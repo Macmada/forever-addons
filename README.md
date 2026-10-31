@@ -9,6 +9,12 @@ Deux addons World of Warcraft compatibles **WoW Forever**, **TBC Anniversary** e
 
 ## Installation
 
+### Avec WowUp (mises à jour automatiques)
+
+Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : les deux addons arrivent ensemble et WowUp propose chaque nouvelle version.
+
+### À la main
+
 1. Télécharge les archives de la dernière version dans l'onglet **Releases**.
 2. Dézippe chaque dossier dans le dossier AddOns de ton client :
    - WoW Forever : dossier `Interface\AddOns` du client Forever

@@ -1,5 +1,8 @@
 # Journal des versions
 
+## ForeverGFX 2.1.1 / ForeverMacros 1.2
+- Publication : archive commune ForeverAddons (installable et mise à jour par WowUp depuis GitHub, avec release.json), chaque addon garde son propre numéro de version.
+
 ## ForeverGFX 2.1 / ForeverMacros 1.2
 - ForeverGFX : réglage automatique selon un objectif de FPS, compteur de FPS à l'écran, liste expert plus rapide (recherche précalculée).
 - ForeverMacros : recherche dans les macros prêtes, sauvegarde et restauration de toutes les macros.
