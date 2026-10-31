@@ -1,0 +1,32 @@
+name: Release
+
+# Pousse un tag (ex. git tag v2.1.0 && git push --tags) pour publier une version.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inscrire la version dans les TOC
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^## Version: .*/## Version: ${VERSION}/" ForeverGFX/ForeverGFX.toc ForeverMacros/ForeverMacros.toc
+
+      - name: Créer les archives
+        run: |
+          mkdir dist
+          zip -r "dist/ForeverGFX-${GITHUB_REF_NAME}.zip" ForeverGFX
+          zip -r "dist/ForeverMacros-${GITHUB_REF_NAME}.zip" ForeverMacros
+
+      - name: Publier la version GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
