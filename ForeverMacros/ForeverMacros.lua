@@ -8,6 +8,11 @@ local QUESTION_ICON = 134400 -- point d'interrogation : icône dynamique avec #s
 local db, ui
 local interface = select(4, GetBuildInfo()) or 0
 ns.isTBC = interface >= 20000 and interface < 30000
+-- Retail (Dragonflight et après) : interface >= 100000. Forever (1.x) et TBC Anniversary (2.x) sont des clients classiques.
+ns.isRetail = interface >= 100000
+if ns.isRetail then
+  ns.Library, ns.LibraryOrder = ns.LibraryRetail, ns.LibraryRetailOrder
+end
 local st = { editIndex = nil, perChar = false }
 
 ----------------------------------------------------------------------
@@ -258,8 +263,8 @@ function ns.Validate(body)
           end
         end
       end
-      -- Limites propres aux clients récents (Midnight) : sans objet sur TBC Anniversary
-      if not ns.isTBC then
+      -- Limites propres aux clients récents (Midnight) : sans objet sur Forever et TBC Anniversary
+      if ns.isRetail then
         if ns.MarkerCommands[cmd] then infos[#infos + 1] = string.format(L.infoMarker, n) end
         if ns.ChatCommands[cmd] then infos[#infos + 1] = string.format(L.infoChat, n) end
       end
@@ -547,16 +552,33 @@ function ns.ResolveLib(entry)
   return body, missing
 end
 
+-- Une macro n'est proposée que si tous ses sorts existent dans ce jeu (ex. Intervention, apparue avec TBC,
+-- n'existe pas sur Forever). Un sort qui existe mais que le personnage ne connaît pas reste affiché (« Non appris »).
+local available = {}
+function ns.LibAvailable(entry)
+  local ok = available[entry]
+  if ok == nil then
+    ok = true
+    for id in entry.body:gmatch("{(%d+)}") do
+      if not SpellName(tonumber(id)) then ok = false break end
+    end
+    available[entry] = ok
+  end
+  return ok
+end
+
 local libSearch = ""
 local function LibEntries()
   local all = ns.Library[db.libClass] or {}
-  if libSearch == "" then return all end
-  local out = {}
+  local out, hidden = {}, 0
   for _, e in ipairs(all) do
-    local hay = (ns.Pick(e.title, e.title_en) .. " " .. ns.Pick(e.desc, e.desc_en)):lower()
-    if hay:find(libSearch, 1, true) then out[#out + 1] = e end
+    if not ns.LibAvailable(e) then
+      hidden = hidden + 1
+    elseif libSearch == "" or (ns.Pick(e.title, e.title_en) .. " " .. ns.Pick(e.desc, e.desc_en)):lower():find(libSearch, 1, true) then
+      out[#out + 1] = e
+    end
   end
-  return out
+  return out, hidden
 end
 
 local function ShowInEditor(entry)
@@ -595,8 +617,9 @@ end
 
 local function UpdateLibrary()
   if not ui or not ui.libRows then return end
-  local list = LibEntries()
+  local list, hidden = LibEntries()
   ui.classBtn:SetText(ClassName(db.libClass))
+  ui.libHidden:SetText(hidden > 0 and string.format(L.libHidden, hidden) or "")
   for i = 1, LIB_ROWS do
     local row = ui.libRows[i]
     local e = list[libOffset + i]
@@ -624,9 +647,7 @@ function BuildLibrary(parent)
   intro:SetPoint("TOPLEFT", 18, -6)
   intro:SetWidth(396)
   intro:SetJustifyH("LEFT")
-  local introText = L.libIntro
-  if interface >= 100000 then introText = introText .. "\n|cffffaa33" .. L.libRetail .. "|r" end
-  intro:SetText(introText)
+  intro:SetText(L.libIntro)
 
   local classLabel = Label(lp, L.class, 18, -54)
   classLabel:ClearAllPoints()
@@ -738,6 +759,10 @@ function BuildLibrary(parent)
     UpdateLibrary()
   end)
   ui.libSlider = slider
+  ui.libHidden = lp:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+  ui.libHidden:SetPoint("TOPLEFT", area, "BOTTOMLEFT", 4, -8)
+  ui.libHidden:SetWidth(386)
+  ui.libHidden:SetJustifyH("LEFT")
   area:SetScript("OnMouseWheel", function(_, d) slider:SetValue(slider:GetValue() - d) end)
   lp:SetScript("OnShow", UpdateLibrary)
 end

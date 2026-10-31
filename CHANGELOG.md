@@ -1,5 +1,11 @@
 # Journal des versions
 
+## ForeverGFX 2.1.3 / ForeverMacros 1.3
+- ForeverMacros : bibliothèque propre au retail (77 macros, 13 classes dont Chevalier de la mort, Moine, Chasseur de démons et Évocateur ; sorts vérifiés pour Midnight). Forever et TBC Anniversary gardent la bibliothèque TBC.
+- ForeverMacros : les macros dont un sort n'existe pas dans le jeu lancé sont masquées (nombre indiqué sous la liste).
+- ForeverMacros : les avertissements propres à Midnight (marqueurs, canaux de discussion) ne s'affichent plus que sur retail (ils apparaissaient à tort sur Forever).
+- ForeverGFX : inchangé (numéro aligné sur le tag).
+
 ## ForeverGFX 2.1.2 / ForeverMacros 1.2
 - Publication : WowUp reconnaît le client Forever (type « forever » dans release.json, au lieu de « classic »).
 

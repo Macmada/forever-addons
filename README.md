@@ -5,7 +5,7 @@ Deux addons World of Warcraft compatibles **WoW Forever**, **TBC Anniversary** e
 | Addon | Commande | Rôle |
 |---|---|---|
 | **ForeverGFX** | `/gfx` | Réglages graphiques en un clic, réglage automatique selon tes FPS, mode expert pour toutes les variables |
-| **ForeverMacros** | `/fmac` | 60 macros prêtes par classe, constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
+| **ForeverMacros** | `/fmac` | macros prêtes par classe (TBC/Forever et retail), constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
 
 ## Installation
 
@@ -33,7 +33,7 @@ Commandes : `/gfx`, `/gfx tune 60`, `/gfx fps`, `/gfx preset ultra`, `/gfx undo`
 
 ## ForeverMacros
 
-- **Macros prêtes** : 60 macros pour les 9 classes de TBC. Les sorts sont référencés par numéro, le nom est donc retrouvé dans la langue du client.
+- **Macros prêtes** : 60 macros pour les 9 classes de TBC (utilisées sur Forever et TBC Anniversary) et 77 macros pour les 13 classes du retail actuel (`LibraryRetail.lua`). Les sorts sont référencés par numéro, le nom est donc retrouvé dans la langue du client. Une macro dont un sort n'existe pas dans le jeu lancé est masquée (ex. Intervention sur Forever).
 - **Créer pas à pas** : sort, cible, touche modificatrice, options, ou mode séquence (totems, rotations sur temps de recharge global).
 - **Éditeur** avec vérification en direct : longueur en octets, crochets, commandes, conditions, cibles, sorts introuvables.
 - **Sauvegarde / restauration** de toutes les macros sous forme de texte.
@@ -59,7 +59,7 @@ Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule 
 
 ## English
 
-Two WoW addons for **WoW Forever**, **TBC Anniversary** and **retail** (one folder per addon for all three clients). **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers 60 ready-made class macros (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. Both addons are fully translated (French and English) and include a guided tutorial.
+Two WoW addons for **WoW Forever**, **TBC Anniversary** and **retail** (one folder per addon for all three clients). **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers ready-made class macros (a TBC/Forever set and a retail set) (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. Both addons are fully translated (French and English) and include a guided tutorial.
 
 ## Licence
 

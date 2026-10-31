@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- Macros prêtes par classe (base TBC / Classic).
+-- Macros prêtes par classe (base TBC / Classic ; le retail utilise LibraryRetail.lua).
 -- {12345} = numéro de sort : remplacé en jeu par son nom dans la langue du client.
 -- short = nom de la macro (16 caractères max).
 -- Sources d'inspiration : guides de macros TBC Classic (Icy Veins, Warcraft Tavern, noobtoboss).
@@ -343,4 +343,6 @@ ns.ClassNamesFallback = {
   WARRIOR = { "Guerrier", "Warrior" }, PALADIN = { "Paladin", "Paladin" }, HUNTER = { "Chasseur", "Hunter" },
   ROGUE = { "Voleur", "Rogue" }, PRIEST = { "Prêtre", "Priest" }, SHAMAN = { "Chaman", "Shaman" },
   MAGE = { "Mage", "Mage" }, WARLOCK = { "Démoniste", "Warlock" }, DRUID = { "Druide", "Druid" },
+  DEATHKNIGHT = { "Chevalier de la mort", "Death Knight" }, MONK = { "Moine", "Monk" },
+  DEMONHUNTER = { "Chasseur de démons", "Demon Hunter" }, EVOKER = { "Évocateur", "Evoker" },
 }
