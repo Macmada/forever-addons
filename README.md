@@ -54,3 +54,7 @@ Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule 
 ## English
 
 Two WoW addons for **WoW Forever**, **TBC Anniversary** and **retail** (one folder per addon for all three clients). **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers 60 ready-made class macros (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. Both addons are fully translated (French and English) and include a guided tutorial.
+
+## Licence
+
+Distribué sous licence [MIT](LICENSE) : libre d'utilisation, de modification et de redistribution, à condition de conserver la mention de copyright.
