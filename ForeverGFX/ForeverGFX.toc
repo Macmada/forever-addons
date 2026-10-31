@@ -3,7 +3,7 @@
 ## Notes: Réglage avancé des variables graphiques : préréglages, profils, bascule auto, mesure de FPS.
 ## Notes-enUS: Advanced graphics variables tuning: presets, profiles, auto switch, FPS measurement.
 ## Author: ForeverGFX
-## Version: 2.1.1
+## Version: 2.1.2
 ## SavedVariables: ForeverGFXDB
 ## IconTexture: Interface\Icons\INV_Misc_Spyglass_03
 ## AddonCompartmentFunc: ForeverGFX_OnCompartmentClick

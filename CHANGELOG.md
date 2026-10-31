@@ -1,5 +1,8 @@
 # Journal des versions
 
+## ForeverGFX 2.1.2 / ForeverMacros 1.2
+- Publication : WowUp reconnaît le client Forever (type « forever » dans release.json, au lieu de « classic »).
+
 ## ForeverGFX 2.1.1 / ForeverMacros 1.2
 - Publication : archive commune ForeverAddons (installable et mise à jour par WowUp depuis GitHub, avec release.json), chaque addon garde son propre numéro de version.
 
