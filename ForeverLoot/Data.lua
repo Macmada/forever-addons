@@ -7,53 +7,41 @@ local _, ns = ...
 local D = {}
 ns.Data = D
 
-local Z = {   -- donjons (noms français / anglais)
+local Z = {   -- donjons et sources (noms français / anglais)
   strat = { "Stratholme", "Stratholme" }, scholo = { "Scholomance", "Scholomance" },
-  brd = { "Profondeurs de Rochenoire", "Blackrock Depths" }, ubrs = { "Pic Rochenoire supérieur", "Upper Blackrock Spire" },
-  dme = { "Hache-Tripes (est)", "Dire Maul East" }, dmw = { "Hache-Tripes (ouest)", "Dire Maul West" },
-  dmn = { "Hache-Tripes (nord)", "Dire Maul North" }, st = { "Temple englouti", "Sunken Temple" },
-  wpl = { "Maleterres de l'Ouest (quête)", "Western Plaguelands (quest)" }, av = { "Vallée d'Alterac", "Alterac Valley" },
-  world = { "Butin du monde (lié quand équipé)", "World drop (BoE)" }, craft = { "Artisanat", "Crafted" },
-  pvp = { "JcJ (rang 14)", "PvP (rank 14)" },
+  brs = { "Pic Blackrock", "Blackrock Spire" }, dm = { "Hache-tripes", "Dire Maul" }, maraudon = { "Maraudon", "Maraudon" },
+  strangle = { "Vallée de Strangleronce (marchand Pix Xizzix)", "Stranglethorn Vale (vendor Pix Xizzix)" },
+  craft = { "Artisanat", "Crafted" },
 }
 D.zones = Z
 
--- Prêtre soigneur, avant les raids. slot = emplacement (1 tête … 18 distance) ; ok = false : numéro non vérifié
--- ou introuvable sur Wowhead Forever (https://www.wowhead.com/forever/fr, vérifié le 03/11/2026 : objet peut-être absent de Forever).
--- boss : nom anglais du guide (le jeu affichera le nom réel de l'objet dans ta langue).
+-- Prêtre soigneur (Sacré et Discipline : même liste), niveau 60 avant les raids, WoW Forever.
+-- Source : liste BiS de kami-labs.fr (calculée le 02/11/2026 avec le simulateur wowsims/forever), numéros relevés
+-- dans son lien « Ouvrir dans l'outil ». new = objet nouveau de Forever ; ench = enchantement conseillé.
+-- boss : comme sur la source (le jeu affiche le nom réel de l'objet dans ta langue).
 D.reference = {
   PRIEST = {
-    { slot = 1, id = 13102, zone = "world", note = "Cassandra's Grace" },
-    { slot = 1, id = 16693, zone = "scholo", boss = "Darkmaster Gandling", alt = true },
-    { slot = 2, id = 18723, zone = "strat", boss = "Ramstein the Gorger", ok = false },           -- page 404 sur Wowhead Forever
-    { slot = 3, id = 18681, zone = "scholo", boss = "butin commun / shared loot" },
-    { slot = 15, id = 13386, zone = "strat", boss = "Archivist Galford", note = "« de soins » / « of Healing »" },
-    { slot = 15, id = 18510, zone = "craft", boss = "Travail du cuir / Leatherworking" },          -- confirmé sur Wowhead Forever
-    -- Robe de la Foi vraie (couture 300) retirée : le numéro 18263 est « Couvre-bras Cœur-de-braise » (Wowhead Forever, 03/11/2026)
-    { slot = 9, id = 11766, zone = "brd", boss = "Lord Incendius", note = "« de soins » / « of Healing »" },
-    { slot = 9, id = 18497, zone = "ubrs", boss = "Warchief Rend Blackhand", alt = true },
-    { slot = 10, id = 10787, zone = "st", boss = "mini-boss", note = "« de soins » / « of Healing »" },
-    { slot = 6, id = 18327, zone = "dme", boss = "Alzzin the Wildshaper" },
-    { slot = 7, id = 11841, zone = "brd", boss = "Fineous Darkvire" },
-    { slot = 7, id = 18386, zone = "dmw", boss = "tribut / tribute", alt = true },
-    { slot = 8, id = 18507, zone = "dmn", boss = "Captain Kromcrush" },
-    { slot = 8, id = 11822, zone = "brd", boss = "Golem Lord Argelmach", alt = true },
-    { slot = 11, id = 16058, zone = "wpl", boss = "In Dreams" },
-    { slot = 11, id = 18103, zone = "ubrs", boss = "Warchief Rend Blackhand" },
-    { slot = 13, id = 12930, zone = "ubrs", boss = "Jed Runewatcher" },
-    { slot = 13, id = 18469, zone = "ubrs", boss = "Jed Runewatcher", ok = false },              -- page 404 sur Wowhead Forever
-    { slot = 13, id = 11819, zone = "brd", boss = "Golem Lord Argelmach", ok = false },           -- page 404 sur Wowhead Forever
-    { slot = 13, id = 18371, zone = "dmw", boss = "Magister Kalendris", alt = true },
-    { slot = 13, id = 22268, zone = "ubrs", boss = "General Drakkisath", alt = true },
-    { slot = 16, id = 11923, zone = "brd", boss = "Chest of The Seven" },
-    { slot = 16, id = 23454, zone = "pvp", boss = "Grand Marshal", alt = true },
-    { slot = 17, id = 11928, zone = "brd", boss = "Emperor Dagran Thaurissan" },
-    { slot = 17, id = 19312, zone = "av", boss = "Exalté / Exalted", alt = true },
-    { slot = 18, id = 16997, zone = "world", boss = "Order Must Be Restored (quête / quest)" },
+    { slot = 1, id = 16693, zone = "scholo", boss = "Sombre Maître Gandling" },
+    { slot = 2, id = 22149, zone = "dm", boss = "quête « La vendetta de Falrin »", ench = "Pouvoir de guérison" },
+    { slot = 3, id = 16695, zone = "brs", boss = "monstres du donjon" },
+    { slot = 15, id = 18510, zone = "craft", boss = "Travail du cuir 300" },
+    { slot = 5, id = 16690, zone = "brs", boss = "Général Drakkisath", ench = "Intelligence majeure" },
+    { slot = 9, id = 16697, zone = "strat", boss = "monstres du donjon", ench = "Intelligence excellente" },
+    { slot = 10, id = 18409, zone = "craft", boss = "Couture 300", ench = "Pouvoir de guérison" },
+    { slot = 6, id = 16696, zone = "brs", boss = "Intendant Zigris" },
+    { slot = 7, id = 16694, zone = "strat", boss = "Baron Rivendare" },
+    { slot = 8, id = 15802, zone = "craft", boss = "Couture 290", ench = "Esprit" },
+    { slot = 11, id = 13345, zone = "strat", boss = "Baron Rivendare" },
+    { slot = 11, id = 272406, zone = "strangle", boss = "75 Réals de Terremine ternis", new = true },
+    { slot = 13, id = 272439, zone = "strangle", boss = "125 Réals de Terremine ternis", new = true },
+    { slot = 13, id = 12930, zone = "brs", boss = "monstres du donjon" },
+    { slot = 16, id = 17710, zone = "maraudon", boss = "Princesse Theradras", ench = "Intelligence renforcée" },
+    { slot = 17, id = 13353, zone = "strat", boss = "Balnazzar" },
+    { slot = 18, id = 249385, zone = "craft", boss = "Enchantement 275", new = true },
   },
 }
-D.referenceLabel = { "Prêtre soigneur, avant les raids (guides du classique, à vérifier pour Forever)",
-                     "Healing priest, pre-raid (classic guides, to check for Forever)" }
+D.referenceLabel = { "Prêtre soigneur, niveau 60 avant les raids — liste WoW Forever de kami-labs.fr (02/11/2026)",
+                     "Healing priest, level 60 pre-raid — WoW Forever list from kami-labs.fr (2026-11-02)" }
 
 -- Emplacements affichés (12 = 2e anneau, 14 = 2e bijou : regroupés avec 11 et 13)
 D.slotOrder = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 13, 16, 17, 18 }

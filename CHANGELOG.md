@@ -1,7 +1,7 @@
 # Journal des versions
 
-## ForeverGFX 2.2.1 / ForeverLoot 1.0.1
-- ForeverLoot : liste de référence recoupée avec Wowhead Forever. Le numéro de la Robe de la Foi vraie était faux (18263 = Couvre-bras Cœur-de-braise) : objet retiré. Peau du Fauve confirmée. Collier animé, Second souffle et Sceau royal d'Eldre'Thalas introuvables sur Wowhead Forever : marqués « (?) », à confirmer avec le bouton Diag en jeu.
+## ForeverGFX 2.2.1 / ForeverLoot 1.1
+- ForeverLoot : **liste de référence de WoW Forever** à la place de celle du classique — prêtre soigneur niveau 60 avant les raids, d'après la liste de kami-labs.fr (calculée le 02/11/2026 avec le simulateur wowsims/forever) : ensemble du dévot, Peau du Fauve, étoffe lunaire, Sceau de Rivendare, Miséricorde de calcinite, Livre des morts, et les nouveautés de Forever (Anneau de canaliste, Champ de sérénité, Baguette brillante), avec l'**enchantement conseillé** pour chaque pièce.
 - Autres addons : inchangés (numéro de ForeverGFX aligné sur le tag).
 
 ## ForeverGFX 2.2.0 / ForeverMacros 1.5 / ForeverGazette 1.4 / ForeverPrep 1.2 / ForeverHeal 1.2 / ForeverLoot 1.0

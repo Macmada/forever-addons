@@ -118,6 +118,8 @@ function ns.BisLines()
       local status = (c.src == "equipped") and L.refWear or ((c.src == "bags") and L.refHave or (" — " .. ns.GainText(c.eval)))
       local boss = r.boss and (r.boss .. ", ") or ""
       lines[#lines + 1] = { link = c.link, text = "|cffe6b84d" .. string.format(L.refLine, c.link, boss, Zone(r.zone), status)
+                                                  .. (r.new and (" |cff66ccff" .. L.newTag .. "|r") or "")
+                                                  .. (r.ench and (" |cffa0a0a0· " .. string.format(L.enchTag, r.ench) .. "|r") or "")
                                                   .. ((r.ok == false) and " |cffff8000(?)|r" or "") .. "|r" }
     end
   end
@@ -291,6 +293,7 @@ local function OnTooltipItem(tt)
   for _, r in ipairs(D.reference[class] or {}) do
     if r.id == id then
       tt:AddLine(string.format(L.tipRef, (r.boss and (r.boss .. ", ") or "") .. Zone(r.zone)), 0.9, 0.72, 0.3, true)
+      if r.ench then tt:AddLine(string.format(L.enchTag, r.ench), 0.6, 0.6, 0.6, true) end
       break
     end
   end

@@ -12,8 +12,9 @@ local ITEMS = {
   [104] = { "Épée longue", "INVTYPE_WEAPON", 2, 7, 3, 34, 1200, { ITEM_MOD_STRENGTH_SHORT = 10 } },
   [105] = { "Os rongé", "INVTYPE_TRINKET", 15, 0, 0, 1, 1, {} },
   [106] = { "Gants de l'avenir", "INVTYPE_HAND", 4, 1, 4, 55, 800, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 60 } },
-  [18723] = { "Collier animé", "INVTYPE_NECK", 4, 0, 3, 57, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 26 } },
-  [13102] = { "Grâce de Cassandre", "INVTYPE_HEAD", 4, 1, 3, 57, 900, { ITEM_MOD_INTELLECT_SHORT = 20, ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
+  [13345] = { "Sceau de Rivendare", "INVTYPE_FINGER", 4, 0, 3, 58, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 26 } },
+  [22149] = { "Perles de mojo ogre", "INVTYPE_NECK", 4, 0, 3, 60, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
+  [16693] = { "Collerette de dévot", "INVTYPE_HEAD", 4, 1, 3, 57, 900, { ITEM_MOD_INTELLECT_SHORT = 20, ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
 }
 local function Link(id) local it = ITEMS[id]; return string.format("|cff0070dd|Hitem:%d::::::::60:::::::|h[%s]|h|r", id, it[1]) end
 local function ID(x) if type(x) == "number" then return x end return tonumber(tostring(x):match("item:(%d+)")) end
@@ -32,7 +33,7 @@ _G.ChatEdit_InsertLink = function() end
 -- modèle de ForeverHeal imité : la valeur de soins de l'objet moins celle de l'objet porté au même emplacement
 _G.ForeverHealAPI = { Evaluate = function(link)
   local id = ID(link); local it = ITEMS[id]
-  local slots = ({ INVTYPE_ROBE = 5, INVTYPE_CHEST = 5, INVTYPE_2HWEAPON = 16, INVTYPE_WEAPON = 16, INVTYPE_HAND = 10, INVTYPE_NECK = 2, INVTYPE_HEAD = 1 })
+  local slots = ({ INVTYPE_ROBE = 5, INVTYPE_CHEST = 5, INVTYPE_2HWEAPON = 16, INVTYPE_WEAPON = 16, INVTYPE_HAND = 10, INVTYPE_NECK = 2, INVTYPE_HEAD = 1, INVTYPE_FINGER = 11 })
   local slot = slots[it[2]] or 13
   local function v(l) if not l then return 0 end local s = ITEMS[ID(l)][8]; return (s.ITEM_MOD_SPELL_HEALING_DONE_SHORT or 0) * 0.1 + (s.ITEM_MOD_INTELLECT_SHORT or 0) * 0.05 end
   local hps = v(link) - v(GEAR[slot])
@@ -79,33 +80,33 @@ _G.UnitExists = function(u) return u == "target" end
 _G.UnitIsDead = function() return true end
 _G.UnitIsPlayer = function() return false end
 _G.UnitClassification = function() return "elite" end
-_G.UnitName = function(u) return u == "target" and "Ramstein le Gorgé" or "Machin" end
+_G.UnitName = function(u) return u == "target" and "Baron Rivendare" or "Machin" end
 _G.GetNumLootItems = function() return 2 end
-_G.GetLootSlotLink = function(i) return ({ Link(18723), Link(105) })[i] end
+_G.GetLootSlotLink = function(i) return ({ Link(13345), Link(105) })[i] end
 W.fire("LOOT_OPENED")
 local z = ForeverLootGlobalDB.dungeons.Stratholme
-check(z and z["Ramstein le Gorgé"] and z["Ramstein le Gorgé"][18723] and not z["Ramstein le Gorgé"][105], "butin du boss noté (objet gris ignoré)")
+check(z and z["Baron Rivendare"] and z["Baron Rivendare"][13345] and not z["Baron Rivendare"][105], "butin du boss noté (objet gris ignoré)")
 W.inInstance, W.zone = false, "Hurlevent"
 
 -- 5. BiS : objets vus classés, référence affichée
 local bis = ns.BiS(3)
 check(bis[5] and bis[5].items[1] and bis[5].items[1].id == 101, "BiS torse : la robe du soigneur vue lors du jet")
-check(bis[2] and #bis[2].refs >= 1 and bis[2].refs[1].id == 18723, "BiS cou : collier de référence (Ramstein, Stratholme)")
+check(bis[11] and #bis[11].refs >= 1 and bis[11].refs[1].id == 13345, "BiS anneaux : Sceau de Rivendare de la liste Forever (Baron Rivendare, Stratholme)")
 check(not bis[5].items[2] or bis[5].items[2].id ~= 102, "BiS : la cuirasse (plaques) n'est pas proposée")
 ns.Toggle()
 local lines = ns.BisLines()
 local txt = {}
 for _, l in ipairs(lines) do txt[#txt + 1] = l.text end
 txt = table.concat(txt, "\n")
-check(txt:find("Robe du soigneur", 1, true) and txt:find("Ramstein", 1, true), "onglet BiS rempli")
+check(txt:find("Robe du soigneur", 1, true) and txt:find("Rivendare", 1, true) and txt:find("Pouvoir de guérison", 1, true), "onglet BiS rempli (référence Forever, enchantement conseillé)")
 local dun = ns.DungeonLines()
 local dtxt = {}
 for _, l in ipairs(dun) do dtxt[#dtxt + 1] = l.text end
 dtxt = table.concat(dtxt, "\n")
-check(dtxt:find("Stratholme", 1, true) and dtxt:find("Collier animé", 1, true), "onglet Donjons : butin vu et référence")
+check(dtxt:find("Stratholme", 1, true) and dtxt:find("Sceau de Rivendare", 1, true), "onglet Donjons : butin vu et référence")
 
 -- 6. infobulle d'un objet de référence
-GameTooltip.link, GameTooltip.lines = Link(13102), {}
+GameTooltip.link, GameTooltip.lines = Link(16693), {}
 ns.OnTooltipItem(GameTooltip)
 check(GameTooltip.lines[1] and GameTooltip.lines[1]:find("ForeverLoot", 1, true), "infobulle : « BiS de référence »")
 
@@ -122,7 +123,7 @@ W.class, W.level = "PRIEST", 40
 
 -- 8. diagnostic, icône commune, commande
 local diag = ns.DiagText()
-check(diag:find("Liste de référence", 1, true) and diag:find("18723", 1, true) and not diag:find("Erreur", 1, true), "diagnostic complet")
+check(diag:find("Liste de référence", 1, true) and diag:find("272406", 1, true) and not diag:find("Erreur", 1, true), "diagnostic complet")
 check(ForeverHub and ForeverHub.entries.ForeverLoot, "inscrit dans l'icône commune")
 SlashCmdList.FOREVERLOOT("donjons")
 check(ns.ui:IsShown(), "/floot donjons")

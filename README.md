@@ -80,7 +80,7 @@ Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`,
 
 Équipement et butin, évalués **pour ton personnage** (avec le modèle de ForeverHeal pour le prêtre, un modèle simplifié par caractéristiques pour les autres classes) :
 
-- **BiS calculé** : chaque objet croisé (infobulles, butin, jets, récompenses de quête, marchands, butin des autres) est mémorisé et évalué ; l'onglet BiS montre, emplacement par emplacement, les meilleurs objets connus et où ils ont été vus, avec la **liste de référence** (prêtre soigneur, avant les raids, guides du classique : à vérifier pour Forever).
+- **BiS calculé** : chaque objet croisé (infobulles, butin, jets, récompenses de quête, marchands, butin des autres) est mémorisé et évalué ; l'onglet BiS montre, emplacement par emplacement, les meilleurs objets connus et où ils ont été vus, avec la **liste de référence de WoW Forever** (prêtre soigneur niveau 60 avant les raids, liste de kami-labs.fr calculée avec le simulateur wowsims/forever) et l'enchantement conseillé pour chaque pièce.
 - **Jets de butin** : conseil « BESOIN » ou « Cupidité » au-dessus de la fenêtre de jet, avec le gain (« +3,5 soins/s ») ou la raison (ta classe ne peut pas le porter, niveau trop élevé, pas mieux).
 - **Récompenses de quête** : la meilleure pour toi est mise en évidence, sinon la plus chère à revendre.
 - **Butin des donjons** : ce que chaque boss lâche, noté au fil de tes donjons (pour tous tes personnages), objets intéressants pour toi en vert.
