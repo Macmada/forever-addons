@@ -2,6 +2,7 @@
 
 ## Prochaine version
 - Compagnon : `oui` / `non` acceptés dans `gazette_discord.ini` (en plus de `yes` / `no`) ; l'exemple les utilise.
+- Compagnon : `installer-demarrage.bat` passe par le lanceur `py` / `pyw` (avec le gestionnaire d'installation de Python, `python` peut n'être qu'un raccourci vers le Microsoft Store et Pillow ne s'installait pas) ; s'arrête avec un message clair si Pillow manque.
 
 
 ## ForeverGFX 2.2.1 / ForeverLoot 1.1
