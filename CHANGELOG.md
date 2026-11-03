@@ -1,9 +1,10 @@
 # Journal des versions
 
-## Prochaine version
+## ForeverGFX 2.2.2 / ForeverGazette 1.4.1 (compagnon PDF)
 - Compagnon : `oui` / `non` acceptés dans `gazette_discord.ini` (en plus de `yes` / `no`) ; l'exemple les utilise.
 - Compagnon : `installer-demarrage.bat` passe par le lanceur `py` / `pyw` (avec le gestionnaire d'installation de Python, `python` peut n'être qu'un raccourci vers le Microsoft Store et Pillow ne s'installait pas) ; s'arrête avec un message clair si Pillow manque.
 
+- Addons : inchangés (numéros alignés sur le tag).
 
 ## ForeverGFX 2.2.1 / ForeverLoot 1.1
 - ForeverLoot : **liste de référence de WoW Forever** à la place de celle du classique — prêtre soigneur niveau 60 avant les raids, d'après la liste de kami-labs.fr (calculée le 02/11/2026 avec le simulateur wowsims/forever) : ensemble du dévot, Peau du Fauve, étoffe lunaire, Sceau de Rivendare, Miséricorde de calcinite, Livre des morts, et les nouveautés de Forever (Anneau de canaliste, Champ de sérénité, Baguette brillante), avec l'**enchantement conseillé** pour chaque pièce.
