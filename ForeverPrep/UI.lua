@@ -206,6 +206,70 @@ local function CreateUI()
   return ui
 end
 
+----------------------------------------------------------------------
+-- Bouton flottant : ouvre la fiche à la main ; sa bordure prend la couleur de l'état (vert, orange, rouge)
+----------------------------------------------------------------------
+local float
+local function CreateFloat()
+  if float then return float end
+  float = CreateFrame("Button", "ForeverPrepFloatButton", UIParent)
+  ns.floatButton = float
+  float:SetSize(40, 40)
+  float:SetFrameStrata("MEDIUM")
+  float:SetClampedToScreen(true)
+  float:SetMovable(true)
+  float:RegisterForDrag("LeftButton")
+  float:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+  local p = ns.db.float
+  float:SetPoint(p.point or "CENTER", UIParent, p.point or "CENTER", p.x or 300, p.y or -150)
+  float.ring = float:CreateTexture(nil, "BACKGROUND")
+  float.ring:SetPoint("TOPLEFT", -3, 3)
+  float.ring:SetPoint("BOTTOMRIGHT", 3, -3)
+  float.ring:SetColorTexture(0.6, 0.6, 0.6, 1)
+  float.icon = float:CreateTexture(nil, "ARTWORK")
+  float.icon:SetAllPoints()
+  float.icon:SetTexture("Interface\\Icons\\INV_Potion_51")
+  float:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+  float.label = float:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  float.label:SetPoint("TOP", float, "BOTTOM", 0, -2)
+  float.label:SetText(L.floatLabel)
+  float:SetScript("OnDragStart", function(self) self:StartMoving() end)
+  float:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    local point, _, _, x, y = self:GetPoint()
+    ns.db.float.point, ns.db.float.x, ns.db.float.y = point, x, y
+  end)
+  float:SetScript("OnClick", function(_, button)
+    if button == "RightButton" then ns.ShowOptions(true) else ns.Toggle() end
+  end)
+  float:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+    GameTooltip:AddLine("ForeverPrep", 1, 0.82, 0)
+    if self.summary then GameTooltip:AddLine(self.summary, 1, 1, 1, true) end
+    GameTooltip:AddLine(L.floatTip, 0.7, 0.7, 0.7)
+    GameTooltip:Show()
+  end)
+  float:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  return float
+end
+
+function ns.UpdateFloat()
+  if not ns.db then return end
+  if not ns.db.float.shown then
+    if float then float:Hide() end
+    return
+  end
+  CreateFloat():Show()
+  local res = ns.Analyze()
+  local c = COLORS[res.worst] or COLORS.info
+  float.ring:SetColorTexture(c[1], c[2], c[3], 1)
+  local nWarn = 0
+  for _, sct in ipairs(res.sections) do
+    for _, r in ipairs(sct.rows) do if r.status == "warn" or r.status == "bad" then nWarn = nWarn + 1 end end
+  end
+  float.summary = (nWarn == 0) and L.allGood or string.format(L.summary, nWarn, #res.shopping)
+end
+
 function ns.Refresh()
   if not ui or not ui:IsShown() then return end
   local inInstance = IsInInstance()
@@ -233,10 +297,12 @@ end
 -- Options
 ----------------------------------------------------------------------
 local opt
-function ns.ShowOptions()
+function ns.ShowOptions(standalone)
+  if not ui then CreateUI() end
+  if standalone and not ui:IsShown() then ui:Show() end
   if not opt then
     opt = CreateFrame("Frame", "ForeverPrepOptionsFrame", ui, "BasicFrameTemplateWithInset")
-    opt:SetSize(500, 270)
+    opt:SetSize(500, 300)
     opt:SetPoint("CENTER", ui, "CENTER", 0, 0)
     opt:SetFrameStrata("DIALOG")
     local t = opt:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -253,6 +319,7 @@ function ns.ShowOptions()
     C(L.optAutoLFG, function() return ns.db.autoLFG end, function(v) ns.db.autoLFG = v end)
     C(L.optMerchant, function() return ns.db.merchant end, function(v) ns.db.merchant = v end)
     C(L.optMinimap, function() return not ns.db.minimap.hide end, function(v) ns.db.minimap.hide = not v; ns.UpdateMinimapButton() end)
+    C(L.optFloat, function() return ns.db.float.shown end, function(v) ns.db.float.shown = v; ns.UpdateFloat() end)
     local note = opt:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     note:SetPoint("TOPLEFT", 20, y - 6)
     note:SetText(L.optOnlyIfMissing)
@@ -397,6 +464,7 @@ function ns.RunTour()
     { target = function() return ui.summary end, title = L.t4t, text = L.t4 },
     { target = function() return ui.optBtn end, title = L.t5t, text = L.t5 },
     { target = function() return ns.minimapButton end, title = L.t6t, text = L.t6 },
+    { target = function() return ns.floatButton end, title = L.t7t, text = L.t7 },
   }, function() ns.db.tourDone = true end)
 end
 
@@ -487,7 +555,10 @@ ns.OnLoaded = function()
     timeout = 0, whileDead = false, hideOnEscape = true,
   }
 end
-ns.OnLogin = function() SetupBroker() end
+ns.OnLogin = function()
+  SetupBroker()
+  C_Timer.After(3, ns.UpdateFloat)
+end
 
 local ROLE_ALIASES = { auto = "auto", tank = "tank", soigneur = "heal", heal = "heal", healer = "heal",
                        physique = "melee", physical = "melee", melee = "melee", magique = "caster", magic = "caster", caster = "caster" }
@@ -506,6 +577,10 @@ SlashCmdList.FOREVERPREP = function(msg)
   elseif cmd == "role" and ROLE_ALIASES[arg] then
     ns.db.role = ROLE_ALIASES[arg]
     CreateUI(); ui:Show(); ns.Refresh()
+  elseif cmd == "bouton" or cmd == "button" then
+    ns.db.float.shown = not ns.db.float.shown
+    ns.UpdateFloat()
+    Print(ns.db.float.shown and L.floatShown or L.floatHidden)
   elseif cmd == "minimap" then
     ns.db.minimap.hide = not ns.db.minimap.hide
     ns.UpdateMinimapButton()

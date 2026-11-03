@@ -2,6 +2,12 @@ local _, ns = ...
 
 local fr = {
   title = "ForeverPrep — Prêt pour le donjon ?",
+  floatLabel = "Prépa",
+  floatTip = "Clic : fiche de préparation · clic droit : options · glisser : déplacer",
+  floatShown = "Bouton de préparation affiché.",
+  floatHidden = "Bouton de préparation masqué (/prep bouton pour le remettre).",
+  optFloat = "Bouton « Prépa » à l'écran (sa couleur indique ton état)",
+  t7t = "Bouton Prépa", t7 = "Lance la préparation quand tu veux, en dehors des ouvertures automatiques. Vert = prêt, orange = à faire, rouge = manque important. Glisse-le où tu veux ; clic droit : options.",
   titleRaid = "ForeverPrep — Prêt pour le raid ?",
   ctx_dungeon = "Donjon", ctx_raid = "Raid",
   role = "Rôle : %s",
@@ -67,7 +73,7 @@ local fr = {
   minimapTip2 = "Glisser : déplacer l'icône",
   minimapHidden = "Icône de minicarte masquée (/prep minimap pour la remettre).",
   minimapShown = "Icône de minicarte affichée.",
-  helpText = "Commandes : /prep (fiche), /prep raid, /prep donjon, /prep role auto|tank|soigneur|physique|magique, /prep minimap, /prep lang fr|en, /prep tuto",
+  helpText = "Commandes : /prep (fiche), /prep raid, /prep donjon, /prep role auto|tank|soigneur|physique|magique, /prep bouton, /prep minimap, /prep lang fr|en, /prep tuto",
   tourNext = "Suivant", tourSkip = "Passer", tourDone = "Terminé",
   t1t = "Ta préparation", t1 = "Tout ce qu'il faut pour le donjon, selon ta classe, ton rôle et ton niveau : vert = prêt, orange = à faire, rouge = manque important, gris = conseil.",
   t2t = "Donjon ou raid", t2 = "Les quantités conseillées changent : choisis le contexte (dans une instance, il est détecté tout seul).",
@@ -79,6 +85,12 @@ local fr = {
 
 local en = {
   title = "ForeverPrep — Ready for the dungeon?",
+  floatLabel = "Prep",
+  floatTip = "Click: preparation sheet · right-click: options · drag: move",
+  floatShown = "Preparation button shown.",
+  floatHidden = "Preparation button hidden (/prep button to bring it back).",
+  optFloat = "On-screen \"Prep\" button (its color shows your status)",
+  t7t = "Prep button", t7 = "Runs the preparation whenever you want, outside the automatic triggers. Green = ready, orange = to do, red = badly missing. Drag it anywhere; right-click: options.",
   titleRaid = "ForeverPrep — Ready for the raid?",
   ctx_dungeon = "Dungeon", ctx_raid = "Raid",
   role = "Role: %s",
@@ -144,7 +156,7 @@ local en = {
   minimapTip2 = "Drag: move the icon",
   minimapHidden = "Minimap icon hidden (/prep minimap to bring it back).",
   minimapShown = "Minimap icon shown.",
-  helpText = "Commands: /prep (sheet), /prep raid, /prep dungeon, /prep role auto|tank|healer|physical|magic, /prep minimap, /prep lang fr|en, /prep tutorial",
+  helpText = "Commands: /prep (sheet), /prep raid, /prep dungeon, /prep role auto|tank|healer|physical|magic, /prep button, /prep minimap, /prep lang fr|en, /prep tutorial",
   tourNext = "Next", tourSkip = "Skip", tourDone = "Done",
   t1t = "Your preparation", t1 = "Everything you need for the dungeon, by class, role and level: green = ready, orange = to do, red = badly missing, grey = tip.",
   t2t = "Dungeon or raid", t2 = "Recommended amounts change: pick the context (inside an instance it is detected automatically).",

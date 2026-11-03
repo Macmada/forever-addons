@@ -398,6 +398,7 @@ local function InitDB()
   if db.autoLFG == nil then db.autoLFG = true end
   if db.merchant == nil then db.merchant = true end
   db.minimap = db.minimap or { angle = 160, hide = false }
+  db.float = db.float or { shown = true }
   if db.lang then ns.lang = db.lang end
 end
 ns._InitDB = InitDB
@@ -418,6 +419,16 @@ function ns.AutoShow(reason, key)
   if ns.Show then ns.Show(res, reason) end
 end
 
+local refreshPending
+local function SoonRefresh()
+  if refreshPending or not ns.Refresh then return end
+  refreshPending = true
+  C_Timer.After(0.5, function()
+    refreshPending = nil
+    ns.Refresh()
+    if ns.UpdateFloat then ns.UpdateFloat() end
+  end)
+end
 handlers.PLAYER_ENTERING_WORLD = function()
   local inInstance, itype = IsInInstance()
   if db.autoInstance and inInstance and (itype == "party" or itype == "raid") then
@@ -434,15 +445,11 @@ handlers.TRAINER_SHOW = function()
   db.lastTrainerLevel = UnitLevel("player")
   if ns.Refresh then ns.Refresh() end
 end
-handlers.PLAYER_LEVEL_UP = function() if ns.Refresh then C_Timer.After(1, ns.Refresh) end end
+handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, SoonRefresh) end
+handlers.UPDATE_INVENTORY_DURABILITY = function() SoonRefresh() end
+handlers.GROUP_ROSTER_UPDATE = function() SoonRefresh() end
 handlers.MERCHANT_SHOW = function() if db.merchant and ns.OnMerchant then ns.OnMerchant() end end
 handlers.MERCHANT_CLOSED = function() if ns.OnMerchantClosed then ns.OnMerchantClosed() end end
-local refreshPending
-local function SoonRefresh()
-  if refreshPending or not ns.Refresh then return end
-  refreshPending = true
-  C_Timer.After(0.5, function() refreshPending = nil; ns.Refresh() end)
-end
 handlers.BAG_UPDATE_DELAYED = SoonRefresh
 handlers.UNIT_AURA = function(unit) if unit == "player" then SoonRefresh() end end
 handlers.GET_ITEM_INFO_RECEIVED = function(id)

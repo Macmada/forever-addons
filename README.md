@@ -70,9 +70,10 @@ Avant un donjon ou un raid, une fiche compare ce que tu as à ce qu'il faut pour
 - **Donjon ou raid** (quantités adaptées), **rôle** deviné par les talents et modifiable.
 - **Liste de courses**, et **chez un marchand** qui vend ces objets : achat de toute la liste en un clic (avec confirmation et prix).
 - S'ouvre toute seule (s'il manque quelque chose) à l'entrée d'un donjon ou d'un raid, lors d'un appel (ready check) et d'une recherche de groupe ou de donjon. Chaque déclencheur se coupe dans les options.
+- **Bouton « Prépa » à l'écran** pour la lancer quand tu veux : déplaçable, sa bordure est verte, orange ou rouge selon ton état ; clic droit = options ; `/prep bouton` pour le masquer ou le remettre.
 - Les objets sont vérifiés auprès du jeu au chargement (nom, niveau requis) : un objet absent de Forever est ignoré.
 
-Commandes : `/prep`, `/prep raid`, `/prep donjon`, `/prep role auto|tank|soigneur|physique|magique`, `/prep minimap`, `/prep lang fr|en`, `/prep tuto`.
+Commandes : `/prep`, `/prep raid`, `/prep donjon`, `/prep role auto|tank|soigneur|physique|magique`, `/prep bouton`, `/prep minimap`, `/prep lang fr|en`, `/prep tuto`.
 
 ## Compatibilité
 
