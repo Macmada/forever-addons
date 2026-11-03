@@ -264,6 +264,9 @@ check(#Events() == before, "même niveau deux fois : un seul article")
 ForeverGazetteDB.days["2000-01-01"] = { events = {}, stats = {} }
 ns._InitDB()
 check(ForeverGazetteDB.days["2000-01-01"] == nil, "vieilles éditions supprimées au chargement")
+check(ns.Upper("L'Écho Croustillant — spécial çà") == "L'ÉCHO CROUSTILLANT — SPÉCIAL ÇÀ", "majuscules accentuées")
+ForeverGazetteDB.tone = "tabloid"
+if LANG == "fr" then check(ns.ToText(ns.BuildEdition(today, ns.DemoDay(), 42), "md"):find("SPÉCIAL", 1, true), "titre du journal en majuscules accentuées") end
 print("\nTOUT OK (" .. LANG .. ")")
 
 -- Écrit la base au format SavedVariables du jeu (pour tester le compagnon Discord)

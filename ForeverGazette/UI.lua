@@ -276,7 +276,7 @@ function ns.DemoDay()
       E(6000, "dungeon", { zone = fr and "Les Mortemines" or "The Deadmines" }, 35),
       E(5000, "boss", { target = "Edwin VanCleef", zone = fr and "Les Mortemines" or "The Deadmines" }, 70, "WoWScrnShot_" .. date("%m%d%y") .. "_213012.jpg"),
       E(4900, "loot_rare", { item = rare }, 12),
-      E(3000, "level", { level = 20 }, 80),
+      E(3000, "level", { level = 20 }, 80, "WoWScrnShot_" .. date("%m%d%y") .. "_221544.jpg"),
       E(2500, "rep", { faction = fr and "Hurlevent" or "Stormwind", standing = fr and "Honoré" or "Honored" }, 30),
       E(2000, "skill", { skill = fr and "Forge" or "Blacksmithing", rank = 150 }, 25),
       E(1500, "duel_win", { target = "Grosbill" }, 20),

@@ -309,13 +309,22 @@ function ns.StripCodes(s)
   return s
 end
 
+-- Majuscules qui gèrent les lettres accentuées (string.upper ne touche pas aux octets UTF-8)
+local ACCENTS = { ["é"] = "É", ["è"] = "È", ["ê"] = "Ê", ["ë"] = "Ë", ["à"] = "À", ["â"] = "Â", ["ä"] = "Ä", ["ç"] = "Ç",
+                  ["î"] = "Î", ["ï"] = "Ï", ["ô"] = "Ô", ["ö"] = "Ö", ["û"] = "Û", ["ù"] = "Ù", ["ü"] = "Ü", ["ÿ"] = "Ÿ", ["œ"] = "Œ", ["æ"] = "Æ" }
+function ns.Upper(s)
+  s = s:upper()
+  for lower, upper in pairs(ACCENTS) do s = s:gsub(lower, upper) end
+  return s
+end
+
 function ns.ToText(blocks, fmt)
   local md = fmt == "md"
   local out = {}
   local function add(s) out[#out + 1] = s end
   for _, b in ipairs(blocks) do
     local text = ns.StripCodes(b.text)
-    if b.kind == "masthead" then add(md and ("# " .. text:upper()) or (text:upper()))
+    if b.kind == "masthead" then add(md and ("# " .. ns.Upper(text)) or ns.Upper(text))
     elseif b.kind == "edition" then add(md and ("*" .. text .. "*") or text); add("")
     elseif b.kind == "headline" then add(md and ("## " .. text) or ("== " .. text .. " =="))
     elseif b.kind == "lede" then add(md and ("> " .. text) or text); add("")
