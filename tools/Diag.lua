@@ -1,6 +1,6 @@
 local ADDON, ns = ...
 
--- Diagnostic commun aux addons Forever (copié tel quel dans chaque addon par tools/sync-diag.sh) :
+-- Diagnostic commun aux addons Forever (copié tel quel dans chaque addon par tools/sync-shared.sh) :
 -- un texte à copier-coller à Claude, avec ce que le client donne vraiment (versions, sorts, objets, valeurs),
 -- pour adapter les addons à WoW Forever (base classique modifiée). Chaque addon fournit ns.DiagCollect(add).
 

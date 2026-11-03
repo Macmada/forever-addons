@@ -101,6 +101,14 @@ local function Vars(ev, d)
   v.plevel = (d and d.stats and d.stats.level) or UnitLevel("player")
   v.playtime = d and ns.FormatPlaytime(d.stats.play) or ""
   if ev.k == "death" then v.killer = KillerText(v.killer) end
+  if ev.k == "run" then
+    v.duration = ns.FormatPlaytime(v.sec or 0)
+    v.healed = ""
+    if (v.heal or 0) > 0 then
+      local n = tostring(math.floor(v.heal)):reverse():gsub("(%d%d%d)", "%1" .. (Lang() == "fr" and " " or ",")):reverse():gsub("^[ ,]", "")
+      v.healed = Fill(T().runHealed, { count = n, item = math.floor((v.over or 0) * 100 / math.max(v.heal + (v.over or 0), 1) + 0.5) })
+    end
+  end
   if v.gold then v.gold = ns.FormatGold(v.gold) end
   return v
 end

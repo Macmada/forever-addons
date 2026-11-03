@@ -17,8 +17,9 @@ dans sa sauvegarde (`WTF\Account\<compte>\<royaume>\<personnage>\SavedVariables\
    séparés par `;`).
 5. Facultatif, Discord : **Paramètres du salon → Intégrations → Webhooks → Nouveau webhook → Copier l'URL**, à mettre dans
    `webhook`.
-6. Lance-le en même temps que le jeu : `python gazette_discord.py --watch --today --weekly`
-   (raccourci, ou tâche planifiée « À l'ouverture de session »).
+6. **Démarrage automatique** : double-clique sur `installer-demarrage.bat`. Le compagnon se lance tout de suite, en fond (sans fenêtre),
+   et à chaque ouverture de session Windows ; son journal est `gazette_discord.log`. Pour annuler : `retirer-demarrage.bat`.
+   (À la main : `python gazette_discord.py --watch --today --weekly`.)
 
 ## En jeu
 

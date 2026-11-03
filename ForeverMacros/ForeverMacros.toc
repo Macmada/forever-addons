@@ -3,7 +3,7 @@
 ## Notes: Assistant de création de macros : modèles, constructeur, vérification de syntaxe.
 ## Notes-enUS: Macro creation assistant: templates, builder, syntax checking.
 ## Author: ForeverGFX
-## Version: 1.4
+## Version: 1.5
 ## SavedVariables: ForeverMacrosDB
 ## IconTexture: Interface\Icons\INV_Misc_Note_01
 ## AddonCompartmentFunc: ForeverMacros_OnCompartmentClick
@@ -15,3 +15,4 @@ Library.lua
 LibraryRetail.lua
 Tour.lua
 ForeverMacros.lua
+Hub.lua

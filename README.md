@@ -51,6 +51,7 @@ Pendant que tu joues, l'addon note les moments forts de ton personnage ; chaque 
 - **Bilan du jour** : temps de jeu, expérience, quêtes, ennemis vaincus, morts, or gagné et dépensé, zones parcourues.
 - **Photo de une** : capture d'écran automatique au moment fort (niveaux, boss, épiques ; option pour tous les grands moments ; 6 par jour au plus). L'édition donne le nom du fichier du dossier `Screenshots`.
 - **Trois tons** : *sérieux* (chronique d'aventurier), *tabloïd* (presse à scandale), *épique* (récit de barde). Changer de ton réécrit aussi les anciennes éditions.
+- **Rubrique Donjons** : chaque passage en donjon ou en raid (boss, durée, morts du groupe, tes soins et ton excédent), dans les trois tons.
 - **Sommaire** de toutes les éditions, **L'Hebdo** (les 7 derniers jours), **export** Markdown ou texte, **partage** dans le canal de guilde, de groupe ou en « Dire ».
 - **Démonstration** : `/gazette demo` affiche une édition d'exemple sans rien enregistrer.
 
@@ -67,9 +68,12 @@ Pour jouer soigneur en sachant ce que vaut chaque point : l'addon traduit les ca
 - **Infobulle des objets** : par rapport à ce que tu portes (la meilleure des deux places pour les anneaux et bijoux, l'arme + la main gauche pour une arme à deux mains), par exemple « +35 Endurance → +350 PV », « +15 Intelligence → +225 mana, +0,30 % critique », « +22 soins → +19 par Soins supérieurs », « +4 mana / 5 s → +0,80 mana/s, même en incantant », puis « Soin moyen +17 · +7,2 soins/s · autonomie +2 s (+1 085 PV soignés avant d'être à sec) ».
 - **Panneau à côté de la fiche personnage** : tes PV, mana, régénération, bonus aux soins, critique, taux de soins effectifs ; tes sorts de référence ; soins par seconde, soin moyen, autonomie ; « ce que vaut » +10 dans chaque caractéristique et la plus utile pour toi en ce moment.
 - **Annonce à chaque changement** (hors combat), à l'écran ou dans la discussion : « +30 Endurance → +360 PV ».
+- **Conseiller de rangs** : d'après ton excédent de soins réel par rang, « Soins supérieurs r4 : 38 % d'excédent → le rang 2 suffirait : −120 mana par lancer », et un bouton qui crée les macros de rang correspondantes (sur le survol, sinon la cible).
+- **Alerte de mana en combat** : « Mana : à sec dans ~14 s », d'après ta consommation réelle des 12 dernières secondes (orange, puis rouge sous 8 s).
+- **Mieux dans mes sacs ?** : les objets de tes sacs qu'un prêtre peut porter et qui amélioreraient tes soins ou ton autonomie, emplacement par emplacement.
 - **Calé sur ton personnage** : les conversions (PV par Endurance, mana par Intelligence, Intelligence pour 1 % de critique, régénération par l'Esprit) sont mesurées à chaque changement d'équipement ; les montants des sorts sont lus dans le jeu ; ton **mélange de sorts** vient de tes lancers réels (part du temps passé sur chaque sort) et l'effet de tes talents est mesuré sur tes vrais soins.
 
-Commandes : `/fheal` (panneau), `/fheal infobulle`, `/fheal annonce`, `/fheal ecran|chat`, `/fheal panneau`, `/fheal oublier`, `/fheal lang fr|en`.
+Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`, `/fheal infobulle`, `/fheal annonce`, `/fheal ecran|chat`, `/fheal panneau`, `/fheal oublier`, `/fheal lang fr|en`.
 
 ## ForeverPrep (WoW Forever)
 
@@ -87,6 +91,10 @@ Avant un donjon ou un raid, une fiche compare ce que tu as à ce qu'il faut pour
 
 Commandes : `/prep`, `/prep raid`, `/prep donjon`, `/prep role auto|tank|soigneur|physique|magique`, `/prep bouton`, `/prep minimap`, `/prep lang fr|en`, `/prep tuto`.
 
+## Icône commune « Forever »
+
+Une seule icône autour de la minicarte pour tous les addons : un clic ouvre un menu (Gazette, Prépa donjon, Soins, Macros, Graphismes). À la première connexion, elle remplace les icônes séparées. `/forever separees` remet une icône par addon, `/forever commune` revient à l'icône commune, `/forever minimap` la masque. La commande `minimap` de chaque addon réaffiche aussi son icône séparée.
+
 ## Diagnostic (pour adapter les addons à WoW Forever)
 
 Chaque addon a un **bouton « Diag »** dans la barre de titre de sa fenêtre (et une commande `diag`) qui ouvre une fenêtre avec un texte à copier (Ctrl+A puis Ctrl+C) et à coller à Claude : ce que ton client donne vraiment, pour corriger les bases d'après le jeu réel plutôt que d'après les règles classiques.
@@ -99,7 +107,7 @@ Chaque addon a un **bouton « Diag »** dans la barre de titre de sa fenêtre (e
 | `/prep diag` | chaque objet de la base (vrai nom et niveau requis, écarts signalés), objets absents, sorts de classe, consommables de tes sacs inconnus de la base, analyse actuelle |
 | `/fheal diag` | relevé du jeu et conversions mesurées, sorts de soin avec leur description brute et ce que l'addon en lit, sorts de soin du grimoire inconnus de la base, caractéristiques de chaque pièce portée |
 
-Chaque texte commence par la version du client, le numéro d'interface, la langue, le personnage et les addons chargés. Le module est commun (`tools/Diag.lua`, copié dans chaque addon par `tools/sync-diag.sh`).
+Chaque texte commence par la version du client, le numéro d'interface, la langue, le personnage et les addons chargés. Le module est commun (`tools/Diag.lua`, copié dans chaque addon par `tools/sync-shared.sh`, comme l'icône commune `tools/Hub.lua` et le tutoriel `tools/Tour.lua`).
 
 ## Compatibilité
 
@@ -114,7 +122,7 @@ Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule 
 ## Développement
 
 - `luacheck ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal` vérifie le code (lancé automatiquement à chaque push).
-- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `lua5.1 tests/prep_sim.lua fr` et `tests/heal_sim.lua` font de même pour ForeverPrep (personnages, sacs, marchand) et ForeverHeal (prêtre, objets, lancers). Lancés aussi à chaque push.
+- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `tests/prep_sim.lua`, `tests/heal_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` font de même pour les autres addons (`tests/wowmock.lua` : API WoW imitée commune). Lancés aussi à chaque push.
 - Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les archives à la release (ForeverMacros, ForeverGazette et ForeverPrep gardent le numéro de leur TOC).
 
 ---

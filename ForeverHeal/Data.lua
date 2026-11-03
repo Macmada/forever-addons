@@ -51,3 +51,11 @@ D.slots = {
   INVTYPE_WEAPONOFFHAND = { 17 }, INVTYPE_HOLDABLE = { 17 }, INVTYPE_SHIELD = { 17 },
   INVTYPE_RANGED = { 18 }, INVTYPE_RANGEDRIGHT = { 18 }, INVTYPE_THROWN = { 18 }, INVTYPE_RELIC = { 18 },
 }
+
+-- Familles où lancer un rang inférieur a du sens (soins directs sur une cible) et nom court des macros
+D.downrank = { greater = "SoinsSup", heal = "Soins", flash = "Rapides", lesser = "SoinInf" }
+
+-- Ce qu'un prêtre peut porter : armures (classe 4) en tissu ou divers (bijoux, anneaux, colliers),
+-- armes (classe 2) : dague, masse à une main, bâton, baguette
+D.priestArmor = { [0] = true, [1] = true }
+D.priestWeapons = { [4] = true, [10] = true, [15] = true, [19] = true }

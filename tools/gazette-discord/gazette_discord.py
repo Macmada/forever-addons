@@ -33,7 +33,7 @@ import uuid
 HERE = os.path.dirname(os.path.abspath(__file__))
 CHUNK = 1900                      # limite Discord : 2 000 caractères par message
 MAX_FILE = 9 * 1024 * 1024        # limite des pièces jointes d'un webhook (10 Mo), avec marge
-USER_AGENT = "ForeverGazette-Discord (https://github.com/Macmada/forever-addons, 1.2)"
+USER_AGENT = "ForeverGazette-Discord (https://github.com/Macmada/forever-addons, 1.3)"
 
 try:
     sys.path.insert(0, HERE)
@@ -442,7 +442,10 @@ def main():
     ap.add_argument("--weekly", action="store_true", help="poste aussi l'Hebdo (une fois par jour)")
     ap.add_argument("--watch", action="store_true", help="vérifie toutes les minutes (à laisser tourner)")
     ap.add_argument("--dry-run", action="store_true", help="affiche sans rien envoyer")
+    ap.add_argument("--log", help="écrit les messages dans ce fichier (lancement sans fenêtre, au démarrage de Windows)")
     args = ap.parse_args()
+    if args.log:
+        sys.stdout = sys.stderr = open(args.log, "a", encoding="utf-8", buffering=1)
     cfg = load_config(args.config)
     if not gazette_render:
         print("Pillow n'est pas installé : pas de PDF ni d'image, texte seul. Pour l'installer : python -m pip install pillow", flush=True)

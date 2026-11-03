@@ -60,9 +60,10 @@ _G.UnitArmor = function() return P.armor, P.armor end
 _G.UnitResistance = function() return 0, 0 end
 _G.UnitGUID = function() return "Player-1" end
 _G.InCombatLockdown = function() return P.combat end
-local KNOWN = { [10963] = true, [10916] = true, [10928] = true, [10960] = true }
+local KNOWN = { [2060] = true, [10963] = true, [10916] = true, [10928] = true, [10960] = true }
 _G.IsSpellKnown = function(id) return KNOWN[id] == true end
 local SPELLS = {
+  [2060] = { "Soins supérieurs", 3000, 314, "Rend de 899 à 1013 points de vie à une cible alliée." },
   [10963] = { "Soins supérieurs", 3000, 370, "Rend de 1166 à 1314 points de vie à une cible alliée." },
   [10916] = { "Soins rapides", 1500, 300, "Rend de 652 à 799 points de vie à une cible alliée." },
   [10928] = { "Rénovation", 0, 280, "Rend 700 points de vie à la cible en 15 sec." },
@@ -78,10 +79,22 @@ local ITEMS = {
                    "Équipé : Rend 4 points de mana toutes les 5 sec." } },
   old = { loc = "INVTYPE_CHEST", stats = { ITEM_MOD_STAMINA_SHORT = 10, RESISTANCE0_NAME = 120 }, tip = { "Vieille tunique" } },
   ring = { loc = "INVTYPE_FINGER", stats = { ITEM_MOD_SPIRIT_SHORT = 12 }, tip = { "Anneau d'esprit" } },
+  plate = { loc = "INVTYPE_CHEST", cls = 4, sub = 4, stats = { ITEM_MOD_STAMINA_SHORT = 60, ITEM_MOD_INTELLECT_SHORT = 30 }, tip = { "Cuirasse" } },
 }
 P.gear[5] = "item:old"
 _G.GetInventoryItemLink = function(_, slot) return P.gear[slot] end
-_G.GetItemInfoInstant = function(link) local it = ITEMS[link:match("item:(%w+)")]; return 1, "", "", it and it.loc end
+_G.GetItemInfoInstant = function(link) local it = ITEMS[link:match("item:(%w+)")]; return 1, "", "", it and it.loc, "icon", it and (it.cls or 4), it and (it.sub or 1) end
+_G.GetItemInfo = function() return "x", "l", 3, 50, 45 end
+P.bags = { "item:robe", "item:plate" }
+_G.GetContainerNumSlots = function(bag) return bag == 0 and #P.bags or 0 end
+_G.GetContainerItemLink = function(bag, slot) return bag == 0 and P.bags[slot] or nil end
+P.manaCur = 4000
+_G.UnitPower = function() return P.manaCur end
+_G.GetSpellSubtext = function(id) return ({ [2060] = "Rang 1", [10963] = "Rang 2" })[id] end
+local MACROS = {}
+_G.GetMacroIndexByName = function(n) for i, m in ipairs(MACROS) do if m.name == n then return i end end return 0 end
+_G.CreateMacro = function(n, _, body) MACROS[#MACROS + 1] = { name = n, body = body }; return #MACROS end
+_G.EditMacro = function(i, n, _, body) MACROS[i] = { name = n, body = body } end
 _G.GetItemStats = function(link) local it = ITEMS[link:match("item:(%w+)")]; local t = {}; for k, v in pairs(it and it.stats or {}) do t[k] = v end; return t end
 local scanLines = {}
 local function SetTipLines(tt, key)
@@ -205,6 +218,41 @@ if os.getenv("SHOW_DIAG") then print(diagText) end
 check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, true), "diagnostic : texte complet, sans erreur (" .. #diagText .. " caractères)")
 if os.getenv("SHOW_DIAG") then print(diagText) end
 SlashCmdList["FOREVERHEAL"]("diag")
+-- 8. conseiller de rangs : Soins supérieurs r2 avec beaucoup d'excédent -> le r1 suffit
+for _ = 1, 60 do
+  _G.CombatLogGetCurrentEventInfo = function() return 0, "SPELL_HEAL", false, "Player-1", "", 0, 0, "x", "", 0, 0, 10963, "", 2, 1500, 1100, 0, false end
+  Fire("COMBAT_LOG_EVENT_UNFILTERED")
+end
+local adv
+for _, a in ipairs(ns.RankAdvice()) do if a.family == "greater" then adv = a end end
+check(adv and adv.better and adv.better.rank == 1 and adv.saving == 56, "conseil : Soins supérieurs r2 avec beaucoup d'excédent -> rang 1 suffit, −56 mana")
+check(strip(ns.PanelText()):find("le rang 1", 1, true) or strip(ns.PanelText()):find("rank 1", 1, true), "conseil affiché dans le panneau")
+ns.MakeMacros()
+check(MACROS[1] and MACROS[1].name == "SoinsSup 1" and MACROS[1].body:find("Soins supérieurs(Rang 1)", 1, true), "macro de rang créée : " .. tostring(MACROS[1] and MACROS[1].body))
+ns.MakeMacros()
+check(#MACROS == 1, "second clic : macro mise à jour, pas de doublon")
+-- 9. objets des sacs : la robe (tissu) oui, la cuirasse (plaques) non
+local ups = ns.BagUpgrades()
+check(#ups == 1 and ups[1].link == "item:robe", "meilleurs objets des sacs : robe proposée, plaques ignorées")
+check(strip(ns.UpgradesText()):find("item:robe", 1, true), "liste des objets des sacs affichée")
+-- 10. alerte de mana en combat
+P.combat = true
+Fire("PLAYER_REGEN_DISABLED")
+for i = 0, 10 do
+  clock = clock + 1
+  P.manaCur = 1500 - i * 100
+  Fire("UNIT_POWER_FREQUENT", "player", "MANA")
+end
+check(ns.ManaTimeLeft() and ns.ManaTimeLeft() < 10, "alerte de mana : à sec dans ~" .. math.floor(ns.ManaTimeLeft() or -1) .. " s")
+check(_G.ForeverHealManaAlert and _G.ForeverHealManaAlert.shown, "alerte affichée à l'écran en combat")
+P.combat = false
+Fire("PLAYER_REGEN_ENABLED")
+check(not _G.ForeverHealManaAlert.shown, "alerte masquée après le combat")
+-- 11. cache des infobulles
+local before = ns.tooltipStats.computed
+GameTooltip.link = "item:robe"; GameTooltip.lines = {}; ns.OnTooltipItem(GameTooltip)
+GameTooltip.lines = {}; ns.OnTooltipItem(GameTooltip)
+check(ns.tooltipStats.computed == before + 1 and ns.tooltipStats.cached >= 1, "infobulle : calculée une fois, puis reprise du cache")
 ns.lastDiag = nil
 local dbtn = ns.panel and ns.panel.diagBtn
 check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")

@@ -1,5 +1,13 @@
 # Journal des versions
 
+## ForeverGFX 2.2.0 / ForeverMacros 1.5 / ForeverGazette 1.4 / ForeverPrep 1.2 / ForeverHeal 1.2
+- **Icône commune « Forever »** autour de la minicarte : un clic ouvre le menu des cinq addons ; elle remplace les icônes séparées à la première connexion (`/forever separees` pour les remettre, `/forever commune` pour revenir).
+- ForeverHeal : **conseiller de rangs** (excédent mesuré par rang, rang inférieur qui suffirait, mana économisée, création des macros de rang en un clic) ; **alerte de mana en combat** (« à sec dans ~14 s ») ; **meilleurs objets de tes sacs** (tissu, dague, masse, bâton, baguette) ; panneau défilant ; infobulles mémorisées (recalculées seulement quand tes caractéristiques, ton équipement ou tes sorts changent).
+- ForeverGazette : **rubrique Donjons** (boss, durée, morts du groupe, tes soins et ton excédent), suivie de l'entrée à la sortie, même après un /reload.
+- ForeverPrep : analyses regroupées (au plus une toutes les 2,5 s) et suspendues en combat.
+- Compagnon 1.3 : **démarrage automatique sous Windows** (`installer-demarrage.bat` / `retirer-demarrage.bat`, journal dans un fichier).
+- Publication : notes de version tirées de ce journal ; modules communs (`tools/Diag.lua`, `Hub.lua`, `Tour.lua`) ; simulations de ForeverGFX et ForeverMacros, les cinq addons testés à chaque push.
+
 ## ForeverGFX 2.1.9 / ForeverMacros 1.4 / ForeverGazette 1.3 / ForeverPrep 1.1 / ForeverHeal 1.1
 - **Commande de diagnostic dans tous les addons** (`/gfx diag`, `/fmac diag`, `/gazette diag`, `/prep diag`, `/fheal diag`) : un texte à copier-coller à Claude avec ce que le client WoW Forever donne vraiment (versions, variables, sorts, objets, textes du jeu, valeurs mesurées), pour adapter les addons à cette base classique modifiée. Module commun `tools/Diag.lua`. **Bouton « Diag »** dans la barre de titre de chaque fenêtre (à gauche du « ? »), pour lancer le diagnostic sans commande écrite.
 

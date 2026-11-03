@@ -96,22 +96,42 @@ end
 ----------------------------------------------------------------------
 -- Infobulles des objets
 ----------------------------------------------------------------------
-local function OnTooltipItem(tt)
-  if not ns.db or not ns.db.tooltip or tt == _G.ForeverHealScanTip then return end
-  local _, link = tt:GetItem()
-  if not link then return end
+-- Résultats mémorisés par objet ; effacés quand tes caractéristiques, ton équipement ou ton mélange de sorts changent
+local cache, cacheN = {}, 0
+ns.tooltipStats = { computed = 0, cached = 0 }
+
+local function Compute(link)
   local ok, cmp = pcall(ns.CompareItem, link)
-  if not ok or not cmp then return end
+  if not ok or not cmp then return false end
   local S = ns.Snapshot()
   local rates = ns.Rates(S)
   local lines = ns.ConversionLines(cmp.d, S, rates, ns.Mix())
   local res = ns.ResultLine(cmp.before, cmp.after)
-  if #lines == 0 and not res then return end
-  tt:AddLine(" ")
+  if #lines == 0 and not res then return false end
   local equipped = GetInventoryItemLink("player", cmp.slot)
-  tt:AddLine(equipped and string.format(L.vs, equipped) or L.vsEmpty, 0.5, 1, 0.67)
-  for _, l in ipairs(lines) do tt:AddLine(l, 1, 1, 1, true) end
-  if res then tt:AddLine(res, 1, 1, 1, true) end
+  return { header = equipped and string.format(L.vs, equipped) or L.vsEmpty, lines = lines, res = res }
+end
+
+local function OnTooltipItem(tt)
+  if not ns.db or not ns.db.tooltip or tt == _G.ForeverHealScanTip then return end
+  local _, link = tt:GetItem()
+  if not link then return end
+  local key = link .. "#" .. tostring(ns.statVersion or 0)
+  local entry = cache[key]
+  if entry == nil then
+    entry = Compute(link)
+    if cacheN >= 300 then wipe(cache); cacheN = 0 end
+    cache[key] = entry
+    cacheN = cacheN + 1
+    ns.tooltipStats.computed = ns.tooltipStats.computed + 1
+  else
+    ns.tooltipStats.cached = ns.tooltipStats.cached + 1
+  end
+  if not entry then return end
+  tt:AddLine(" ")
+  tt:AddLine(entry.header, 0.5, 1, 0.67)
+  for _, l in ipairs(entry.lines) do tt:AddLine(l, 1, 1, 1, true) end
+  if entry.res then tt:AddLine(entry.res, 1, 1, 1, true) end
   tt:Show()
 end
 ns.OnTooltipItem = OnTooltipItem
@@ -193,7 +213,7 @@ local function CreatePanel()
   if panel then return panel end
   panel = CreateFrame("Frame", "ForeverHealPanel", UIParent, "BasicFrameTemplateWithInset")
   ns.panel = panel
-  panel:SetSize(420, 470)
+  panel:SetSize(420, 560)
   panel:SetPoint("CENTER")
   panel:SetFrameStrata("HIGH")
   panel:SetMovable(true)
@@ -206,9 +226,16 @@ local function CreatePanel()
   title:SetPoint("TOPLEFT", 12, -6)
   title:SetText(L.panelTitle)
   panel.diagBtn = ns.MakeDiagButton(panel)
-  panel.text = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  panel.text:SetPoint("TOPLEFT", 14, -32)
-  panel.text:SetWidth(392)
+  local sf = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+  sf:SetPoint("TOPLEFT", 10, -30)
+  sf:SetPoint("BOTTOMRIGHT", -30, 66)
+  local child = CreateFrame("Frame", nil, sf)
+  child:SetSize(370, 10)
+  sf:SetScrollChild(child)
+  panel.child = child
+  panel.text = child:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  panel.text:SetPoint("TOPLEFT", 4, -2)
+  panel.text:SetWidth(362)
   panel.text:SetJustifyH("LEFT")
   panel.text:SetJustifyV("TOP")
   panel.text:SetSpacing(2)
@@ -228,6 +255,21 @@ local function CreatePanel()
     ns.db.announceWhere = (ns.db.announceWhere == "screen") and "chat" or "screen"
     self:SetText(string.format(L.optWhere, L["where_" .. ns.db.announceWhere]))
   end)
+  local macros = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+  macros:SetSize(190, 22)
+  macros:SetPoint("BOTTOMLEFT", 12, 36)
+  macros:SetText(L.btnMacros)
+  macros:SetScript("OnClick", function() ns.MakeMacros() end)
+  local up = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+  up:SetSize(190, 22)
+  up:SetPoint("BOTTOMRIGHT", -12, 36)
+  up:SetText(L.btnUpgrades)
+  up:SetScript("OnClick", function(self)
+    panel.mode = (panel.mode == "upgrades") and nil or "upgrades"
+    self:SetText(panel.mode == "upgrades" and L.btnBack or L.btnUpgrades)
+    ns.RefreshPanel()
+  end)
+  panel.upBtn = up
   panel:SetScript("OnShow", function() ns.RefreshPanel() end)
   return panel
 end
@@ -260,6 +302,20 @@ function ns.PanelText()
   add(string.format(L.p_perCast, Fmt(M.perCast)))
   add(string.format(L.p_oom, Duration(M.oom)) .. (M.healedBeforeOom and (" — " .. string.format(L.p_oomTotal, Fmt(M.healedBeforeOom))) or ""))
   add("")
+  add(H(L.p_ranks))
+  local advice = ns.RankAdvice()
+  if #advice == 0 then add(GREY .. L.p_rankNone .. "|r") end
+  for _, a in ipairs(advice) do
+    local label = (a.model and a.model.name or a.family) .. " r" .. a.rank
+    if a.better then
+      add(string.format(L.p_rankAdvice, label, Fmt(a.overPct * 100), Fmt(a.useful), a.better.rank, Fmt(a.betterNormal), a.saving))
+    elseif a.overPct >= 0.15 then
+      add(string.format(L.p_rankKeep, label, Fmt(a.overPct * 100), Fmt(a.useful)))
+    else
+      add(string.format(L.p_rankOk, label, Fmt(a.overPct * 100)))
+    end
+  end
+  add("")
   add(H(L.p_worth))
   local gains = {
     { "+10 " .. L.sta, { sta = 10 } }, { "+10 " .. L.int, { int = 10 } }, { "+10 " .. L.spi, { spi = 10 } },
@@ -285,9 +341,50 @@ function ns.PanelText()
   return table.concat(out, "\n")
 end
 
+function ns.UpgradesText()
+  local out = { H(L.upTitle), "" }
+  local list = ns.BagUpgrades()
+  if #list == 0 then out[#out + 1] = L.upNone end
+  for _, u in ipairs(list) do
+    local cur = GetInventoryItemLink("player", u.slot)
+    out[#out + 1] = string.format(L.upLine, u.link, cur or L.upEmpty, Signed(u.hps, 1), Signed(u.healed))
+  end
+  return table.concat(out, "\n")
+end
+
 function ns.RefreshPanel()
   if not panel or not panel:IsShown() then return end
-  panel.text:SetText(ns.PanelText())
+  if panel.mode == "upgrades" then panel.text:SetText(ns.UpgradesText()) else panel.text:SetText(ns.PanelText()) end
+  panel.child:SetHeight((panel.text:GetStringHeight() or 400) + 8)
+end
+
+function ns.MakeMacros()
+  local n, why = ns.CreateRankMacros()
+  if why == "combat" then return Print(L.macrosCombat) end
+  if why == "full" then Print(L.macrosFull) end
+  Print(n > 0 and string.format(L.macrosDone, n) or L.macrosNone)
+end
+
+local alert
+function ns.UpdateManaAlert()
+  if not ns.db.manaAlert or select(2, UnitClass("player")) ~= "PRIEST" then if alert then alert:Hide() end return end
+  local left = InCombatLockdown() and ns.ManaTimeLeft()
+  local pct = UnitPower("player", 0) / math.max(UnitPowerMax("player", 0), 1)
+  if not left or left > ns.db.manaAlertSeconds or pct > 0.6 then
+    if alert then alert:Hide() end
+    return
+  end
+  if not alert then
+    alert = CreateFrame("Frame", "ForeverHealManaAlert", UIParent)
+    alert:SetSize(400, 40)
+    alert:SetPoint("CENTER", 0, -120)
+    alert.text = alert:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
+    alert.text:SetPoint("CENTER")
+  end
+  alert.text:SetText(string.format(L.manaAlert, math.floor(left + 0.5)))
+  if left <= 8 then alert.text:SetTextColor(1, 0.25, 0.25) else alert.text:SetTextColor(1, 0.65, 0.1) end
+  alert:Show()
+  ns.alertShown = true
 end
 
 local function AttachToCharacterFrame()
@@ -335,6 +432,12 @@ SlashCmdList.FOREVERHEAL = function(msg)
     ns.db.announce = not ns.db.announce; Print(L.optAnnounce .. " : " .. (ns.db.announce and L.on or L.off))
   elseif cmd == "ecran" or cmd == "écran" or cmd == "screen" then ns.db.announceWhere = "screen"; Print(string.format(L.optWhere, L.where_screen))
   elseif cmd == "diag" then ns.ShowDiag()
+  elseif cmd == "alerte" or cmd == "alert" then
+    ns.db.manaAlert = not ns.db.manaAlert; Print(L.optManaAlert .. " : " .. (ns.db.manaAlert and L.on or L.off))
+  elseif cmd == "macros" then ns.MakeMacros()
+  elseif cmd == "sacs" or cmd == "bags" then
+    CreatePanel(); panel.mode = "upgrades"; panel.upBtn:SetText(L.btnBack)
+    if not panel:IsShown() then panel:ClearAllPoints(); panel:SetPoint("CENTER"); panel:Show() else ns.RefreshPanel() end
   elseif cmd == "chat" then ns.db.announceWhere = "chat"; Print(string.format(L.optWhere, L.where_chat))
   elseif cmd == "panneau" or cmd == "panel" then
     ns.db.panel = not ns.db.panel; Print(L.optPanel .. " : " .. (ns.db.panel and L.on or L.off))

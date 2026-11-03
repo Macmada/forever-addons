@@ -351,6 +351,8 @@ function ns.OnCast(spellID)
   -- poids dégressif : les 300 derniers lancers comptent le plus
   for _, other in pairs(db.usage) do other.casts = other.casts * 0.997 end
   u.casts = u.casts + 1
+  ns.castsSinceVersion = (ns.castsSinceVersion or 0) + 1
+  if ns.castsSinceVersion >= 10 then ns.castsSinceVersion = 0; ns.statVersion = (ns.statVersion or 0) + 1 end
 end
 
 function ns.OnHeal(spellID, amount, overheal, crit, periodic)
@@ -358,6 +360,13 @@ function ns.OnHeal(spellID, amount, overheal, crit, periodic)
   if not f or not db then return end
   db.effective.total = db.effective.total + (amount or 0)
   db.effective.over = db.effective.over + (overheal or 0)
+  if D.downrank[f.family] and not periodic then
+    local r = db.ranks[spellID] or { n = 0, amount = 0, over = 0 }
+    db.ranks[spellID] = r
+    -- moyenne glissante sur les ~100 derniers soins de ce rang
+    if r.n >= 100 then r.amount, r.over, r.n = r.amount * 0.99, r.over * 0.99, r.n * 0.99 end
+    r.n, r.amount, r.over = r.n + 1, r.amount + (amount or 0), r.over + (overheal or 0)
+  end
   -- correction des talents : montant réel non critique / montant prévu (soins directs seulement)
   if crit or periodic then return end
   local sp = ns.SpellModel(f.family, f.rank)
@@ -372,6 +381,136 @@ function ns.OnHeal(spellID, amount, overheal, crit, periodic)
 end
 
 ----------------------------------------------------------------------
+-- Conseiller de rangs : rang inférieur qui couvrirait le soin réellement utile, mana économisée
+----------------------------------------------------------------------
+function ns.RankAdvice()
+  local out = {}
+  local S = ns.Snapshot()
+  for family in pairs(D.downrank) do
+    local ranks = D.families[family].ranks
+    -- rang le plus utilisé (au moins 10 soins observés)
+    local used, usedIdx
+    for i, r in ipairs(ranks) do
+      local st = db.ranks[r[1]]
+      if st and st.n >= 10 and (not used or st.n > used.n) then used, usedIdx = st, i end
+    end
+    if used then
+      local cur = ns.SpellModel(family, usedIdx)
+      local useful = (used.amount - used.over) / used.n
+      local overPct = used.over / math.max(used.amount, 1)
+      local adv = { family = family, rank = usedIdx, model = cur, useful = useful, overPct = overPct, n = used.n }
+      if cur and overPct >= 0.15 then
+        for k = 1, usedIdx - 1 do
+          if Known(ranks[k][1]) then
+            local m = ns.SpellModel(family, k)
+            if m then
+              local normal = (m.base + m.coef * S.heal) * m.mult
+              if normal >= useful * 1.05 and m.cost < cur.cost then
+                adv.better, adv.betterNormal, adv.saving = m, normal, cur.cost - m.cost
+                break
+              end
+            end
+          end
+        end
+      end
+      out[#out + 1] = adv
+    end
+  end
+  table.sort(out, function(a, b) return a.n > b.n end)
+  return out
+end
+
+-- Texte de rang pour /cast (« Rang 2 » / « Rank 2 », donné par le jeu)
+local function RankText(id)
+  local sub
+  if C_Spell and C_Spell.GetSpellSubtext then sub = C_Spell.GetSpellSubtext(id) elseif GetSpellSubtext then sub = GetSpellSubtext(id) end
+  return sub
+end
+
+-- Crée ou met à jour une macro par conseil (sur le survol, sinon la cible) ; hors combat seulement
+function ns.CreateRankMacros()
+  if InCombatLockdown() then return 0, "combat" end
+  local made = 0
+  for _, a in ipairs(ns.RankAdvice()) do
+    if a.better then
+      local rank = RankText(a.better.id)
+      local spell = a.better.name .. (rank and rank ~= "" and ("(" .. rank .. ")") or "")
+      local name = (D.downrank[a.family] .. " " .. a.better.rank):sub(1, 16)
+      local body = "#showtooltip\n/cast [@mouseover,help,nodead][] " .. spell
+      local idx = GetMacroIndexByName(name)
+      if idx and idx > 0 then
+        EditMacro(idx, name, nil, body)
+      else
+        local ok = pcall(CreateMacro, name, "INV_MISC_QUESTIONMARK", body, true)
+        if not ok then return made, "full" end
+      end
+      made = made + 1
+    end
+  end
+  return made
+end
+
+----------------------------------------------------------------------
+-- Meilleurs objets de tes sacs (prêtre : tissu, dague, masse à une main, bâton, baguette)
+----------------------------------------------------------------------
+local function Wearable(link)
+  local inst = (C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant
+  local _, _, _, equipLoc, _, classID, subID = inst(link)
+  if not equipLoc or not D.slots[equipLoc] then return false end
+  local info = (C_Item and C_Item.GetItemInfo) or GetItemInfo
+  local minLevel = select(5, info(link))
+  if minLevel and minLevel > UnitLevel("player") then return false end
+  if classID == 4 then return D.priestArmor[subID] == true end
+  if classID == 2 then return D.priestWeapons[subID] == true end
+  return false
+end
+ns.Wearable = Wearable
+
+function ns.BagUpgrades()
+  local best = {}
+  for bag = 0, 4 do
+    local slots = (C_Container and C_Container.GetContainerNumSlots) and C_Container.GetContainerNumSlots(bag)
+                  or (GetContainerNumSlots and GetContainerNumSlots(bag)) or 0
+    for slot = 1, slots do
+      local link = (C_Container and C_Container.GetContainerItemLink) and C_Container.GetContainerItemLink(bag, slot)
+                   or (GetContainerItemLink and GetContainerItemLink(bag, slot))
+      if link and Wearable(link) then
+        local cmp = ns.CompareItem(link)
+        if cmp then
+          local hps = cmp.after.hps - cmp.before.hps
+          local healed = (cmp.after.healedBeforeOom or 0) - (cmp.before.healedBeforeOom or 0)
+          local score = hps * 30 + healed / 100 + (cmp.d.sta or 0) * 0.05
+          if score > 0.5 and (not best[cmp.slot] or score > best[cmp.slot].score) then
+            best[cmp.slot] = { link = link, slot = cmp.slot, hps = hps, healed = healed, d = cmp.d, score = score, cmp = cmp }
+          end
+        end
+      end
+    end
+  end
+  local list = {}
+  for _, v in pairs(best) do list[#list + 1] = v end
+  table.sort(list, function(a, b) return a.score > b.score end)
+  return list
+end
+
+----------------------------------------------------------------------
+-- Alerte de mana en combat : consommation nette des 12 dernières secondes
+----------------------------------------------------------------------
+local samples = {}
+function ns.ManaSample(now, mana)
+  samples[#samples + 1] = { t = now, m = mana }
+  while samples[1] and now - samples[1].t > 12 do table.remove(samples, 1) end
+end
+function ns.ManaTimeLeft()
+  local first, lastS = samples[1], samples[#samples]
+  if not first or not lastS or lastS.t - first.t < 4 then return nil end
+  local rate = (first.m - lastS.m) / (lastS.t - first.t)      -- mana perdue par seconde (régénération comprise)
+  if rate <= 0 then return nil end
+  return lastS.m / rate
+end
+function ns.ManaReset() wipe(samples) end
+
+----------------------------------------------------------------------
 -- Base, événements
 ----------------------------------------------------------------------
 local function InitDB()
@@ -383,6 +522,9 @@ local function InitDB()
   db.usage = db.usage or {}
   db.mult = db.mult or {}
   db.effective = db.effective or { total = 0, over = 0 }
+  db.ranks = db.ranks or {}
+  if db.manaAlert == nil then db.manaAlert = true end
+  db.manaAlertSeconds = db.manaAlertSeconds or 20
   if db.tooltip == nil then db.tooltip = true end
   if db.panel == nil then db.panel = true end
   if db.announce == nil then db.announce = true end
@@ -410,6 +552,7 @@ local function StatsChanged()
       if ns.Announce then ns.Announce(last, now) end
     end
     ns.equipChanged = nil
+    ns.statVersion = (ns.statVersion or 0) + 1          -- infobulles à recalculer
     if not InCombatLockdown() then last = now end
     if ns.RefreshPanel then ns.RefreshPanel() end
   end)
@@ -425,7 +568,17 @@ handlers.PLAYER_EQUIPMENT_CHANGED = function() ns.equipChanged = true; StatsChan
 handlers.UNIT_STATS = function(unit) if unit == "player" then StatsChanged() end end
 handlers.UNIT_MAXHEALTH = handlers.UNIT_STATS
 handlers.UNIT_MAXPOWER = handlers.UNIT_STATS
-handlers.PLAYER_REGEN_ENABLED = function() last = ns.Snapshot() end   -- après un combat : nouvelle base, sans annonce
+handlers.PLAYER_REGEN_ENABLED = function()        -- après un combat : nouvelle base, sans annonce
+  last = ns.Snapshot()
+  ns.ManaReset()
+  if ns.UpdateManaAlert then ns.UpdateManaAlert() end
+end
+handlers.PLAYER_REGEN_DISABLED = function() ns.ManaReset() end
+handlers.UNIT_POWER_FREQUENT = function(unit, kind)
+  if unit ~= "player" or (kind and kind ~= "MANA") or not InCombatLockdown() then return end
+  ns.ManaSample(GetTime(), UnitPower("player", 0))
+  if ns.UpdateManaAlert then ns.UpdateManaAlert() end
+end
 handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, function() last = ns.Snapshot() end) end
 handlers.UNIT_SPELLCAST_SUCCEEDED = function(unit, _, spellID) if unit == "player" then ns.OnCast(spellID) end end
 handlers.COMBAT_LOG_EVENT_UNFILTERED = function()

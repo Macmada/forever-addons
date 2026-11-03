@@ -20,7 +20,7 @@ local SCORE = {
   level = 50, levelmax = 100, boss = 70, rare = 40, dungeon = 35, zone = 15,
   loot_legendary = 100, loot_epic = 60, loot_rare = 12, death = 25, pvp = 15,
   duel_win = 20, duel_loss = 10, rep = 30, skill = 25, recipe = 5, money = 30,
-  achievement = 25, quest = 3,
+  achievement = 25, quest = 3, run = 30,
 }
 ns.SCORE = SCORE
 local SHOT_MIN, SHOT_MIN_ALL = 60, 35     -- score à partir duquel une photo est prise
@@ -192,6 +192,11 @@ end
 -- kind : type (voir SCORE) ; v : variables de l'article ; key : anti-doublon ; bonus : ajouté au score.
 function ns.Record(kind, v, key, bonus)
   if not db then return end
+  if kind == "boss" and db.run and v and v.target then
+    local seen = false
+    for _, b in ipairs(db.run.bosses) do if b == v.target then seen = true end end
+    if not seen then table.insert(db.run.bosses, v.target) end
+  end
   key = kind .. ":" .. tostring(key or "")
   local now = GetTime()
   if recent[key] and now - recent[key] < 30 then return end
@@ -259,11 +264,28 @@ end
 ----------------------------------------------------------------------
 -- Zones et donjons
 ----------------------------------------------------------------------
+-- Passage en donjon / raid : suivi de l'entrée à la sortie (gardé dans la base, résiste à un /reload)
+local function FinishRun()
+  local run = db.run
+  if not run then return end
+  db.run = nil
+  local sec = time() - run.start
+  if sec < 120 and #run.bosses == 0 then return end
+  ns.Record("run", { zone = run.zone, sec = sec, bosses = #run.bosses, deaths = run.deaths, heal = run.heal, over = run.over },
+            run.zone .. run.start, #run.bosses * 10 + (run.raid and 20 or 0))
+end
+ns.FinishRun = FinishRun
+
 local function OnZone(silent)
   local zone = GetRealZoneText()
   if not zone or zone == "" then return end
-  Day().stats.zones[zone] = true
   local inInstance, itype = IsInInstance()
+  local dungeon = inInstance and (itype == "party" or itype == "raid")
+  if db.run and (not dungeon or db.run.zone ~= zone) then FinishRun() end
+  if dungeon and not db.run then
+    db.run = { zone = zone, start = time(), bosses = {}, deaths = 0, heal = 0, over = 0, raid = itype == "raid" }
+  end
+  Day().stats.zones[zone] = true
   if inInstance and (itype == "party" or itype == "raid" or itype == "scenario") then
     if not db.seen.instances[zone] then
       db.seen.instances[zone] = true
@@ -303,11 +325,21 @@ local ENV_KEYS = { Falling = "@fall", Drowning = "@drown", Fatigue = "@fatigue",
                    FALLING = "@fall", DROWNING = "@drown", FATIGUE = "@fatigue", FIRE = "@fire", LAVA = "@lava", SLIME = "@slime" }
 
 local function OnCombatLog(...)
-  local _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, _, _, p12 = ...
+  local _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _, p12 = ...
   if CombatLogGetCurrentEventInfo then
-    _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, _, _, p12 = CombatLogGetCurrentEventInfo()
+    _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _, p12 = CombatLogGetCurrentEventInfo()
   end
   if not sub then return end
+  if db.run then
+    if (sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL") and srcGUID == playerGUID then
+      local amount, over = select(15, ...), select(16, ...)
+      if CombatLogGetCurrentEventInfo then amount, over = select(15, CombatLogGetCurrentEventInfo()), select(16, CombatLogGetCurrentEventInfo()) end
+      db.run.heal = db.run.heal + math.max((amount or 0) - (over or 0), 0)
+      db.run.over = db.run.over + (over or 0)
+    elseif sub == "UNIT_DIED" and dstGUID and dstGUID:find("^Player") and (dstGUID == playerGUID or Group(dstFlags)) then
+      db.run.deaths = db.run.deaths + 1
+    end
+  end
   if dstGUID == playerGUID then
     if sub == "ENVIRONMENTAL_DAMAGE" then
       lastHit = { name = ENV_KEYS[p12] or "@unknown", t = GetTime() }

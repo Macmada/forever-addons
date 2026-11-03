@@ -1409,3 +1409,7 @@ function ns.DiagCollect(add)
   local g, c = GetNumMacros()
   add(string.format("Macros : %d générales, %d du personnage", g or 0, c or 0))
 end
+
+-- Pour les tests hors jeu (tests/macros_sim.lua)
+ns._BackupAll = function() return BackupAll() end
+ns._RestoreFrom = function(text) return RestoreFrom(text) end

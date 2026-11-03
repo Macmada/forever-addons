@@ -420,15 +420,20 @@ function ns.AutoShow(reason, key)
 end
 
 local refreshPending
+-- Analyse regroupée : au plus une fois toutes les 2,5 s, jamais en combat (reprise à la sortie du combat)
+local deferredByCombat = false
 local function SoonRefresh()
   if refreshPending or not ns.Refresh then return end
+  if InCombatLockdown and InCombatLockdown() then deferredByCombat = true return end
   refreshPending = true
-  C_Timer.After(0.5, function()
+  C_Timer.After(2.5, function()
     refreshPending = nil
+    if InCombatLockdown and InCombatLockdown() then deferredByCombat = true return end
     ns.Refresh()
     if ns.UpdateFloat then ns.UpdateFloat() end
   end)
 end
+ns.SoonRefresh = SoonRefresh
 handlers.PLAYER_ENTERING_WORLD = function()
   local inInstance, itype = IsInInstance()
   if db.autoInstance and inInstance and (itype == "party" or itype == "raid") then
@@ -451,6 +456,9 @@ handlers.GROUP_ROSTER_UPDATE = function() SoonRefresh() end
 handlers.MERCHANT_SHOW = function() if db.merchant and ns.OnMerchant then ns.OnMerchant() end end
 handlers.MERCHANT_CLOSED = function() if ns.OnMerchantClosed then ns.OnMerchantClosed() end end
 handlers.BAG_UPDATE_DELAYED = SoonRefresh
+handlers.PLAYER_REGEN_ENABLED = function()
+  if deferredByCombat then deferredByCombat = false; SoonRefresh() end
+end
 handlers.UNIT_AURA = function(unit) if unit == "player" then SoonRefresh() end end
 handlers.GET_ITEM_INFO_RECEIVED = function(id)
   if id and pendingItems[id] then pendingItems[id] = nil; SoonRefresh() end

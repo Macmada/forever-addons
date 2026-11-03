@@ -19,9 +19,10 @@ T.fr = {
     epic = "La Geste hebdomadaire de {name}",
   },
   edition = "Édition n° {count} — {date}",
+  runHealed = " ; {count} PV soignés ({item} % d'excédent)",
   weeklyRange = "Semaine du {from} au {to}",
   sections = {
-    exploits = "Exploits", travel = "Voyages", loot = "Butin et fortune", death = "Nécrologie",
+    dungeons = "Donjons", exploits = "Exploits", travel = "Voyages", loot = "Butin et fortune", death = "Nécrologie",
     social = "Carnet mondain", craft = "Métiers", quests = "Quêtes", stats = "Bilan du jour",
     weeklyTop = "Les grands moments de la semaine", weeklyStats = "Les chiffres de la semaine",
   },
@@ -75,6 +76,7 @@ T.fr = {
     achievement = { head = { "Haut fait : {ach}" }, line = { "Haut fait obtenu : {ach}." } },
     quest = { head = { "Mission accomplie : {target}" }, line = { "{target}" } },
     companions = { head = { "{name} fait équipe avec {names}" }, line = { "En groupe avec {names}." } },
+    run = { head = { "{zone} : {bosses} boss vaincu(s) en {duration}" }, line = { "{zone} : {bosses} boss en {duration}, {deaths} mort(s) dans le groupe{healed}." } },
   },
   tabloid = {
     lede = { "EXCLUSIF ! {name} (niveau {plevel}) a cru pouvoir passer {playtime} incognito. C'était sans compter sur nos paparazzis.",
@@ -108,6 +110,7 @@ T.fr = {
     achievement = { head = { "{name} décroche « {ach} » et ne parle plus que de ça" }, line = { "« {ach} » : la vitrine déborde." } },
     quest = { head = { "{target} : {name} règle l'affaire en douce" }, line = { "{target}" } },
     companions = { head = { "On a vu {name} avec {names} : idylle ou alliance ?" }, line = { "Surpris{e} en compagnie de {names}." } },
+    run = { head = { "{zone} : {duration} d'enfer et {deaths} mort(s), on vous dit tout !" }, line = { "{zone} : {bosses} boss, {deaths} mort(s), {duration}{healed}. Ambiance tendue." } },
   },
   epic = {
     lede = { "Écoutez, gens d'Azeroth, la geste de {name}, de niveau {plevel}, qui chevaucha {playtime} durant !",
@@ -137,6 +140,7 @@ T.fr = {
     achievement = { head = { "Haut fait légendaire : {ach}" }, line = { "« {ach} » sera gravé dans la pierre." } },
     quest = { head = { "La quête « {target} » est accomplie" }, line = { "{target}" } },
     companions = { head = { "La compagnie de {name} : {names}" }, line = { "{name} chevaucha aux côtés de {names}." } },
+    run = { head = { "L'épopée de {zone} : {bosses} gardien(s) terrassé(s)" }, line = { "En {zone}, la compagnie vainquit {bosses} gardien(s) en {duration}, au prix de {deaths} chute(s){healed}." } },
   },
 }
 
@@ -152,9 +156,10 @@ T.en = {
     epic = "The Weekly Saga of {name}",
   },
   edition = "Edition No. {count} — {date}",
+  runHealed = "; {count} HP healed ({item}% overheal)",
   weeklyRange = "Week of {from} to {to}",
   sections = {
-    exploits = "Feats", travel = "Travels", loot = "Loot and fortune", death = "Obituaries",
+    dungeons = "Dungeons", exploits = "Feats", travel = "Travels", loot = "Loot and fortune", death = "Obituaries",
     social = "Society pages", craft = "Professions", quests = "Quests", stats = "Day in numbers",
     weeklyTop = "The week's biggest moments", weeklyStats = "The week in numbers",
   },
@@ -197,6 +202,7 @@ T.en = {
     achievement = { head = { "Achievement: {ach}" }, line = { "Achievement earned: {ach}." } },
     quest = { head = { "Mission accomplished: {target}" }, line = { "{target}" } },
     companions = { head = { "{name} teams up with {names}" }, line = { "Grouped with {names}." } },
+    run = { head = { "{zone}: {bosses} boss(es) down in {duration}" }, line = { "{zone}: {bosses} boss(es) in {duration}, {deaths} group death(s){healed}." } },
   },
   tabloid = {
     lede = { "EXCLUSIVE! {name} (level {plevel}) thought {playtime} would go unnoticed. Not with our paparazzi around.",
@@ -222,6 +228,7 @@ T.en = {
     achievement = { head = { "{name} earns \"{ach}\" and won't talk about anything else" }, line = { "\"{ach}\": the trophy case overflows." } },
     quest = { head = { "{target}: {name} quietly settles the matter" }, line = { "{target}" } },
     companions = { head = { "{name} seen with {names}: romance or alliance?" }, line = { "Caught in the company of {names}." } },
+    run = { head = { "{zone}: {duration} of chaos and {deaths} death(s), the full story!" }, line = { "{zone}: {bosses} boss(es), {deaths} death(s), {duration}{healed}. Tense atmosphere." } },
   },
   epic = {
     lede = { "Hear, people of Azeroth, the saga of {name}, level {plevel}, who rode for {playtime}!",
@@ -247,6 +254,7 @@ T.en = {
     achievement = { head = { "Legendary deed: {ach}" }, line = { "\"{ach}\" shall be carved in stone." } },
     quest = { head = { "The quest \"{target}\" is fulfilled" }, line = { "{target}" } },
     companions = { head = { "The fellowship of {name}: {names}" }, line = { "{name} rode alongside {names}." } },
+    run = { head = { "The saga of {zone}: {bosses} guardian(s) slain" }, line = { "In {zone}, the fellowship vanquished {bosses} guardian(s) in {duration}, at the cost of {deaths} fall(s){healed}." } },
   },
 }
 
@@ -263,5 +271,6 @@ ns.SECTION_OF = {
   companions = "social", rep = "social",
   skill = "craft", recipe = "craft",
   quest = "quests",
+  run = "dungeons",
 }
-ns.SECTION_ORDER = { "exploits", "travel", "loot", "death", "social", "craft", "quests" }
+ns.SECTION_ORDER = { "dungeons", "exploits", "travel", "loot", "death", "social", "craft", "quests" }

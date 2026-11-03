@@ -305,4 +305,23 @@ local dbtn = ns.ui and ns.ui.diagBtn
 check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
 dbtn.scripts.OnClick(dbtn)
 check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
+-- 9. performances : analyses regroupées, aucune en combat
+local analyses = 0
+local realAnalyze = ns.Analyze
+ns.Analyze = function(...) analyses = analyses + 1; return realAnalyze(...) end
+local combat = false
+_G.InCombatLockdown = function() return combat end
+combat = true
+for _ = 1, 20 do Fire("BAG_UPDATE_DELAYED") end
+RunTimers(5)
+check(analyses == 0, "en combat : aucune analyse malgré 20 changements de sacs")
+combat = false
+Fire("PLAYER_REGEN_ENABLED")
+RunTimers(5)
+check(analyses >= 1 and analyses <= 2, "après le combat : une seule mise à jour (" .. analyses .. " analyse(s))")
+analyses = 0
+for _ = 1, 30 do Fire("UNIT_AURA", "player") end
+RunTimers(5)
+check(analyses <= 2, "30 changements de buffs en rafale : regroupés (" .. analyses .. " analyse(s))")
+ns.Analyze = realAnalyze
 print("\nTOUT OK (" .. LANG .. ")")

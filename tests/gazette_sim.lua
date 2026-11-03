@@ -302,6 +302,32 @@ if os.getenv("SHOW_DIAG") then print(diagText) end
 check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, true), "diagnostic : texte complet, sans erreur (" .. #diagText .. " caractères)")
 if os.getenv("SHOW_DIAG") then print(diagText) end
 SlashCmdList["FOREVERGAZETTE"]("diag")
+-- Passage en donjon : entrée, boss, mort d'un membre, soins, sortie
+ForeverGazetteDB.days[today] = nil
+state.zone, state.inInstance, state.itype = "Ombrecroc", true, "party"
+Fire("ZONE_CHANGED_NEW_AREA")
+check(ForeverGazetteDB.run and ForeverGazetteDB.run.zone == "Ombrecroc", "passage en donjon : suivi commencé")
+Fire("ENCOUNTER_END", 2, "Arugal", 1, 5, 1)
+Log("UNIT_DIED", "", nil, 0, "Player-3-DDDD", "Lyra")
+cleu = { 0, "UNIT_DIED", false, "", nil, 0, 0, "Player-3-DDDD", "Lyra", 0x512, 0 }
+Fire("COMBAT_LOG_EVENT_UNFILTERED")
+for _ = 1, 10 do
+  cleu = { 0, "SPELL_HEAL", false, "Player-1-AAAA", "Machin", 0x511, 0, "Player-3-DDDD", "Lyra", 0x512, 0, 2061, "Soins rapides", 2, 1000, 200, 0, false }
+  Fire("COMBAT_LOG_EVENT_UNFILTERED")
+end
+check(#ForeverGazetteDB.run.bosses == 1 and ForeverGazetteDB.run.deaths == 1 and ForeverGazetteDB.run.heal == 8000, "boss, mort du groupe et soins comptés")
+ForeverGazetteDB.run.start = time() - 1500
+state.zone, state.inInstance, state.itype = "Forêt des Pins-Argentés", false, "none"
+Fire("ZONE_CHANGED_NEW_AREA")
+local runEv
+for _, e in ipairs(ForeverGazetteDB.days[today].events) do if e.k == "run" then runEv = e end end
+check(runEv and runEv.v.bosses == 1 and not ForeverGazetteDB.run, "sortie : passage noté (1 boss), suivi terminé")
+ForeverGazetteDB.tone = "serious"
+local runMd = ns.ToText(ns.BuildEdition(today), "md")
+print(runMd:match("### Donjons.-\n\n") or runMd:match("### Dungeons.-\n\n") or runMd)
+check(runMd:find("Ombrecroc : 1 boss en 25 min", 1, true) or runMd:find("Ombrecroc: 1 boss(es) in 25 min", 1, true) or runMd:find("Ombrecroc", 1, true),
+      "rubrique Donjons dans l'édition")
+check(runMd:find("8 000 PV soignés (20 % d'excédent)", 1, true) or runMd:find("8,000 HP healed (20% overheal)", 1, true), "soins du passage : total et excédent")
 ns.lastDiag = nil
 local dbtn = ns.ui and ns.ui.diagBtn
 check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")

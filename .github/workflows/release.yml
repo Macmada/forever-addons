@@ -55,10 +55,17 @@ jobs:
             > dist/release.json
           cat dist/release.json
 
+      - name: Notes de version (première section de CHANGELOG.md)
+        run: |
+          awk '/^## /{n++} n==1' CHANGELOG.md > dist/notes.md
+          printf '\n---\nInstallation : WowUp, « Install from URL » avec https://github.com/Macmada/forever-addons\n' >> dist/notes.md
+          cat dist/notes.md
+
       - name: Publier la version GitHub
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*.zip
             dist/release.json
-          generate_release_notes: true
+          body_path: dist/notes.md
+          generate_release_notes: false
