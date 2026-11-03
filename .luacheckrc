@@ -6,10 +6,11 @@ self = false
 
 -- Variables globales écrites par les addons
 globals = {
-  "ForeverGFXDB", "ForeverMacrosDB", "ForeverGazetteDB",
+  "ForeverGFXDB", "ForeverMacrosDB", "ForeverGazetteDB", "ForeverPrepDB",
   "SLASH_FOREVERGFX1", "SLASH_FOREVERGFX2", "SLASH_FOREVERMACROS1", "SLASH_FOREVERMACROS2",
   "ForeverGFX_OnCompartmentClick", "ForeverMacros_OnCompartmentClick",
   "SLASH_FOREVERGAZETTE1", "SLASH_FOREVERGAZETTE2", "ForeverGazette_OnCompartmentClick",
+  "SLASH_FOREVERPREP1", "SLASH_FOREVERPREP2", "ForeverPrep_OnCompartmentClick",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
@@ -33,4 +34,11 @@ read_globals = {
   "IsInRaid", "LOOT_ITEM_SELF", "Screenshot", "SendChatMessage", "SKILL_RANK_UP", "UNKNOWNOBJECT",
   "UnitExists", "UnitGUID", "UnitIsPlayer", "UnitLevel", "UnitName", "UnitSex", "UnitXP", "UnitXPMax",
   "UnitClassification", "GetRealZoneText", "ReloadUI", "GetItemIcon", "CANCEL", "InCombatLockdown",
+  -- ForeverPrep
+  "C_Container", "C_Spell", "C_UnitAuras", "BuyMerchantItem", "GetContainerNumFreeSlots", "GetContainerNumSlots",
+  "GetInventoryItemDurability", "GetInventoryItemLink", "GetItemCooldown", "GetItemCount", "GetItemInfoInstant",
+  "GetMerchantItemID", "GetMerchantItemInfo", "GetMerchantItemLink", "GetMerchantItemMaxStack", "GetMerchantNumItems",
+  "GetNumTalentTabs", "GetPetHappiness", "GetSpellTexture", "GetTalentTabInfo", "GetUnspentTalentPoints",
+  "GetWeaponEnchantInfo", "IsPlayerSpell", "IsSpellKnown", "MerchantFrame", "UnitBuff", "UnitCharacterPoints",
+  "UnitIsConnected", "UnitIsDeadOrGhost", "UnitIsUnit", "UnitIsVisible",
 }

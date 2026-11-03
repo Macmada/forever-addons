@@ -1,8 +1,8 @@
 name: Release
 
 # Pousse un tag (ex. git tag v2.1.1 && git push origin v2.1.1) pour publier une version.
-# Le tag porte la version de ForeverGFX ; ForeverMacros et ForeverGazette gardent celle de leur TOC.
-# Archives : ForeverAddons-<tag>.zip (les trois addons, celle que prend WowUp grâce à release.json),
+# Le tag porte la version de ForeverGFX ; ForeverMacros, ForeverGazette et ForeverPrep gardent celle de leur TOC.
+# Archives : ForeverAddons-<tag>.zip (tous les addons, celle que prend WowUp grâce à release.json),
 # plus un zip par addon pour une installation à la main.
 on:
   push:
@@ -27,14 +27,17 @@ jobs:
           echo "macros=${MACROS}" >> "$GITHUB_OUTPUT"
           GAZETTE="$(sed -n 's/^## Version: *//p' ForeverGazette/ForeverGazette.toc | tr -d '\r')"
           echo "gazette=${GAZETTE}" >> "$GITHUB_OUTPUT"
+          PREP="$(sed -n 's/^## Version: *//p' ForeverPrep/ForeverPrep.toc | tr -d '\r')"
+          echo "prep=${PREP}" >> "$GITHUB_OUTPUT"
 
       - name: Créer les archives
         run: |
           mkdir dist
-          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverGazette
+          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverGazette ForeverPrep
           zip -r "dist/ForeverGFX-v${{ steps.v.outputs.gfx }}.zip" ForeverGFX
           zip -r "dist/ForeverMacros-v${{ steps.v.outputs.macros }}.zip" ForeverMacros
           zip -r "dist/ForeverGazette-v${{ steps.v.outputs.gazette }}.zip" ForeverGazette
+          zip -r "dist/ForeverPrep-v${{ steps.v.outputs.prep }}.zip" ForeverPrep
           (cd tools && zip -r "../dist/ForeverGazette-Discord-v${{ steps.v.outputs.gazette }}.zip" gazette-discord)
 
       - name: Créer release.json (WowUp)

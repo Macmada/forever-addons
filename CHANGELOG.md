@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGFX 2.1.7 / ForeverMacros 1.3 / ForeverGazette 1.2 / ForeverPrep 1.0
+- **Nouvel addon ForeverPrep** (`/prep`, WoW Forever seulement) : « Prêt pour le donjon ? ». Consommables au meilleur rang utilisable à ton niveau (soins, mana, nourriture, boisson, bandages, nourriture de stats, élixirs et flacons en raid), composants de classe (selon les sorts connus), améliorations personnelles et de groupe, familier, poisons/imprégnations, durabilité, sacs, emplacements vides, talents, rappel du maître de classe, pierre de foyer. Donjon ou raid, rôle deviné par les talents. Liste de courses et achat en un clic chez le marchand. Ouverture automatique (s'il manque quelque chose) à l'entrée d'une instance, à l'appel et lors d'une recherche de groupe/donjon.
+- ForeverGFX, ForeverMacros, ForeverGazette : inchangés (numéro de ForeverGFX aligné sur le tag).
+
 ## ForeverGFX 2.1.6 / ForeverMacros 1.3 / ForeverGazette 1.2
 - ForeverGazette : **photos sans l'interface** (option activée par défaut) : l'interface est masquée une fraction de seconde le temps de la capture, comme Alt+Z, puis rétablie (hors combat seulement ; rétablie aussi dès qu'un combat commence).
 - Compagnon 1.2 : **écrans ultra-larges (21:9, 32:9, ex. Samsung G9 en 5120×1440)** : les captures sont recadrées au centre (2,35:1 pour la une, 1,9:1 pour les autres photos) au lieu de devenir des bandeaux très fins ; décodage réduit des JPEG 5K (plus rapide).
