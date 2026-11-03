@@ -12,7 +12,8 @@ globals = {
   "SLASH_FOREVERGAZETTE1", "SLASH_FOREVERGAZETTE2", "ForeverGazette_OnCompartmentClick",
   "SLASH_FOREVERPREP1", "SLASH_FOREVERPREP2", "ForeverPrep_OnCompartmentClick",
   "SLASH_FOREVERHEAL1", "SLASH_FOREVERHEAL2", "ForeverHeal_OnCompartmentClick",
-  "ForeverHub", "SLASH_FOREVERHUB1",
+  "ForeverHub", "SLASH_FOREVERHUB1", "ForeverHealAPI", "ForeverLootDB", "ForeverLootGlobalDB",
+  "SLASH_FOREVERLOOT1", "SLASH_FOREVERLOOT2", "ForeverLoot_OnCompartmentClick",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
@@ -50,4 +51,5 @@ read_globals = {
   -- diagnostic
   "GetAddOnMetadata", "UnitRace", "UnitFactionGroup", "GetNumSpellTabs", "GetSpellTabInfo", "GetSpellBookItemName",
   "GetSpellBookItemInfo", "GetContainerItemLink", "GetNumMacros", "GetFramerate", "DEFAULT_CHAT_FRAME", "UnitPower", "GetSpellSubtext", "GetMacroIndexByName", "CreateMacro", "EditMacro",
+  "GetLootSlotLink", "GetNumLootItems", "GetLootRollItemLink", "GetNumQuestChoices", "GetQuestItemLink", "UnitIsDead",
 }

@@ -8,13 +8,14 @@ Des addons World of Warcraft pour **WoW Forever**, **TBC Anniversary** et **reta
 | **ForeverMacros** | `/fmac` | macros prêtes par classe (TBC/Forever et retail), constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
 | **ForeverGazette** | `/gazette` | la gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal |
 | **ForeverHeal** | `/fheal` | (WoW Forever, prêtre) ce que chaque caractéristique et chaque objet change vraiment, en clair : PV, mana, soins par seconde, autonomie |
+| **ForeverLoot** | `/floot` (`/bis`) | (WoW Forever) BiS calculé pour ton personnage, conseil de jet de butin et de récompense de quête, butin des donjons, liste de référence |
 | **ForeverPrep** | `/prep` | (WoW Forever seulement) prêt pour le donjon ? consommables, composants, améliorations, équipement selon ta classe, ton rôle et ton niveau, liste de courses et achat chez le marchand |
 
 ## Installation
 
 ### Avec WowUp (mises à jour automatiques)
 
-Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : tous les addons arrivent ensemble (ForeverPrep et ForeverHeal ne se chargent que sur WoW Forever) et WowUp propose chaque nouvelle version.
+Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : tous les addons arrivent ensemble (ForeverPrep, ForeverHeal et ForeverLoot ne se chargent que sur WoW Forever) et WowUp propose chaque nouvelle version.
 
 ### À la main
 
@@ -75,6 +76,18 @@ Pour jouer soigneur en sachant ce que vaut chaque point : l'addon traduit les ca
 
 Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`, `/fheal infobulle`, `/fheal annonce`, `/fheal ecran|chat`, `/fheal panneau`, `/fheal oublier`, `/fheal lang fr|en`.
 
+## ForeverLoot (WoW Forever)
+
+Équipement et butin, évalués **pour ton personnage** (avec le modèle de ForeverHeal pour le prêtre, un modèle simplifié par caractéristiques pour les autres classes) :
+
+- **BiS calculé** : chaque objet croisé (infobulles, butin, jets, récompenses de quête, marchands, butin des autres) est mémorisé et évalué ; l'onglet BiS montre, emplacement par emplacement, les meilleurs objets connus et où ils ont été vus, avec la **liste de référence** (prêtre soigneur, avant les raids, guides du classique : à vérifier pour Forever).
+- **Jets de butin** : conseil « BESOIN » ou « Cupidité » au-dessus de la fenêtre de jet, avec le gain (« +3,5 soins/s ») ou la raison (ta classe ne peut pas le porter, niveau trop élevé, pas mieux).
+- **Récompenses de quête** : la meilleure pour toi est mise en évidence, sinon la plus chère à revendre.
+- **Butin des donjons** : ce que chaque boss lâche, noté au fil de tes donjons (pour tous tes personnages), objets intéressants pour toi en vert.
+- Ce que chaque classe peut porter est pris en compte (types d'armure selon le niveau, armes, boucliers).
+
+Commandes : `/floot` (ou `/bis`), `/floot donjons`, `/floot diag`, `/floot lang fr|en`.
+
 ## ForeverPrep (WoW Forever)
 
 Avant un donjon ou un raid, une fiche compare ce que tu as à ce qu'il faut pour **ta classe, ton rôle et ton niveau** : vert = prêt, orange = à faire, rouge = manque important, gris = conseil.
@@ -93,7 +106,7 @@ Commandes : `/prep`, `/prep raid`, `/prep donjon`, `/prep role auto|tank|soigneu
 
 ## Icône commune « Forever »
 
-Une seule icône autour de la minicarte pour tous les addons : un clic ouvre un menu (Gazette, Prépa donjon, Soins, Macros, Graphismes). À la première connexion, elle remplace les icônes séparées. `/forever separees` remet une icône par addon, `/forever commune` revient à l'icône commune, `/forever minimap` la masque. La commande `minimap` de chaque addon réaffiche aussi son icône séparée.
+Une seule icône autour de la minicarte pour tous les addons : un clic ouvre un menu (Gazette, Prépa donjon, Soins, Équipement / butin, Macros, Graphismes). À la première connexion, elle remplace les icônes séparées. `/forever separees` remet une icône par addon, `/forever commune` revient à l'icône commune, `/forever minimap` la masque. La commande `minimap` de chaque addon réaffiche aussi son icône séparée.
 
 ## Diagnostic (pour adapter les addons à WoW Forever)
 
@@ -105,6 +118,7 @@ Chaque addon a un **bouton « Diag »** dans la barre de titre de sa fenêtre (e
 | `/fmac diag` | sorts des macros prêtes trouvés ou absents dans ce client, classe par classe |
 | `/gazette diag` | événements acceptés ou refusés, fonctions disponibles, textes du jeu (butin, métiers, duels), boss détectés et comment, derniers moments notés |
 | `/prep diag` | chaque objet de la base (vrai nom et niveau requis, écarts signalés), objets absents, sorts de classe, consommables de tes sacs inconnus de la base, analyse actuelle |
+| `/floot diag` | numéro de chaque objet de la liste de référence et son nom dans ce client (les numéros non vérifiés sont signalés), nombre d'objets vus, butin noté par donjon |
 | `/fheal diag` | relevé du jeu et conversions mesurées, sorts de soin avec leur description brute et ce que l'addon en lit, sorts de soin du grimoire inconnus de la base, caractéristiques de chaque pièce portée |
 
 Chaque texte commence par la version du client, le numéro d'interface, la langue, le personnage et les addons chargés. Le module est commun (`tools/Diag.lua`, copié dans chaque addon par `tools/sync-shared.sh`, comme l'icône commune `tools/Hub.lua` et le tutoriel `tools/Tour.lua`).
@@ -122,7 +136,7 @@ Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule 
 ## Développement
 
 - `luacheck ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal` vérifie le code (lancé automatiquement à chaque push).
-- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `tests/prep_sim.lua`, `tests/heal_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` font de même pour les autres addons (`tests/wowmock.lua` : API WoW imitée commune). Lancés aussi à chaque push.
+- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `tests/prep_sim.lua`, `tests/heal_sim.lua`, `tests/loot_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` font de même pour les autres addons (`tests/wowmock.lua` : API WoW imitée commune). Lancés aussi à chaque push.
 - Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les archives à la release (ForeverMacros, ForeverGazette et ForeverPrep gardent le numéro de leur TOC).
 
 ---

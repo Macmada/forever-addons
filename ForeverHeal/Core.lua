@@ -700,3 +700,18 @@ function ns.DiagCollect(add)
   for _, m in ipairs(mix) do add(string.format("  %s : %.0f %% du temps", m.spell.name, m.share * 100)) end
   add(string.format("  lancers observés : %d ; soins totaux %d dont excédent %d", mix.observed or 0, ns.db.effective.total, ns.db.effective.over))
 end
+
+----------------------------------------------------------------------
+-- Pour les autres addons (ForeverLoot) : évaluation d'un objet avec le modèle du prêtre
+----------------------------------------------------------------------
+_G.ForeverHealAPI = {
+  version = 1,
+  Evaluate = function(link)
+    local ok, cmp = pcall(ns.CompareItem, link)
+    if not ok or not cmp then return nil end
+    local hps = cmp.after.hps - cmp.before.hps
+    local healed = (cmp.after.healedBeforeOom or 0) - (cmp.before.healedBeforeOom or 0)
+    local hp = (cmp.d.sta or 0) * ns.Rates(ns.Snapshot()).hpPerSta + (cmp.d.hp or 0)
+    return { slot = cmp.slot, hps = hps, healed = healed, hp = hp, score = hps * 30 + healed / 100 + (cmp.d.sta or 0) * 0.05 }
+  end,
+}

@@ -1,6 +1,7 @@
 # Journal des versions
 
-## ForeverGFX 2.2.0 / ForeverMacros 1.5 / ForeverGazette 1.4 / ForeverPrep 1.2 / ForeverHeal 1.2
+## ForeverGFX 2.2.0 / ForeverMacros 1.5 / ForeverGazette 1.4 / ForeverPrep 1.2 / ForeverHeal 1.2 / ForeverLoot 1.0
+- **Nouvel addon ForeverLoot** (`/floot`, `/bis`, WoW Forever) : BiS calculé pour ton personnage à partir des objets réellement vus (modèle de ForeverHeal pour le prêtre, poids simplifiés pour les autres classes), liste de référence du prêtre soigneur (classique, avant les raids, à vérifier pour Forever), conseil BESOIN / Cupidité sur les jets de butin, meilleure récompense de quête mise en évidence, butin des donjons noté par boss pour tous tes personnages, lignes dans les infobulles.
 - **Icône commune « Forever »** autour de la minicarte : un clic ouvre le menu des cinq addons ; elle remplace les icônes séparées à la première connexion (`/forever separees` pour les remettre, `/forever commune` pour revenir).
 - ForeverHeal : **conseiller de rangs** (excédent mesuré par rang, rang inférieur qui suffirait, mana économisée, création des macros de rang en un clic) ; **alerte de mana en combat** (« à sec dans ~14 s ») ; **meilleurs objets de tes sacs** (tissu, dague, masse, bâton, baguette) ; panneau défilant ; infobulles mémorisées (recalculées seulement quand tes caractéristiques, ton équipement ou tes sorts changent).
 - ForeverGazette : **rubrique Donjons** (boss, durée, morts du groupe, tes soins et ton excédent), suivie de l'entrée à la sortie, même après un /reload.

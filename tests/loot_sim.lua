@@ -1,0 +1,129 @@
+-- Simulation hors jeu de ForeverLoot (Lua 5.1). Lancer depuis la racine : lua5.1 tests/loot_sim.lua [fr|en]
+local LANG = arg and arg[1] or "fr"
+local W = dofile("tests/wowmock.lua")(LANG)
+local check = W.check
+
+-- Objets : id -> { nom, emplacement, classe, sous-classe, qualité, niveau, prix de vente, caractéristiques }
+local ITEMS = {
+  [100] = { "Robe usée", "INVTYPE_ROBE", 4, 1, 2, 30, 50, { ITEM_MOD_INTELLECT_SHORT = 5 } },
+  [101] = { "Robe du soigneur", "INVTYPE_ROBE", 4, 1, 3, 35, 300, { ITEM_MOD_INTELLECT_SHORT = 15, ITEM_MOD_SPELL_HEALING_DONE_SHORT = 30 } },
+  [102] = { "Cuirasse lourde", "INVTYPE_CHEST", 4, 4, 3, 35, 2500, { ITEM_MOD_STRENGTH_SHORT = 20, ITEM_MOD_STAMINA_SHORT = 15 } },
+  [103] = { "Bâton de lumière", "INVTYPE_2HWEAPON", 2, 10, 3, 34, 900, { ITEM_MOD_INTELLECT_SHORT = 20, ITEM_MOD_SPELL_HEALING_DONE_SHORT = 40 } },
+  [104] = { "Épée longue", "INVTYPE_WEAPON", 2, 7, 3, 34, 1200, { ITEM_MOD_STRENGTH_SHORT = 10 } },
+  [105] = { "Os rongé", "INVTYPE_TRINKET", 15, 0, 0, 1, 1, {} },
+  [106] = { "Gants de l'avenir", "INVTYPE_HAND", 4, 1, 4, 55, 800, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 60 } },
+  [18723] = { "Collier animé", "INVTYPE_NECK", 4, 0, 3, 57, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 26 } },
+  [13102] = { "Grâce de Cassandre", "INVTYPE_HEAD", 4, 1, 3, 57, 900, { ITEM_MOD_INTELLECT_SHORT = 20, ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
+}
+local function Link(id) local it = ITEMS[id]; return string.format("|cff0070dd|Hitem:%d::::::::60:::::::|h[%s]|h|r", id, it[1]) end
+local function ID(x) if type(x) == "number" then return x end return tonumber(tostring(x):match("item:(%d+)")) end
+_G.GetItemInfoInstant = function(x) local id = ID(x); local it = ITEMS[id]; if not it then return nil end; return id, "t", "s", it[2], "icon" .. id, it[3], it[4] end
+_G.GetItemInfo = function(x) local id = ID(x); local it = ITEMS[id]; if not it then return nil end
+  return it[1], Link(id), it[5], 40, it[6], "t", "s", 1, it[2], "icon", it[7] end
+_G.GetItemStats = function(x) local it = ITEMS[ID(x)]; local t = {}; for k, v in pairs(it and it[8] or {}) do t[k] = v end; return t end
+local GEAR = { [5] = Link(100) }
+_G.GetInventoryItemLink = function(_, slot) return GEAR[slot] end
+local BAGS = {}
+_G.GetContainerNumSlots = function(bag) return bag == 0 and #BAGS or 0 end
+_G.GetContainerItemLink = function(bag, s) return bag == 0 and BAGS[s] or nil end
+_G.GameTooltip.GetItem = function(self) return "x", self.link end
+_G.GameTooltip.AddLine = function(self, s) self.lines = self.lines or {}; self.lines[#self.lines + 1] = s end
+_G.ChatEdit_InsertLink = function() end
+-- modèle de ForeverHeal imité : la valeur de soins de l'objet moins celle de l'objet porté au même emplacement
+_G.ForeverHealAPI = { Evaluate = function(link)
+  local id = ID(link); local it = ITEMS[id]
+  local slots = ({ INVTYPE_ROBE = 5, INVTYPE_CHEST = 5, INVTYPE_2HWEAPON = 16, INVTYPE_WEAPON = 16, INVTYPE_HAND = 10, INVTYPE_NECK = 2, INVTYPE_HEAD = 1 })
+  local slot = slots[it[2]] or 13
+  local function v(l) if not l then return 0 end local s = ITEMS[ID(l)][8]; return (s.ITEM_MOD_SPELL_HEALING_DONE_SHORT or 0) * 0.1 + (s.ITEM_MOD_INTELLECT_SHORT or 0) * 0.05 end
+  local hps = v(link) - v(GEAR[slot])
+  return { slot = slot, hps = hps, healed = hps * 100, hp = 0, score = hps * 30 + hps }
+end }
+W.class, W.level = "PRIEST", 40
+
+local ns = W.load("ForeverLoot")
+W.fire("ADDON_LOADED", "ForeverLoot")
+W.fire("PLAYER_LOGIN")
+W.run(3)
+check(ForeverLootDB and ForeverLootGlobalDB and ForeverLootGlobalDB.dungeons, "bases créées (personnage et compte)")
+
+-- 1. ce qu'un prêtre peut porter
+check(ns.Wearable(Link(101)) and not ns.Wearable(Link(102)), "prêtre : tissu oui, plaques non")
+check(ns.Wearable(Link(103)) and not ns.Wearable(Link(104)), "prêtre : bâton oui, épée non")
+
+-- 2. jets de butin
+local a, why = ns.RollAdvice(Link(101))
+check(a == "need", "jet : robe du soigneur -> BESOIN (" .. why .. ")")
+a, why = ns.RollAdvice(Link(102))
+check(a == "greed" and why == ns.L.adviceNotWearable, "jet : cuirasse en plaques -> Cupidité (ta classe ne peut pas la porter)")
+a = ns.RollAdvice(Link(106))
+check(a == "greed", "jet : objet de niveau 55 pour un niveau 40 -> Cupidité")
+_G.GetLootRollItemLink = function() return Link(101) end
+_G.GroupLootFrame1 = W.Obj("GroupLootFrame1"); GroupLootFrame1.rollID = 7
+W.fire("START_LOOT_ROLL", 7)
+check(ns.lastRoll and ns.lastRoll.advice == "need" and GroupLootFrame1.flText, "fenêtre de jet : conseil affiché au-dessus")
+
+-- 3. récompense de quête
+local idx, kind = ns.QuestChoice({ Link(102), Link(101), Link(105) })
+check(idx == 2 and kind == "best", "quête : la robe (amélioration) plutôt que la cuirasse plus chère")
+idx, kind = ns.QuestChoice({ Link(102), Link(104), Link(105) })
+check(idx == 1 and kind == "price", "quête sans amélioration : la plus chère à revendre (cuirasse)")
+_G.GetNumQuestChoices = function() return 3 end
+_G.GetQuestItemLink = function(_, i) return ({ Link(102), Link(101), Link(105) })[i] end
+for i = 1, 3 do _G["QuestInfoRewardsFrameQuestInfoItem" .. i] = W.Obj() end
+W.fire("QUEST_COMPLETE")
+check(ns.lastQuest and ns.lastQuest.index == 2 and QuestInfoRewardsFrameQuestInfoItem2.flGlow, "récompense mise en évidence dans la fenêtre de quête")
+
+-- 4. butin d'un boss en donjon (gardé pour tous les personnages)
+W.inInstance, W.instanceType, W.zone = true, "party", "Stratholme"
+_G.UnitExists = function(u) return u == "target" end
+_G.UnitIsDead = function() return true end
+_G.UnitIsPlayer = function() return false end
+_G.UnitClassification = function() return "elite" end
+_G.UnitName = function(u) return u == "target" and "Ramstein le Gorgé" or "Machin" end
+_G.GetNumLootItems = function() return 2 end
+_G.GetLootSlotLink = function(i) return ({ Link(18723), Link(105) })[i] end
+W.fire("LOOT_OPENED")
+local z = ForeverLootGlobalDB.dungeons.Stratholme
+check(z and z["Ramstein le Gorgé"] and z["Ramstein le Gorgé"][18723] and not z["Ramstein le Gorgé"][105], "butin du boss noté (objet gris ignoré)")
+W.inInstance, W.zone = false, "Hurlevent"
+
+-- 5. BiS : objets vus classés, référence affichée
+local bis = ns.BiS(3)
+check(bis[5] and bis[5].items[1] and bis[5].items[1].id == 101, "BiS torse : la robe du soigneur vue lors du jet")
+check(bis[2] and #bis[2].refs >= 1 and bis[2].refs[1].id == 18723, "BiS cou : collier de référence (Ramstein, Stratholme)")
+check(not bis[5].items[2] or bis[5].items[2].id ~= 102, "BiS : la cuirasse (plaques) n'est pas proposée")
+ns.Toggle()
+local lines = ns.BisLines()
+local txt = {}
+for _, l in ipairs(lines) do txt[#txt + 1] = l.text end
+txt = table.concat(txt, "\n")
+check(txt:find("Robe du soigneur", 1, true) and txt:find("Ramstein", 1, true), "onglet BiS rempli")
+local dun = ns.DungeonLines()
+local dtxt = {}
+for _, l in ipairs(dun) do dtxt[#dtxt + 1] = l.text end
+dtxt = table.concat(dtxt, "\n")
+check(dtxt:find("Stratholme", 1, true) and dtxt:find("Collier animé", 1, true), "onglet Donjons : butin vu et référence")
+
+-- 6. infobulle d'un objet de référence
+GameTooltip.link, GameTooltip.lines = Link(13102), {}
+ns.OnTooltipItem(GameTooltip)
+check(GameTooltip.lines[1] and GameTooltip.lines[1]:find("ForeverLoot", 1, true), "infobulle : « BiS de référence »")
+
+-- 7. autre classe : modèle simplifié
+W.class, W.level = "WARRIOR", 45
+ns.version = ns.version + 1
+check(ns.Wearable(Link(102)) and ns.Wearable(Link(104)), "guerrier 45 : plaques et épée portables")
+local r = ns.Evaluate(Link(102))
+check(r and r.method == "weights" and r.score > 0, "guerrier : évaluation par poids simplifiés (" .. string.format("%.1f", r.score) .. " points)")
+W.level = 30
+ns.version = ns.version + 1
+check(not ns.Wearable(Link(102)), "guerrier 30 : pas encore les plaques (niveau 40)")
+W.class, W.level = "PRIEST", 40
+
+-- 8. diagnostic, icône commune, commande
+local diag = ns.DiagText()
+check(diag:find("Liste de référence", 1, true) and diag:find("18723", 1, true) and not diag:find("Erreur", 1, true), "diagnostic complet")
+check(ForeverHub and ForeverHub.entries.ForeverLoot, "inscrit dans l'icône commune")
+SlashCmdList.FOREVERLOOT("donjons")
+check(ns.ui:IsShown(), "/floot donjons")
+W.rprint("\nTOUT OK (" .. LANG .. ")")

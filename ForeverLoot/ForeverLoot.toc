@@ -1,0 +1,17 @@
+## Interface: 16000, 16001
+## Title: ForeverLoot
+## Notes: Équipement et butin : BiS calculé pour ton personnage, conseils de jet de butin et de récompense de quête, butin des donjons.
+## Notes-enUS: Gear and loot: computed BiS for your character, loot roll and quest reward advice, dungeon loot.
+## Author: ForeverGFX
+## Version: 1.0
+## SavedVariablesPerCharacter: ForeverLootDB
+## SavedVariables: ForeverLootGlobalDB
+## IconTexture: Interface\Icons\INV_Misc_Bag_10
+## AddonCompartmentFunc: ForeverLoot_OnCompartmentClick
+
+Locale.lua
+Diag.lua
+Data.lua
+Core.lua
+UI.lua
+Hub.lua

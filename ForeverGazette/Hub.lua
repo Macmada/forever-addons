@@ -9,6 +9,7 @@ local ENTRIES = {
   ForeverGazette = { order = 1, label = FR and "Gazette" or "Gazette", icon = "Interface\\Icons\\INV_Misc_Book_09", open = "Toggle" },
   ForeverPrep = { order = 2, label = FR and "Prépa donjon" or "Dungeon prep", icon = "Interface\\Icons\\INV_Potion_51", open = "Toggle" },
   ForeverHeal = { order = 3, label = FR and "Soins (prêtre)" or "Healing (priest)", icon = "Interface\\Icons\\Spell_Holy_GreaterHeal", open = "TogglePanel" },
+  ForeverLoot = { order = 3.5, label = FR and "Équipement / butin" or "Gear / loot", icon = "Interface\\Icons\\INV_Misc_Bag_10", open = "Toggle" },
   ForeverMacros = { order = 4, label = FR and "Macros" or "Macros", icon = "Interface\\Icons\\INV_Misc_Note_01", open = "Toggle" },
   ForeverGFX = { order = 5, label = FR and "Graphismes" or "Graphics", icon = "Interface\\Icons\\INV_Misc_Spyglass_03", open = "ToggleUI" },
 }

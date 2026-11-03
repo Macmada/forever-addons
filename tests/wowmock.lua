@@ -145,14 +145,16 @@ return function(LANG)
   end
   _G.Enum = { ConsoleCommandType = { Cvar = 0 } }
 
-  W.ns = {}
-  function W.load(addon)
+  W.addons = {}
+  function W.load(addon)          -- chaque addon a son propre espace (comme dans le jeu)
+    local ns = {}
     local toc = io.open(addon .. "/" .. addon .. ".toc"):read("*a")
     for file in toc:gmatch("\n([%w_]+%.lua)") do
       local chunk = assert(loadfile(addon .. "/" .. file))
-      chunk(addon, W.ns)
+      chunk(addon, ns)
     end
-    return W.ns
+    W.addons[addon] = ns
+    return ns
   end
   -- envoie un événement à toutes les fenêtres qui ont un gestionnaire OnEvent
   function W.fire(event, ...)

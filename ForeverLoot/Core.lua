@@ -1,0 +1,344 @@
+local ADDON, ns = ...
+local L = ns.L
+local D = ns.Data
+
+-- ForeverLoot : évaluation des objets pour ton personnage, mémoire des objets vus, butin des donjons,
+-- conseils de jet de butin et de récompense de quête.
+
+local db, gdb
+function ns.Print(fmt, ...)
+  local msg = (select("#", ...) > 0) and string.format(fmt, ...) or tostring(fmt)
+  print("|cffe6b84dForeverLoot|r " .. msg)
+end
+
+local Instant = function(x) return ((C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant)(x) end
+local Info = function(x) return ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(x) end
+local function ItemID(link) return link and tonumber(link:match("item:(%d+)")) end
+ns.ItemID = ItemID
+
+----------------------------------------------------------------------
+-- Ce que la classe peut porter
+----------------------------------------------------------------------
+function ns.Wearable(link)
+  local _, _, _, equipLoc, _, classID, subID = Instant(link)
+  if not equipLoc or not D.slots[equipLoc] then return false, "slot" end
+  local _, class = UnitClass("player")
+  local level = UnitLevel("player")
+  if classID == 4 then
+    if subID == 0 then return true end
+    if subID == 6 then return D.shield[class] == true, "armor" end
+    local a = D.armor[class] or { 1 }
+    local max = (a[2] and level < a[2]) and a[3] or a[1]
+    return subID <= max, "armor"
+  elseif classID == 2 then
+    return (D.weapons[class] or {})[subID] == true, "weapon"
+  end
+  return false, "class"
+end
+
+local function MinLevel(link) return select(5, Info(link)) end
+
+----------------------------------------------------------------------
+-- Évaluation : modèle de ForeverHeal pour le prêtre, sinon poids simplifiés
+----------------------------------------------------------------------
+local function Stats(link)
+  local get = (C_Item and C_Item.GetItemStats) or GetItemStats
+  return (get and get(link)) or {}
+end
+
+local function WeightScore(stats, w)
+  local s = 0
+  for k, v in pairs(stats) do s = s + (w[k] or 0) * v end
+  return s
+end
+
+local cache, cacheN = {}, 0
+ns.version = 0
+
+function ns.Evaluate(link)
+  if not link then return nil end
+  local key = link .. "#" .. ns.version
+  if cache[key] ~= nil then return cache[key] or nil end
+  local r
+  local wear, why = ns.Wearable(link)
+  local _, class = UnitClass("player")
+  local _, _, _, equipLoc = Instant(link)
+  local slots = equipLoc and D.slots[equipLoc]
+  if slots then
+    r = { wearable = wear, why = why, minLevel = MinLevel(link) }
+    local api = _G.ForeverHealAPI
+    if class == "PRIEST" and api and api.Evaluate then
+      local e = api.Evaluate(link)
+      if e then
+        r.method, r.slot, r.score, r.hps, r.healed, r.hp = "heal", e.slot, e.score, e.hps, e.healed, e.hp
+      end
+    end
+    if not r.method then
+      local w = D.weights[class] or D.weights.WARRIOR
+      local new = WeightScore(Stats(link), w)
+      local best
+      for _, slot in ipairs(slots) do
+        local cur = GetInventoryItemLink("player", slot)
+        local old = cur and WeightScore(Stats(cur), w) or 0
+        if slots.two then
+          local off = GetInventoryItemLink("player", 17)
+          if off then old = old + WeightScore(Stats(off), w) end
+        end
+        if not best or new - old > best.score then best = { slot = slot, score = new - old } end
+      end
+      r.method, r.slot, r.score = "weights", best.slot, best.score
+    end
+  end
+  if cacheN > 500 then wipe(cache); cacheN = 0 end
+  cache[key] = r or false
+  cacheN = cacheN + 1
+  return r
+end
+
+-- Résumé humain d'une évaluation
+function ns.GainText(r)
+  if not r then return "" end
+  if r.method == "heal" then
+    local parts = {}
+    if math.abs(r.hps or 0) >= 0.05 then parts[#parts + 1] = string.format(L.gainHps, ns.Signed(r.hps, 1)) end
+    if math.abs(r.healed or 0) >= 1 then parts[#parts + 1] = string.format(L.gainHealed, ns.Signed(r.healed)) end
+    if math.abs(r.hp or 0) >= 1 then parts[#parts + 1] = string.format(L.gainHp, ns.Signed(r.hp)) end
+    return #parts > 0 and table.concat(parts, ", ") or L.gainNone
+  end
+  return string.format(L.gainPoints, ns.Signed(r.score, 1))
+end
+
+function ns.Signed(v, dec)
+  dec = dec or 0
+  if math.abs(v) < 0.5 * 10 ^ (-dec) then return "|cffa0a0a00|r" end
+  local s = string.format("%." .. dec .. "f", math.abs(v))
+  if ns.lang ~= "en" then s = s:gsub("%.", ",") end
+  return (v > 0 and "|cff40d860+" or "|cffff5050−") .. s .. "|r"
+end
+
+----------------------------------------------------------------------
+-- Mémoire des objets vus et du butin des donjons
+----------------------------------------------------------------------
+local function Remember(link, src, where)
+  local id = ItemID(link)
+  if not id or not db then return end
+  local _, _, _, equipLoc = Instant(link)
+  if not equipLoc or not D.slots[equipLoc] then return end
+  local quality = select(3, Info(link))
+  if quality and quality < 2 then return end                       -- gris et blancs ignorés
+  local e = db.seen[id] or {}
+  e.link, e.src, e.where, e.t = link, src, where or e.where, time()
+  if not db.seen[id] then db.seenCount = (db.seenCount or 0) + 1 end
+  db.seen[id] = e
+  if db.seenCount > 1500 then                                      -- ménage : les plus anciens
+    local list = {}
+    for k, v in pairs(db.seen) do list[#list + 1] = { k = k, t = v.t or 0 } end
+    table.sort(list, function(a, b) return a.t < b.t end)
+    for i = 1, 300 do db.seen[list[i].k] = nil end
+    db.seenCount = db.seenCount - 300
+  end
+end
+ns.Remember = Remember
+
+local function Where()
+  local inInstance = IsInInstance()
+  return inInstance and GetRealZoneText() or nil
+end
+
+-- Butin d'un boss (ou d'un monstre en donjon) : gardé pour tous tes personnages
+function ns.RecordDungeonLoot(zone, boss, link)
+  local id = ItemID(link)
+  if not (zone and id and gdb) then return end
+  local quality = select(3, Info(link))
+  if quality and quality < 2 then return end
+  gdb.dungeons[zone] = gdb.dungeons[zone] or {}
+  local z = gdb.dungeons[zone]
+  boss = boss or "?"
+  z[boss] = z[boss] or {}
+  local e = z[boss][id] or { n = 0 }
+  e.link, e.n, e.t = link, e.n + 1, time()
+  z[boss][id] = e
+end
+
+----------------------------------------------------------------------
+-- Conseils
+----------------------------------------------------------------------
+-- Jet de butin : « besoin » si tu peux le porter et qu'il améliore ton équipement
+function ns.RollAdvice(link)
+  local r = ns.Evaluate(link)
+  if not r then return "greed", L.adviceNotGear end
+  if not r.wearable then return "greed", L.adviceNotWearable end
+  if (r.minLevel or 0) > UnitLevel("player") + 5 then return "greed", string.format(L.adviceTooHigh, r.minLevel) end
+  if (r.score or 0) > 0.3 then return "need", ns.GainText(r) end
+  return "greed", L.adviceNoGain
+end
+
+-- Récompenses de quête : la meilleure pour toi, sinon la plus chère à revendre
+function ns.QuestChoice(links)
+  local best, bestScore, dear, dearPrice
+  for i, link in ipairs(links) do
+    local r = link and ns.Evaluate(link)
+    if r and r.wearable and (r.score or 0) > 0.3 and (r.minLevel or 0) <= UnitLevel("player") and (not bestScore or r.score > bestScore) then
+      best, bestScore = i, r.score
+    end
+    local price = link and select(11, Info(link)) or 0
+    if not dearPrice or (price or 0) > dearPrice then dear, dearPrice = i, price or 0 end
+  end
+  if best then return best, "best" end
+  return dear, "price"
+end
+
+----------------------------------------------------------------------
+-- Événements
+----------------------------------------------------------------------
+local function InitDB()
+  ForeverLootDB = ForeverLootDB or {}
+  db = ForeverLootDB
+  ns.db = db
+  db.version = db.version or 1
+  db.seen = db.seen or {}
+  if db.rollHelp == nil then db.rollHelp = true end
+  if db.questHelp == nil then db.questHelp = true end
+  if db.tooltipHint == nil then db.tooltipHint = true end
+  if db.higher == nil then db.higher = true end
+  db.minimap = db.minimap or { angle = 250, hide = false }
+  if db.lang then ns.lang = db.lang end
+  ForeverLootGlobalDB = ForeverLootGlobalDB or {}
+  gdb = ForeverLootGlobalDB
+  ns.gdb = gdb
+  gdb.dungeons = gdb.dungeons or {}
+end
+ns._InitDB = InitDB
+
+local ev = CreateFrame("Frame")
+ns.eventFrame = ev
+local handlers = {}
+local lastBoss
+
+local function Bump() ns.version = ns.version + 1 end
+handlers.PLAYER_EQUIPMENT_CHANGED = function() Bump(); if ns.Refresh then ns.Refresh() end end
+handlers.PLAYER_LEVEL_UP = Bump
+handlers.CHARACTER_POINTS_CHANGED = Bump
+handlers.ENCOUNTER_END = function(_, name, _, _, success) if success == 1 then lastBoss = name end end
+handlers.LOOT_OPENED = function()
+  local zone = Where()
+  local boss
+  if UnitExists("target") and UnitIsDead("target") and not UnitIsPlayer("target") then
+    boss = UnitName("target")
+    local c = UnitClassification("target")
+    if not (c == "worldboss" or c == "elite" or c == "rareelite" or UnitLevel("target") == -1) and boss ~= lastBoss then boss = nil end
+  end
+  for i = 1, (GetNumLootItems and GetNumLootItems() or 0) do
+    local link = GetLootSlotLink(i)
+    if link then
+      Remember(link, "loot", zone)
+      if zone and boss then ns.RecordDungeonLoot(zone, boss, link) end
+    end
+  end
+end
+handlers.START_LOOT_ROLL = function(rollID)
+  local link = GetLootRollItemLink(rollID)
+  if not link then return end
+  Remember(link, "roll", Where())
+  if Where() then ns.RecordDungeonLoot(Where(), lastBoss or "?", link) end
+  if db.rollHelp and ns.ShowRollAdvice then ns.ShowRollAdvice(rollID, link) end
+end
+handlers.CHAT_MSG_LOOT = function(msg)
+  local link = msg and msg:match("(|c[^|]*|Hitem:.-|h.-|h|r)")
+  if link then
+    Remember(link, "chat", Where())
+    if Where() then ns.RecordDungeonLoot(Where(), lastBoss or "?", link) end
+  end
+end
+local function QuestLinks()
+  local links = {}
+  for i = 1, (GetNumQuestChoices and GetNumQuestChoices() or 0) do links[i] = GetQuestItemLink("choice", i) end
+  return links
+end
+handlers.QUEST_COMPLETE = function()
+  local links = QuestLinks()
+  for _, l in ipairs(links) do if l then Remember(l, "quest") end end
+  if db.questHelp and #links > 1 and ns.ShowQuestChoice then ns.ShowQuestChoice(links) end
+end
+handlers.QUEST_DETAIL = function()
+  for _, l in ipairs(QuestLinks()) do if l then Remember(l, "quest") end end
+end
+handlers.MERCHANT_SHOW = function()
+  for i = 1, (GetMerchantNumItems and GetMerchantNumItems() or 0) do
+    local l = GetMerchantItemLink(i)
+    if l then Remember(l, "vendor") end
+  end
+end
+handlers.PLAYER_LOGIN = function() if ns.OnLogin then ns.OnLogin() end end
+
+ev:RegisterEvent("ADDON_LOADED")
+ev:SetScript("OnEvent", function(_, event, ...)
+  if event == "ADDON_LOADED" then
+    if ... ~= ADDON then return end
+    InitDB()
+    for e in pairs(handlers) do pcall(ev.RegisterEvent, ev, e) end
+    if ns.OnLoaded then ns.OnLoaded() end
+    return
+  end
+  local h = handlers[event]
+  if h then h(...) end
+end)
+ns._handlers = handlers
+
+----------------------------------------------------------------------
+-- BiS : meilleurs objets connus par emplacement (portés, sacs, vus, référence)
+----------------------------------------------------------------------
+function ns.Candidates()
+  local list, seenIds = {}, {}
+  local function add(link, src, where, ref)
+    local id = ItemID(link)
+    if not id or seenIds[id] then return end
+    seenIds[id] = true
+    list[#list + 1] = { link = link, id = id, src = src, where = where, ref = ref }
+  end
+  for slot = 1, 18 do
+    local l = GetInventoryItemLink("player", slot)
+    if l then add(l, "equipped") end
+  end
+  for bag = 0, 4 do
+    local n = (C_Container and C_Container.GetContainerNumSlots) and C_Container.GetContainerNumSlots(bag)
+              or (GetContainerNumSlots and GetContainerNumSlots(bag)) or 0
+    for s = 1, n do
+      local l = (C_Container and C_Container.GetContainerItemLink) and C_Container.GetContainerItemLink(bag, s)
+                or (GetContainerItemLink and GetContainerItemLink(bag, s))
+      if l then add(l, "bags") end
+    end
+  end
+  local _, class = UnitClass("player")
+  local refById = {}
+  for _, r in ipairs(D.reference[class] or {}) do
+    refById[r.id] = r
+    local _, link = Info(r.id)
+    if link then add(link, "ref", nil, r) elseif C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(r.id) end
+  end
+  for _, e in pairs(db.seen) do if e.link then add(e.link, e.src, e.where) end end
+  for _, c in ipairs(list) do c.ref = c.ref or refById[c.id] end   -- une référence déjà portée reste marquée
+  return list
+end
+
+-- slot -> { meilleurs candidats (gain > 0, triés) }, et l'objet de référence de cet emplacement
+function ns.BiS(limit)
+  local out = {}
+  for _, c in ipairs(ns.Candidates()) do
+    local r = ns.Evaluate(c.link)
+    if r and r.slot and (r.wearable or c.ref) then
+      local slot = (r.slot == 12) and 11 or ((r.slot == 14) and 13 or r.slot)
+      if db.higher or (r.minLevel or 0) <= UnitLevel("player") then
+        out[slot] = out[slot] or { items = {}, refs = {} }
+        c.eval = r
+        if c.ref then table.insert(out[slot].refs, c) end
+        if c.src ~= "equipped" and (r.score or 0) > 0.3 and r.wearable then table.insert(out[slot].items, c) end
+      end
+    end
+  end
+  for _, s in pairs(out) do
+    table.sort(s.items, function(a, b) return a.eval.score > b.eval.score end)
+    while #s.items > (limit or 3) do table.remove(s.items) end
+  end
+  return out
+end
