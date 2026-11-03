@@ -1319,6 +1319,8 @@ SlashCmdList.FOREVERMACROS = function(msg)
     if not ui then CreateUI() end
     ui:Show()
     ns.RunTour()
+  elseif msg == "diag" then
+    ns.ShowDiag()
   elseif msg == "help" or msg == "?" then
     Print(L.help)
   else
@@ -1375,3 +1377,34 @@ ev:SetScript("OnEvent", function(_, event, name)
     HookMacroFrame()
   end
 end)
+
+----------------------------------------------------------------------
+-- Diagnostic (/fmac diag) : sorts des macros prêtes présents ou absents dans ce client
+----------------------------------------------------------------------
+function ns.DiagCollect(add)
+  local _, myClass = UnitClass("player")
+  local lib = ns.isRetail and ns.LibraryRetail or ns.Library
+  local order = (lib == ns.LibraryRetail) and ns.LibraryRetailOrder or ns.LibraryOrder
+  add("")
+  add("## Sorts utilisés par les macros prêtes")
+  for _, cls in ipairs(order or {}) do
+    local missing, found, seen = {}, 0, {}
+    for _, m in ipairs(lib[cls] or {}) do
+      for id in (m.body or ""):gmatch("{(%d+)}") do
+        id = tonumber(id)
+        if not seen[id] then
+          seen[id] = true
+          local name, known = ns.DiagSpell(id)
+          if name then found = found + 1 else missing[#missing + 1] = tostring(id) end
+          if cls == myClass then
+            add(string.format("  %d = %s%s", id, tostring(name or "ABSENT"), known and " (connu)" or ""))
+          end
+        end
+      end
+    end
+    add(string.format("%s : %d sort(s) trouvé(s) ; absents de ce client : %s", cls, found,
+      #missing > 0 and table.concat(missing, ", ") or "aucun"))
+  end
+  local g, c = GetNumMacros()
+  add(string.format("Macros : %d générales, %d du personnage", g or 0, c or 0))
+end

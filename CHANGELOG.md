@@ -1,5 +1,8 @@
 # Journal des versions
 
+## ForeverGFX 2.1.9 / ForeverMacros 1.4 / ForeverGazette 1.3 / ForeverPrep 1.1 / ForeverHeal 1.1
+- **Commande de diagnostic dans tous les addons** (`/gfx diag`, `/fmac diag`, `/gazette diag`, `/prep diag`, `/fheal diag`) : un texte à copier-coller à Claude avec ce que le client WoW Forever donne vraiment (versions, variables, sorts, objets, textes du jeu, valeurs mesurées), pour adapter les addons à cette base classique modifiée. Module commun `tools/Diag.lua`.
+
 ## ForeverGFX 2.1.8 / ForeverMacros 1.3 / ForeverGazette 1.2 / ForeverPrep 1.0 / ForeverHeal 1.0
 - **Nouvel addon ForeverHeal** (`/fheal`, WoW Forever, prêtre) : ce que chaque caractéristique et chaque objet change vraiment, en clair. Infobulle des objets comparée à ce que tu portes (« +35 Endurance → +350 PV », « +22 soins → +19 par Soins supérieurs », puis soin moyen, soins par seconde, autonomie), panneau à côté de la fiche personnage (mesures, sorts de référence, ce que vaut +10 dans chaque caractéristique), annonce à chaque changement hors combat. Conversions mesurées sur ton personnage, montants des sorts lus dans le jeu, mélange de sorts et effet des talents tirés de tes lancers réels.
 - Autres addons : inchangés (numéro de ForeverGFX aligné sur le tag).

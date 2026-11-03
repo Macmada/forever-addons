@@ -698,7 +698,7 @@ local ALIASES = {
   photo = "photo", photos = "photo", screenshot = "photo",
   demo = "demo", ["démo"] = "demo",
   minimap = "minimap", tuto = "tuto", tutorial = "tuto", pdf = "pdf", imprimer = "pdf", print = "pdf",
-  lang = "lang", help = "help", aide = "help", ["?"] = "help",
+  lang = "lang", help = "help", aide = "help", ["?"] = "help", diag = "diag",
 }
 local TONE_ALIASES = { serieux = "serious", ["sérieux"] = "serious", serious = "serious",
                        tabloid = "tabloid", ["tabloïd"] = "tabloid", epique = "epic", ["épique"] = "epic", epic = "epic" }
@@ -731,6 +731,8 @@ SlashCmdList.FOREVERGAZETTE = function(msg)
     elseif arg == "off" or arg == "non" then ns.db.shots = false
     else ns.db.shots = not ns.db.shots end
     Print(L.optShots .. " : " .. (ns.db.shots and "on" or "off"))
+  elseif action == "diag" then
+    ns.ShowDiag()
   elseif action == "pdf" then
     StaticPopup_Show("FOREVERGAZETTE_PDF")
   elseif action == "demo" then

@@ -175,6 +175,7 @@ local function MaybeShot(ev, d)
     end
     C_Timer.After(hide and 0.1 or 0, function()   -- une image sans interface est d'abord affichée
       ev.shot = ShotName()
+      ns.diag.shots = ns.diag.shots + 1
       Screenshot()
       if not hide then Print(L.shot, ev.shot) else ns.pendingShotName = ev.shot end
     end)
@@ -331,6 +332,7 @@ local function OnCombatLog(...)
     engaged[dstGUID] = nil
     local info = unitInfo[dstGUID]
     local kind = Notable(info)
+    if kind == "boss" then ns.diag.bossLog = ns.diag.bossLog + 1 elseif kind == "rare" then ns.diag.rareLog = ns.diag.rareLog + 1 end
     if kind then
       local raid = select(2, IsInInstance()) == "raid"
       ns.Record(kind, { target = info.name or dstName }, info.name or dstName,
@@ -496,7 +498,9 @@ end
 ----------------------------------------------------------------------
 local ev = CreateFrame("Frame")
 ns.eventFrame = ev
-local function Safe(e) pcall(ev.RegisterEvent, ev, e) end
+ns.registered = {}
+ns.diag = { encounterEnd = 0, bossLog = 0, rareLog = 0, deaths = 0, shots = 0 }
+local function Safe(e) ns.registered[e] = pcall(ev.RegisterEvent, ev, e) end
 
 local handlers = {}
 handlers.PLAYER_LOGIN = function()
@@ -521,6 +525,8 @@ handlers.UPDATE_MOUSEOVER_UNIT = function() NoteUnit("mouseover") end
 handlers.NAME_PLATE_UNIT_ADDED = function(unit) NoteUnit(unit) end
 handlers.INSTANCE_ENCOUNTER_ENGAGE_UNIT = function() for i = 1, 5 do NoteUnit("boss" .. i) end end
 handlers.ENCOUNTER_END = function(_, name, _, _, success)
+  ns.diag.encounterEnd = ns.diag.encounterEnd + 1
+  ns.diag.lastEncounter = tostring(name) .. " (réussite : " .. tostring(success) .. ")"
   if success == 1 and name then
     local raid = select(2, IsInInstance()) == "raid"
     ns.Record("boss", { target = name }, name, raid and 20 or 0)

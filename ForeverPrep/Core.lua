@@ -477,3 +477,97 @@ ev:SetScript("OnEvent", function(_, event, ...)
   if h then h(...) end
 end)
 ns._handlers = handlers
+
+----------------------------------------------------------------------
+-- Diagnostic (/prep diag) : la base de ForeverPrep confrontée au client Forever
+----------------------------------------------------------------------
+function ns.DiagCollect(add)
+  local level = UnitLevel("player")
+  local _, class = UnitClass("player")
+  local known = {}
+  local function item(label, id, hint)
+    if known[id] then return end
+    known[id] = true
+    local it = ns.DiagItem(id)
+    if not it then
+      add(string.format("  %s %d : ABSENT de ce client", label, id))
+    else
+      local lvl = it.minLevel
+      local flag = (hint and lvl and lvl > 0 and lvl ~= hint) and string.format("  <-- niveau %d dans le jeu, %d dans la base", lvl, hint) or ""
+      add(string.format("  %s %d = %s (niv. %s, classe %s/%s)%s", label, id, tostring(it.name or "?"), tostring(lvl or "?"),
+        tostring(it.classID), tostring(it.subID), flag))
+    end
+  end
+  add("")
+  add("## Consommables de la base")
+  for _, cat in ipairs(D.consumables) do
+    for _, e in ipairs(cat.items) do item(cat.key, e[1], e[2]) end
+    for _, e in ipairs(cat.extra or {}) do item(cat.key, e[1], e[2]) end
+  end
+  for role, list in pairs(D.elixirs) do for _, e in ipairs(list) do item("élixir/" .. role, e[1], e[2]) end end
+  for role, list in pairs(D.weaponBoost) do for _, e in ipairs(list) do item("arme/" .. role, e[1], e[2]) end end
+  add("")
+  add("## Composants et sorts de ta classe (" .. tostring(class) .. ")")
+  for _, r in ipairs(D.reagents[class] or {}) do
+    item("composant", r.item)
+    for _, id in ipairs(r.spells) do
+      local name, isKnown = ns.DiagSpell(id)
+      add(string.format("    sort %d = %s%s", id, tostring(name or "ABSENT"), isKnown and " (connu)" or ""))
+    end
+  end
+  if class == "ROGUE" then for _, e in ipairs(D.poisons) do item("poison", e[1], e[2]) end end
+  if class == "HUNTER" then
+    for kind, list in pairs(D.ammo) do for _, e in ipairs(list) do item(kind, e[1], e[2]) end end
+  end
+  for _, b in ipairs(D.buffs[class] or {}) do
+    for _, id in ipairs(b.spells or {}) do
+      local name, isKnown = ns.DiagSpell(id)
+      add(string.format("  amélioration %d = %s%s", id, tostring(name or "ABSENT"), isKnown and " (connu)" or ""))
+    end
+  end
+  add("")
+  add("## Consommables de tes sacs absents de la base (nouveautés de Forever ?)")
+  local n = 0
+  for bag = 0, 4 do
+    local slots = (C_Container and C_Container.GetContainerNumSlots) and C_Container.GetContainerNumSlots(bag)
+                  or (GetContainerNumSlots and GetContainerNumSlots(bag)) or 0
+    for slot = 1, slots do
+      local id = (C_Container and C_Container.GetContainerItemID) and C_Container.GetContainerItemID(bag, slot)
+      if not id and GetContainerItemLink then
+        local link = GetContainerItemLink(bag, slot)
+        id = link and tonumber(link:match("item:(%d+)"))
+      end
+      if id and not known[id] then
+        local it = ns.DiagItem(id)
+        if it and (it.classID == 0 or it.classID == 5 or it.classID == 6) then
+          known[id] = true
+          n = n + 1
+          add(string.format("  %d = %s (niv. %s, %s / %s, classe %s/%s), %d en sac", id, tostring(it.name), tostring(it.minLevel),
+            tostring(it.type), tostring(it.sub), tostring(it.classID), tostring(it.subID), ns.Count(id)))
+        end
+      end
+    end
+  end
+  if n == 0 then add("  (aucun)") end
+  add("")
+  add("## Divers")
+  local frames = {}
+  for _, f in ipairs({ "LFGParentFrame", "PVEFrame", "LFGListingFrame", "LFGBrowseFrame", "GroupFinderFrame", "LFDParentFrame" }) do
+    if _G[f] then frames[#frames + 1] = f end
+  end
+  add("Fenêtres de recherche de groupe présentes : " .. (#frames > 0 and table.concat(frames, ", ") or "aucune"))
+  if GetNumTalentTabs then
+    for i = 1, GetNumTalentTabs() do
+      local r = { GetTalentTabInfo(i) }
+      for k = 1, #r do r[k] = tostring(r[k]) end
+      add("Arbre de talents " .. i .. " : " .. table.concat(r, " | "))
+    end
+  end
+  add("Rôle : " .. tostring(ns.Role()) .. " (réglage " .. tostring(ns.db.role) .. ") ; dernier passage au maître : niveau " .. tostring(ns.db.lastTrainerLevel))
+  add("")
+  add("## Analyse actuelle (niveau " .. level .. ")")
+  local res = ns.Analyze()
+  for _, s in ipairs(res.sections) do
+    for _, r in ipairs(s.rows) do add(string.format("  [%s] %s : %s", s.key, r.status, r.text)) end
+  end
+end

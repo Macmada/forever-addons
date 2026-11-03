@@ -333,6 +333,7 @@ SlashCmdList.FOREVERHEAL = function(msg)
   elseif cmd == "annonce" or cmd == "announce" then
     ns.db.announce = not ns.db.announce; Print(L.optAnnounce .. " : " .. (ns.db.announce and L.on or L.off))
   elseif cmd == "ecran" or cmd == "écran" or cmd == "screen" then ns.db.announceWhere = "screen"; Print(string.format(L.optWhere, L.where_screen))
+  elseif cmd == "diag" then ns.ShowDiag()
   elseif cmd == "chat" then ns.db.announceWhere = "chat"; Print(string.format(L.optWhere, L.where_chat))
   elseif cmd == "panneau" or cmd == "panel" then
     ns.db.panel = not ns.db.panel; Print(L.optPanel .. " : " .. (ns.db.panel and L.on or L.off))

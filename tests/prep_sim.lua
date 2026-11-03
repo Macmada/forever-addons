@@ -149,8 +149,17 @@ Char({})
 ----------------------------------------------------------------------
 -- Chargement
 ----------------------------------------------------------------------
+_G.date = _G.date or os.date
+_G.time = _G.time or os.time
+_G.UnitRace = _G.UnitRace or function() return "Humain", "Human" end
+_G.UnitFactionGroup = _G.UnitFactionGroup or function() return "Alliance" end
+_G.GetRealmName = _G.GetRealmName or function() return "Forever" end
+_G.GetBuildInfo = _G.GetBuildInfo or function() return "1.16.0", "60000", "Nov 1 2026", 16001 end
+_G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
+_G.IsAddOnLoaded = function() return true end
+_G.ChatFontNormal = _G.ChatFontNormal or {}
 local ns = {}
-for _, f in ipairs({ "Locale", "Data", "Core", "Tour", "UI" }) do
+for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "Tour", "UI" }) do
   assert(loadfile("ForeverPrep/" .. f .. ".lua"))("ForeverPrep", ns)
 end
 local evf = ns.eventFrame
@@ -286,4 +295,9 @@ SlashCmdList.FOREVERPREP("bouton")
 check(not fb.shown and ForeverPrepDB.float.shown == false, "/prep bouton : bouton masqué")
 SlashCmdList.FOREVERPREP("bouton")
 check(fb.shown, "/prep bouton : bouton réaffiché")
+local diagText = ns.DiagText()
+if os.getenv("SHOW_DIAG") then print(diagText) end
+check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, true), "diagnostic : texte complet, sans erreur (" .. #diagText .. " caractères)")
+if os.getenv("SHOW_DIAG") then print(diagText) end
+SlashCmdList["FOREVERPREP"]("diag")
 print("\nTOUT OK (" .. LANG .. ")")

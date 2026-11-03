@@ -427,3 +427,63 @@ function ns.WriteExports()
   ex.tone = db.tone
   db.exports = ex
 end
+
+----------------------------------------------------------------------
+-- Diagnostic (/gazette diag) : ce que le client fournit (événements, fonctions, textes du jeu) et ce qui a été noté
+----------------------------------------------------------------------
+function ns.DiagCollect(add)
+  local db = ns.db
+  add("")
+  add("## Événements")
+  local ok, ko = {}, {}
+  for e, v in pairs(ns.registered or {}) do if v then ok[#ok + 1] = e else ko[#ko + 1] = e end end
+  table.sort(ok); table.sort(ko)
+  add("Refusés par ce client : " .. (#ko > 0 and table.concat(ko, ", ") or "aucun"))
+  add("Acceptés : " .. table.concat(ok, ", "))
+  add("")
+  add("## Fonctions du jeu")
+  local function has(path, v) add(path .. " : " .. (v and "oui" or "NON")) end
+  has("CombatLogGetCurrentEventInfo", CombatLogGetCurrentEventInfo)
+  has("C_QuestLog.GetTitleForQuestID", C_QuestLog and C_QuestLog.GetTitleForQuestID)
+  has("C_QuestLog.GetQuestInfo", C_QuestLog and C_QuestLog.GetQuestInfo)
+  has("C_Reputation.GetFactionDataByIndex", C_Reputation and C_Reputation.GetFactionDataByIndex)
+  has("GetFactionInfo", GetFactionInfo)
+  has("Screenshot", Screenshot)
+  has("GetAchievementInfo", GetAchievementInfo)
+  add("Niveau maximum vu par l'addon : " .. tostring(ns.MaxLevel()))
+  add("Captures : format " .. tostring(GetCVar and GetCVar("screenshotFormat")) .. ", qualité " .. tostring(GetCVar and GetCVar("screenshotQuality")))
+  add("")
+  add("## Textes du jeu utilisés pour reconnaître les messages")
+  for _, n in ipairs({ "LOOT_ITEM_SELF", "LOOT_ITEM_SELF_MULTIPLE", "LOOT_ITEM_PUSHED_SELF", "LOOT_ITEM_CREATED_SELF", "SKILL_RANK_UP",
+                       "ERR_LEARN_RECIPE_S", "DUEL_WINNER_KNOCKOUT", "DUEL_WINNER_RETREAT" }) do
+    add(n .. " = " .. tostring(_G[n]))
+  end
+  local labels = {}
+  for i = 1, 8 do labels[#labels + 1] = tostring(_G["FACTION_STANDING_LABEL" .. i]) end
+  add("Paliers de réputation : " .. table.concat(labels, ", "))
+  add("")
+  add("## Détections depuis la connexion")
+  local d = ns.diag or {}
+  add(string.format("Fins de rencontre (ENCOUNTER_END) : %d%s ; boss vus par le journal de combat : %d ; élites rares : %d ; captures : %d",
+    d.encounterEnd or 0, d.lastEncounter and (", dernière : " .. d.lastEncounter) or "", d.bossLog or 0, d.rareLog or 0, d.shots or 0))
+  local keys = ns.EditionKeys()
+  add(string.format("Éditions enregistrées : %d ; ton : %s ; photos : %s ; sans interface : %s", #keys, tostring(db.tone),
+    tostring(db.shots), tostring(db.shotsNoUI)))
+  add("")
+  add("## Derniers moments notés")
+  local n = 0
+  for i = #keys, math.max(1, #keys - 2), -1 do
+    local day = db.days[keys[i]]
+    for j = #(day.events or {}), 1, -1 do
+      if n >= 25 then break end
+      local e = day.events[j]
+      local vars = {}
+      for k, v in pairs(e.v or {}) do vars[#vars + 1] = k .. "=" .. ns.StripCodes(tostring(v)) end
+      table.sort(vars)
+      add(string.format("%s %s %s (score %d)%s : %s", keys[i], date("%H:%M", e.t), e.k, e.s, e.shot and (" photo " .. e.shot) or "",
+        table.concat(vars, ", ")))
+      n = n + 1
+    end
+  end
+  if n == 0 then add("(aucun)") end
+end

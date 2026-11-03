@@ -614,6 +614,8 @@ SlashCmdList.FOREVERGFX = function(msg)
   cmd = (cmd or ""):lower()
   if cmd == "" then
     ns.ToggleUI()
+  elseif cmd == "diag" then
+    ns.ShowDiag()
   elseif cmd == "preset" then
     local p = ns.PresetByKey(arg)
     if p then ns.ApplyPreset(p, false)
@@ -728,3 +730,54 @@ ev:SetScript("OnEvent", function(_, event, a1, a2)
     ns.Refresh(true)
   end
 end)
+
+----------------------------------------------------------------------
+-- Diagnostic (/gfx diag) : valeurs réelles des variables du client, pour adapter l'addon à WoW Forever
+----------------------------------------------------------------------
+local GFX_KEYWORDS = { "graphics", "shadow", "raytrac", "ssao", "texture", "particle", "liquid", "light", "fsr", "dlss", "xess",
+                       "render", "vrs", "msaa", "aa", "projected", "weather", "sunshaft", "fog", "farclip", "lod", "density",
+                       "spell", "ssr", "reflection", "volumetric", "outline", "resample", "sharpen", "vsync", "maxfps", "contrast",
+                       "brightness", "gamma" }
+function ns.DiagCollect(add)
+  local names = {}
+  for k in pairs(ns.Descriptions) do names[#names + 1] = k end
+  table.sort(names)
+  local CVa = C_CVar or {}
+  local missing = {}
+  add("")
+  add("## Variables gérées par ForeverGFX (" .. #names .. ")")
+  for _, n in ipairs(names) do
+    local v = ns.GetCVar(n)
+    if v == nil then
+      missing[#missing + 1] = n
+    else
+      local def = CVa.GetCVarDefault and CVa.GetCVarDefault(n)
+      add(n .. " = " .. tostring(v) .. (def and (" (défaut " .. tostring(def) .. ")") or ""))
+    end
+  end
+  add("Absentes de ce client : " .. (#missing > 0 and table.concat(missing, ", ") or "aucune"))
+  if ConsoleGetAllCommands then
+    local known = {}
+    for _, n in ipairs(names) do known[n:lower()] = true end
+    local cvarType = (Enum and Enum.ConsoleCommandType and Enum.ConsoleCommandType.Cvar) or 0
+    local extra = {}
+    for _, c in ipairs(ConsoleGetAllCommands()) do
+      local n = c.command
+      if n and not known[n:lower()] and (c.commandType == nil or c.commandType == cvarType) then
+        local l = n:lower()
+        local hit = l:sub(1, 2) == "gx" or l:sub(1, 2) == "rt"
+        for _, kw in ipairs(GFX_KEYWORDS) do if l:find(kw, 1, true) then hit = true break end end
+        if hit then
+          local v = ns.GetCVar(n)
+          if v ~= nil then extra[#extra + 1] = n .. " = " .. tostring(v) end
+        end
+      end
+    end
+    table.sort(extra)
+    add("")
+    add("## Variables graphiques du client non gérées par ForeverGFX (" .. #extra .. ")")
+    for _, e in ipairs(extra) do add(e) end
+  end
+  add("")
+  add(string.format("FPS actuel : %.0f", GetFramerate()))
+end

@@ -449,3 +449,101 @@ ev:SetScript("OnEvent", function(_, event, ...)
 end)
 ns._handlers = handlers
 ns._setLast = function(s) last = s end
+
+----------------------------------------------------------------------
+-- Diagnostic (/fheal diag) : valeurs réelles du client (sorts, objets, conversions) pour caler le modèle sur Forever
+----------------------------------------------------------------------
+local HEALWORDS = { "soin", "heal", "rénov", "renew", "prière", "prayer", "rétabl", "mend", "bouclier", "shield", "nova", "lumière", "light" }
+local STATWORDS = { "soin", "heal", "mana", "critique", "critical", "esprit", "spirit", "intell", "endurance", "stamina", "équipé", "equip", "%+" }
+
+function ns.DiagCollect(add)
+  local S = ns.Snapshot()
+  local r = ns.Rates(S)
+  add("")
+  add("## Relevé du jeu")
+  add(string.format("Endurance %d, Intelligence %d, Esprit %d ; PV %d ; mana %d ; bonus aux soins %d ; critique %.2f %%",
+    S.sta, S.int, S.spi, S.hp, S.mana, S.heal, S.crit * 100))
+  add(string.format("Régénération : %.2f/s hors combat, %.2f/s en incantant ; armure %d", S.regenOut, S.regenIn, S.armor))
+  add(string.format("Conversions utilisées : %.2f PV/Endurance, %.2f mana/Intelligence, %.1f Intelligence pour 1 %% critique, %.3f mana/s par Esprit, %.0f %% gardé en incantant",
+    r.hpPerSta, r.manaPerInt, r.intPerCrit, r.regenPerSpi, r.castFrac * 100))
+  local learned = {}
+  for k, v in pairs(ns.db.rates) do learned[#learned + 1] = string.format("%s=%.3f", k, v) end
+  add("Mesurées sur le personnage : " .. (#learned > 0 and table.concat(learned, ", ") or "rien encore"))
+  add("")
+  add("## Sorts de soin connus (base de l'addon)")
+  for family, fam in pairs(ns.Data.families) do
+    for i = #fam.ranks, 1, -1 do
+      local id = fam.ranks[i][1]
+      local name, isKnown = ns.DiagSpell(id)
+      if isKnown then
+        local m = ns.SpellModel(family, i)
+        local desc = (C_Spell and C_Spell.GetSpellDescription and C_Spell.GetSpellDescription(id))
+                     or (GetSpellDescription and GetSpellDescription(id)) or "?"
+        add(string.format("%s rang %d (%d) = %s", family, i, id, tostring(name)))
+        add("  description : " .. tostring(desc):gsub("\n", " "))
+        if m then
+          add(string.format("  lu : moyenne %.0f, coefficient %.3f, incantation %.2f s, coût %d, correction talents ×%.3f",
+            m.base, m.coef, m.cast, m.cost, m.mult))
+        else
+          add("  lu : IMPOSSIBLE (montant introuvable dans la description)")
+        end
+        break
+      end
+    end
+  end
+  add("")
+  add("## Sorts du grimoire qui ressemblent à des soins mais absents de la base")
+  local n = 0
+  if GetNumSpellTabs and GetSpellTabInfo and GetSpellBookItemName then
+    for tab = 1, GetNumSpellTabs() do
+      local _, _, offset, count = GetSpellTabInfo(tab)
+      for i = (offset or 0) + 1, (offset or 0) + (count or 0) do
+        local name, rank = GetSpellBookItemName(i, "spell")
+        local _, id = GetSpellBookItemInfo(i, "spell")
+        local l = (name or ""):lower()
+        local healish = false
+        for _, w in ipairs(HEALWORDS) do if l:find(w, 1, true) then healish = true break end end
+        if healish and id and not ns.familyOf[id] then
+          add(string.format("  %d = %s %s", id, tostring(name), tostring(rank or "")))
+          n = n + 1
+        end
+      end
+    end
+  end
+  if n == 0 then add("  (aucun)") end
+  add("")
+  add("## Équipement porté : caractéristiques données par le jeu et lignes d'infobulle utiles")
+  for slot = 1, 18 do
+    local link = GetInventoryItemLink("player", slot)
+    if link then
+      local get = (C_Item and C_Item.GetItemStats) or GetItemStats
+      local raw = get and get(link) or {}
+      local parts = {}
+      for k, v in pairs(raw) do parts[#parts + 1] = k .. "=" .. tostring(v) end
+      table.sort(parts)
+      local st = ns.ItemStats(nil, slot)
+      add(string.format("emplacement %d %s", slot, link:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|H.-|h", ""):gsub("|h", "")))
+      add("  jeu : " .. (#parts > 0 and table.concat(parts, ", ") or "rien"))
+      add(string.format("  lu par l'addon : soins %s, mana/5 s %s, critique %s", tostring(st.heal), tostring(st.mp5), tostring(st.crit)))
+      if scan then
+        scan:SetOwner(WorldFrame or UIParent, "ANCHOR_NONE")
+        scan:ClearLines()
+        scan:SetInventoryItem("player", slot)
+        for i = 2, scan:NumLines() do
+          local fs = _G["ForeverHealScanTipTextLeft" .. i]
+          local t = fs and fs:GetText()
+          local lt = t and t:lower() or ""
+          for _, w in ipairs(STATWORDS) do
+            if lt:find(w) then add("  infobulle : " .. t) break end
+          end
+        end
+        scan:Hide()
+      end
+    end
+  end
+  add("")
+  add("## Jeu réel")
+  local mix = ns.Mix()
+  for _, m in ipairs(mix) do add(string.format("  %s : %.0f %% du temps", m.spell.name, m.share * 100)) end
+  add(string.format("  lancers observés : %d ; soins totaux %d dont excédent %d", mix.observed or 0, ns.db.effective.total, ns.db.effective.over))
+end

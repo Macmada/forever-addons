@@ -577,6 +577,8 @@ SlashCmdList.FOREVERPREP = function(msg)
   elseif cmd == "role" and ROLE_ALIASES[arg] then
     ns.db.role = ROLE_ALIASES[arg]
     CreateUI(); ui:Show(); ns.Refresh()
+  elseif cmd == "diag" then
+    ns.ShowDiag()
   elseif cmd == "bouton" or cmd == "button" then
     ns.db.float.shown = not ns.db.float.shown
     ns.UpdateFloat()

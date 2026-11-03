@@ -46,4 +46,7 @@ read_globals = {
   "CharacterFrame", "GetItemStats", "GetManaRegen", "GetSpellBonusHealing", "GetSpellCritChance", "GetSpellDescription",
   "GetSpellPowerCost", "ItemRefTooltip", "TooltipDataProcessor", "UnitArmor", "UnitHealthMax", "UnitPowerMax",
   "UnitResistance", "UnitStat", "WorldFrame",
+  -- diagnostic
+  "GetAddOnMetadata", "UnitRace", "UnitFactionGroup", "GetNumSpellTabs", "GetSpellTabInfo", "GetSpellBookItemName",
+  "GetSpellBookItemInfo", "GetContainerItemLink", "GetNumMacros", "GetFramerate",
 }

@@ -95,8 +95,17 @@ end
 _G.GameTooltip.GetItem = function(self) return "x", self.link end
 
 -- chargement
+_G.date = _G.date or os.date
+_G.time = _G.time or os.time
+_G.UnitRace = _G.UnitRace or function() return "Humain", "Human" end
+_G.UnitFactionGroup = _G.UnitFactionGroup or function() return "Alliance" end
+_G.GetRealmName = _G.GetRealmName or function() return "Forever" end
+_G.GetBuildInfo = _G.GetBuildInfo or function() return "1.16.0", "60000", "Nov 1 2026", 16001 end
+_G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
+_G.IsAddOnLoaded = function() return true end
+_G.ChatFontNormal = _G.ChatFontNormal or {}
 local ns = {}
-for _, f in ipairs({ "Locale", "Data", "Core", "UI" }) do assert(loadfile("ForeverHeal/" .. f .. ".lua"))("ForeverHeal", ns) end
+for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "UI" }) do assert(loadfile("ForeverHeal/" .. f .. ".lua"))("ForeverHeal", ns) end
 -- infobulle de lecture : relie SetHyperlink / SetInventoryItem à nos objets
 local realCF = _G.CreateFrame
 _G.CreateFrame = function(kind, name, ...)
@@ -191,4 +200,9 @@ check(strip(ns.PanelText()):find(LANG == "fr" and "prêtre" or "priest", 1, true
 P.class = "PRIEST"
 SlashCmdList.FOREVERHEAL("chat")
 check(ns.db.announceWhere == "chat", "/fheal chat")
+local diagText = ns.DiagText()
+if os.getenv("SHOW_DIAG") then print(diagText) end
+check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, true), "diagnostic : texte complet, sans erreur (" .. #diagText .. " caractères)")
+if os.getenv("SHOW_DIAG") then print(diagText) end
+SlashCmdList["FOREVERHEAL"]("diag")
 print("\nTOUT OK (" .. LANG .. ")")

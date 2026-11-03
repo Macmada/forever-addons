@@ -127,8 +127,18 @@ end
 ----------------------------------------------------------------------
 -- Chargement de l'addon (même ordre que le .toc)
 ----------------------------------------------------------------------
+_G.date = _G.date or os.date
+_G.time = _G.time or os.time
+_G.UnitRace = _G.UnitRace or function() return "Humain", "Human" end
+_G.UnitClass = _G.UnitClass or function() return "Prêtre", "PRIEST" end
+_G.UnitFactionGroup = _G.UnitFactionGroup or function() return "Alliance" end
+_G.GetRealmName = _G.GetRealmName or function() return "Forever" end
+_G.GetBuildInfo = _G.GetBuildInfo or function() return "1.16.0", "60000", "Nov 1 2026", 16001 end
+_G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
+_G.IsAddOnLoaded = function() return true end
+_G.ChatFontNormal = _G.ChatFontNormal or {}
 local ns = {}
-for _, f in ipairs({ "Locale", "Templates", "Core", "Gazette", "Tour", "UI" }) do
+for _, f in ipairs({ "Locale", "Diag", "Templates", "Core", "Gazette", "Tour", "UI" }) do
   local chunk = assert(loadfile("ForeverGazette/" .. f .. ".lua"))
   chunk("ForeverGazette", ns)
 end
@@ -287,6 +297,11 @@ check(ForeverGazetteDB.days["2000-01-01"] == nil, "vieilles éditions supprimée
 check(ns.Upper("L'Écho Croustillant — spécial çà") == "L'ÉCHO CROUSTILLANT — SPÉCIAL ÇÀ", "majuscules accentuées")
 ForeverGazetteDB.tone = "tabloid"
 if LANG == "fr" then check(ns.ToText(ns.BuildEdition(today, ns.DemoDay(), 42), "md"):find("SPÉCIAL", 1, true), "titre du journal en majuscules accentuées") end
+local diagText = ns.DiagText()
+if os.getenv("SHOW_DIAG") then print(diagText) end
+check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, true), "diagnostic : texte complet, sans erreur (" .. #diagText .. " caractères)")
+if os.getenv("SHOW_DIAG") then print(diagText) end
+SlashCmdList["FOREVERGAZETTE"]("diag")
 print("\nTOUT OK (" .. LANG .. ")")
 
 -- Écrit la base au format SavedVariables du jeu (pour tester le compagnon Discord)

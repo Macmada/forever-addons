@@ -9,6 +9,7 @@
 ## AddonCompartmentFunc: ForeverGFX_OnCompartmentClick
 
 Locale.lua
+Diag.lua
 Data.lua
 Core.lua
 Tour.lua

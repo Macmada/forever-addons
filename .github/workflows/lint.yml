@@ -13,6 +13,8 @@ jobs:
         uses: lunarmodules/luacheck@v1
         with:
           args: ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal
+      - name: Module de diagnostic identique dans chaque addon
+        run: sh tools/sync-diag.sh --check
 
   gazette-sim:
     runs-on: ubuntu-latest
