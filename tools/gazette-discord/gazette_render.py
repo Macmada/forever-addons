@@ -122,13 +122,21 @@ class Renderer:
         if not path:
             return None
         try:
-            return Image.open(path).convert("RGB")
+            im = Image.open(path)
+            im.draft("RGB", (im.width // 2, im.height // 2))   # JPEG 5K : décodage réduit, plus rapide
+            return im.convert("RGB")
         except OSError:
             return None
 
-    def fit_photo(self, im, width, max_h):
+    def fit_photo(self, im, width, max_h, max_ratio):
+        """Largeur imposée ; les captures trop larges (écran 21:9 ou 32:9) sont recadrées au centre à max_ratio,
+        les trop hautes à max_h. Dans WoW, le personnage est au centre de l'écran."""
+        if im.width / im.height > max_ratio:
+            cw = int(im.height * max_ratio)
+            left = (im.width - cw) // 2
+            im = im.crop((left, 0, left + cw, im.height))
         h = int(width * im.height / im.width)
-        if h > max_h:              # recadrage au centre pour garder la largeur
+        if h > max_h:
             return ImageOps.fit(im, (width, max_h), Image.LANCZOS, centering=(0.5, 0.45))
         return im.resize((width, h), Image.LANCZOS)
 
@@ -166,7 +174,7 @@ class Renderer:
         im = self.load_photo(une.get("f")) if une else None
         if im:
             pw = W - 2 * M - 160
-            im = self.fit_photo(im, pw, 400)
+            im = self.fit_photo(im, pw, 400, 2.35)
             y = self.paste_photo(page, im, M + 80 + (pw - im.width) // 2 + 0, y, une.get("f"), pw) + 10
         lede = get("lede")
         if lede:
@@ -194,7 +202,7 @@ class Renderer:
                 items.append(("line", self.text_h("• " + b["t"], self.f_txt, colw - 10, 4) + 4, b))
                 ph = self.load_photo(b.get("f")) if b.get("f") else None
                 if ph:
-                    ph = self.fit_photo(ph, colw, 220)
+                    ph = self.fit_photo(ph, colw, 220, 1.9)
                     items.append(("photo", ph.height + 10 + self.text_h(b["t"], self.f_small, colw, 2) + 12, (ph, b)))
             items.append(("space", 18, None))
         for st in stats:

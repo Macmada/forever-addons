@@ -412,7 +412,7 @@ local opt
 local function ShowOptions()
   if not opt then
     opt = CreateFrame("Frame", "ForeverGazetteOptionsFrame", ui, "BasicFrameTemplateWithInset")
-    opt:SetSize(540, 380)
+    opt:SetSize(540, 410)
     opt:SetPoint("CENTER", ui, "CENTER", 0, -10)
     opt:SetFrameStrata("DIALOG")
     local t = opt:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -449,6 +449,7 @@ local function ShowOptions()
     end
     C(L.optShots, "shots")
     C(L.optShotsAll, "shotsAll")
+    C(L.optNoUI, "shotsNoUI")
     C(L.optToast, "toast")
     local mm = MakeCheck(opt, L.optMinimap, function() return not ns.db.minimap.hide end,
                          function(v) ns.db.minimap.hide = not v; ns.UpdateMinimapButton() end)

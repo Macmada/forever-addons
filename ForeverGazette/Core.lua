@@ -127,6 +127,7 @@ local function InitDB()
   if db.shots == nil then db.shots = true end
   if db.shotsAll == nil then db.shotsAll = false end
   if db.toast == nil then db.toast = true end
+  if db.shotsNoUI == nil then db.shotsNoUI = true end
   db.keepDays = db.keepDays or 365
   db.minimap = db.minimap or { angle = 215, hide = false }
   db.days = db.days or {}
@@ -165,10 +166,26 @@ local function MaybeShot(ev, d)
   d.shots = d.shots + 1
   lastShot = GetTime()
   C_Timer.After(1.2, function()          -- laisse l'animation (niveau, butin) apparaître à l'écran
-    ev.shot = ShotName()
-    Screenshot()
-    Print(L.shot, ev.shot)
+    -- Sans interface (comme Alt+Z) : seulement hors combat, le jeu bloque sinon les cadres protégés.
+    local hide = db.shotsNoUI and UIParent and UIParent:IsShown() and not InCombatLockdown()
+    if hide then
+      UIParent:Hide()
+      ns.uiHiddenForShot = true
+      C_Timer.After(2, ns.RestoreUI)        -- filet de sécurité si le jeu ne confirme pas la capture
+    end
+    C_Timer.After(hide and 0.1 or 0, function()   -- une image sans interface est d'abord affichée
+      ev.shot = ShotName()
+      Screenshot()
+      if not hide then Print(L.shot, ev.shot) else ns.pendingShotName = ev.shot end
+    end)
   end)
+end
+
+function ns.RestoreUI()
+  if not ns.uiHiddenForShot then return end
+  ns.uiHiddenForShot = nil
+  if UIParent and not UIParent:IsShown() then UIParent:Show() end
+  if ns.pendingShotName then Print(L.shot, ns.pendingShotName); ns.pendingShotName = nil end
 end
 
 -- kind : type (voir SCORE) ; v : variables de l'article ; key : anti-doublon ; bonus : ajouté au score.
@@ -528,7 +545,9 @@ handlers.ACHIEVEMENT_EARNED = function(id)
   local _, name, points = GetAchievementInfo(id)
   if name then ns.Record("achievement", { ach = name }, id, math.min(tonumber(points) or 0, 50)) end
 end
-handlers.SCREENSHOT_FAILED = function() Print("Screenshot failed.") end
+handlers.SCREENSHOT_SUCCEEDED = function() C_Timer.After(0.05, ns.RestoreUI) end
+handlers.SCREENSHOT_FAILED = function() ns.RestoreUI(); Print("Screenshot failed.") end
+handlers.PLAYER_REGEN_DISABLED = function() ns.RestoreUI() end   -- combat qui commence : interface rétablie tout de suite
 handlers.PLAYER_LOGOUT = function() if ns.WriteExports then ns.WriteExports() end end
 
 ev:RegisterEvent("ADDON_LOADED")

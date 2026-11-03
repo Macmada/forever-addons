@@ -43,6 +43,7 @@ Sans clic, la même chose se fait à chaque déconnexion.
 
 ## Bon à savoir
 
+- Écran ultra-large (21:9, 32:9 comme un Samsung G9) : les captures sont recadrées au centre (là où est ton personnage) pour garder des photos bien proportionnées.
 - Les photos sont cherchées dans le dossier `Screenshots` du client (nom exact, ou à 5 secondes près). Format conseillé :
   JPEG (réglage par défaut du jeu).
 - Ce qui a été traité est noté dans `gazette_discord_state.json` : rien n'est fait deux fois. Une édition d'un jour terminé

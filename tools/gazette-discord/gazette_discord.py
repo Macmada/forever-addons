@@ -33,7 +33,7 @@ import uuid
 HERE = os.path.dirname(os.path.abspath(__file__))
 CHUNK = 1900                      # limite Discord : 2 000 caractères par message
 MAX_FILE = 9 * 1024 * 1024        # limite des pièces jointes d'un webhook (10 Mo), avec marge
-USER_AGENT = "ForeverGazette-Discord (https://github.com/Macmada/forever-addons, 1.1)"
+USER_AGENT = "ForeverGazette-Discord (https://github.com/Macmada/forever-addons, 1.2)"
 
 try:
     sys.path.insert(0, HERE)

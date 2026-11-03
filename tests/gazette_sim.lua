@@ -46,6 +46,7 @@ local function Obj(kind)
 end
 _G.CreateFrame = function(kind) local f = Obj(kind); frames[#frames + 1] = f; return f end
 _G.UIParent, _G.Minimap, _G.GameTooltip = Obj("Frame"), Obj("Frame"), Obj("GameTooltip")
+UIParent.shown = true
 _G.UISpecialFrames, _G.StaticPopupDialogs, _G.SlashCmdList = {}, {}, {}
 _G.StaticPopup_Show = function() end
 _G.ChatFontNormal = {}
@@ -94,7 +95,9 @@ _G.GetNumGroupMembers = function() return #state.group > 0 and #state.group + 1 
 _G.GetRealmName = function() return "Forever" end
 _G.GetCVar = function() return "jpeg" end
 local shots, chat = 0, {}
-_G.Screenshot = function() shots = shots + 1 end
+local uiAtShot
+_G.Screenshot = function() shots = shots + 1; uiAtShot = UIParent.shown end
+_G.InCombatLockdown = function() return false end
 _G.SendChatMessage = function(msg, ch) chat[#chat + 1] = { msg, ch } end
 _G.GetNumFactions = function() return #state.factions end
 _G.GetFactionInfo = function(i) local f = state.factions[i]; return f[1], "", f[2], 0, 0, 0, false, false, false, false, true end
@@ -160,9 +163,12 @@ Fire("PLAYER_TARGET_CHANGED")
 Log("SPELL_DAMAGE", "Player-1-AAAA", "Machin", 0x511, "Creature-0-1-VC", "Edwin VanCleef")
 Log("UNIT_DIED", "", nil, 0, "Creature-0-1-VC", "Edwin VanCleef")
 check(Has("boss") and Has("boss").v.target == "Edwin VanCleef", "boss vaincu noté (crâne + élite en instance)")
-clock = clock + 2; RunTimers()
+clock = clock + 2; RunTimers(); clock = clock + 0.2; RunTimers()
 check(Has("boss").shot and Has("boss").shot:match("^WoWScrnShot_%d+_%d+%.jpg$"), "photo de une prise pour le boss : " .. tostring(Has("boss").shot))
 check(shots == 1, "Screenshot() appelé une fois")
+check(uiAtShot == false, "interface masquée au moment de la capture (photos sans interface)")
+Fire("SCREENSHOT_SUCCEEDED"); clock = clock + 1; RunTimers()
+check(UIParent.shown == true, "interface rétablie après la capture")
 ENCOUNTER = Fire("ENCOUNTER_END", 1, "Edwin VanCleef", 1, 5, 1)
 local n = 0; for _, e in ipairs(Events()) do if e.k == "boss" then n = n + 1 end end
 check(n == 1, "pas de doublon entre UNIT_DIED et ENCOUNTER_END")

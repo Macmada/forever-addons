@@ -1,5 +1,10 @@
 # Journal des versions
 
+## ForeverGFX 2.1.6 / ForeverMacros 1.3 / ForeverGazette 1.2
+- ForeverGazette : **photos sans l'interface** (option activée par défaut) : l'interface est masquée une fraction de seconde le temps de la capture, comme Alt+Z, puis rétablie (hors combat seulement ; rétablie aussi dès qu'un combat commence).
+- Compagnon 1.2 : **écrans ultra-larges (21:9, 32:9, ex. Samsung G9 en 5120×1440)** : les captures sont recadrées au centre (2,35:1 pour la une, 1,9:1 pour les autres photos) au lieu de devenir des bandeaux très fins ; décodage réduit des JPEG 5K (plus rapide).
+- ForeverGFX, ForeverMacros : inchangés (numéro de ForeverGFX aligné sur le tag).
+
 ## ForeverGFX 2.1.5 / ForeverMacros 1.3 / ForeverGazette 1.1
 - ForeverGazette : **PDF et image de chaque édition, avec tes captures d'écran**. Bouton « PDF » (et `/gazette pdf`) : la gazette est enregistrée (rechargement de l'interface) et le compagnon, sur ton PC, en fait dans la minute une page de journal (une avec sa photo, rubriques sur deux colonnes, photos des autres grands moments, bilan) en PDF et PNG, rangée dans `Documents\ForeverGazette` et postée sur Discord en image si tu veux. Un addon ne peut pas écrire de fichier lui-même : c'est le compagnon qui les fabrique.
 - ForeverGazette : icônes des objets dans la page en jeu ; L'Hebdo a ses photos ; titre du journal en majuscules accentuées (« SPÉCIAL ») ; photos du niveau et de l'épique dans la démo.
