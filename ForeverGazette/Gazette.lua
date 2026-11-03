@@ -212,7 +212,7 @@ function ns.BuildEdition(key, d, number)
   blocks[#blocks + 1] = { kind = "masthead", text = Fill(t.masthead[ns.db.tone] or t.masthead.serious, { name = name }) }
   blocks[#blocks + 1] = { kind = "edition", text = Fill(t.edition, { count = number or ns.EditionNumber(key), date = ns.FormatDate(key) }) }
   if top then
-    blocks[#blocks + 1] = { kind = "headline", text = ns.Headline(top, d), link = top.v and top.v.item }
+    blocks[#blocks + 1] = { kind = "headline", text = ns.Headline(top, d), link = top.v and top.v.item, ev = top.k }
   else
     blocks[#blocks + 1] = { kind = "headline", text = Fill(Pick(tone.quiet.head, DayTime(key)), { name = name }) }
   end
@@ -241,7 +241,8 @@ function ns.BuildEdition(key, d, number)
       local limit = (s == "quests") and 5 or SECTION_LIMIT
       for i = 1, math.min(#list, limit) do
         local e = list[i]
-        blocks[#blocks + 1] = { kind = (e.v and e.v.item) and "item" or "line", text = Line(e, d), link = e.v and e.v.item }
+        blocks[#blocks + 1] = { kind = (e.v and e.v.item) and "item" or "line", text = Line(e, d), link = e.v and e.v.item,
+                                file = e.shot, ev = e.k }
       end
       if #list > limit then blocks[#blocks + 1] = { kind = "note", text = Fill(t.questsMore, { count = #list - limit }) } end
     end
@@ -281,8 +282,14 @@ function ns.BuildWeekly(key)
   local blocks = {}
   blocks[#blocks + 1] = { kind = "masthead", text = Fill(t.weeklyMasthead[ns.db.tone] or t.weeklyMasthead.serious, { name = name }) }
   blocks[#blocks + 1] = { kind = "edition", text = Fill(t.weeklyRange, { from = ns.FormatDate(keys[1]), to = ns.FormatDate(keys[7]) }) }
+  local weekShot
   if all[1] then
-    blocks[#blocks + 1] = { kind = "headline", text = ns.Headline(all[1].e, all[1].d), link = all[1].e.v and all[1].e.v.item }
+    blocks[#blocks + 1] = { kind = "headline", text = ns.Headline(all[1].e, all[1].d), link = all[1].e.v and all[1].e.v.item, ev = all[1].e.k }
+    weekShot = all[1].e.shot
+    if not weekShot then
+      for _, x in ipairs(all) do if x.e.shot then weekShot = x.e.shot break end end
+    end
+    if weekShot then blocks[#blocks + 1] = { kind = "photo", text = Fill(t.photo, { item = weekShot }), file = weekShot } end
   end
   blocks[#blocks + 1] = { kind = "section", text = t.sections.weeklyTop }
   local n = 0
@@ -291,7 +298,8 @@ function ns.BuildWeekly(key)
     if x.e.s >= 15 and n < 10 then
       n = n + 1
       blocks[#blocks + 1] = { kind = (x.e.v and x.e.v.item) and "item" or "line",
-                              text = ns.FormatDate(x.key, true) .. " — " .. ns.Headline(x.e, x.d), link = x.e.v and x.e.v.item }
+                              text = ns.FormatDate(x.key, true) .. " — " .. ns.Headline(x.e, x.d), link = x.e.v and x.e.v.item,
+                              file = (x.e.shot ~= weekShot) and x.e.shot or nil, ev = x.e.k }
     end
   end
   StatsBlocks(blocks, total, t.sections.weeklyStats)
@@ -383,6 +391,15 @@ end
 ----------------------------------------------------------------------
 -- Exports pour le compagnon Discord (lus dans le fichier SavedVariables à la déconnexion)
 ----------------------------------------------------------------------
+-- Mise en page transmise au compagnon (PDF/PNG) : type, texte sans codes, qualité d'objet, photo, type d'événement
+function ns.ExportBlocks(blocks)
+  local out = {}
+  for _, b in ipairs(blocks) do
+    out[#out + 1] = { k = b.kind, t = ns.StripCodes(b.text), q = b.link and ns.LinkQuality(b.link) or nil, f = b.file, e = b.ev }
+  end
+  return out
+end
+
 function ns.WriteExports()
   local db = ns.db
   if not db then return end
@@ -393,13 +410,20 @@ function ns.WriteExports()
       local blocks = ns.BuildEdition(k)
       if blocks then
         local shot
-        for _, b in ipairs(blocks) do if b.file then shot = b.file end end
-        ex.days[k] = { md = ns.ToText(blocks, "md"), headline = ns.StripCodes(ns.DayHeadline(k) or ""), shot = shot }
+        for _, b in ipairs(blocks) do if b.kind == "photo" then shot = b.file end end
+        ex.days[k] = { md = ns.ToText(blocks, "md"), headline = ns.StripCodes(ns.DayHeadline(k) or ""), shot = shot,
+                       blocks = ns.ExportBlocks(blocks) }
       end
     end
   end
   local today = ns.Today()
   local wk = ns.BuildWeekly(today)
-  if wk then ex.weekly = { key = today, md = ns.ToText(wk, "md") } end
+  if wk then
+    local head
+    for _, b in ipairs(wk) do if b.kind == "headline" then head = ns.StripCodes(b.text) break end end
+    ex.weekly = { key = today, md = ns.ToText(wk, "md"), blocks = ns.ExportBlocks(wk), headline = head }
+  end
+  ex.lang = ns.lang
+  ex.tone = db.tone
   db.exports = ex
 end

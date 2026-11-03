@@ -32,5 +32,5 @@ read_globals = {
   "GetNumPartyMembers", "GetNumRaidMembers", "GetRealmName", "GetTime", "GetTitleText", "IsInGuild",
   "IsInRaid", "LOOT_ITEM_SELF", "Screenshot", "SendChatMessage", "SKILL_RANK_UP", "UNKNOWNOBJECT",
   "UnitExists", "UnitGUID", "UnitIsPlayer", "UnitLevel", "UnitName", "UnitSex", "UnitXP", "UnitXPMax",
-  "UnitClassification", "GetRealZoneText",
+  "UnitClassification", "GetRealZoneText", "ReloadUI", "GetItemIcon", "CANCEL",
 }

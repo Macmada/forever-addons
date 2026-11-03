@@ -66,6 +66,9 @@ local function GetBtn()
   local b = pool.btn[used.btn]
   if not b then
     b = CreateFrame("Button", nil, ui.content)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetSize(18, 18)
+    b.icon:SetPoint("TOPLEFT", 0, 1)
     b.fs = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     b.fs:SetPoint("TOPLEFT")
     b.fs:SetJustifyH("LEFT")
@@ -104,6 +107,14 @@ local function GetRule()
   return r
 end
 
+local function ItemIcon(link)
+  if not link then return nil end
+  local ok, tex
+  if C_Item and C_Item.GetItemIconByID then ok, tex = pcall(C_Item.GetItemIconByID, link) end
+  if (not ok or not tex) and GetItemIcon then ok, tex = pcall(GetItemIcon, link) end
+  return ok and tex or nil
+end
+
 local STYLE = {
   masthead = { font = "GameFontNormalHuge", color = INK, justify = "CENTER", gap = 4 },
   edition = { font = "GameFontNormalSmall", color = INK_SOFT, justify = "CENTER", gap = 6, ruleAfter = true },
@@ -136,18 +147,24 @@ local function Render(blocks)
     local indent = st.indent or 0
     local text = (b.kind == "line" or b.kind == "item" or b.kind == "stats") and ("• " .. b.text) or b.text
     local fs, holder
+    local iconW = 0
     if b.link or b.onClick then
       holder = GetBtn()
       holder.link, holder.onClick = b.link, b.onClick
       fs = holder.fs
+      local tex = (b.kind == "item") and ItemIcon(b.link)
+      holder.icon:SetShown(tex ~= nil)
+      if tex then holder.icon:SetTexture(tex); iconW = 22 end
+      fs:ClearAllPoints()
+      fs:SetPoint("TOPLEFT", iconW, 0)
     else
       fs = GetFS()
     end
     fs:SetFontObject(st.font)
     fs:SetTextColor(st.color[1], st.color[2], st.color[3])
     fs:SetJustifyH(st.justify)
-    fs:SetWidth(width - indent - 12)
-    fs:SetText(text)
+    fs:SetWidth(width - indent - 12 - iconW)
+    fs:SetText(iconW > 0 and b.text or text)
     local h = fs:GetStringHeight()
     if holder then
       holder:SetPoint("TOPLEFT", 6 + indent, y)
@@ -280,7 +297,7 @@ function ns.DemoDay()
       E(2500, "rep", { faction = fr and "Hurlevent" or "Stormwind", standing = fr and "Honoré" or "Honored" }, 30),
       E(2000, "skill", { skill = fr and "Forge" or "Blacksmithing", rank = 150 }, 25),
       E(1500, "duel_win", { target = "Grosbill" }, 20),
-      E(1000, "loot_epic", { item = epic }, 60),
+      E(1000, "loot_epic", { item = epic }, 60, "WoWScrnShot_" .. date("%m%d%y") .. "_224010.jpg"),
       E(500, "money", { gold = 1000000 }, 30),
     },
     stats = { play = 3 * 3600 + 25 * 60, xp = 48210, quests = 7, kills = 143, deaths = 1, earned = 1234567, spent = 45600,
@@ -497,7 +514,9 @@ function ns.CreateUI()
   ui.shareBtn:SetPoint("LEFT", ui.exportBtn, "RIGHT", 4, 0)
   ui.optBtn = MakeButton(ui, L.options, 96, function() ShowOptions() end)
   ui.optBtn:SetPoint("LEFT", ui.shareBtn, "RIGHT", 4, 0)
-  ui.backBtn = MakeButton(ui, L.back, 180, function() ns.ShowDay(state.key) end)
+  ui.pdfBtn = MakeButton(ui, L.pdf, 96, function() StaticPopup_Show("FOREVERGAZETTE_PDF") end)
+  ui.pdfBtn:SetPoint("LEFT", ui.optBtn, "RIGHT", 4, 0)
+  ui.backBtn = MakeButton(ui, L.back, 150, function() ns.ShowDay(state.key) end)
   ui.backBtn:SetPoint("TOPRIGHT", ui.helpBtn, "BOTTOMRIGHT", 0, -4)
 
   -- le papier
@@ -544,6 +563,7 @@ function ns.RunTour()
     { target = function() return ui.exportBtn end, title = L.t5t, text = L.t5 },
     { target = function() return ui.shareBtn end, title = L.t6t, text = L.t6 },
     { target = function() return ui.optBtn end, title = L.t7t, text = L.t7 },
+    { target = function() return ui.pdfBtn end, title = L.t10t, text = L.t10 },
     { target = function() return ns.minimapButton end, title = L.t8t, text = L.t8 },
     { target = function() return ui.helpBtn end, title = L.t9t, text = L.t9 },
   }, function() ns.db.tourDone = true end)
@@ -643,6 +663,11 @@ end
 ----------------------------------------------------------------------
 ns.OnLoaded = function()
   CreateMinimapButton()
+  StaticPopupDialogs["FOREVERGAZETTE_PDF"] = {
+    text = L.pdfConfirm, button1 = L.pdfGo, button2 = CANCEL or NO,
+    OnAccept = function() ns.PrintPDF() end,
+    timeout = 0, whileDead = true, hideOnEscape = true,
+  }
   StaticPopupDialogs["FOREVERGAZETTE_WIPE"] = {
     text = L.wipeConfirm, button1 = YES, button2 = NO,
     OnAccept = function()
@@ -656,6 +681,13 @@ ns.OnLoaded = function()
 end
 ns.OnLogin = function() SetupBroker() end
 
+-- « PDF » : enregistre la gazette (le jeu n'écrit la sauvegarde qu'au rechargement ou à la déconnexion) ;
+-- le compagnon (tools/gazette-discord, sur le PC) en fait un PDF et un PNG avec les captures d'écran.
+function ns.PrintPDF()
+  ns.WriteExports()
+  ReloadUI()
+end
+
 local ALIASES = {
   hebdo = "weekly", weekly = "weekly", semaine = "weekly",
   sommaire = "index", contents = "index", index = "index",
@@ -664,7 +696,7 @@ local ALIASES = {
   ton = "tone", tone = "tone",
   photo = "photo", photos = "photo", screenshot = "photo",
   demo = "demo", ["démo"] = "demo",
-  minimap = "minimap", tuto = "tuto", tutorial = "tuto",
+  minimap = "minimap", tuto = "tuto", tutorial = "tuto", pdf = "pdf", imprimer = "pdf", print = "pdf",
   lang = "lang", help = "help", aide = "help", ["?"] = "help",
 }
 local TONE_ALIASES = { serieux = "serious", ["sérieux"] = "serious", serious = "serious",
@@ -698,6 +730,8 @@ SlashCmdList.FOREVERGAZETTE = function(msg)
     elseif arg == "off" or arg == "non" then ns.db.shots = false
     else ns.db.shots = not ns.db.shots end
     Print(L.optShots .. " : " .. (ns.db.shots and "on" or "off"))
+  elseif action == "pdf" then
+    StaticPopup_Show("FOREVERGAZETTE_PDF")
   elseif action == "demo" then
     ns.ShowDemo()
   elseif action == "minimap" then

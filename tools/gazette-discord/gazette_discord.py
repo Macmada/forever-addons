@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""ForeverGazette -> Discord.
+"""Compagnon ForeverGazette : PDF / PNG des éditions avec les captures d'écran, et envoi sur Discord.
 
-Lit le fichier SavedVariables de ForeverGazette (écrit par le jeu à la déconnexion ou après /reload) et poste
-chaque édition dans un salon Discord par un webhook, avec la photo de une si elle est dans le dossier Screenshots.
+Lit le fichier SavedVariables de ForeverGazette (écrit par le jeu à la déconnexion, après /reload ou par le bouton
+« PDF » de l'addon), met chaque édition en page comme un journal avec tes captures d'écran (PDF + PNG, dans le
+dossier « output_dir ») et, si un webhook est configuré, la poste dans un salon Discord.
 
-Python 3.8+, bibliothèque standard seulement. Configuration : gazette_discord.ini à côté du script
-(voir gazette_discord.example.ini). Usage :
+Python 3.8+ ; Pillow pour le PDF/PNG (pip install pillow), sinon texte seul. Configuration : gazette_discord.ini
+à côté du script (voir gazette_discord.example.ini). Usage :
 
-    python gazette_discord.py              # poste les éditions des jours terminés pas encore postées
-    python gazette_discord.py --today      # poste aussi l'édition du jour (mise à jour si elle change)
-    python gazette_discord.py --weekly     # poste aussi l'Hebdo (une fois par jour)
+    python gazette_discord.py              # éditions des jours terminés pas encore traitées
+    python gazette_discord.py --today      # aussi l'édition du jour (refaite si elle change)
+    python gazette_discord.py --weekly     # aussi l'Hebdo
     python gazette_discord.py --watch      # tourne en continu : vérifie toutes les minutes
-    python gazette_discord.py --dry-run    # affiche ce qui serait posté, sans rien envoyer
+    python gazette_discord.py --dry-run    # affiche ce qui serait fait, sans rien écrire ni envoyer
 """
 from __future__ import annotations
 
@@ -32,7 +33,13 @@ import uuid
 HERE = os.path.dirname(os.path.abspath(__file__))
 CHUNK = 1900                      # limite Discord : 2 000 caractères par message
 MAX_FILE = 9 * 1024 * 1024        # limite des pièces jointes d'un webhook (10 Mo), avec marge
-USER_AGENT = "ForeverGazette-Discord (https://github.com/Macmada/forever-addons, 1.0)"
+USER_AGENT = "ForeverGazette-Discord (https://github.com/Macmada/forever-addons, 1.1)"
+
+try:
+    sys.path.insert(0, HERE)
+    import gazette_render          # nécessite Pillow
+except ImportError:
+    gazette_render = None
 
 
 # ---------------------------------------------------------------------------
@@ -206,23 +213,29 @@ def split_chunks(text: str) -> list[str]:
     return chunks
 
 
-def post(webhook: str, content: str, username: str, file_path: str | None = None) -> str:
+MIME = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".pdf": "application/pdf"}
+
+
+def post(webhook: str, content: str, username: str, files: list[str] | str | None = None) -> str:
     url = webhook + ("&" if "?" in webhook else "?") + "wait=true"
     payload = {"content": content, "username": username, "allowed_mentions": {"parse": []}}
-    if not file_path:
+    if isinstance(files, str):
+        files = [files]
+    files = [f for f in (files or []) if f and os.path.isfile(f) and os.path.getsize(f) <= MAX_FILE]
+    if not files:
         return http("POST", url, json.dumps(payload).encode())["id"]
     boundary = uuid.uuid4().hex
-    name = os.path.basename(file_path)
-    with open(file_path, "rb") as f:
-        data = f.read()
-    payload["attachments"] = [{"id": 0, "filename": name}]
-    parts = [
-        f"--{boundary}\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n".encode()
-        + json.dumps(payload).encode() + b"\r\n",
-        f"--{boundary}\r\nContent-Disposition: form-data; name=\"files[0]\"; filename=\"{name}\"\r\n"
-        f"Content-Type: {'image/png' if name.endswith('.png') else 'image/jpeg'}\r\n\r\n".encode() + data + b"\r\n",
-        f"--{boundary}--\r\n".encode(),
-    ]
+    payload["attachments"] = [{"id": n, "filename": os.path.basename(f)} for n, f in enumerate(files)]
+    parts = [f"--{boundary}\r\nContent-Disposition: form-data; name=\"payload_json\"\r\nContent-Type: application/json\r\n\r\n".encode()
+             + json.dumps(payload).encode() + b"\r\n"]
+    for n, path in enumerate(files):
+        name = os.path.basename(path)
+        with open(path, "rb") as fh:
+            data = fh.read()
+        parts.append(f"--{boundary}\r\nContent-Disposition: form-data; name=\"files[{n}]\"; filename=\"{name}\"\r\n"
+                     f"Content-Type: {MIME.get(os.path.splitext(name)[1].lower(), 'application/octet-stream')}\r\n\r\n".encode()
+                     + data + b"\r\n")
+    parts.append(f"--{boundary}--\r\n".encode())
     return http("POST", url, b"".join(parts), f"multipart/form-data; boundary={boundary}")["id"]
 
 
@@ -275,13 +288,21 @@ def load_config(path: str) -> dict:
         sys.exit(f"Fichier de configuration introuvable : {path} (copie gazette_discord.example.ini)")
     c = cp["gazette"]
     webhook = c.get("webhook", "").strip()
-    if not webhook.startswith("https://"):
-        sys.exit("Renseigne « webhook = https://discord.com/api/webhooks/… » dans la configuration.")
+    if webhook and not webhook.startswith("https://"):
+        sys.exit("« webhook » doit être une adresse https://discord.com/api/webhooks/… (ou rester vide : fichiers seulement).")
+    if "XXXXXXXX" in webhook:
+        webhook = ""
     dirs = [d.strip() for d in c.get("wow_dirs", "").split(";") if d.strip()]
     if not dirs:
         sys.exit("Renseigne « wow_dirs » (dossier du client, ex. C:\\Program Files (x86)\\World of Warcraft\\_anniversary_).")
     chars = [x.strip().lower() for x in c.get("characters", "").split(",") if x.strip()]
-    return {"webhook": webhook, "dirs": dirs, "chars": chars, "username": c.get("username", "ForeverGazette").strip()}
+    out_dir = os.path.expandvars(os.path.expanduser(c.get("output_dir", "").strip() or os.path.join("~", "Documents", "ForeverGazette")))
+    discord = c.get("discord", "image").strip().lower()
+    if discord not in ("image", "text", "both", "pdf"):
+        sys.exit("« discord » vaut image, text, both ou pdf.")
+    return {"webhook": webhook, "dirs": dirs, "chars": chars, "username": c.get("username", "ForeverGazette").strip(),
+            "out_dir": out_dir, "pdf": c.getboolean("pdf", True), "png": c.getboolean("png", True),
+            "discord": discord, "discord_pdf": c.getboolean("discord_pdf", False)}
 
 
 def saved_files(dirs: list[str]) -> list[tuple[str, str]]:
@@ -307,31 +328,68 @@ def save_state(path: str, state: dict):
     os.replace(tmp, path)
 
 
-def publish(cfg, state, key, text, shot_path, dry, log):
-    digest = hashlib.sha256(text.encode()).hexdigest()
+def safe_name(text: str) -> str:
+    return re.sub(r"[^\w\-]+", "_", text, flags=re.UNICODE).strip("_") or "gazette"
+
+
+def render_files(cfg, key, entry, shots, footer, dry, log) -> list[str]:
+    """PDF + PNG de l'édition (si Pillow et des blocs sont là). Renvoie les PNG puis le PDF."""
+    blocks = entry.get("blocks")
+    if not gazette_render or not isinstance(blocks, list) or not (cfg["pdf"] or cfg["png"]):
+        return []
+    base = os.path.join(cfg["out_dir"], *[safe_name(p) for p in key.split("/")])
+    if dry:
+        log(f"[essai] {key} : PDF/PNG -> {base}.pdf")
+        return []
+    files = gazette_render.render_edition(blocks, shots, find_shot, base, footer, png=True, pdf=cfg["pdf"])
+    if not cfg["png"]:
+        for f in files:
+            if f.endswith(".png") and not (cfg["webhook"] and cfg["discord"] in ("image", "both")):
+                os.remove(f)
+    log(f"{key} : {base}.pdf" + (" et .png" if cfg["png"] else ""))
+    return [f for f in files if os.path.isfile(f)]
+
+
+def publish(cfg, state, key, entry, shots, footer, dry, log):
+    text = entry.get("md") or ""
+    shot_path = find_shot(shots, entry.get("shot"))
+    digest = hashlib.sha256(json.dumps([text, entry.get("blocks"), shot_path and os.path.getmtime(shot_path)],
+                                       sort_keys=True, default=str).encode()).hexdigest()
     prev = state["posted"].get(key)
     if prev and prev.get("hash") == digest:
         return False
-    chunks = split_chunks(text)
-    if dry:
-        log(f"[essai] {key} : {len(chunks)} message(s){' + photo ' + os.path.basename(shot_path) if shot_path else ''}")
-        print(text, end="\n\n")
-        return True
+    files = render_files(cfg, key, entry, shots, footer, dry, log)
+    pngs = [f for f in files if f.endswith(".png")]
+    pdf = next((f for f in files if f.endswith(".pdf")), None)
     ids = prev.get("ids", []) if prev else []
-    if prev and len(ids) == len(chunks):
-        for msg_id, chunk in zip(ids, chunks):
-            edit(cfg["webhook"], msg_id, chunk)
-        log(f"{key} : mise à jour ({len(chunks)} message(s))")
-    else:
-        for msg_id in ids:
-            delete(cfg["webhook"], msg_id)
-        ids = []
-        for n, chunk in enumerate(chunks):
-            photo = shot_path if (n == 0 and shot_path and os.path.getsize(shot_path) <= MAX_FILE) else None
-            ids.append(post(cfg["webhook"], chunk, cfg["username"], photo))
-            time.sleep(0.6)
-        log(f"{key} : postée ({len(chunks)} message(s){', avec photo' if shot_path else ''})")
-    state["posted"][key] = {"hash": digest, "ids": ids, "at": int(time.time())}
+    if cfg["webhook"]:
+        mode = cfg["discord"] if pngs or cfg["discord"] == "text" else "text"     # sans image : texte
+        if mode == "pdf" and not pdf:
+            mode = "text"
+        if dry:
+            log(f"[essai] {key} : Discord ({mode})")
+            print(text, end="\n\n")
+        else:
+            for msg_id in ids:
+                delete(cfg["webhook"], msg_id)
+            ids = []
+            head = (entry.get("headline") or "").strip()
+            caption = f"**{head}**" if head else key.split("/")[-1]
+            attach_pdf = [pdf] if pdf and (cfg["discord_pdf"] or mode == "pdf") else []
+            if mode in ("image", "both"):
+                ids.append(post(cfg["webhook"], caption, cfg["username"], pngs[:9] + attach_pdf))
+                time.sleep(0.6)
+            elif mode == "pdf":
+                ids.append(post(cfg["webhook"], caption, cfg["username"], attach_pdf))
+                time.sleep(0.6)
+            if mode in ("text", "both"):
+                for n, chunk in enumerate(split_chunks(text)):
+                    photo = shot_path if (mode == "text" and n == 0) else None
+                    ids.append(post(cfg["webhook"], chunk, cfg["username"], photo))
+                    time.sleep(0.6)
+            log(f"{key} : postée sur Discord ({mode})")
+    if not dry:
+        state["posted"][key] = {"hash": digest, "ids": ids, "at": int(time.time())}
     return True
 
 
@@ -341,7 +399,7 @@ def run_once(cfg, state_path, args, log) -> int:
     done = 0
     files = saved_files(cfg["dirs"])
     if not files:
-        log("Aucun fichier ForeverGazette.lua trouvé (le jeu l'écrit à la déconnexion ou après /reload).")
+        log("Aucun fichier ForeverGazette.lua trouvé (le jeu l'écrit à la déconnexion, après /reload ou par le bouton PDF).")
     for wow_dir, path in files:
         try:
             ex = (read_saved_variables(path).get("ForeverGazetteDB") or {}).get("exports")
@@ -354,22 +412,23 @@ def run_once(cfg, state_path, args, log) -> int:
         if cfg["chars"] and name.lower() not in cfg["chars"]:
             continue
         shots = [os.path.join(wow_dir, "Screenshots")]
+        footer = f"ForeverGazette — {name}" + (f" ({realm})" if realm else "")
         for day, e in sorted((ex.get("days") or {}).items()):
-            if not isinstance(e, dict) or not e.get("md"):
+            if not isinstance(e, dict) or not (e.get("md") or e.get("blocks")):
                 continue
             if day > today or (day == today and not args.today):
                 continue
             key = f"{realm}/{name}/{day}"
             if day < today and key in state["posted"] and not state["posted"][key].get("today"):
-                continue            # jour terminé déjà posté : on n'y touche plus
-            if publish(cfg, state, key, e["md"], find_shot(shots, e.get("shot")), args.dry_run, log):
+                continue            # jour terminé déjà traité : on n'y touche plus
+            if publish(cfg, state, key, e, shots, footer, args.dry_run, log):
                 done += 1
                 if not args.dry_run:
                     state["posted"][key]["today"] = day == today
         wk = ex.get("weekly")
-        if args.weekly and isinstance(wk, dict) and wk.get("md"):
+        if args.weekly and isinstance(wk, dict) and (wk.get("md") or wk.get("blocks")):
             key = f"{realm}/{name}/hebdo/{wk.get('key')}"
-            if key not in state["posted"] and publish(cfg, state, key, wk["md"], None, args.dry_run, log):
+            if key not in state["posted"] and publish(cfg, state, key, wk, shots, footer, args.dry_run, log):
                 done += 1
         if not args.dry_run:
             save_state(state_path, state)
@@ -377,7 +436,7 @@ def run_once(cfg, state_path, args, log) -> int:
 
 
 def main():
-    ap = argparse.ArgumentParser(description="Poste les éditions de ForeverGazette sur Discord.")
+    ap = argparse.ArgumentParser(description="PDF/PNG des éditions de ForeverGazette, et envoi sur Discord.")
     ap.add_argument("--config", default=os.path.join(HERE, "gazette_discord.ini"))
     ap.add_argument("--today", action="store_true", help="poste aussi l'édition du jour et la met à jour")
     ap.add_argument("--weekly", action="store_true", help="poste aussi l'Hebdo (une fois par jour)")
@@ -385,6 +444,8 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="affiche sans rien envoyer")
     args = ap.parse_args()
     cfg = load_config(args.config)
+    if not gazette_render:
+        print("Pillow n'est pas installé : pas de PDF ni d'image, texte seul. Pour l'installer : python -m pip install pillow", flush=True)
     state_path = os.path.join(os.path.dirname(os.path.abspath(args.config)), "gazette_discord_state.json")
 
     def log(msg):
@@ -392,7 +453,7 @@ def main():
 
     if not args.watch:
         n = run_once(cfg, state_path, args, log)
-        log(f"{n} édition(s) envoyée(s).")
+        log(f"{n} édition(s) traitée(s).")
         return
     last = None
     log("Surveillance : Ctrl+C pour arrêter.")

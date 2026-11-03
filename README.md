@@ -52,11 +52,11 @@ Pendant que tu joues, l'addon note les moments forts de ton personnage ; chaque 
 - **Sommaire** de toutes les éditions, **L'Hebdo** (les 7 derniers jours), **export** Markdown ou texte, **partage** dans le canal de guilde, de groupe ou en « Dire ».
 - **Démonstration** : `/gazette demo` affiche une édition d'exemple sans rien enregistrer.
 
-Commandes : `/gazette`, `/gazette hebdo`, `/gazette sommaire`, `/gazette export`, `/gazette partager guilde|groupe|dire`, `/gazette ton serieux|tabloid|epique`, `/gazette photo on|off`, `/gazette demo`, `/gazette minimap`, `/gazette lang fr|en`, `/gazette tuto` (alias `/gaz`).
+Commandes : `/gazette`, `/gazette hebdo`, `/gazette sommaire`, `/gazette export`, `/gazette partager guilde|groupe|dire`, `/gazette ton serieux|tabloid|epique`, `/gazette photo on|off`, `/gazette pdf`, `/gazette demo`, `/gazette minimap`, `/gazette lang fr|en`, `/gazette tuto` (alias `/gaz`).
 
-### Compagnon Discord (facultatif)
+### PDF et image avec tes captures, Discord (compagnon)
 
-Un addon ne peut ni écrire de fichier ni aller sur Internet : le compagnon `tools/gazette-discord/gazette_discord.py` (Python 3, sans dépendance, archive `ForeverGazette-Discord` de chaque version) lit la sauvegarde de l'addon (écrite par le jeu à la déconnexion ou après `/reload`) et poste chaque édition dans un salon Discord par webhook, **avec la photo de une**. Mode d'emploi : [tools/gazette-discord/README.md](tools/gazette-discord/README.md).
+Un addon ne peut ni écrire de fichier ni lire tes captures d'écran : le compagnon `tools/gazette-discord` (Python 3 + Pillow, archive `ForeverGazette-Discord` de chaque version) lit la sauvegarde de l'addon et fait de chaque édition **une page de journal en PDF et en image, avec tes captures** (une, photos des grands moments, rubriques en colonnes, bilan), rangée dans `Documents\ForeverGazette`, et peut la poster sur Discord. Dans le jeu, le bouton **PDF** (`/gazette pdf`) enregistre la gazette pour qu'elle soit prête dans la minute. Mode d'emploi : [tools/gazette-discord/README.md](tools/gazette-discord/README.md).
 
 ## Compatibilité
 

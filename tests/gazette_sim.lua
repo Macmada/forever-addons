@@ -47,6 +47,7 @@ end
 _G.CreateFrame = function(kind) local f = Obj(kind); frames[#frames + 1] = f; return f end
 _G.UIParent, _G.Minimap, _G.GameTooltip = Obj("Frame"), Obj("Frame"), Obj("GameTooltip")
 _G.UISpecialFrames, _G.StaticPopupDialogs, _G.SlashCmdList = {}, {}, {}
+_G.StaticPopup_Show = function() end
 _G.ChatFontNormal = {}
 _G.YES, _G.NO, _G.UNKNOWNOBJECT = "Oui", "Non", "Inconnu"
 _G.tinsert, _G.wipe = table.insert, function(t) for k in pairs(t) do t[k] = nil end return t end
@@ -249,6 +250,19 @@ check(#chat == #lines and chat[1][2] == "GUILD", "partage en guilde : " .. #chat
 Fire("PLAYER_LOGOUT")
 check(ForeverGazetteDB.exports and ForeverGazetteDB.exports.days[today] and ForeverGazetteDB.exports.days[today].shot,
       "export pour le compagnon écrit à la déconnexion, avec la photo")
+local exb = ForeverGazetteDB.exports.days[today].blocks
+local withShot, epicQ
+for _, x in ipairs(exb) do
+  if x.f and x.k ~= "photo" then withShot = x end
+  if x.q == 4 then epicQ = x end
+  assert(not x.t:find("|c%x") and not x.t:find("|H"), "bloc exporté sans codes : " .. x.t)
+end
+check(#exb > 10 and withShot and epicQ, "blocs exportés pour le PDF (photo du boss sur sa ligne, qualité épique)")
+local reloaded = false
+_G.ReloadUI = function() reloaded = true end
+SlashCmdList.FOREVERGAZETTE("pdf")
+StaticPopupDialogs.FOREVERGAZETTE_PDF.OnAccept()
+check(reloaded, "bouton PDF : export puis rechargement de l'interface")
 -- démo et interface (imitée)
 SlashCmdList.FOREVERGAZETTE("demo")
 SlashCmdList.FOREVERGAZETTE("")

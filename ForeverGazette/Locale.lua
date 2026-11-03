@@ -3,6 +3,10 @@ local _, ns = ...
 -- Textes de l'interface. Les textes des articles sont dans Templates.lua.
 local fr = {
   title = "ForeverGazette",
+  pdf = "PDF",
+  pdfGo = "Enregistrer",
+  pdfConfirm = "PDF de la gazette\n\nL'interface va se recharger (/reload) pour enregistrer la gazette. Le compagnon ForeverGazette, s'il tourne sur ton PC, en fait dans la minute un PDF et une image avec tes captures d'écran (dossier choisi dans sa configuration, et Discord si tu l'as réglé).",
+  t10t = "PDF", t10 = "Enregistre la gazette pour le compagnon sur ton PC : il en fait un PDF et une image, avec tes captures d'écran. (Un addon ne peut pas écrire de fichier lui-même.)",
   today = "Aujourd'hui",
   prev = "< Veille",
   next = "Lendemain >",
@@ -52,7 +56,7 @@ local fr = {
   noted = "%s",
   shot = "Photo prise pour la une : %s",
   demoTitle = "Édition de démonstration (rien n'est enregistré)",
-  helpText = "Commandes : /gazette (ouvrir), /gazette hebdo, /gazette sommaire, /gazette export, /gazette partager [guilde|groupe|dire], /gazette ton serieux|tabloid|epique, /gazette photo on|off, /gazette demo, /gazette minimap, /gazette lang fr|en, /gazette tuto",
+  helpText = "Commandes : /gazette (ouvrir), /gazette hebdo, /gazette sommaire, /gazette export, /gazette partager [guilde|groupe|dire], /gazette ton serieux|tabloid|epique, /gazette photo on|off, /gazette pdf, /gazette demo, /gazette minimap, /gazette lang fr|en, /gazette tuto",
   tourNext = "Suivant", tourSkip = "Passer", tourDone = "Terminé",
   t1t = "Ta gazette", t1 = "Chaque journée de jeu donne une édition : la une (le plus grand moment du jour), puis les rubriques. Tout est noté tout seul pendant que tu joues.",
   t2t = "Feuilleter", t2 = "Passe d'une édition à l'autre comme dans un journal. « Aujourd'hui » revient à l'édition du jour.",
@@ -67,6 +71,10 @@ local fr = {
 
 local en = {
   title = "ForeverGazette",
+  pdf = "PDF",
+  pdfGo = "Save",
+  pdfConfirm = "Gazette PDF\n\nThe interface will reload (/reload) to save the gazette. The ForeverGazette companion, if it runs on your PC, turns it into a PDF and an image with your screenshots within a minute (folder set in its configuration, and Discord if configured).",
+  t10t = "PDF", t10 = "Saves the gazette for the companion on your PC: it makes a PDF and an image with your screenshots. (An addon cannot write files itself.)",
   today = "Today",
   prev = "< Previous",
   next = "Next >",
@@ -116,7 +124,7 @@ local en = {
   noted = "%s",
   shot = "Front-page photo taken: %s",
   demoTitle = "Demo edition (nothing is saved)",
-  helpText = "Commands: /gazette (open), /gazette weekly, /gazette contents, /gazette export, /gazette share [guild|party|say], /gazette tone serious|tabloid|epic, /gazette photo on|off, /gazette demo, /gazette minimap, /gazette lang fr|en, /gazette tutorial",
+  helpText = "Commands: /gazette (open), /gazette weekly, /gazette contents, /gazette export, /gazette share [guild|party|say], /gazette tone serious|tabloid|epic, /gazette photo on|off, /gazette pdf, /gazette demo, /gazette minimap, /gazette lang fr|en, /gazette tutorial",
   tourNext = "Next", tourSkip = "Skip", tourDone = "Done",
   t1t = "Your gazette", t1 = "Each play day makes an edition: the front page (the day's biggest moment), then the sections. Everything is noted automatically while you play.",
   t2t = "Browse", t2 = "Move from one edition to another like in a newspaper. \"Today\" goes back to today's edition.",

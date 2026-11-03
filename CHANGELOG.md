@@ -1,5 +1,11 @@
 # Journal des versions
 
+## ForeverGFX 2.1.5 / ForeverMacros 1.3 / ForeverGazette 1.1
+- ForeverGazette : **PDF et image de chaque édition, avec tes captures d'écran**. Bouton « PDF » (et `/gazette pdf`) : la gazette est enregistrée (rechargement de l'interface) et le compagnon, sur ton PC, en fait dans la minute une page de journal (une avec sa photo, rubriques sur deux colonnes, photos des autres grands moments, bilan) en PDF et PNG, rangée dans `Documents\ForeverGazette` et postée sur Discord en image si tu veux. Un addon ne peut pas écrire de fichier lui-même : c'est le compagnon qui les fabrique.
+- ForeverGazette : icônes des objets dans la page en jeu ; L'Hebdo a ses photos ; titre du journal en majuscules accentuées (« SPÉCIAL ») ; photos du niveau et de l'épique dans la démo.
+- Compagnon 1.1 (`tools/gazette-discord`) : PDF/PNG (Pillow), Discord facultatif (image, PDF, texte ou image + texte), polices vérifiées pour les accents.
+- ForeverGFX, ForeverMacros : inchangés (numéro de ForeverGFX aligné sur le tag).
+
 ## ForeverGFX 2.1.4 / ForeverMacros 1.3 / ForeverGazette 1.0
 - **Nouvel addon ForeverGazette** (`/gazette`) : la gazette de ton personnage. Chaque journée de jeu devient une édition de journal : une (le plus grand moment du jour), rubriques (exploits, voyages, butin et fortune, nécrologie, carnet mondain, métiers, quêtes) et bilan du jour.
   - Moments notés : niveaux, boss, élites rares, nouvelles zones et donjons, objets rares/épiques/légendaires, paliers d'or, morts (avec le coupable), victoires JcJ, duels, réputation, métiers, recettes, hauts faits (retail), quêtes, compagnons de groupe.
