@@ -6,11 +6,12 @@ self = false
 
 -- Variables globales écrites par les addons
 globals = {
-  "ForeverGFXDB", "ForeverMacrosDB", "ForeverGazetteDB", "ForeverPrepDB",
+  "ForeverGFXDB", "ForeverMacrosDB", "ForeverGazetteDB", "ForeverPrepDB", "ForeverHealDB",
   "SLASH_FOREVERGFX1", "SLASH_FOREVERGFX2", "SLASH_FOREVERMACROS1", "SLASH_FOREVERMACROS2",
   "ForeverGFX_OnCompartmentClick", "ForeverMacros_OnCompartmentClick",
   "SLASH_FOREVERGAZETTE1", "SLASH_FOREVERGAZETTE2", "ForeverGazette_OnCompartmentClick",
   "SLASH_FOREVERPREP1", "SLASH_FOREVERPREP2", "ForeverPrep_OnCompartmentClick",
+  "SLASH_FOREVERHEAL1", "SLASH_FOREVERHEAL2", "ForeverHeal_OnCompartmentClick",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
@@ -41,4 +42,8 @@ read_globals = {
   "GetNumTalentTabs", "GetPetHappiness", "GetSpellTexture", "GetTalentTabInfo", "GetUnspentTalentPoints",
   "GetWeaponEnchantInfo", "IsPlayerSpell", "IsSpellKnown", "MerchantFrame", "UnitBuff", "UnitCharacterPoints",
   "UnitIsConnected", "UnitIsDeadOrGhost", "UnitIsUnit", "UnitIsVisible",
+  -- ForeverHeal
+  "CharacterFrame", "GetItemStats", "GetManaRegen", "GetSpellBonusHealing", "GetSpellCritChance", "GetSpellDescription",
+  "GetSpellPowerCost", "ItemRefTooltip", "TooltipDataProcessor", "UnitArmor", "UnitHealthMax", "UnitPowerMax",
+  "UnitResistance", "UnitStat", "WorldFrame",
 }

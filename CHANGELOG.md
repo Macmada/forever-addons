@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGFX 2.1.8 / ForeverMacros 1.3 / ForeverGazette 1.2 / ForeverPrep 1.0 / ForeverHeal 1.0
+- **Nouvel addon ForeverHeal** (`/fheal`, WoW Forever, prêtre) : ce que chaque caractéristique et chaque objet change vraiment, en clair. Infobulle des objets comparée à ce que tu portes (« +35 Endurance → +350 PV », « +22 soins → +19 par Soins supérieurs », puis soin moyen, soins par seconde, autonomie), panneau à côté de la fiche personnage (mesures, sorts de référence, ce que vaut +10 dans chaque caractéristique), annonce à chaque changement hors combat. Conversions mesurées sur ton personnage, montants des sorts lus dans le jeu, mélange de sorts et effet des talents tirés de tes lancers réels.
+- Autres addons : inchangés (numéro de ForeverGFX aligné sur le tag).
+
 ## ForeverGFX 2.1.7 / ForeverMacros 1.3 / ForeverGazette 1.2 / ForeverPrep 1.0
 - **Nouvel addon ForeverPrep** (`/prep`, WoW Forever seulement) : « Prêt pour le donjon ? ». Consommables au meilleur rang utilisable à ton niveau (soins, mana, nourriture, boisson, bandages, nourriture de stats, élixirs et flacons en raid), composants de classe (selon les sorts connus), améliorations personnelles et de groupe, familier, poisons/imprégnations, durabilité, sacs, emplacements vides, talents, rappel du maître de classe, pierre de foyer. Donjon ou raid, rôle deviné par les talents. Liste de courses et achat en un clic chez le marchand. Ouverture automatique (s'il manque quelque chose) à l'entrée d'une instance, à l'appel et lors d'une recherche de groupe/donjon. **Bouton « Prépa » à l'écran** (déplaçable, couleur selon ton état : vert, orange, rouge) pour lancer la préparation à la main, en plus de l'icône de minicarte et de `/prep`.
 - ForeverGFX, ForeverMacros, ForeverGazette : inchangés (numéro de ForeverGFX aligné sur le tag).

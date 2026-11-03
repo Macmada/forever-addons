@@ -1,0 +1,14 @@
+## Interface: 16000, 16001
+## Title: ForeverHeal
+## Notes: Pour le prêtre soigneur : ce que chaque caractéristique et chaque objet change vraiment (PV, mana, soins par seconde, autonomie), en clair.
+## Notes-enUS: For healing priests: what each stat and item really changes (HP, mana, healing per second, mana longevity), in plain words.
+## Author: ForeverGFX
+## Version: 1.0
+## SavedVariablesPerCharacter: ForeverHealDB
+## IconTexture: Interface\Icons\Spell_Holy_GreaterHeal
+## AddonCompartmentFunc: ForeverHeal_OnCompartmentClick
+
+Locale.lua
+Data.lua
+Core.lua
+UI.lua
