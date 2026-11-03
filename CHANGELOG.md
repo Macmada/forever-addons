@@ -1,5 +1,9 @@
 # Journal des versions
 
+## Prochaine version
+- Compagnon : `oui` / `non` acceptés dans `gazette_discord.ini` (en plus de `yes` / `no`) ; l'exemple les utilise.
+
+
 ## ForeverGFX 2.2.1 / ForeverLoot 1.1
 - ForeverLoot : **liste de référence de WoW Forever** à la place de celle du classique — prêtre soigneur niveau 60 avant les raids, d'après la liste de kami-labs.fr (calculée le 02/11/2026 avec le simulateur wowsims/forever) : ensemble du dévot, Peau du Fauve, étoffe lunaire, Sceau de Rivendare, Miséricorde de calcinite, Livre des morts, et les nouveautés de Forever (Anneau de canaliste, Champ de sérénité, Baguette brillante), avec l'**enchantement conseillé** pour chaque pièce.
 - Autres addons : inchangés (numéro de ForeverGFX aligné sur le tag).

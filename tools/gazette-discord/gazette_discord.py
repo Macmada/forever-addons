@@ -284,6 +284,8 @@ def find_shot(dirs: list[str], name: str | None) -> str | None:
 # ---------------------------------------------------------------------------
 def load_config(path: str) -> dict:
     cp = configparser.ConfigParser()
+    # oui / non acceptés en plus de yes / no, true / false, 1 / 0
+    cp.BOOLEAN_STATES = dict(cp.BOOLEAN_STATES, oui=True, non=False, vrai=True, faux=False)
     if not cp.read(path, encoding="utf-8"):
         sys.exit(f"Fichier de configuration introuvable : {path} (copie gazette_discord.example.ini)")
     c = cp["gazette"]
