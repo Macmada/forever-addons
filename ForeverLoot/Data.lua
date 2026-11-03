@@ -18,17 +18,18 @@ local Z = {   -- donjons (noms français / anglais)
 }
 D.zones = Z
 
--- Prêtre soigneur, avant les raids. slot = emplacement (1 tête … 18 distance) ; ok = false : numéro non vérifié.
+-- Prêtre soigneur, avant les raids. slot = emplacement (1 tête … 18 distance) ; ok = false : numéro non vérifié
+-- ou introuvable sur Wowhead Forever (https://www.wowhead.com/forever/fr, vérifié le 03/11/2026 : objet peut-être absent de Forever).
 -- boss : nom anglais du guide (le jeu affichera le nom réel de l'objet dans ta langue).
 D.reference = {
   PRIEST = {
     { slot = 1, id = 13102, zone = "world", note = "Cassandra's Grace" },
     { slot = 1, id = 16693, zone = "scholo", boss = "Darkmaster Gandling", alt = true },
-    { slot = 2, id = 18723, zone = "strat", boss = "Ramstein the Gorger" },
+    { slot = 2, id = 18723, zone = "strat", boss = "Ramstein the Gorger", ok = false },           -- page 404 sur Wowhead Forever
     { slot = 3, id = 18681, zone = "scholo", boss = "butin commun / shared loot" },
     { slot = 15, id = 13386, zone = "strat", boss = "Archivist Galford", note = "« de soins » / « of Healing »" },
-    { slot = 15, id = 18510, zone = "craft", boss = "Travail du cuir / Leatherworking", ok = false },
-    { slot = 5, id = 18263, zone = "craft", boss = "Couture 300 / Tailoring 300", ok = false },
+    { slot = 15, id = 18510, zone = "craft", boss = "Travail du cuir / Leatherworking" },          -- confirmé sur Wowhead Forever
+    -- Robe de la Foi vraie (couture 300) retirée : le numéro 18263 est « Couvre-bras Cœur-de-braise » (Wowhead Forever, 03/11/2026)
     { slot = 9, id = 11766, zone = "brd", boss = "Lord Incendius", note = "« de soins » / « of Healing »" },
     { slot = 9, id = 18497, zone = "ubrs", boss = "Warchief Rend Blackhand", alt = true },
     { slot = 10, id = 10787, zone = "st", boss = "mini-boss", note = "« de soins » / « of Healing »" },
@@ -40,8 +41,8 @@ D.reference = {
     { slot = 11, id = 16058, zone = "wpl", boss = "In Dreams" },
     { slot = 11, id = 18103, zone = "ubrs", boss = "Warchief Rend Blackhand" },
     { slot = 13, id = 12930, zone = "ubrs", boss = "Jed Runewatcher" },
-    { slot = 13, id = 18469, zone = "ubrs", boss = "Jed Runewatcher", ok = false },
-    { slot = 13, id = 11819, zone = "brd", boss = "Golem Lord Argelmach", ok = false },
+    { slot = 13, id = 18469, zone = "ubrs", boss = "Jed Runewatcher", ok = false },              -- page 404 sur Wowhead Forever
+    { slot = 13, id = 11819, zone = "brd", boss = "Golem Lord Argelmach", ok = false },           -- page 404 sur Wowhead Forever
     { slot = 13, id = 18371, zone = "dmw", boss = "Magister Kalendris", alt = true },
     { slot = 13, id = 22268, zone = "ubrs", boss = "General Drakkisath", alt = true },
     { slot = 16, id = 11923, zone = "brd", boss = "Chest of The Seven" },

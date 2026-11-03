@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGFX 2.2.1 / ForeverLoot 1.0.1
+- ForeverLoot : liste de référence recoupée avec Wowhead Forever. Le numéro de la Robe de la Foi vraie était faux (18263 = Couvre-bras Cœur-de-braise) : objet retiré. Peau du Fauve confirmée. Collier animé, Second souffle et Sceau royal d'Eldre'Thalas introuvables sur Wowhead Forever : marqués « (?) », à confirmer avec le bouton Diag en jeu.
+- Autres addons : inchangés (numéro de ForeverGFX aligné sur le tag).
+
 ## ForeverGFX 2.2.0 / ForeverMacros 1.5 / ForeverGazette 1.4 / ForeverPrep 1.2 / ForeverHeal 1.2 / ForeverLoot 1.0
 - **Nouvel addon ForeverLoot** (`/floot`, `/bis`, WoW Forever) : BiS calculé pour ton personnage à partir des objets réellement vus (modèle de ForeverHeal pour le prêtre, poids simplifiés pour les autres classes), liste de référence du prêtre soigneur (classique, avant les raids, à vérifier pour Forever), conseil BESOIN / Cupidité sur les jets de butin, meilleure récompense de quête mise en évidence, butin des donjons noté par boss pour tous tes personnages, lignes dans les infobulles.
 - **Icône commune « Forever »** autour de la minicarte : un clic ouvre le menu des cinq addons ; elle remplace les icônes séparées à la première connexion (`/forever separees` pour les remettre, `/forever commune` pour revenir).
