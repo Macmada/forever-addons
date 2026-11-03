@@ -1,17 +1,18 @@
 # Forever Addons
 
-Deux addons World of Warcraft compatibles **WoW Forever**, **TBC Anniversary** et **retail**, avec un seul dossier par addon pour les trois clients.
+Trois addons World of Warcraft compatibles **WoW Forever**, **TBC Anniversary** et **retail**, avec un seul dossier par addon pour les trois clients.
 
 | Addon | Commande | Rôle |
 |---|---|---|
 | **ForeverGFX** | `/gfx` | Réglages graphiques en un clic, réglage automatique selon tes FPS, mode expert pour toutes les variables |
 | **ForeverMacros** | `/fmac` | macros prêtes par classe (TBC/Forever et retail), constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
+| **ForeverGazette** | `/gazette` | la gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal |
 
 ## Installation
 
 ### Avec WowUp (mises à jour automatiques)
 
-Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : les deux addons arrivent ensemble et WowUp propose chaque nouvelle version.
+Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : les trois addons arrivent ensemble et WowUp propose chaque nouvelle version.
 
 ### À la main
 
@@ -40,6 +41,23 @@ Commandes : `/gfx`, `/gfx tune 60`, `/gfx fps`, `/gfx preset ultra`, `/gfx undo`
 
 Commandes : `/fmac`, `/fmac tuto`, `/fmac minimap`.
 
+## ForeverGazette
+
+Pendant que tu joues, l'addon note les moments forts de ton personnage ; chaque journée de jeu devient une édition de journal, avec une **une** (le plus grand moment du jour, choisi par importance) et des rubriques. Un journal par personnage.
+
+- **Ce qui est noté** : niveaux, boss de donjon et de raid, élites rares, premiers passages dans une zone ou un donjon, objets rares, épiques et légendaires, paliers d'or, morts (avec le coupable : ennemi, chute, noyade…), victoires JcJ et duels, paliers de réputation, paliers de métier et recettes, hauts faits (retail), quêtes rendues, compagnons de groupe.
+- **Bilan du jour** : temps de jeu, expérience, quêtes, ennemis vaincus, morts, or gagné et dépensé, zones parcourues.
+- **Photo de une** : capture d'écran automatique au moment fort (niveaux, boss, épiques ; option pour tous les grands moments ; 6 par jour au plus). L'édition donne le nom du fichier du dossier `Screenshots`.
+- **Trois tons** : *sérieux* (chronique d'aventurier), *tabloïd* (presse à scandale), *épique* (récit de barde). Changer de ton réécrit aussi les anciennes éditions.
+- **Sommaire** de toutes les éditions, **L'Hebdo** (les 7 derniers jours), **export** Markdown ou texte, **partage** dans le canal de guilde, de groupe ou en « Dire ».
+- **Démonstration** : `/gazette demo` affiche une édition d'exemple sans rien enregistrer.
+
+Commandes : `/gazette`, `/gazette hebdo`, `/gazette sommaire`, `/gazette export`, `/gazette partager guilde|groupe|dire`, `/gazette ton serieux|tabloid|epique`, `/gazette photo on|off`, `/gazette demo`, `/gazette minimap`, `/gazette lang fr|en`, `/gazette tuto` (alias `/gaz`).
+
+### Compagnon Discord (facultatif)
+
+Un addon ne peut ni écrire de fichier ni aller sur Internet : le compagnon `tools/gazette-discord/gazette_discord.py` (Python 3, sans dépendance, archive `ForeverGazette-Discord` de chaque version) lit la sauvegarde de l'addon (écrite par le jeu à la déconnexion ou après `/reload`) et poste chaque édition dans un salon Discord par webhook, **avec la photo de une**. Mode d'emploi : [tools/gazette-discord/README.md](tools/gazette-discord/README.md).
+
 ## Compatibilité
 
 Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule ligne `## Interface:`. Le code teste la présence des fonctions récentes (`C_CVar`, `C_Spell`, `Settings`…) et se replie sur les anciennes si besoin. Si une mise à jour du jeu change le numéro d'interface, ajoute-le à cette ligne (`/dump select(4, GetBuildInfo())` en jeu pour l'obtenir).
@@ -52,14 +70,15 @@ Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule 
 
 ## Développement
 
-- `luacheck ForeverGFX ForeverMacros` vérifie le code (lancé automatiquement à chaque push).
-- Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les deux archives à la release.
+- `luacheck ForeverGFX ForeverMacros ForeverGazette` vérifie le code (lancé automatiquement à chaque push).
+- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite (lancé aussi à chaque push).
+- Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les archives à la release (ForeverMacros et ForeverGazette gardent le numéro de leur TOC).
 
 ---
 
 ## English
 
-Two WoW addons for **WoW Forever**, **TBC Anniversary** and **retail** (one folder per addon for all three clients). **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers ready-made class macros (a TBC/Forever set and a retail set) (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. Both addons are fully translated (French and English) and include a guided tutorial.
+Three WoW addons for **WoW Forever**, **TBC Anniversary** and **retail** (one folder per addon for all three clients). **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers ready-made class macros (a TBC/Forever set and a retail set) (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. **ForeverGazette** (`/gazette`) turns each play day into a newspaper edition of your character's highlights (levels, bosses, rare kills, epic loot, deaths, duels, reputation, professions, gold), with automatic front-page screenshots, three tones (serious, tabloid, epic), a weekly edition, Markdown export, chat sharing and an optional Discord companion script. All addons are fully translated (French and English) and include a guided tutorial.
 
 ## Licence
 

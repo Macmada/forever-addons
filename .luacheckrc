@@ -6,9 +6,10 @@ self = false
 
 -- Variables globales écrites par les addons
 globals = {
-  "ForeverGFXDB", "ForeverMacrosDB",
+  "ForeverGFXDB", "ForeverMacrosDB", "ForeverGazetteDB",
   "SLASH_FOREVERGFX1", "SLASH_FOREVERGFX2", "SLASH_FOREVERMACROS1", "SLASH_FOREVERMACROS2",
   "ForeverGFX_OnCompartmentClick", "ForeverMacros_OnCompartmentClick",
+  "SLASH_FOREVERGAZETTE1", "SLASH_FOREVERGAZETTE2", "ForeverGazette_OnCompartmentClick",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
@@ -24,4 +25,12 @@ read_globals = {
   "MAX_ACCOUNT_MACROS", "MAX_CHARACTER_MACROS", "MacroFrame", "Minimap", "NO", "PickupMacro",
   "RestartGx", "SetCVar", "Settings", "SettingsPanel", "StaticPopup_Show", "UIParent",
   "UnitClass", "YES", "date", "time", "tinsert", "wipe",
+  -- ForeverGazette
+  "bit", "C_QuestLog", "C_Reputation", "ChatEdit_InsertLink", "CombatLogGetCurrentEventInfo",
+  "DUEL_WINNER_KNOCKOUT", "DUEL_WINNER_RETREAT", "ERR_LEARN_RECIPE_S", "GetAchievementInfo",
+  "GetFactionInfo", "GetMaxPlayerLevel", "GetMoney", "GetNumFactions", "GetNumGroupMembers",
+  "GetNumPartyMembers", "GetNumRaidMembers", "GetRealmName", "GetTime", "GetTitleText", "IsInGuild",
+  "IsInRaid", "LOOT_ITEM_SELF", "Screenshot", "SendChatMessage", "SKILL_RANK_UP", "UNKNOWNOBJECT",
+  "UnitExists", "UnitGUID", "UnitIsPlayer", "UnitLevel", "UnitName", "UnitSex", "UnitXP", "UnitXPMax",
+  "UnitClassification", "GetRealZoneText",
 }

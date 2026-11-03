@@ -12,4 +12,16 @@ jobs:
       - name: Luacheck
         uses: lunarmodules/luacheck@v1
         with:
-          args: ForeverGFX ForeverMacros
+          args: ForeverGFX ForeverMacros ForeverGazette
+
+  gazette-sim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Simulation hors jeu de ForeverGazette (fr et en)
+        run: |
+          sudo apt-get install -y -q lua5.1
+          lua5.1 tests/gazette_sim.lua fr
+          lua5.1 tests/gazette_sim.lua en
+      - name: Compagnon Discord (syntaxe)
+        run: python3 -m py_compile tools/gazette-discord/gazette_discord.py

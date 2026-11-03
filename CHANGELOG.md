@@ -1,5 +1,12 @@
 # Journal des versions
 
+## ForeverGFX 2.1.4 / ForeverMacros 1.3 / ForeverGazette 1.0
+- **Nouvel addon ForeverGazette** (`/gazette`) : la gazette de ton personnage. Chaque journée de jeu devient une édition de journal : une (le plus grand moment du jour), rubriques (exploits, voyages, butin et fortune, nécrologie, carnet mondain, métiers, quêtes) et bilan du jour.
+  - Moments notés : niveaux, boss, élites rares, nouvelles zones et donjons, objets rares/épiques/légendaires, paliers d'or, morts (avec le coupable), victoires JcJ, duels, réputation, métiers, recettes, hauts faits (retail), quêtes, compagnons de groupe.
+  - Photo de une (capture d'écran automatique), trois tons (sérieux, tabloïd, épique), sommaire, L'Hebdo, export Markdown/texte, partage en guilde, en groupe ou en « Dire », édition de démonstration (`/gazette demo`), tutoriel, icône de minicarte, français et anglais.
+  - Compagnon Discord (`tools/gazette-discord`, archive `ForeverGazette-Discord`) : poste chaque édition dans un salon par webhook, avec la photo.
+- ForeverGFX, ForeverMacros : inchangés (numéro de ForeverGFX aligné sur le tag).
+
 ## ForeverGFX 2.1.3 / ForeverMacros 1.3
 - ForeverMacros : bibliothèque propre au retail (77 macros, 13 classes dont Chevalier de la mort, Moine, Chasseur de démons et Évocateur ; sorts vérifiés pour Midnight). Forever et TBC Anniversary gardent la bibliothèque TBC.
 - ForeverMacros : les macros dont un sort n'existe pas dans le jeu lancé sont masquées (nombre indiqué sous la liste).

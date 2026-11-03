@@ -1,0 +1,16 @@
+## Interface: 16000, 16001, 20504, 20505, 120100, 120101, 120105, 120107, 120200
+## Title: ForeverGazette
+## Notes: La gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal.
+## Notes-enUS: Your character's newspaper: each play day's highlights, laid out like a gazette.
+## Author: ForeverGFX
+## Version: 1.0
+## SavedVariablesPerCharacter: ForeverGazetteDB
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## AddonCompartmentFunc: ForeverGazette_OnCompartmentClick
+
+Locale.lua
+Templates.lua
+Core.lua
+Gazette.lua
+Tour.lua
+UI.lua
