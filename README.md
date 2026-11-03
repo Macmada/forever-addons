@@ -69,7 +69,7 @@ Pour jouer soigneur en sachant ce que vaut chaque point : l'addon traduit les ca
 - **Infobulle des objets** : par rapport à ce que tu portes (la meilleure des deux places pour les anneaux et bijoux, l'arme + la main gauche pour une arme à deux mains), par exemple « +35 Endurance → +350 PV », « +15 Intelligence → +225 mana, +0,30 % critique », « +22 soins → +19 par Soins supérieurs », « +4 mana / 5 s → +0,80 mana/s, même en incantant », puis « Soin moyen +17 · +7,2 soins/s · autonomie +2 s (+1 085 PV soignés avant d'être à sec) ».
 - **Panneau à côté de la fiche personnage** : tes PV, mana, régénération, bonus aux soins, critique, taux de soins effectifs ; tes sorts de référence ; soins par seconde, soin moyen, autonomie ; « ce que vaut » +10 dans chaque caractéristique et la plus utile pour toi en ce moment.
 - **Annonce à chaque changement** (hors combat), à l'écran ou dans la discussion : « +30 Endurance → +360 PV ».
-- **Conseiller de rangs** : d'après ton excédent de soins réel par rang, « Soins supérieurs r4 : 38 % d'excédent → le rang 2 suffirait : −120 mana par lancer », et un bouton qui crée les macros de rang correspondantes (sur le survol, sinon la cible).
+- **Conseiller de rangs** (avec, si HealBot est installé, quoi changer dans ses sorts) : d'après ton excédent de soins réel par rang, « Soins supérieurs r4 : 38 % d'excédent → le rang 2 suffirait : −120 mana par lancer », et un bouton qui crée les macros de rang correspondantes (sur le survol, sinon la cible).
 - **Alerte de mana en combat** : « Mana : à sec dans ~14 s », d'après ta consommation réelle des 12 dernières secondes (orange, puis rouge sous 8 s).
 - **Mieux dans mes sacs ?** : les objets de tes sacs qu'un prêtre peut porter et qui amélioreraient tes soins ou ton autonomie, emplacement par emplacement.
 - **Calé sur ton personnage** : les conversions (PV par Endurance, mana par Intelligence, Intelligence pour 1 % de critique, régénération par l'Esprit) sont mesurées à chaque changement d'équipement ; les montants des sorts sont lus dans le jeu ; ton **mélange de sorts** vient de tes lancers réels (part du temps passé sur chaque sort) et l'effet de tes talents est mesuré sur tes vrais soins.
@@ -85,6 +85,7 @@ Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`,
 - **Récompenses de quête** : la meilleure pour toi est mise en évidence, sinon la plus chère à revendre.
 - **Butin des donjons** : ce que chaque boss lâche, noté au fil de tes donjons (pour tous tes personnages), objets intéressants pour toi en vert.
 - Ce que chaque classe peut porter est pris en compte (types d'armure selon le niveau, armes, boucliers).
+- **Avec DungeonJournal** (facultatif) : le butin de chaque boss et les récompenses de quête de ses donjons, nouveaux donjons de Forever compris, entrent dans le BiS et l'onglet Donjons. **Avec Syndicator** (facultatif) : un objet déjà dans ta banque, ton courrier ou sur un autre personnage est signalé.
 
 Commandes : `/floot` (ou `/bis`), `/floot donjons`, `/floot diag`, `/floot lang fr|en`.
 

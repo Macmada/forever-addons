@@ -22,7 +22,7 @@ local function Zone(key)
 end
 
 local SRC = { equipped = "srcEquipped", bags = "srcBags", loot = "srcLoot", roll = "srcRoll", chat = "srcChat",
-              quest = "srcQuest", vendor = "srcVendor", tooltip = "srcTooltip", ref = "srcRef" }
+              quest = "srcQuest", vendor = "srcVendor", tooltip = "srcTooltip", ref = "srcRef", dj = "srcDj", djquest = "srcDjQuest" }
 
 ----------------------------------------------------------------------
 -- Lignes de la liste (réutilisées)
@@ -94,6 +94,15 @@ function ns.BisLines()
   if D.reference[class] then
     lines[#lines + 1] = { text = "|cffa0a0a0" .. string.format(L.refLabel, ns.lang == "en" and D.referenceLabel[2] or D.referenceLabel[1]) .. "|r" }
   end
+  local fdj = ns.DJ()
+  if fdj then
+    local n = 0
+    for _ in pairs(fdj.DB) do n = n + 1 end
+    lines[#lines + 1] = { text = "|cffa0a0a0" .. string.format(L.djOn, n) .. "|r" }
+  else
+    lines[#lines + 1] = { text = "|cffa0a0a0" .. L.djOff .. "|r" }
+  end
+  if _G.Syndicator and _G.Syndicator.API then lines[#lines + 1] = { text = "|cffa0a0a0" .. L.syndOn .. "|r" } end
   local bis = ns.BiS(3)
   for _, slot in ipairs(D.slotOrder) do
     local worn = GetInventoryItemLink("player", slot)
@@ -110,7 +119,9 @@ function ns.BisLines()
       for _, c in ipairs(s.items) do
         local where = c.where and string.format(L.at, c.where) or ""
         local lvl = (c.eval.minLevel or 0) > UnitLevel("player") and string.format(L.levelReq, c.eval.minLevel) or ""
-        lines[#lines + 1] = { link = c.link, text = c.link .. lvl .. " — " .. ns.GainText(c.eval) .. " |cffa0a0a0(" .. (L[SRC[c.src] or "srcTooltip"]) .. where .. ")|r" }
+        local owned = ns.Owned(c.id)
+        lines[#lines + 1] = { link = c.link, text = c.link .. lvl .. " — " .. ns.GainText(c.eval) .. " |cffa0a0a0(" .. (L[SRC[c.src] or "srcTooltip"]) .. where .. ")|r"
+                                                  .. (owned and string.format(L.ownTag, owned) or "") }
       end
     end
     for _, c in ipairs(s and s.refs or {}) do
@@ -120,7 +131,8 @@ function ns.BisLines()
       lines[#lines + 1] = { link = c.link, text = "|cffe6b84d" .. string.format(L.refLine, c.link, boss, Zone(r.zone), status)
                                                   .. (r.new and (" |cff66ccff" .. L.newTag .. "|r") or "")
                                                   .. (r.ench and (" |cffa0a0a0· " .. string.format(L.enchTag, r.ench) .. "|r") or "")
-                                                  .. ((r.ok == false) and " |cffff8000(?)|r" or "") .. "|r" }
+                                                  .. ((r.ok == false) and " |cffff8000(?)|r" or "") .. "|r"
+                                                  .. ((c.src ~= "equipped" and c.src ~= "bags" and ns.Owned(c.id)) and string.format(L.ownTag, ns.Owned(c.id)) or "") }
     end
   end
   return lines
@@ -129,34 +141,52 @@ end
 function ns.DungeonLines()
   local lines = { { text = "|cffa0a0a0" .. L.dungeonsHelp .. "|r" } }
   local zones = {}
-  for zone, bosses in pairs(ns.gdb.dungeons) do zones[zone] = zones[zone] or {}; zones[zone].bosses = bosses end
+  local function Z(name) zones[name] = zones[name] or { bosses = {}, refs = {}, dj = {}, djOrder = {} }; return zones[name] end
+  for zone, bosses in pairs(ns.gdb.dungeons) do Z(zone).bosses = bosses end
   local _, class = UnitClass("player")
-  for _, r in ipairs(D.reference[class] or {}) do
-    local name = Zone(r.zone)
-    zones[name] = zones[name] or {}
-    zones[name].refs = zones[name].refs or {}
-    table.insert(zones[name].refs, r)
+  for _, r in ipairs(D.reference[class] or {}) do table.insert(Z(Zone(r.zone)).refs, r) end
+  -- DungeonJournal : objets intéressants pour toi, boss par boss
+  for _, it in ipairs(ns.DJItems()) do
+    local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(it.id)
+    if link then
+      local r = ns.Evaluate(link)
+      if r and r.wearable and (r.score or 0) > 0.3 then
+        local z = Z(it.dungeon)
+        if not z.dj[it.boss] then z.dj[it.boss] = {}; table.insert(z.djOrder, it.boss) end
+        table.insert(z.dj[it.boss], { link = link, eval = r, quest = it.quest })
+      end
+    end
   end
   local names = {}
   for z in pairs(zones) do names[#names + 1] = z end
   table.sort(names)
   local any = false
   for _, z in ipairs(names) do
-    lines[#lines + 1] = { header = true, text = z }
-    local bosses = zones[z].bosses or {}
+    local zz = zones[z]
+    local nDj = 0
+    for _, items in pairs(zz.dj) do nDj = nDj + #items end
+    lines[#lines + 1] = { header = true, text = z .. (nDj > 0 and ("  |cff40d860" .. string.format(L.djForYou, nDj) .. "|r") or "") }
+    for _, boss in ipairs(zz.djOrder) do
+      lines[#lines + 1] = { sub = true, text = boss }
+      table.sort(zz.dj[boss], function(a, b) return a.eval.score > b.eval.score end)
+      for _, e in ipairs(zz.dj[boss]) do
+        any = true
+        lines[#lines + 1] = { link = e.link, text = e.link .. string.format(L.forYou, ns.GainText(e.eval)) }
+      end
+    end
     local bnames = {}
-    for b in pairs(bosses) do bnames[#bnames + 1] = b end
+    for b in pairs(zz.bosses) do bnames[#bnames + 1] = b end
     table.sort(bnames)
     for _, b in ipairs(bnames) do
-      lines[#lines + 1] = { sub = true, text = (b == "?") and L.unknownBoss or b }
-      for _, e in pairs(bosses[b]) do
+      lines[#lines + 1] = { sub = true, text = ((b == "?") and L.unknownBoss or b) .. " |cffa0a0a0(" .. L.srcChat .. ")|r" }
+      for _, e in pairs(zz.bosses[b]) do
         any = true
         local r = ns.Evaluate(e.link)
         local good = r and r.wearable and (r.score or 0) > 0.3
         lines[#lines + 1] = { link = e.link, text = e.link .. " ×" .. e.n .. (good and string.format(L.forYou, ns.GainText(r)) or "") }
       end
     end
-    for _, r in ipairs(zones[z].refs or {}) do
+    for _, r in ipairs(zz.refs) do
       local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(r.id)
       if link then
         lines[#lines + 1] = { link = link, text = "|cffe6b84d" .. link .. L.refTag .. (r.boss and (" — " .. r.boss) or "") .. "|r" }
@@ -334,6 +364,17 @@ function ns.DiagCollect(add)
     add(string.format("  %d = %s (niv. %s, qualité %s, %s), attendu emplacement %d%s%s", r.id, tostring(name or "ABSENT OU PAS ENCORE CHARGÉ"),
       tostring(minLevel), tostring(quality), tostring(equipLoc), r.slot, r.note and (", guide : " .. r.note) or "", (r.ok == false) and " [NON VÉRIFIÉ]" or ""))
   end
+  add("")
+  local fdj = ns.DJ()
+  if fdj then
+    local nd = 0
+    for _ in pairs(fdj.DB) do nd = nd + 1 end
+    add(string.format("DungeonJournal : présent, %d donjons, %d objets (butin + récompenses de quête)", nd, #ns.DJItems()))
+  else
+    add("DungeonJournal : absent (ou format inconnu : ForeverDungeonJournal_NS.DB introuvable)")
+  end
+  local S = _G.Syndicator
+  add("Syndicator : " .. ((S and S.API) and ("présent, prêt : " .. tostring(S.API.IsReady and S.API.IsReady())) or "absent"))
   add("")
   add("## Objets vus : " .. tostring(ns.db.seenCount or 0))
   add("## Butin des donjons noté (tous personnages)")

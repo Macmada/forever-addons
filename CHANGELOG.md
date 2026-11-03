@@ -1,9 +1,12 @@
 # Journal des versions
 
-## ForeverGFX 2.2.2 / ForeverGazette 1.4.1 (compagnon PDF)
+## ForeverGFX 2.2.2 / ForeverGazette 1.4.1 / ForeverLoot 1.2 / ForeverHeal 1.3
+- ForeverLoot + **DungeonJournal** (s'il est installé) : le butin de chaque boss et les récompenses de quête de ses donjons (dont les nouveaux donjons de Forever) entrent dans le BiS calculé, avec l'endroit où les obtenir ; l'onglet Donjons montre, boss par boss, les objets intéressants pour toi.
+- ForeverLoot + **Syndicator** (s'il est installé) : un objet BiS déjà dans ta banque, ton courrier, sur un autre personnage ou en banque de guilde est signalé.
+- ForeverHeal + **HealBot** (s'il est installé) : le conseil de rangs dit aussi quoi remplacer dans les sorts de HealBot ; les macros de rang restent.
 - Compagnon : `oui` / `non` acceptés dans `gazette_discord.ini` (en plus de `yes` / `no`) ; l'exemple les utilise.
 - Compagnon : `installer-demarrage.bat` passe par le lanceur `py` / `pyw` (avec le gestionnaire d'installation de Python, `python` peut n'être qu'un raccourci vers le Microsoft Store et Pillow ne s'installait pas) ; s'arrête avec un message clair si Pillow manque.
-- Addons : inchangés (numéros alignés sur le tag).
+- Autres addons : inchangés (numéros alignés sur le tag).
 
 
 ## ForeverGFX 2.2.1 / ForeverLoot 1.1

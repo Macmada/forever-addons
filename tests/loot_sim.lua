@@ -13,6 +13,9 @@ local ITEMS = {
   [105] = { "Os rongé", "INVTYPE_TRINKET", 15, 0, 0, 1, 1, {} },
   [106] = { "Gants de l'avenir", "INVTYPE_HAND", 4, 1, 4, 55, 800, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 60 } },
   [13345] = { "Sceau de Rivendare", "INVTYPE_FINGER", 4, 0, 3, 58, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 26 } },
+  [107] = { "Gants de l'oracle", "INVTYPE_HAND", 4, 1, 3, 38, 400, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 25 } },
+  [108] = { "Gantelets de plaques", "INVTYPE_HAND", 4, 4, 3, 38, 400, { ITEM_MOD_STRENGTH_SHORT = 20 } },
+  [109] = { "Bâton du pèlerin", "INVTYPE_2HWEAPON", 2, 10, 3, 38, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 50 } },
   [22149] = { "Perles de mojo ogre", "INVTYPE_NECK", 4, 0, 3, 60, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
   [16693] = { "Collerette de dévot", "INVTYPE_HEAD", 4, 1, 3, 57, 900, { ITEM_MOD_INTELLECT_SHORT = 20, ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
 }
@@ -104,6 +107,38 @@ local dtxt = {}
 for _, l in ipairs(dun) do dtxt[#dtxt + 1] = l.text end
 dtxt = table.concat(dtxt, "\n")
 check(dtxt:find("Stratholme", 1, true) and dtxt:find("Sceau de Rivendare", 1, true), "onglet Donjons : butin vu et référence")
+
+-- 5b. DungeonJournal (format réel : ForeverDungeonJournal_NS.DB[donjon].bosses[i].loot / quests[i].rewardItems) et Syndicator
+_G.ForeverDungeonJournal_NS = {
+  DB = { ["Hall of Thanes"] = {
+    bosses = { { name = "Faldrim Anvilmar", loot = { { 107, "Oracle Gloves", "Hands, Cloth", 3 }, { 108, "Plate Gauntlets", "Hands, Plate", 3 } } } },
+    quests = { { name = "An Ancient Grudge", rewardItems = { { 109, "Pilgrim Staff", 3 } } } },
+  } },
+  LocalizeDungeonName = function(k) return k == "Hall of Thanes" and "La Salle des thanes" or k end,
+}
+_G.Syndicator = { API = { IsReady = function() return true end,
+  GetInventoryInfoByItemID = function(id)
+    if id == 109 then return { characters = { { character = "Machin", bank = 1, bags = 0, mail = 0 } }, guilds = {} } end
+    return { characters = {}, guilds = {} }
+  end } }
+bis = ns.BiS(3)
+check(bis[10] and bis[10].items[1] and bis[10].items[1].id == 107 and bis[10].items[1].where:find("Salle des thanes", 1, true),
+      "BiS mains : gants de DungeonJournal (La Salle des thanes — Faldrim Anvilmar), plaques ignorées")
+local twoHand
+for _, c in ipairs(bis[16] and bis[16].items or {}) do if c.id == 109 then twoHand = c end end
+check(twoHand and twoHand.src == "djquest", "BiS : bâton, récompense de quête de DungeonJournal")
+check(ns.Owned(109) == ns.L.ownBank, "Syndicator : le bâton est dans ta banque")
+ns.version = ns.version + 1
+local bl = {}
+for _, l in ipairs(ns.BisLines()) do bl[#bl + 1] = l.text end
+bl = table.concat(bl, "\n")
+check(bl:find("Syndicator", 1, true) and bl:find("DungeonJournal", 1, true), "onglet BiS : lignes DungeonJournal et Syndicator")
+local dl = {}
+for _, l in ipairs(ns.DungeonLines()) do dl[#dl + 1] = l.text end
+dl = table.concat(dl, "\n")
+check(dl:find("La Salle des thanes", 1, true) and dl:find("Faldrim Anvilmar", 1, true) and dl:find("Gants de l'oracle", 1, true)
+      and not dl:find("Gantelets de plaques", 1, true), "onglet Donjons : butin de DungeonJournal pour toi, boss par boss")
+check(ns.DiagText():find("DungeonJournal : présent", 1, true), "diagnostic : DungeonJournal détecté")
 
 -- 6. infobulle d'un objet de référence
 GameTooltip.link, GameTooltip.lines = Link(16693), {}

@@ -276,6 +276,12 @@ end
 
 local function H(t) return "|cffffd100" .. t .. "|r" end
 
+-- HealBot Continued chargé ? (le conseil de rangs indique alors aussi quoi changer dans ses sorts)
+local function HealBotLoaded()
+  if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded("HealBot") end
+  return IsAddOnLoaded and IsAddOnLoaded("HealBot") or false
+end
+
 function ns.PanelText()
   local S = ns.Snapshot()
   local rates = ns.Rates(S)
@@ -309,6 +315,11 @@ function ns.PanelText()
     local label = (a.model and a.model.name or a.family) .. " r" .. a.rank
     if a.better then
       add(string.format(L.p_rankAdvice, label, Fmt(a.overPct * 100), Fmt(a.useful), a.better.rank, Fmt(a.betterNormal), a.saving))
+      if HealBotLoaded() then
+        local sub = (C_Spell and C_Spell.GetSpellSubtext and C_Spell.GetSpellSubtext(a.better.id))
+                    or (GetSpellSubtext and GetSpellSubtext(a.better.id)) or ("r" .. a.better.rank)
+        add("   " .. string.format(L.p_rankHealBot, a.model.name, a.better.name .. "(" .. sub .. ")"))
+      end
     elseif a.overPct >= 0.15 then
       add(string.format(L.p_rankKeep, label, Fmt(a.overPct * 100), Fmt(a.useful)))
     else

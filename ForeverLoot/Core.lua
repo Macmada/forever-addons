@@ -270,6 +270,12 @@ handlers.MERCHANT_SHOW = function()
   end
 end
 handlers.PLAYER_LOGIN = function() if ns.OnLogin then ns.OnLogin() end end
+local infoPending
+handlers.GET_ITEM_INFO_RECEIVED = function()
+  if infoPending or not (ns.ui and ns.ui:IsShown()) then return end
+  infoPending = true
+  C_Timer.After(1.5, function() infoPending = nil; if ns.Refresh then ns.Refresh() end end)
+end
 
 ev:RegisterEvent("ADDON_LOADED")
 ev:SetScript("OnEvent", function(_, event, ...)
@@ -286,7 +292,82 @@ end)
 ns._handlers = handlers
 
 ----------------------------------------------------------------------
--- BiS : meilleurs objets connus par emplacement (portés, sacs, vus, référence)
+-- Autres addons (facultatifs) : DungeonJournal (butin par boss de Forever), Syndicator (banque, autres personnages)
+----------------------------------------------------------------------
+-- DungeonJournal : ForeverDungeonJournal_NS.DB[donjon].bosses[i] = { name, loot = { { id, nom, emplacement, qualité } } },
+-- et .quests[i].rewardItems. Lu tel quel dans le jeu (rien n'est copié). Renvoie nil si l'addon est absent.
+function ns.DJ()
+  local fdj = _G.ForeverDungeonJournal_NS
+  if type(fdj) ~= "table" or type(fdj.DB) ~= "table" then return nil end
+  return fdj
+end
+
+function ns.DJName(fdj, key)
+  if fdj.LocalizeDungeonName then
+    local ok, n = pcall(fdj.LocalizeDungeonName, key)
+    if ok and n then return n end
+  end
+  return key
+end
+
+-- Liste à plat du butin de DungeonJournal : { id, dungeon, boss (ou quête), quest = true/false }
+local djCache
+function ns.DJItems()
+  local fdj = ns.DJ()
+  if not fdj then return {} end
+  if djCache and djCache.src == fdj.DB then return djCache.list end
+  local list = {}
+  for key, d in pairs(fdj.DB) do
+    if type(d) == "table" then
+      local dname = ns.DJName(fdj, key)
+      for _, b in ipairs(type(d.bosses) == "table" and d.bosses or {}) do
+        for _, it in ipairs(type(b.loot) == "table" and b.loot or {}) do
+          if type(it) == "table" and type(it[1]) == "number" then
+            list[#list + 1] = { id = it[1], dungeon = dname, boss = b.name or "?" }
+          end
+        end
+      end
+      for _, q in ipairs(type(d.quests) == "table" and d.quests or {}) do
+        for _, it in ipairs(type(q.rewardItems) == "table" and q.rewardItems or {}) do
+          if type(it) == "table" and type(it[1]) == "number" then
+            list[#list + 1] = { id = it[1], dungeon = dname, boss = q.name or "?", quest = true }
+          end
+        end
+      end
+    end
+  end
+  djCache = { src = fdj.DB, list = list }
+  return list
+end
+
+-- Syndicator : où se trouve un objet (ta banque, ton courrier, tes autres personnages) ; nil si absent
+function ns.Owned(id)
+  local S = _G.Syndicator
+  if not (S and S.API and S.API.GetInventoryInfoByItemID) then return nil end
+  if S.API.IsReady and not S.API.IsReady() then return nil end
+  local ok, info = pcall(S.API.GetInventoryInfoByItemID, id, true, false)
+  if not ok or type(info) ~= "table" then return nil end
+  local me = UnitName("player")
+  local out = {}
+  for _, c in ipairs(info.characters or {}) do
+    local where = {}
+    if c.character == me then
+      if (c.bank or 0) > 0 then where[#where + 1] = L.ownBank end
+      if (c.mail or 0) > 0 then where[#where + 1] = L.ownMail end
+      if #where > 0 then out[#out + 1] = table.concat(where, ", ") end
+    elseif (c.bags or 0) + (c.bank or 0) + (c.mail or 0) + (c.equipped or 0) > 0 then
+      out[#out + 1] = string.format(L.ownOther, c.character)
+    end
+  end
+  for _, g in ipairs(info.guilds or {}) do
+    if (g.bank or 0) > 0 then out[#out + 1] = string.format(L.ownGuild, g.guild) end
+  end
+  if #out == 0 then return nil end
+  return table.concat(out, " ; ")
+end
+
+----------------------------------------------------------------------
+-- BiS : meilleurs objets connus par emplacement (portés, sacs, vus, référence, DungeonJournal)
 ----------------------------------------------------------------------
 function ns.Candidates()
   local list, seenIds = {}, {}
@@ -317,6 +398,22 @@ function ns.Candidates()
     if link then add(link, "ref", nil, r) elseif C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(r.id) end
   end
   for _, e in pairs(db.seen) do if e.link then add(e.link, e.src, e.where) end end
+  -- DungeonJournal : seulement ce que ta classe peut porter ; objets pas encore chargés demandés au jeu (visibles au rafraîchissement)
+  local asked = 0
+  for _, it in ipairs(ns.DJItems()) do
+    if not seenIds[it.id] then
+      local _, _, _, equipLoc = Instant(it.id)
+      if equipLoc and D.slots[equipLoc] then
+        local _, link = Info(it.id)
+        if link then
+          if ns.Wearable(link) then add(link, it.quest and "djquest" or "dj", it.dungeon .. " — " .. it.boss) end
+        elseif asked < 50 and C_Item and C_Item.RequestLoadItemDataByID then
+          C_Item.RequestLoadItemDataByID(it.id)
+          asked = asked + 1
+        end
+      end
+    end
+  end
   for _, c in ipairs(list) do c.ref = c.ref or refById[c.id] end   -- une référence déjà portée reste marquée
   return list
 end

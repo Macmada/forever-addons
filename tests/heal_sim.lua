@@ -227,6 +227,10 @@ local adv
 for _, a in ipairs(ns.RankAdvice()) do if a.family == "greater" then adv = a end end
 check(adv and adv.better and adv.better.rank == 1 and adv.saving == 56, "conseil : Soins supérieurs r2 avec beaucoup d'excédent -> rang 1 suffit, −56 mana")
 check(strip(ns.PanelText()):find("le rang 1", 1, true) or strip(ns.PanelText()):find("rank 1", 1, true), "conseil affiché dans le panneau")
+_G.IsAddOnLoaded = function(n) return n == "HealBot" end
+check(strip(ns.PanelText()):find("HealBot", 1, true) and strip(ns.PanelText()):find("Soins supérieurs(Rang 1)", 1, true), "HealBot chargé : conseil « remplace par Soins supérieurs(Rang 1) » dans ses sorts")
+_G.IsAddOnLoaded = function() return false end
+check(not strip(ns.PanelText()):find("HealBot", 1, true), "sans HealBot : pas de ligne HealBot")
 ns.MakeMacros()
 check(MACROS[1] and MACROS[1].name == "SoinsSup 1" and MACROS[1].body:find("Soins supérieurs(Rang 1)", 1, true), "macro de rang créée : " .. tostring(MACROS[1] and MACROS[1].body))
 ns.MakeMacros()
