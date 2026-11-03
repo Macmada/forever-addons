@@ -1244,6 +1244,7 @@ local function CreateUI()
     GameTooltip:SetOwner(self, "ANCHOR_TOP"); GameTooltip:SetText(L.helpTip); GameTooltip:Show()
   end)
   ui.helpBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  ui.diagBtn = ns.MakeDiagButton(ui, ui.helpBtn)
 
   ui:HookScript("OnHide", function() if ns.TourShown() then ns.EndTour() end end)
 

@@ -300,4 +300,9 @@ if os.getenv("SHOW_DIAG") then print(diagText) end
 check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, true), "diagnostic : texte complet, sans erreur (" .. #diagText .. " caractères)")
 if os.getenv("SHOW_DIAG") then print(diagText) end
 SlashCmdList["FOREVERPREP"]("diag")
+ns.lastDiag = nil
+local dbtn = ns.ui and ns.ui.diagBtn
+check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
+dbtn.scripts.OnClick(dbtn)
+check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
 print("\nTOUT OK (" .. LANG .. ")")

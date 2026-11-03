@@ -10,6 +10,9 @@ local T = {
              or "%s diagnostic: copy this text (Ctrl+A then Ctrl+C) and paste it to Claude",
   close = FR and "Fermer" or "Close",
   selectAll = FR and "Tout sélectionner" or "Select all",
+  button = "Diag",
+  tip = FR and "Diagnostic : ouvre un texte à copier-coller à Claude, avec ce que ton client WoW Forever donne vraiment, pour adapter l'addon."
+           or "Diagnostic: opens a text to copy and paste to Claude, with what your WoW Forever client really provides, to adapt the addon.",
 }
 
 local function Meta(addon, field)
@@ -116,4 +119,21 @@ function ns.DiagItem(id)
   local name, _, quality, ilvl, minLevel = info(id)
   return { name = name, quality = quality, ilvl = ilvl, minLevel = minLevel, type = itemType, sub = subType,
            equipLoc = equipLoc, classID = classID, subID = subID }
+end
+
+-- Bouton « Diag » pour les fenêtres des addons (dans la barre de titre, à gauche du « ? » ou de la croix)
+function ns.MakeDiagButton(parent, rightOf)
+  local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+  b:SetSize(44, 20)
+  b:SetText(T.button)
+  if rightOf then b:SetPoint("RIGHT", rightOf, "LEFT", -2, 0) else b:SetPoint("TOPRIGHT", -28, -2) end
+  b:SetFrameLevel(((rightOf or parent):GetFrameLevel() or 1) + (rightOf and 0 or 60))
+  b:SetScript("OnClick", function() ns.ShowDiag() end)
+  b:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText(T.tip, 1, 1, 1, 1, true)
+    GameTooltip:Show()
+  end)
+  b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  return b
 end

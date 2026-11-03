@@ -89,7 +89,7 @@ Commandes : `/prep`, `/prep raid`, `/prep donjon`, `/prep role auto|tank|soigneu
 
 ## Diagnostic (pour adapter les addons à WoW Forever)
 
-Chaque addon a une commande `diag` qui ouvre une fenêtre avec un texte à copier (Ctrl+A puis Ctrl+C) et à coller à Claude : ce que ton client donne vraiment, pour corriger les bases d'après le jeu réel plutôt que d'après les règles classiques.
+Chaque addon a un **bouton « Diag »** dans la barre de titre de sa fenêtre (et une commande `diag`) qui ouvre une fenêtre avec un texte à copier (Ctrl+A puis Ctrl+C) et à coller à Claude : ce que ton client donne vraiment, pour corriger les bases d'après le jeu réel plutôt que d'après les règles classiques.
 
 | Commande | Contenu |
 |---|---|

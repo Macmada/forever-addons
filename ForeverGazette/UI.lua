@@ -506,6 +506,7 @@ function ns.CreateUI()
   ui.indexBtn:SetPoint("LEFT", ui.nextBtn, "RIGHT", 12, 0)
   ui.weeklyBtn = MakeButton(ui, L.weekly, 96, function() ns.ShowWeekly() end)
   ui.weeklyBtn:SetPoint("LEFT", ui.indexBtn, "RIGHT", 4, 0)
+  ui.diagBtn = ns.MakeDiagButton(ui)
   ui.helpBtn = MakeButton(ui, L.help, 26, function() ns.RunTour() end)
   ui.helpBtn:SetPoint("TOPRIGHT", -14, -30)
 

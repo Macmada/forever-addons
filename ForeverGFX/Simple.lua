@@ -152,6 +152,7 @@ function ns.BuildSimple(ui)
     GameTooltip:SetOwner(self, "ANCHOR_TOP"); GameTooltip:SetText(L.helpTip); GameTooltip:Show()
   end)
   helpBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  ns.diagBtn = ns.MakeDiagButton(ui, helpBtn)
 
   ns.simpleBtn = MakeButton(ui, L.simpleBtn, 120, function()
     ns.db.expert = false
