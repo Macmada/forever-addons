@@ -366,6 +366,17 @@ function ns.Owned(id)
   return table.concat(out, " ; ")
 end
 
+-- All The Things : où obtenir un objet (base Forever d'ATT), mémorisé ; nil si ATT est absent ou ne sait pas
+local attCache = {}
+function ns.ATTWhere(id)
+  if not (id and ns.ATT.Available()) then return nil end
+  if attCache[id] == nil then
+    local s = ns.ATT.Source("itemID", id, 1)
+    attCache[id] = (s and s.text) or false
+  end
+  return attCache[id] or nil
+end
+
 ----------------------------------------------------------------------
 -- BiS : meilleurs objets connus par emplacement (portés, sacs, vus, référence, DungeonJournal)
 ----------------------------------------------------------------------

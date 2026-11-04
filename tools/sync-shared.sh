@@ -1,6 +1,7 @@
 #!/bin/sh
 # Copie les modules communs (tools/*.lua) dans les addons. --check : échoue si une copie diffère.
-#   Diag.lua : diagnostic (tous) ; Hub.lua : icône commune « Forever » (tous) ; Tour.lua : tutoriel (addons qui en ont un)
+#   Diag.lua : diagnostic (tous) ; Hub.lua : icône commune « Forever » (tous) ; Tour.lua : tutoriel (addons qui en ont un) ;
+#   ATT.lua : sources d'All The Things (ForeverMetiers, ForeverLoot)
 set -e
 cd "$(dirname "$0")/.."
 ALL="ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers"
@@ -19,4 +20,5 @@ sync() { # fichier addons...
 sync Diag.lua $ALL
 sync Hub.lua $ALL
 sync Tour.lua $TOUR
+sync ATT.lua ForeverMetiers ForeverLoot
 echo "modules communs : ok"

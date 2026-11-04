@@ -140,6 +140,18 @@ check(dl:find("La Salle des thanes", 1, true) and dl:find("Faldrim Anvilmar", 1,
       and not dl:find("Gantelets de plaques", 1, true), "onglet Donjons : butin de DungeonJournal pour toi, boss par boss")
 check(ns.DiagText():find("DungeonJournal : présent", 1, true), "diagnostic : DungeonJournal détecté")
 
+-- 5c. All The Things : où obtenir chaque objet de la liste de référence
+_G.ATTC = { SearchForField = function(field, id)
+  if field == "itemID" and id == 13345 then
+    return { { itemID = 13345, parent = { encounterID = 456, text = "Baron Rivendare", parent = { instanceID = 236, text = "Stratholme", parent = { headerID = -1, text = "Donjons" } } } } }
+  end
+end }
+check(ns.ATTWhere(13345) == "Baron Rivendare — Stratholme", "ATT : Sceau de Rivendare sur le Baron Rivendare (Stratholme)")
+local al = {}
+for _, l in ipairs(ns.BisLines()) do al[#al + 1] = l.text end
+check(table.concat(al, "\n"):find("ATT[^|]*Baron Rivendare — Stratholme"), "onglet BiS : source d'ATT")
+_G.ATTC = nil
+
 -- 6. infobulle d'un objet de référence
 GameTooltip.link, GameTooltip.lines = Link(16693), {}
 ns.OnTooltipItem(GameTooltip)

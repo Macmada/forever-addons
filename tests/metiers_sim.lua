@@ -220,6 +220,48 @@ GameTooltip.link, GameTooltip.lines = Link(4305), {}
 ns.OnTooltipItem(GameTooltip)
 check(GameTooltip.lines[1] and GameTooltip.lines[1]:find("145", 1, true), "infobulle : soie utile à l'étape 145-150")
 
+-- 8b. All The Things (structure réelle : recettes r(sort, { itemID, learnedAt, requireSkill, cost, minReputation }) sous un PNJ, une catégorie, une zone)
+_G.C_CurrencyInfo = { GetCurrencyInfo = function(id) return id == 3402 and { name = "Faveur marchande" } or nil end }
+_G.GetFactionInfoByID = function(id) return id == 2586 and "Administration commerciale d'Azeroth" or nil end
+local zone = { mapID = 1453, text = "Hurlevent" }
+local header = { headerID = -2, text = "Marchands", parent = zone }
+local npc = { npcID = 250001, text = "|cffffffffAlynsia|r", parent = header }
+local trainer = { npcID = 1346, text = "Georgio Bolero", parent = { mapID = 1453, text = "Hurlevent" } }
+local craftables = { headerID = -100, text = "Fabrications", parent = { headerID = -5, text = "Métiers" } }
+local RECIPES = {
+  [1249058] = { { recipeID = 1249058, itemID = 249503, learnedAt = 225, requireSkill = 333, name = "Enchantement de collier (Pouvoir de guérison)",
+                  cost = { { "c", 3402, 120 } }, minReputation = { 2586, 3000 }, parent = npc } },
+  [3851] = { { recipeID = 3851, learnedAt = 140, requireSkill = 197, name = "Ceinture azur en soie", parent = trainer } },
+  [3863] = { { recipeID = 3863, learnedAt = 165, requireSkill = 197, name = "Cape glaciale", itemID = 4355, parent = npc } },
+  [8784] = { { recipeID = 8784, learnedAt = 105, requireSkill = 197, name = "Gants de méditation", parent = trainer } },
+  [99999] = { { recipeID = 99999, learnedAt = 50, requireSkill = 333, name = "Autre métier ?", parent = craftables } },
+}
+_G.ATTC = {
+  SearchForField = function(field, id)
+    if field == "recipeID" then return RECIPES[id] end
+    if field == "itemID" and id == 4318 then return { { itemID = 4318, parent = craftables } } end
+    return nil
+  end,
+  SearchForFieldContainer = function(field) if field == "recipeID" then return RECIPES end end,
+}
+check(ns.ATT.Available(), "All The Things détecté")
+local src = ns.ATT.Source("recipeID", 1249058)
+check(src and src.text:find("^Alynsia — Hurlevent %(120 Faveur marchande, ") and src.text:find("Administration commerciale d'Azeroth)", 1, true) and src.learnedAt == 225,
+      "ATT : collier de soins chez Alynsia (Hurlevent), 120 faveurs, Amical — « " .. tostring(src and src.text) .. " »")
+local collier
+for _, e in ipairs(ns.Data.healEnchants) do if e.spell == 1249058 then collier = e end end
+check(ns.EntrySkill(collier) == 225 and collier.skill == 210, "compétence d'ATT (225) préférée à celle du guide (210)")
+local now, soon = ns.ATTLearnable("tailoring")
+check(#now == 1 and now[1].name == "Ceinture azur en soie" and #soon == 1 and soon[1].name == "Cape glaciale",
+      "ATT : à apprendre maintenant en couture 148 : Ceinture azur (140) ; bientôt : Cape glaciale (165) ; Gants de méditation déjà connus")
+local rc2 = Txt(ns.RecipeLines())
+check(rc2:find("Georgio Bolero", 1, true) and rc2:find("ATT", 1, true) and rc2:find("Alynsia", 1, true), "onglet Recettes : sources d'ATT")
+check(ns.DiagText():find("All The Things : présent", 1, true), "diagnostic : ATT détecté")
+_G.ATTC = { SearchForField = function() error("structure changée") end, SearchForFieldContainer = function() error("x") end }
+check(ns.ATT.Source("recipeID", 1) == nil and #ns.ATT.Search("itemID", 1) == 0, "ATT qui change de structure : aucune erreur, rien affiché")
+check(Txt(ns.RecipeLines()) ~= nil, "onglet Recettes sans planter si ATT change")
+_G.ATTC = nil
+
 -- 9. diagnostic, icône commune, commandes
 local diag = ns.DiagText()
 check(diag:find("API craft", 1, true) and diag:find("1248459 = Enchantement de brassards", 1, true) and diag:find("Auctionator : présent", 1, true)

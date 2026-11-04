@@ -168,12 +168,12 @@ function ns.ForYouLines()
       end
       if a.soon then
         local e = a.soon.e
-        lines[#lines + 1] = { tall = true, text = string.format(L.enchSoon, e.name, e.skill, a.soon.gain and ns.GainText(a.soon.gain) or "?", e.src)
+        lines[#lines + 1] = { tall = true, text = string.format(L.enchSoon, e.name, ns.EntrySkill(e), a.soon.gain and ns.GainText(a.soon.gain) or "?", ns.SrcText(e))
                                                 .. (e.new and L.newTag or "") }
       end
       if a.learn then
         local e = a.learn.e
-        lines[#lines + 1] = { tall = true, text = string.format(L.enchLearn, e.name, e.skill, a.learn.gain and ns.GainText(a.learn.gain) or "?", e.src)
+        lines[#lines + 1] = { tall = true, text = string.format(L.enchLearn, e.name, ns.EntrySkill(e), a.learn.gain and ns.GainText(a.learn.gain) or "?", ns.SrcText(e))
                                                 .. (e.new and L.newTag or "") }
       end
       if not a.any then lines[#lines + 1] = { text = Gray(L.enchNoOption) } end
@@ -210,9 +210,18 @@ end
 local function Status(k, entry)
   if ns.Known(k, entry) then return L.recKnown end
   local s = ns.db.skills[k]
-  if s and s.rank >= (entry.skill or 0) then return L.recNow end
-  return string.format(L.recLater, entry.skill or 0)
+  local need = ns.EntrySkill(entry)
+  if s and s.rank >= need then return L.recNow end
+  return string.format(L.recLater, need)
 end
+
+-- Où l'obtenir : All The Things (base Forever) en priorité, sinon le guide
+local function SrcText(entry)
+  local s = ns.Source(entry)
+  if s and s.text then return "|cff66ccffATT|r " .. s.text end
+  return entry.src or "?"
+end
+ns.SrcText = SrcText
 
 function ns.RecipeLines()
   local lines = {}
@@ -221,7 +230,7 @@ function ns.RecipeLines()
     for _, p in ipairs(list) do
       if filter(p) then
         local link = p.id and select(2, ns.Info(p.id)) or nil
-        lines[#lines + 1] = { link = link, text = string.format(L.recLine, Status(k, p), link or p.name, p.src) .. (p.new and L.newTag or "") }
+        lines[#lines + 1] = { tall = true, link = link, text = string.format(L.recLine, Status(k, p), link or p.name, SrcText(p)) .. (p.new and L.newTag or "") }
       end
     end
   end
@@ -231,6 +240,33 @@ function ns.RecipeLines()
   section(L.recTitleEnch, "enchanting", function() return true end, D.healEnchants)
   section(nil, "enchanting", function(p) return p.heal end, D.patterns.enchanting)
   section(L.recTitlePat, "tailoring", function(p) return p.heal or (not p.camp and p.new) end, D.patterns.tailoring)
+  -- toutes les recettes du métier d'après All The Things : à apprendre maintenant, puis bientôt
+  if ns.ATT.Available() then
+    for _, k in ipairs(D.profOrder) do
+      local now, soon = ns.ATTLearnable(k)
+      if now then
+        lines[#lines + 1] = { header = true, text = string.format(L.attNow, L["prof_" .. k], ns.db.skills[k].rank) }
+        if #now == 0 then lines[#lines + 1] = { text = Gray(L.attNone) } end
+        for i, r in ipairs(now) do
+          if i > 15 then lines[#lines + 1] = { text = Gray(string.format(L.attMore, #now - 15)) }; break end
+          local src = ns.ATT.Source("recipeID", r.spell)
+          lines[#lines + 1] = { tall = true, link = r.item and select(2, ns.Info(r.item)) or nil,
+                                text = string.format(L.attLine, r.learnedAt, r.name, src and src.text or "?") }
+        end
+        if #soon > 0 then
+          lines[#lines + 1] = { text = string.format(L.attSoon, #soon) }
+          for i, r in ipairs(soon) do
+            if i > 8 then break end
+            local src = ns.ATT.Source("recipeID", r.spell)
+            lines[#lines + 1] = { tall = true, link = r.item and select(2, ns.Info(r.item)) or nil,
+                                  text = Gray(string.format(L.attLine, r.learnedAt, r.name, src and src.text or "?")) }
+          end
+        end
+      end
+    end
+  else
+    lines[#lines + 1] = { text = Gray(L.attOff) }
+  end
   -- temps de recharge de tous tes personnages
   lines[#lines + 1] = { header = true, text = L.cdTitle }
   local now, any = time(), false
@@ -532,6 +568,13 @@ function ns.DiagCollect(add)
   add("Syndicator : " .. ((S and S.API) and "présent" or "absent"))
   add("ForeverHeal (évaluation) : " .. (ns.HealAPI() and ("présent, API " .. tostring(_G.ForeverHealAPI.version)) or "absent ou pas prêtre"))
   add("Désenchanter : " .. tostring(GetSpellInfo and GetSpellInfo(D.disenchantSpell)))
+  ns.ATT.Diag(add)
+  if ns.ATT.Available() then
+    for _, e in ipairs(D.healEnchants) do
+      local s = ns.Source(e)
+      if s then add(string.format("  ATT %d : appris à %s, %s", e.spell, tostring(s.learnedAt), tostring(s.text))) end
+    end
+  end
   local nCd = 0
   for _, list in pairs(ns.gdb.cooldowns) do for _ in pairs(list) do nCd = nCd + 1 end end
   add("Temps de recharge relevés : " .. nCd)

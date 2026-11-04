@@ -86,7 +86,7 @@ Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`,
 - **Récompenses de quête** : la meilleure pour toi est mise en évidence, sinon la plus chère à revendre.
 - **Butin des donjons** : ce que chaque boss lâche, noté au fil de tes donjons (pour tous tes personnages), objets intéressants pour toi en vert.
 - Ce que chaque classe peut porter est pris en compte (types d'armure selon le niveau, armes, boucliers).
-- **Avec DungeonJournal** (facultatif) : le butin de chaque boss et les récompenses de quête de ses donjons, nouveaux donjons de Forever compris, entrent dans le BiS et l'onglet Donjons. **Avec Syndicator** (facultatif) : un objet déjà dans ta banque, ton courrier ou sur un autre personnage est signalé.
+- **Avec DungeonJournal** (facultatif) : le butin de chaque boss et les récompenses de quête de ses donjons, nouveaux donjons de Forever compris, entrent dans le BiS et l'onglet Donjons. **Avec Syndicator** (facultatif) : un objet déjà dans ta banque, ton courrier ou sur un autre personnage est signalé. **Avec All The Things** (facultatif) : où obtenir chaque objet du BiS.
 
 Commandes : `/floot` (ou `/bis`), `/floot donjons`, `/floot diag`, `/floot lang fr|en`.
 
@@ -99,6 +99,8 @@ Couture et enchantement, pensés pour un prêtre soigneur qui monte les deux mé
 - **Désenchanter** : ce qui peut l'être dans tes sacs (jamais une amélioration pour toi, ni chemise ou tabard), ce que ça donne et la compétence requise ; bouton « Désenchanter le premier » ; clic droit sur une ligne pour garder l'objet.
 - **Recettes** : feux de camp de Forever (bannière, rouet, luth, récupérateur arcanique…), bâtonnets runiques, enchantements de soigneur et patrons utiles, avec où les obtenir (maître, butin, faveur marchande, réputation) et si tu les connais ; **temps de recharge** de tous tes personnages.
 - **Infobulles** : un patron ou une formule dit s'il est déjà appris, par quel reroll, ou s'il est utile à ton prêtre ; un composant dit à quelle étape de ta montée il sert.
+
+**Avec All The Things** (facultatif) : où apprendre chaque recette (PNJ, quête, zone, coût, réputation) et à quelle compétence, d'après la base de WoW Forever d'ATT, et la liste de toutes les recettes à apprendre maintenant.
 
 Les données des guides viennent de la bêta : l'addon s'appuie d'abord sur ce que la fenêtre du métier donne vraiment, et le bouton **Diag** dit ce qui diffère.
 

@@ -228,9 +228,25 @@ function ns.Scan(api)
   return sc
 end
 
+-- Source d'une recette ou d'un objet du guide : All The Things d'abord (base Forever), sinon le texte du guide
+function ns.Source(entry)
+  if not ns.ATT.Available() then return nil end
+  if entry.spell then return ns.ATT.Source("recipeID", entry.spell) end
+  if entry.id then return ns.ATT.Source("itemID", entry.id) end
+end
+
+-- Compétence pour apprendre : celle d'ATT si elle la connaît
+function ns.EntrySkill(entry)
+  local s = ns.Source(entry)
+  return (s and s.learnedAt and s.learnedAt > 0) and s.learnedAt or entry.skill or 0
+end
+
 function ns.Known(k, entry)
   local kn = db.known[k]
-  if not kn then return false end
+  if not kn then
+    local s = ns.Source(entry)
+    return s and s.collected or false
+  end
   if entry.spell and kn["s" .. entry.spell] then return true end
   if entry.item and kn["i" .. entry.item] then return true end
   if entry.id and kn["i" .. entry.id] then return true end
@@ -450,8 +466,8 @@ function ns.EnchantAdvice()
           if ns.Known("enchanting", e) then
             if not a.known or score > a.known.score then a.known = c end
           else
-            if not a.learn or score > a.learn.score or (score == a.learn.score and e.skill < a.learn.e.skill) then a.learn = c end
-            if e.skill <= skill and (not a.soon or score > a.soon.score) then a.soon = c end      -- apprenable dès maintenant
+            if not a.learn or score > a.learn.score or (score == a.learn.score and ns.EntrySkill(e) < ns.EntrySkill(a.learn.e)) then a.learn = c end
+            if ns.EntrySkill(e) <= skill and (not a.soon or score > a.soon.score) then a.soon = c end      -- apprenable dès maintenant
           end
         end
       end
@@ -485,6 +501,20 @@ function ns.TailorUpgrades()
   end
   table.sort(list, function(a, b) return a.gain.score > b.gain.score end)
   return list
+end
+
+-- Recettes du métier connues d'All The Things, pas encore apprises : maintenant (≤ compétence) et bientôt (jusqu'à +25)
+function ns.ATTLearnable(k)
+  local s = db.skills[k]
+  if not (s and ns.ATT.Available()) then return nil end
+  local now, soon = {}, {}
+  for _, r in ipairs(ns.ATT.Recipes(ns.ATT.SKILL[k])) do
+    if r.name and not ns.Known(k, { spell = r.spell, name = r.name }) then
+      if r.learnedAt <= s.rank then now[#now + 1] = r elseif r.learnedAt <= s.rank + 25 then soon[#soon + 1] = r end
+    end
+  end
+  table.sort(now, function(a, b) return a.learnedAt > b.learnedAt end)
+  return now, soon
 end
 
 ----------------------------------------------------------------------

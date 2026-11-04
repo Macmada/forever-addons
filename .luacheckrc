@@ -14,7 +14,7 @@ globals = {
   "SLASH_FOREVERHEAL1", "SLASH_FOREVERHEAL2", "ForeverHeal_OnCompartmentClick",
   "ForeverHub", "SLASH_FOREVERHUB1", "ForeverHealAPI", "ForeverLootDB", "ForeverLootGlobalDB", "ForeverDungeonJournal_NS", "Syndicator",
   "SLASH_FOREVERLOOT1", "SLASH_FOREVERLOOT2", "ForeverLoot_OnCompartmentClick",
-  "ForeverMetiersDB", "ForeverMetiersGlobalDB", "SLASH_FOREVERMETIERS1", "SLASH_FOREVERMETIERS2", "ForeverMetiers_OnCompartmentClick", "Auctionator",
+  "ForeverMetiersDB", "ForeverMetiersGlobalDB", "SLASH_FOREVERMETIERS1", "SLASH_FOREVERMETIERS2", "ForeverMetiers_OnCompartmentClick", "Auctionator", "ATTC",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
@@ -59,5 +59,5 @@ read_globals = {
   "TradeSkillFrame_SetSelection", "TradeSkillFrame_Update", "GetCraftDisplaySkillLine", "GetCraftSkillLine", "GetNumCrafts",
   "GetCraftInfo", "GetCraftItemLink", "GetCraftRecipeLink", "GetCraftNumReagents", "GetCraftReagentInfo",
   "GetCraftReagentItemLink", "GetCraftDescription", "CraftFrame_SetSelection", "CraftFrame_Update", "GetNumSkillLines",
-  "GetSkillLineInfo",
+  "GetSkillLineInfo", "C_CurrencyInfo", "GetFactionInfoByID",
 }

@@ -1,5 +1,12 @@
 # Journal des versions
 
+## ForeverGFX 2.3.1 / ForeverMetiers 1.1 / ForeverLoot 1.3
+- **All The Things** (s'il est installé ; sa base propre à WoW Forever, tirée des données du jeu) :
+  - ForeverMetiers : où apprendre chaque recette (PNJ ou quête, zone, coût en faveur marchande, réputation requise) et à quelle compétence, à la place des textes du guide ; onglet Recettes : **toutes les recettes de couture et d'enchantement à apprendre maintenant** et celles des 25 prochains points, avec leur source.
+  - ForeverLoot : où obtenir chaque objet du BiS (boss et donjon, PNJ, quête).
+- ATT n'ayant pas d'interface publique, ses données sont lues avec précaution : si une mise à jour d'ATT change sa structure, ces lignes disparaissent simplement (le bouton Diag le signale).
+- Autres addons : inchangés.
+
 ## ForeverGFX 2.3.0 / ForeverMetiers 1.0 / ForeverHeal 1.4
 - **Nouvel addon ForeverMetiers** (`/metiers`, WoW Forever) : couture et enchantement.
   - **Montée** : panneau à côté de la fenêtre du métier avec les meilleurs crafts (couleurs réelles du jeu, coût par point avec Auctionator, clic pour sélectionner), étape du guide 1-300 (mamytwink.com) et liste de courses (sacs, banque, rerolls avec Syndicator, ce qui manque et son coût) ; rappel du maître Compagnon / Expert / Artisan avant le plafond.

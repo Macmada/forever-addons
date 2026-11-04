@@ -103,6 +103,7 @@ function ns.BisLines()
     lines[#lines + 1] = { text = "|cffa0a0a0" .. L.djOff .. "|r" }
   end
   if _G.Syndicator and _G.Syndicator.API then lines[#lines + 1] = { text = "|cffa0a0a0" .. L.syndOn .. "|r" } end
+  if ns.ATT.Available() then lines[#lines + 1] = { text = "|cffa0a0a0" .. L.attOn .. "|r" } end
   local bis = ns.BiS(3)
   for _, slot in ipairs(D.slotOrder) do
     local worn = GetInventoryItemLink("player", slot)
@@ -120,8 +121,9 @@ function ns.BisLines()
         local where = c.where and string.format(L.at, c.where) or ""
         local lvl = (c.eval.minLevel or 0) > UnitLevel("player") and string.format(L.levelReq, c.eval.minLevel) or ""
         local owned = ns.Owned(c.id)
+        local att = (not c.where) and ns.ATTWhere(c.id)
         lines[#lines + 1] = { link = c.link, text = c.link .. lvl .. " — " .. ns.GainText(c.eval) .. " |cffa0a0a0(" .. (L[SRC[c.src] or "srcTooltip"]) .. where .. ")|r"
-                                                  .. (owned and string.format(L.ownTag, owned) or "") }
+                                                  .. (att and string.format(L.attTag, att) or "") .. (owned and string.format(L.ownTag, owned) or "") }
       end
     end
     for _, c in ipairs(s and s.refs or {}) do
@@ -132,6 +134,7 @@ function ns.BisLines()
                                                   .. (r.new and (" |cff66ccff" .. L.newTag .. "|r") or "")
                                                   .. (r.ench and (" |cffa0a0a0· " .. string.format(L.enchTag, r.ench) .. "|r") or "")
                                                   .. ((r.ok == false) and " |cffff8000(?)|r" or "") .. "|r"
+                                                  .. ((c.src ~= "equipped" and c.src ~= "bags" and ns.ATTWhere(c.id)) and string.format(L.attTag, ns.ATTWhere(c.id)) or "")
                                                   .. ((c.src ~= "equipped" and c.src ~= "bags" and ns.Owned(c.id)) and string.format(L.ownTag, ns.Owned(c.id)) or "") }
     end
   end
@@ -375,6 +378,11 @@ function ns.DiagCollect(add)
   end
   local S = _G.Syndicator
   add("Syndicator : " .. ((S and S.API) and ("présent, prêt : " .. tostring(S.API.IsReady and S.API.IsReady())) or "absent"))
+  ns.ATT.Diag(add)
+  for _, r in ipairs(D.reference[class] or {}) do
+    local w = ns.ATTWhere(r.id)
+    if w then add(string.format("  ATT %d : %s", r.id, w)) end
+  end
   add("")
   add("## Objets vus : " .. tostring(ns.db.seenCount or 0))
   add("## Butin des donjons noté (tous personnages)")
