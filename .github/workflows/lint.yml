@@ -12,7 +12,7 @@ jobs:
       - name: Luacheck
         uses: lunarmodules/luacheck@v1
         with:
-          args: ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot
+          args: ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers
       - name: Modules communs identiques dans chaque addon (diagnostic, icône, tutoriel)
         run: sh tools/sync-shared.sh --check
 
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Simulations hors jeu des cinq addons (fr et en)
+      - name: Simulations hors jeu des addons (fr et en)
         run: |
           sudo apt-get install -y -q lua5.1
           lua5.1 tests/gazette_sim.lua fr
@@ -35,5 +35,7 @@ jobs:
           lua5.1 tests/macros_sim.lua en
           lua5.1 tests/loot_sim.lua fr
           lua5.1 tests/loot_sim.lua en
+          lua5.1 tests/metiers_sim.lua fr
+          lua5.1 tests/metiers_sim.lua en
       - name: Compagnon Discord (syntaxe)
         run: python3 -m py_compile tools/gazette-discord/gazette_discord.py tools/gazette-discord/gazette_render.py

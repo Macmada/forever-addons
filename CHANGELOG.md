@@ -1,5 +1,14 @@
 # Journal des versions
 
+## ForeverGFX 2.3.0 / ForeverMetiers 1.0 / ForeverHeal 1.4
+- **Nouvel addon ForeverMetiers** (`/metiers`, WoW Forever) : couture et enchantement.
+  - **Montée** : panneau à côté de la fenêtre du métier avec les meilleurs crafts (couleurs réelles du jeu, coût par point avec Auctionator, clic pour sélectionner), étape du guide 1-300 (mamytwink.com) et liste de courses (sacs, banque, rerolls avec Syndicator, ce qui manque et son coût) ; rappel du maître Compagnon / Expert / Artisan avant le plafond.
+  - **Pour toi** : enchantements de soigneur pour chaque pièce portée (ce que tu sais faire, à apprendre maintenant, le meilleur à viser), chiffrés par ForeverHeal ; pièces de couture qui t'améliorent.
+  - **Désenchanter** : ce qui peut l'être dans tes sacs (jamais une amélioration), résultat attendu, compétence requise, bouton « Désenchanter le premier ».
+  - **Recettes** : feux de camp, bâtonnets runiques, enchantements et patrons utiles (nouveautés de Forever comprises) avec leur source ; temps de recharge de tous tes personnages ; infobulles des patrons (appris, par quel reroll, utile au prêtre) et des composants.
+- ForeverHeal : `ForeverHealAPI.EvaluateStats` (gain d'un simple bonus de caractéristiques, pour chiffrer les enchantements).
+- Icône commune « Forever » : entrée « Métiers ».
+
 ## ForeverGFX 2.2.2 / ForeverGazette 1.4.1 / ForeverLoot 1.2 / ForeverHeal 1.3
 - ForeverLoot + **DungeonJournal** (s'il est installé) : le butin de chaque boss et les récompenses de quête de ses donjons (dont les nouveaux donjons de Forever) entrent dans le BiS calculé, avec l'endroit où les obtenir ; l'onglet Donjons montre, boss par boss, les objets intéressants pour toi.
 - ForeverLoot + **Syndicator** (s'il est installé) : un objet BiS déjà dans ta banque, ton courrier, sur un autre personnage ou en banque de guilde est signalé.

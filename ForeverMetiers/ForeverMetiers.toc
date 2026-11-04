@@ -1,0 +1,17 @@
+## Interface: 16000, 16001
+## Title: ForeverMetiers
+## Notes: Couture et enchantement : meilleur craft pour monter, liste de courses, enchantements et pièces utiles à ton prêtre, désenchantement, recettes et temps de recharge.
+## Notes-enUS: Tailoring and enchanting: best craft to level, shopping list, enchants and pieces useful to your priest, disenchanting, recipes and cooldowns.
+## Author: ForeverGFX
+## Version: 1.0
+## SavedVariablesPerCharacter: ForeverMetiersDB
+## SavedVariables: ForeverMetiersGlobalDB
+## IconTexture: Interface\Icons\Trade_Tailoring
+## AddonCompartmentFunc: ForeverMetiers_OnCompartmentClick
+
+Locale.lua
+Diag.lua
+Data.lua
+Core.lua
+UI.lua
+Hub.lua

@@ -3,7 +3,7 @@
 #   Diag.lua : diagnostic (tous) ; Hub.lua : icône commune « Forever » (tous) ; Tour.lua : tutoriel (addons qui en ont un)
 set -e
 cd "$(dirname "$0")/.."
-ALL="ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot"
+ALL="ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers"
 TOUR="ForeverGFX ForeverMacros ForeverGazette ForeverPrep"
 sync() { # fichier addons...
   f="$1"; shift

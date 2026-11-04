@@ -262,4 +262,9 @@ local dbtn = ns.panel and ns.panel.diagBtn
 check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
 dbtn.scripts.OnClick(dbtn)
 check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
+-- 12. API pour les autres addons : écart de caractéristiques seul (enchantement)
+local e16 = ForeverHealAPI.EvaluateStats({ heal = 16 })
+local eSta = ForeverHealAPI.EvaluateStats({ sta = 10 })
+check(ForeverHealAPI.version >= 2 and e16 and e16.hps > 0 and eSta and eSta.hp > 0 and eSta.hps == 0,
+      string.format("API EvaluateStats : +16 soins -> %+.1f soins/s ; +10 Endurance -> %+d PV", e16.hps, eSta.hp))
 print("\nTOUT OK (" .. LANG .. ")")

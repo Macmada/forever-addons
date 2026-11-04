@@ -702,10 +702,25 @@ function ns.DiagCollect(add)
 end
 
 ----------------------------------------------------------------------
--- Pour les autres addons (ForeverLoot) : évaluation d'un objet avec le modèle du prêtre
+-- Pour les autres addons (ForeverLoot, ForeverMetiers) : évaluation avec le modèle du prêtre
 ----------------------------------------------------------------------
 _G.ForeverHealAPI = {
-  version = 1,
+  version = 2,
+  -- Écart de caractéristiques seul (enchantement…) : d = { sta, int, spi, heal, mp5, crit, hp, mana } ; même retour qu'Evaluate, sans slot
+  EvaluateStats = function(d)
+    local ok, r = pcall(function()
+      local S = ns.Snapshot()
+      local rates = ns.Rates(S)
+      local mix = ns.Mix()
+      local before = ns.Metrics(S, mix)
+      local after = ns.Metrics(ns.Apply(S, d, rates), mix)
+      local hps = after.hps - before.hps
+      local healed = (after.healedBeforeOom or 0) - (before.healedBeforeOom or 0)
+      return { hps = hps, healed = healed, hp = (d.sta or 0) * rates.hpPerSta + (d.hp or 0),
+               score = hps * 30 + healed / 100 + (d.sta or 0) * 0.05 }
+    end)
+    return ok and r or nil
+  end,
   Evaluate = function(link)
     local ok, cmp = pcall(ns.CompareItem, link)
     if not ok or not cmp then return nil end

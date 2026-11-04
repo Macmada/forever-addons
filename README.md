@@ -9,13 +9,14 @@ Des addons World of Warcraft pour **WoW Forever**, **TBC Anniversary** et **reta
 | **ForeverGazette** | `/gazette` | la gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal |
 | **ForeverHeal** | `/fheal` | (WoW Forever, prêtre) ce que chaque caractéristique et chaque objet change vraiment, en clair : PV, mana, soins par seconde, autonomie |
 | **ForeverLoot** | `/floot` (`/bis`) | (WoW Forever) BiS calculé pour ton personnage, conseil de jet de butin et de récompense de quête, butin des donjons, liste de référence |
+| **ForeverMetiers** | `/metiers` | (WoW Forever) Couture et enchantement : meilleur craft pour monter, liste de courses, enchantements et pièces utiles à ton prêtre, désenchantement, recettes, temps de recharge |
 | **ForeverPrep** | `/prep` | (WoW Forever seulement) prêt pour le donjon ? consommables, composants, améliorations, équipement selon ta classe, ton rôle et ton niveau, liste de courses et achat chez le marchand |
 
 ## Installation
 
 ### Avec WowUp (mises à jour automatiques)
 
-Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : tous les addons arrivent ensemble (ForeverPrep, ForeverHeal et ForeverLoot ne se chargent que sur WoW Forever) et WowUp propose chaque nouvelle version.
+Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : tous les addons arrivent ensemble (ForeverPrep, ForeverHeal, ForeverLoot et ForeverMetiers ne se chargent que sur WoW Forever) et WowUp propose chaque nouvelle version.
 
 ### À la main
 
@@ -88,6 +89,20 @@ Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`,
 - **Avec DungeonJournal** (facultatif) : le butin de chaque boss et les récompenses de quête de ses donjons, nouveaux donjons de Forever compris, entrent dans le BiS et l'onglet Donjons. **Avec Syndicator** (facultatif) : un objet déjà dans ta banque, ton courrier ou sur un autre personnage est signalé.
 
 Commandes : `/floot` (ou `/bis`), `/floot donjons`, `/floot diag`, `/floot lang fr|en`.
+
+## ForeverMetiers (WoW Forever)
+
+Couture et enchantement, pensés pour un prêtre soigneur qui monte les deux métiers ensemble :
+
+- **Montée** : à l'ouverture de la fenêtre du métier, un panneau à côté donne les **meilleurs crafts** d'après les couleurs réelles du jeu (faisables d'abord, orange, étape du guide, coût par point avec les prix d'Auctionator) ; un clic sélectionne la recette. L'**étape du guide** (parcours 1-300 de mamytwink.com) et la **liste de courses** : ce qu'il faut pour la finir, ce que tu as dans tes sacs, ta banque et sur tes rerolls (Syndicator), ce qui manque et son coût. **Rappel du maître** (Compagnon, Expert, Artisan) quand tu approches du plafond, avec où le trouver et le niveau requis.
+- **Pour toi** : pour chaque pièce portée, enchantée ou non, le meilleur enchantement de soigneur que tu sais faire, celui à apprendre dès maintenant et le meilleur à viser, **chiffrés en soins/s par ForeverHeal** (description du jeu lue quand tu connais la formule) ; les pièces de couture (recettes connues et patrons du guide) qui t'améliorent.
+- **Désenchanter** : ce qui peut l'être dans tes sacs (jamais une amélioration pour toi, ni chemise ou tabard), ce que ça donne et la compétence requise ; bouton « Désenchanter le premier » ; clic droit sur une ligne pour garder l'objet.
+- **Recettes** : feux de camp de Forever (bannière, rouet, luth, récupérateur arcanique…), bâtonnets runiques, enchantements de soigneur et patrons utiles, avec où les obtenir (maître, butin, faveur marchande, réputation) et si tu les connais ; **temps de recharge** de tous tes personnages.
+- **Infobulles** : un patron ou une formule dit s'il est déjà appris, par quel reroll, ou s'il est utile à ton prêtre ; un composant dit à quelle étape de ta montée il sert.
+
+Les données des guides viennent de la bêta : l'addon s'appuie d'abord sur ce que la fenêtre du métier donne vraiment, et le bouton **Diag** dit ce qui diffère.
+
+Commandes : `/metiers` (montée), `/metiers pourtoi`, `/metiers de`, `/metiers recettes`, `/metiers garder`, `/metiers diag`, `/metiers lang fr|en`.
 
 ## ForeverPrep (WoW Forever)
 
