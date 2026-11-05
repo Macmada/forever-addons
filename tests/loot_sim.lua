@@ -183,4 +183,17 @@ check(ForeverHub and ForeverHub.entries.ForeverLoot, "inscrit dans l'icône comm
 SlashCmdList.FOREVERLOOT("donjons")
 check(ns.ui:IsShown(), "/floot donjons")
 check(ns.ui.dunBtn.active and not ns.ui.bisBtn.active, "onglet Donjons actif (style Forever)")
+-- cartes d'objets (fenêtre refaite le 05/11/2026) : nom en couleur de qualité, gain en grand, étoile des références
+ns.ShowTab("bis")
+local robe, ref, torse
+for _, c in ipairs(ns._view.cards) do
+  if c:IsShown() and c.name:GetText() == "Robe du soigneur" then robe = c end
+  if c:IsShown() and c.star:IsShown() then ref = c end
+end
+for _, h in ipairs(ns._view.slots) do if h:IsShown() and h.title:GetText() == ns.L.slot5 then torse = h end end
+check(robe and robe.gain:GetText():find(ns.L.cardHps, 1, true), "carte : Robe du soigneur avec son gain en soins/s")
+check(ref, "carte de référence marquée d'une étoile")
+check(torse, "titre d'emplacement « " .. ns.L.slot5 .. " »")
+ns.ui.optBtn.scripts.OnClick(ns.ui.optBtn)
+check(_G.ForeverLootOptionsFrame and _G.ForeverLootOptionsFrame:IsShown(), "bouton Options : options dans une petite fenêtre")
 W.rprint("\nTOUT OK (" .. LANG .. ")")

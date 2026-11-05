@@ -2,11 +2,14 @@ local _, ns = ...
 local L = ns.L
 local D = ns.Data
 local Print = ns.Print
+local K = ns.Kit
 
-local W, H = 640, 580
+-- Fenêtre de ForeverLoot : une fiche par emplacement (comme la fiche personnage), et pour chaque emplacement des cartes
+-- d'objets : icône encadrée de la couleur de qualité, nom, d'où il vient, et le gain pour toi en grand à droite.
+
+local W, H = 700, 640
 local ui
 local tab = "bis"
-
 
 local function Zone(key)
   local z = D.zones[key]
@@ -16,141 +19,316 @@ end
 
 local SRC = { equipped = "srcEquipped", bags = "srcBags", loot = "srcLoot", roll = "srcRoll", chat = "srcChat",
               quest = "srcQuest", vendor = "srcVendor", tooltip = "srcTooltip", ref = "srcRef", dj = "srcDj", djquest = "srcDjQuest" }
+local SLOT_NAME = { [1] = "HeadSlot", [2] = "NeckSlot", [3] = "ShoulderSlot", [5] = "ChestSlot", [6] = "WaistSlot", [7] = "LegsSlot",
+                    [8] = "FeetSlot", [9] = "WristSlot", [10] = "HandsSlot", [11] = "Finger0Slot", [13] = "Trinket0Slot",
+                    [15] = "BackSlot", [16] = "MainHandSlot", [17] = "SecondaryHandSlot", [18] = "RangedSlot" }
+local QUALITY = { [0] = { 0.62, 0.62, 0.62 }, [1] = { 1, 1, 1 }, [2] = { 0.12, 1, 0 }, [3] = { 0, 0.44, 0.87 },
+                  [4] = { 0.64, 0.21, 0.93 }, [5] = { 1, 0.5, 0 } }
+local Instant = function(x) return ((C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant)(x) end
+local Info = function(x) return ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(x) end
+
+-- Gain en deux parties : le grand chiffre (soins/s ou points) et le détail
+local function GainParts(r)
+  if not r then return "", "" end
+  if r.method == "heal" then
+    local sub = {}
+    if math.abs(r.healed or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHealed, ns.Signed(r.healed)) end
+    if math.abs(r.hp or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHp, ns.Signed(r.hp)) end
+    if math.abs(r.hps or 0) < 0.05 then return L.cardNoHps, table.concat(sub, " · ") end
+    return ns.Signed(r.hps, 1) .. " |cffd8c8a0" .. L.cardHps .. "|r", table.concat(sub, " · ")
+  end
+  return ns.Signed(r.score, 1) .. " |cffd8c8a0" .. L.cardPoints .. "|r", ""
+end
 
 ----------------------------------------------------------------------
--- Lignes de la liste (réutilisées)
+-- Éléments réutilisés : cartes, titres d'emplacement, lignes d'information
 ----------------------------------------------------------------------
-local rows, used = {}, 0
-local function Row()
-  used = used + 1
-  local r = rows[used]
-  if not r then
-    r = CreateFrame("Button", nil, ui.content)
-    r:SetHeight(20)
-    r.icon = r:CreateTexture(nil, "ARTWORK")
-    r.icon:SetSize(18, 18)
-    r.icon:SetPoint("LEFT", 4, 0)
-    r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    r.text:SetPoint("LEFT", 26, 0)
-    r.text:SetPoint("RIGHT", -4, 0)
-    r.text:SetJustifyH("LEFT")
-    r:SetScript("OnEnter", function(self)
+local cards, slots, infos = {}, {}, {}
+local cu, su, iu = 0, 0, 0
+ns._view = { cards = cards, slots = slots }          -- pour les simulations
+
+local function Card()
+  cu = cu + 1
+  local c = cards[cu]
+  if not c then
+    c = CreateFrame("Button", nil, ui.content)
+    c:SetHeight(46)
+    c:RegisterForClicks("LeftButtonUp")
+    c.bg = c:CreateTexture(nil, "BACKGROUND")
+    c.bg:SetAllPoints()
+    local hl = c:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetAllPoints()
+    hl:SetColorTexture(1, 0.82, 0.3, 0.10)
+    c.iconFrame = CreateFrame("Frame", nil, c)
+    c.iconFrame:SetSize(36, 36)
+    c.iconFrame:SetPoint("LEFT", 8, 0)
+    c.icon = c.iconFrame:CreateTexture(nil, "ARTWORK")
+    c.icon:SetPoint("TOPLEFT", 1, -1)
+    c.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+    c.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    c.qborder = K.Border(c.iconFrame, 1, 1, 1, 1, "OVERLAY")
+    c.name = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    c.name:SetPoint("TOPLEFT", c.iconFrame, "TOPRIGHT", 10, -2)
+    c.name:SetJustifyH("LEFT")
+    c.tags = c:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    c.tags:SetPoint("LEFT", c.name, "RIGHT", 8, 0)
+    c.tags:SetJustifyH("LEFT")
+    c.src = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    c.src:SetPoint("BOTTOMLEFT", c.iconFrame, "BOTTOMRIGHT", 10, 2)
+    c.src:SetJustifyH("LEFT")
+    c.src:SetTextColor(0.72, 0.66, 0.55)
+    c.gain = c:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    c.gain:SetPoint("TOPRIGHT", -10, -6)
+    c.gain:SetJustifyH("RIGHT")
+    c.sub = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    c.sub:SetPoint("BOTTOMRIGHT", -10, 6)
+    c.sub:SetJustifyH("RIGHT")
+    c.sub:SetTextColor(0.72, 0.66, 0.55)
+    c.star = c:CreateTexture(nil, "OVERLAY")
+    c.star:SetSize(14, 14)
+    c.star:SetPoint("TOPLEFT", c.iconFrame, "TOPLEFT", -5, 5)
+    c.star:SetTexture("Interface\\COMMON\\FavoritesIcon")
+    c:SetScript("OnEnter", function(self)
       if self.link then
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         pcall(GameTooltip.SetHyperlink, GameTooltip, self.link)
         GameTooltip:Show()
       end
     end)
-    r:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    r:SetScript("OnClick", function(self)
+    c:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    c:SetScript("OnClick", function(self)
       if self.link and IsShiftKeyDown() and ChatEdit_InsertLink then ChatEdit_InsertLink(self.link) end
     end)
-    rows[used] = r
+    cards[cu] = c
   end
-  r:Show()
-  return r
+  c:Show()
+  return c
+end
+
+local function SlotHead()
+  su = su + 1
+  local h = slots[su]
+  if not h then
+    h = CreateFrame("Button", nil, ui.content)
+    h:SetHeight(34)
+    h.bg = h:CreateTexture(nil, "BACKGROUND")
+    h.bg:SetAllPoints()
+    h.bg:SetColorTexture(0.32, 0.22, 0.08, 0.35)
+    h.icon = h:CreateTexture(nil, "ARTWORK")
+    h.icon:SetSize(26, 26)
+    h.icon:SetPoint("LEFT", 6, 0)
+    h.title = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    h.title:SetPoint("LEFT", h.icon, "RIGHT", 8, 0)
+    K.TitleFont(h.title, 17, "GameFontNormal")
+    h.worn = h:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    h.worn:SetPoint("RIGHT", -10, 0)
+    h.worn:SetJustifyH("RIGHT")
+    h.rule = h:CreateTexture(nil, "ARTWORK")
+    h.rule:SetPoint("BOTTOMLEFT"); h.rule:SetPoint("BOTTOMRIGHT"); h.rule:SetHeight(1)
+    h.rule:SetColorTexture(0.75, 0.56, 0.18, 0.9)
+    h:SetScript("OnEnter", function(self)
+      if self.link then
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        pcall(GameTooltip.SetHyperlink, GameTooltip, self.link)
+        GameTooltip:Show()
+      end
+    end)
+    h:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    slots[su] = h
+  end
+  h:Show()
+  return h
+end
+
+local function InfoLine()
+  iu = iu + 1
+  local f = infos[iu]
+  if not f then
+    f = ui.content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f:SetJustifyH("LEFT")
+    infos[iu] = f
+  end
+  f:ClearAllPoints()
+  f:Show()
+  return f
 end
 
 local function Render(lines)
-  for _, r in ipairs(rows) do r:Hide() end
-  used = 0
-  local y = -4
+  for _, o in ipairs(cards) do o:Hide() end
+  for _, o in ipairs(slots) do o:Hide() end
+  for _, o in ipairs(infos) do o:Hide() end
+  cu, su, iu = 0, 0, 0
+  local width = ui.content:GetWidth()
+  if type(width) ~= "number" or width <= 0 then width = W - 70 end
+  local y, stripe = -6, 0
   for _, l in ipairs(lines) do
-    local r = Row()
-    r.link = l.link
-    local icon = l.link and select(5, ((C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant)(l.link))
-    r.icon:SetShown(icon ~= nil)
-    if icon then r.icon:SetTexture(icon) end
-    r.text:SetFontObject(l.header and "GameFontNormal" or (l.sub and "GameFontNormalSmall" or "GameFontHighlightSmall"))
-    r.text:ClearAllPoints()
-    r.text:SetPoint("LEFT", icon and 26 or (l.header and 2 or 12), 0)
-    r.text:SetPoint("RIGHT", -4, 0)
-    r.text:SetText(l.text)
-    ns.Kit.StyleHeader(r, l.header and true or false, 15)
-    r:ClearAllPoints()
-    r:SetPoint("TOPLEFT", 0, y)
-    r:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
-    local h = l.header and 28 or 20
-    r:SetHeight(h)
-    y = y - h - (l.header and 2 or 0)
+    if l.kind == "slot" or l.kind == "dungeon" then
+      local h = SlotHead()
+      h:ClearAllPoints()
+      h:SetPoint("TOPLEFT", 0, y - 6)
+      h:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
+      h.icon:SetTexture(l.icon)
+      if l.iconCrop then h.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) else h.icon:SetTexCoord(0, 1, 0, 1) end
+      h.title:SetText(l.title)
+      h.worn:SetText(l.right or "")
+      h.link = l.link
+      y = y - 44
+      stripe = 0
+    elseif l.kind == "card" then
+      local c = Card()
+      stripe = stripe + 1
+      c.bg:SetColorTexture(1, 1, 1, stripe % 2 == 0 and 0.035 or 0.0)
+      c.link = l.link
+      local q = QUALITY[l.quality or 1] or QUALITY[1]
+      for _, t in ipairs(c.qborder) do t:SetColorTexture(q[1], q[2], q[3], 1) end
+      c.icon:SetTexture(l.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+      c.name:SetText(l.name or "?")
+      c.name:SetTextColor(q[1], q[2], q[3])
+      c.tags:SetText(l.tags or "")
+      c.src:SetText(l.source or "")
+      c.src:SetWidth(width - 230)
+      c.gain:SetText(l.gain or "")
+      c.sub:SetText(l.gainSub or "")
+      c.star:SetShown(l.ref and true or false)
+      c:ClearAllPoints()
+      c:SetPoint("TOPLEFT", 6, y)
+      c:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
+      y = y - 48
+    else
+      -- information ou ligne simple
+      local f = InfoLine()
+      f:SetFontObject(l.boss and "GameFontNormal" or "GameFontHighlightSmall")
+      f:SetWidth(width - 24)
+      f:SetText(l.display or l.text)
+      f:SetPoint("TOPLEFT", l.boss and 8 or 14, y - (l.boss and 4 or 2))
+      local fh = f:GetStringHeight()
+      y = y - ((type(fh) == "number" and fh > 0) and fh or 12) - (l.boss and 8 or 5)
+    end
   end
-  ui.content:SetHeight(-y + 8)
+  ui.content:SetHeight(-y + 10)
 end
 
 ----------------------------------------------------------------------
--- Onglets
+-- Contenu des onglets (chaque élément garde aussi un texte complet, pour les recherches et les tests)
 ----------------------------------------------------------------------
-function ns.BisLines()
-  local lines = {}
+local function CardFrom(c, ref, extraTags)
+  local name, _, quality, _, _, _, _, _, _, icon = Info(c.link)
+  local _, _, _, _, iconI = Instant(c.link)
+  local tags = {}
+  local lvl = c.eval and c.eval.minLevel or 0
+  if lvl > UnitLevel("player") then tags[#tags + 1] = "|cffff6a5a" .. string.format(L.cardLevel, lvl) .. "|r" end
+  if ref then tags[#tags + 1] = "|cffffd100" .. L.cardRef .. "|r" end
+  if ref and ref.new then tags[#tags + 1] = "|cff66ccff" .. L.newTag .. "|r" end
+  for _, t in ipairs(extraTags or {}) do tags[#tags + 1] = t end
+  local owned = ns.Owned(c.id)
+  if owned then tags[#tags + 1] = "|cff66ccff" .. owned .. "|r" end
+  -- d'où il vient : boss et donjon (référence, DungeonJournal, butin vu), sinon All The Things, sinon comment tu l'as vu
+  local source
+  if ref then
+    source = (ref.boss and (ref.boss .. " — ") or "") .. Zone(ref.zone)
+  elseif c.where then
+    source = c.where
+  end
+  local att = ns.ATTWhere(c.id)
+  if not source and att then source = att end
+  source = (source and (source .. "  ·  ") or "") .. (L[SRC[c.src] or "srcTooltip"])
+  if ref and ref.ench then source = source .. "  ·  |cffd8c8a0" .. string.format(L.enchTag, ref.ench) .. "|r" end
+  local gain, sub = GainParts(c.eval)
+  if c.src == "equipped" then gain, sub = "|cff40d860" .. L.refWear:gsub("^ — ", "") .. "|r", "" end
+  return { kind = "card", link = c.link, ref = ref, name = name or (c.link and c.link:match("%[(.-)%]")) or "?",
+           quality = quality or 1, icon = icon or iconI, tags = table.concat(tags, "  "), source = source, gain = gain, gainSub = sub }
+end
+
+-- Bandeau des sources : ForeverHeal, DungeonJournal, Syndicator, All The Things (vert = actif)
+local function StatusLine(lines)
   local _, class = UnitClass("player")
   local api = _G.ForeverHealAPI
-  lines[#lines + 1] = { text = "|cffa0a0a0" .. ((class == "PRIEST" and api) and L.methodHeal or L.methodWeights) .. "|r" }
-  if D.reference[class] then
-    lines[#lines + 1] = { text = "|cffa0a0a0" .. string.format(L.refLabel, ns.lang == "en" and D.referenceLabel[2] or D.referenceLabel[1]) .. "|r" }
-  end
   local fdj = ns.DJ()
-  if fdj then
-    local n = 0
-    for _ in pairs(fdj.DB) do n = n + 1 end
-    lines[#lines + 1] = { text = "|cffa0a0a0" .. string.format(L.djOn, n) .. "|r" }
-  else
-    lines[#lines + 1] = { text = "|cffa0a0a0" .. L.djOff .. "|r" }
+  local nd = 0
+  if fdj then for _ in pairs(fdj.DB) do nd = nd + 1 end end
+  local function chip(on, label)
+    return (on and "|TInterface\\COMMON\\Indicator-Green:14|t " or "|TInterface\\COMMON\\Indicator-Gray:14|t ")
+           .. (on and label or ("|cff808080" .. label .. "|r"))
   end
-  if _G.Syndicator and _G.Syndicator.API then lines[#lines + 1] = { text = "|cffa0a0a0" .. L.syndOn .. "|r" } end
-  if ns.ATT.Available() then lines[#lines + 1] = { text = "|cffa0a0a0" .. L.attOn .. "|r" } end
+  local chips = {
+    chip(class == "PRIEST" and api, "ForeverHeal"),
+    chip(fdj ~= nil, fdj and string.format(L.chipDJ, nd) or "DungeonJournal"),
+    chip(_G.Syndicator and _G.Syndicator.API, "Syndicator"),
+    chip(ns.ATT.Available(), "All The Things"),
+  }
+  local legacy = { (class == "PRIEST" and api) and L.methodHeal or L.methodWeights }
+  if D.reference[class] then legacy[#legacy + 1] = string.format(L.refLabel, ns.lang == "en" and D.referenceLabel[2] or D.referenceLabel[1]) end
+  legacy[#legacy + 1] = fdj and string.format(L.djOn, nd) or L.djOff
+  if _G.Syndicator and _G.Syndicator.API then legacy[#legacy + 1] = L.syndOn end
+  if ns.ATT.Available() then legacy[#legacy + 1] = L.attOn end
+  lines[#lines + 1] = { kind = "info", display = table.concat(chips, "      "), text = table.concat(legacy, "\n") }
+  if D.reference[class] then
+    lines[#lines + 1] = { kind = "info", display = "|TInterface\\COMMON\\FavoritesIcon:14|t |cffa0a0a0" .. string.format(L.refLabel, ns.lang == "en" and D.referenceLabel[2] or D.referenceLabel[1]) .. "|r",
+                          text = "" }
+  end
+end
+
+function ns.BisLines()
+  local lines = {}
+  StatusLine(lines)
   local bis = ns.BiS(3)
   for _, slot in ipairs(D.slotOrder) do
     local worn = GetInventoryItemLink("player", slot)
-    if slot == 11 or slot == 13 then
-      local w2 = GetInventoryItemLink("player", slot + 1)
-      worn = (worn or "") .. ((worn and w2) and " + " or "") .. (w2 or "")
-      if worn == "" then worn = nil end
+    local worn2 = (slot == 11 or slot == 13) and GetInventoryItemLink("player", slot + 1) or nil
+    local wornTxt = worn and (worn .. (worn2 and (" + " .. worn2) or "")) or worn2
+    local icon = GetInventoryItemTexture and GetInventoryItemTexture("player", slot)
+    local crop = icon ~= nil
+    if not icon and GetInventorySlotInfo and SLOT_NAME[slot] then
+      local ok, _, tex = pcall(GetInventorySlotInfo, SLOT_NAME[slot])
+      if ok then icon = tex end
     end
-    lines[#lines + 1] = { header = true, text = (L["slot" .. slot] or tostring(slot)) .. "  |cffa0a0a0" .. string.format(L.equipped, worn or L.nothing) .. "|r" }
+    lines[#lines + 1] = { kind = "slot", icon = icon, iconCrop = crop, link = worn, title = L["slot" .. slot] or tostring(slot),
+                          right = "|cffa0a0a0" .. string.format(L.equipped, wornTxt or L.nothing) .. "|r",
+                          text = (L["slot" .. slot] or tostring(slot)) .. "  " .. string.format(L.equipped, wornTxt or L.nothing) }
     local s = bis[slot]
-    if not s or #s.items == 0 then
-      lines[#lines + 1] = { text = "|cffa0a0a0" .. L.noCandidate .. "|r" }
-    else
-      for _, c in ipairs(s.items) do
-        local where = c.where and string.format(L.at, c.where) or ""
-        local lvl = (c.eval.minLevel or 0) > UnitLevel("player") and string.format(L.levelReq, c.eval.minLevel) or ""
-        local owned = ns.Owned(c.id)
-        local att = (not c.where) and ns.ATTWhere(c.id)
-        lines[#lines + 1] = { link = c.link, text = c.link .. lvl .. " — " .. ns.GainText(c.eval) .. " |cffa0a0a0(" .. (L[SRC[c.src] or "srcTooltip"]) .. where .. ")|r"
-                                                  .. (att and string.format(L.attTag, att) or "") .. (owned and string.format(L.ownTag, owned) or "") }
-      end
+    local shown = {}
+    for _, c in ipairs(s and s.items or {}) do
+      local card = CardFrom(c, c.ref)
+      local att = (not c.where) and ns.ATTWhere(c.id)
+      card.text = c.link .. " — " .. ns.GainText(c.eval) .. " (" .. (L[SRC[c.src] or "srcTooltip"]) .. (c.where and string.format(L.at, c.where) or "") .. ")"
+                  .. (att and string.format(L.attTag, att) or "") .. (ns.Owned(c.id) and string.format(L.ownTag, ns.Owned(c.id)) or "")
+                  .. ((c.ref and c.ref.ench) and (" " .. string.format(L.enchTag, c.ref.ench)) or "")
+                  .. (c.ref and (" " .. string.format(L.refLine, "", c.ref.boss and (c.ref.boss .. ", ") or "", Zone(c.ref.zone), "")) or "")
+      lines[#lines + 1] = card
+      shown[c.id] = true
     end
     for _, c in ipairs(s and s.refs or {}) do
-      local r = c.ref
-      local status = (c.src == "equipped") and L.refWear or ((c.src == "bags") and L.refHave or (" — " .. ns.GainText(c.eval)))
-      local boss = r.boss and (r.boss .. ", ") or ""
-      lines[#lines + 1] = { link = c.link, text = "|cffe6b84d" .. string.format(L.refLine, c.link, boss, Zone(r.zone), status)
-                                                  .. (r.new and (" |cff66ccff" .. L.newTag .. "|r") or "")
-                                                  .. (r.ench and (" |cffa0a0a0· " .. string.format(L.enchTag, r.ench) .. "|r") or "")
-                                                  .. ((r.ok == false) and " |cffff8000(?)|r" or "") .. "|r"
-                                                  .. ((c.src ~= "equipped" and c.src ~= "bags" and ns.ATTWhere(c.id)) and string.format(L.attTag, ns.ATTWhere(c.id)) or "")
-                                                  .. ((c.src ~= "equipped" and c.src ~= "bags" and ns.Owned(c.id)) and string.format(L.ownTag, ns.Owned(c.id)) or "") }
+      if not shown[c.id] then
+        local r = c.ref
+        local card = CardFrom(c, r)
+        local att = ns.ATTWhere(c.id)
+        card.text = string.format(L.refLine, c.link, r.boss and (r.boss .. ", ") or "", Zone(r.zone), "")
+                    .. (r.ench and (" " .. string.format(L.enchTag, r.ench)) or "") .. (att and string.format(L.attTag, att) or "")
+        lines[#lines + 1] = card
+      end
+    end
+    if (not s or #s.items == 0) and not (s and #s.refs > 0) then
+      lines[#lines + 1] = { kind = "info", display = "|cff808080" .. L.noCandidate .. "|r", text = L.noCandidate }
     end
   end
   return lines
 end
 
 function ns.DungeonLines()
-  local lines = { { text = "|cffa0a0a0" .. L.dungeonsHelp .. "|r" } }
+  local lines = { { kind = "info", display = "|cffa0a0a0" .. L.dungeonsHelp .. "|r", text = L.dungeonsHelp } }
   local zones = {}
   local function Z(name) zones[name] = zones[name] or { bosses = {}, refs = {}, dj = {}, djOrder = {} }; return zones[name] end
   for zone, bosses in pairs(ns.gdb.dungeons) do Z(zone).bosses = bosses end
   local _, class = UnitClass("player")
   for _, r in ipairs(D.reference[class] or {}) do table.insert(Z(Zone(r.zone)).refs, r) end
-  -- DungeonJournal : objets intéressants pour toi, boss par boss
   for _, it in ipairs(ns.DJItems()) do
-    local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(it.id)
+    local _, link = Info(it.id)
     if link then
       local r = ns.Evaluate(link)
       if r and r.wearable and (r.score or 0) > 0.3 then
         local z = Z(it.dungeon)
         if not z.dj[it.boss] then z.dj[it.boss] = {}; table.insert(z.djOrder, it.boss) end
-        table.insert(z.dj[it.boss], { link = link, eval = r, quest = it.quest })
+        table.insert(z.dj[it.boss], { link = link, eval = r, quest = it.quest, id = it.id })
       end
     end
   end
@@ -158,39 +336,49 @@ function ns.DungeonLines()
   for z in pairs(zones) do names[#names + 1] = z end
   table.sort(names)
   local any = false
-  for _, z in ipairs(names) do
-    local zz = zones[z]
+  for _, zname in ipairs(names) do
+    local zz = zones[zname]
     local nDj = 0
     for _, items in pairs(zz.dj) do nDj = nDj + #items end
-    lines[#lines + 1] = { header = true, text = z .. (nDj > 0 and ("  |cff40d860" .. string.format(L.djForYou, nDj) .. "|r") or "") }
+    lines[#lines + 1] = { kind = "dungeon", icon = "Interface\\Icons\\INV_Misc_Head_Dragon_01", iconCrop = true, title = zname,
+                          right = nDj > 0 and ("|cff40d860" .. string.format(L.djForYou, nDj) .. "|r") or "", text = zname }
     for _, boss in ipairs(zz.djOrder) do
-      lines[#lines + 1] = { sub = true, text = boss }
+      lines[#lines + 1] = { kind = "info", boss = true, display = "|cffffd100" .. boss .. "|r", text = boss }
       table.sort(zz.dj[boss], function(a, b) return a.eval.score > b.eval.score end)
       for _, e in ipairs(zz.dj[boss]) do
         any = true
-        lines[#lines + 1] = { link = e.link, text = e.link .. string.format(L.forYou, ns.GainText(e.eval)) }
+        local card = CardFrom({ link = e.link, id = e.id or ns.ItemID(e.link), eval = e.eval, src = e.quest and "djquest" or "dj", where = zname .. " — " .. boss })
+        card.text = e.link .. string.format(L.forYou, ns.GainText(e.eval))
+        lines[#lines + 1] = card
       end
     end
     local bnames = {}
     for b in pairs(zz.bosses) do bnames[#bnames + 1] = b end
     table.sort(bnames)
     for _, b in ipairs(bnames) do
-      lines[#lines + 1] = { sub = true, text = ((b == "?") and L.unknownBoss or b) .. " |cffa0a0a0(" .. L.srcChat .. ")|r" }
+      local bname = (b == "?") and L.unknownBoss or b
+      lines[#lines + 1] = { kind = "info", boss = true, display = "|cffffd100" .. bname .. "|r |cff808080(" .. L.srcChat .. ")|r", text = bname }
       for _, e in pairs(zz.bosses[b]) do
         any = true
         local r = ns.Evaluate(e.link)
         local good = r and r.wearable and (r.score or 0) > 0.3
-        lines[#lines + 1] = { link = e.link, text = e.link .. " ×" .. e.n .. (good and string.format(L.forYou, ns.GainText(r)) or "") }
+        local card = CardFrom({ link = e.link, id = ns.ItemID(e.link), eval = good and r or nil, src = "loot", where = zname .. " — " .. bname },
+                              nil, { "|cffa0a0a0×" .. e.n .. "|r" })
+        if not good then card.gain, card.gainSub = "", "" end
+        card.text = e.link .. " ×" .. e.n .. (good and string.format(L.forYou, ns.GainText(r)) or "")
+        lines[#lines + 1] = card
       end
     end
     for _, r in ipairs(zz.refs) do
-      local _, link = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(r.id)
+      local _, link = Info(r.id)
       if link then
-        lines[#lines + 1] = { link = link, text = "|cffe6b84d" .. link .. L.refTag .. (r.boss and (" — " .. r.boss) or "") .. "|r" }
+        local card = CardFrom({ link = link, id = r.id, eval = ns.Evaluate(link), src = "ref" }, r)
+        card.text = link .. L.refTag .. (r.boss and (" — " .. r.boss) or "")
+        lines[#lines + 1] = card
       end
     end
   end
-  if not any then table.insert(lines, 2, { text = "|cffa0a0a0" .. L.dungeonsNone .. "|r" }) end
+  if not any then table.insert(lines, 2, { kind = "info", display = "|cff808080" .. L.dungeonsNone .. "|r", text = L.dungeonsNone }) end
   return lines
 end
 
@@ -200,6 +388,40 @@ function ns.Refresh()
   ui.bisBtn:SetActive(tab == "bis")
   ui.dunBtn:SetActive(tab == "dungeons")
 end
+
+----------------------------------------------------------------------
+-- Fenêtre, options
+----------------------------------------------------------------------
+local opt
+local function ShowOptions()
+  if not opt then
+    opt = CreateFrame("Frame", "ForeverLootOptionsFrame", ui, "BasicFrameTemplateWithInset")
+    ns.SafeClose(opt)
+    opt:SetSize(420, 180)
+    opt:SetPoint("TOPRIGHT", ui, "TOPRIGHT", -10, -70)
+    opt:SetFrameStrata("DIALOG")
+    K.Dress(opt, "Interface\\Icons\\INV_Misc_Gear_01", L.optTitle)
+    local y = -34
+    local function C(text, key)
+      local cb = CreateFrame("CheckButton", nil, opt, "UICheckButtonTemplate")
+      cb:SetSize(22, 22)
+      cb:SetPoint("TOPLEFT", 14, y)
+      local lab = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      lab:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+      lab:SetText(text)
+      cb:SetScript("OnShow", function(self) self:SetChecked(ns.db[key]) end)
+      cb:SetScript("OnClick", function(self) ns.db[key] = self:GetChecked() and true or false; ns.version = ns.version + 1; ns.Refresh() end)
+      y = y - 28
+    end
+    C(L.optRoll, "rollHelp")
+    C(L.optQuest, "questHelp")
+    C(L.optTip, "tooltipHint")
+    C(L.optHigher, "higher")
+    opt:Hide()
+  end
+  opt:SetShown(not opt:IsShown())
+end
+ns.ShowOptions = ShowOptions
 
 local function CreateUI()
   if ui then return ui end
@@ -217,38 +439,23 @@ local function CreateUI()
   ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
   tinsert(UISpecialFrames, "ForeverLootFrame")
   ui:Hide()
-  ns.Kit.Dress(ui, "Interface\\Icons\\INV_Misc_Bag_10", L.title)
+  K.Dress(ui, "Interface\\Icons\\INV_Misc_Bag_10", L.title)
   ui.diagBtn = ns.MakeDiagButton(ui)
-  ui.bisBtn = ns.Kit.Tab(ui, L.tabBis, function() tab = "bis"; ns.Refresh() end)
+  ui.bisBtn = K.Tab(ui, L.tabBis, function() tab = "bis"; ns.Refresh() end)
   ui.bisBtn:SetPoint("TOPLEFT", 14, -32)
-  ui.dunBtn = ns.Kit.Tab(ui, L.tabDungeons, function() tab = "dungeons"; ns.Refresh() end)
+  ui.dunBtn = K.Tab(ui, L.tabDungeons, function() tab = "dungeons"; ns.Refresh() end)
   ui.dunBtn:SetPoint("LEFT", ui.bisBtn, "RIGHT", 4, 0)
+  ui.optBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.optShort, L.optTip2, function() ShowOptions() end)
+  ui.optBtn:SetPoint("TOPRIGHT", -18, -30)
   local sf = CreateFrame("ScrollFrame", nil, ui, "UIPanelScrollFrameTemplate")
-  sf:SetPoint("TOPLEFT", 16, -68)
-  sf:SetPoint("BOTTOMRIGHT", -34, 100)
-  ns.Kit.Backdrop(ui, sf, 0.55, 6)
+  sf:SetPoint("TOPLEFT", 16, -82)
+  sf:SetPoint("BOTTOMRIGHT", -34, 16)
+  K.Backdrop(ui, sf, 0.6, 6)
   ui.scroll = sf
   local content = CreateFrame("Frame", nil, sf)
-  content:SetSize(W - 52, 10)
+  content:SetSize(W - 60, 10)
   sf:SetScrollChild(content)
   ui.content = content
-  -- options
-  local y = 88
-  local function C(text, key)
-    local cb = CreateFrame("CheckButton", nil, ui, "UICheckButtonTemplate")
-    cb:SetSize(22, 22)
-    cb:SetPoint("BOTTOMLEFT", 14, y - 22)
-    local lab = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    lab:SetPoint("LEFT", cb, "RIGHT", 2, 0)
-    lab:SetText(text)
-    cb:SetScript("OnShow", function(self) self:SetChecked(ns.db[key]) end)
-    cb:SetScript("OnClick", function(self) ns.db[key] = self:GetChecked() and true or false; ns.version = ns.version + 1; ns.Refresh() end)
-    y = y - 20
-  end
-  C(L.optRoll, "rollHelp")
-  C(L.optQuest, "questHelp")
-  C(L.optTip, "tooltipHint")
-  C(L.optHigher, "higher")
   ui:SetScript("OnShow", function() ns.Refresh() end)
   return ui
 end

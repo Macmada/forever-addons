@@ -1,5 +1,14 @@
 # Journal des versions
 
+## ForeverGFX 2.4.2 / ForeverLoot 2.0
+- **Nouvelle fenêtre ForeverLoot**, refaite de zéro :
+  - chaque emplacement a son **bandeau** : icône de l'objet porté (ou de l'emplacement vide, comme la fiche personnage), nom en lettres de livre, ce que tu portes à droite ;
+  - chaque objet est une **carte** : grande icône encadrée de la couleur de qualité, nom en couleur, étiquettes (niveau requis en rouge, « Référence », « nouveau », banque/rerolls), d'où il vient (boss et donjon, ATT, enchantement conseillé) en dessous, et **le gain pour toi en grand à droite** (« +2,9 soins/s ») avec le détail (soignés avant d'être à sec, PV) ;
+  - les références de la liste Forever ont une **étoile** ;
+  - en haut, les sources actives en pastilles (ForeverHeal, DungeonJournal, Syndicator, All The Things) ;
+  - les options passent dans une petite fenêtre (icône Options) : plus de place pour la liste.
+- L'onglet Donjons utilise les mêmes cartes, par donjon et par boss.
+
 ## ForeverGFX 2.4.1 / ForeverLoot 1.8.1 / ForeverMetiers 1.6.1 / ForeverGazette 1.5.3 (et modules communs des autres)
 - **Lignes illisibles dans ForeverLoot** (certaines en grandes lettres de livre) : une ligne qui avait servi de titre gardait la police des titres quand elle était réutilisée (dans WoW, une police posée directement l'emporte ensuite sur le style). Les titres ont maintenant leur propre texte ; même correction pour ForeverMetiers et la Gazette.
 - All The Things : plus de « ALL THE THINGS » (la racine d'ATT) ni de « Quest #6502* » (quête pas encore chargée) comme source.

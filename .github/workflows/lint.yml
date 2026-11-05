@@ -15,8 +15,8 @@ jobs:
           args: ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers
       - name: Modules communs identiques dans chaque addon (diagnostic, icône, tutoriel)
         run: sh tools/sync-shared.sh --check
-      - name: Caractères absents de la police du jeu (→ ≈ ✓ s'affichent en carré)
-        run: "! grep -n '[→≈✓]' Forever*/*.lua tools/*.lua"
+      - name: Caractères absents de la police du jeu (→ ≈ ✓ ● ○ ★ s'affichent en carré)
+        run: "! grep -n '[→≈✓●○★☆]' Forever*/*.lua tools/*.lua"
       - name: Piège Lua « cond and nil or x » (vaut toujours x)
         run: "! grep -n 'and nil or' Forever*/*.lua tools/*.lua"
 

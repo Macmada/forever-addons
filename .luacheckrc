@@ -59,5 +59,5 @@ read_globals = {
   "TradeSkillFrame_SetSelection", "TradeSkillFrame_Update", "GetCraftDisplaySkillLine", "GetCraftSkillLine", "GetNumCrafts",
   "GetCraftInfo", "GetCraftItemLink", "GetCraftRecipeLink", "GetCraftNumReagents", "GetCraftReagentInfo",
   "GetCraftReagentItemLink", "GetCraftDescription", "CraftFrame_SetSelection", "CraftFrame_Update", "GetNumSkillLines",
-  "GetSkillLineInfo", "C_CurrencyInfo", "GetFactionInfoByID", "GetProfessions", "GetProfessionInfo", "C_SpellBook", "C_CombatLog",
+  "GetSkillLineInfo", "C_CurrencyInfo", "GetFactionInfoByID", "GetProfessions", "GetProfessionInfo", "C_SpellBook", "C_CombatLog", "GetInventoryItemTexture", "GetInventorySlotInfo",
 }

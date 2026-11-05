@@ -45,6 +45,9 @@ local fr = {
   slot9 = "Poignets", slot10 = "Mains", slot11 = "Anneaux", slot13 = "Bijoux", slot15 = "Dos", slot16 = "Main droite",
   slot17 = "Main gauche", slot18 = "Distance / baguette",
   unknownBoss = "boss inconnu",
+  cardHps = "soins/s", cardPoints = "points", cardNoHps = "|cffa0a0a0survie|r", cardHealed = "%s soignés avant d'être à sec", cardHp = "%s PV",
+  cardLevel = "niv. %d", cardRef = "Référence", chipDJ = "DungeonJournal (%d donjons)",
+  optTitle = "Options de ForeverLoot", optShort = "Options", optTip2 = "Conseils de jet et de quête, infobulles, objets de niveau supérieur.",
 }
 
 local en = {
@@ -92,6 +95,9 @@ local en = {
   slot9 = "Wrists", slot10 = "Hands", slot11 = "Rings", slot13 = "Trinkets", slot15 = "Back", slot16 = "Main hand",
   slot17 = "Off hand", slot18 = "Ranged / wand",
   unknownBoss = "unknown boss",
+  cardHps = "HPS", cardPoints = "points", cardNoHps = "|cffa0a0a0survival|r", cardHealed = "%s healed before OOM", cardHp = "%s HP",
+  cardLevel = "lvl %d", cardRef = "Reference", chipDJ = "DungeonJournal (%d dungeons)",
+  optTitle = "ForeverLoot options", optShort = "Options", optTip2 = "Roll and quest advice, tooltips, higher-level items.",
 }
 
 ns.lang = (GetLocale() == "frFR") and "fr" or "en"
