@@ -206,7 +206,11 @@ class Renderer:
                     items.append(("photo", ph.height + 10 + self.text_h(b["t"], self.f_small, colw, 2) + 12, (ph, b)))
             items.append(("space", 18, None))
         for st in stats:
-            rows = (len(st["items"]) + 1) // 2
+            # deux colonnes si chaque ligne y tient, sinon une seule (le bilan était coupé : « Expérience gagnée : … »)
+            half = (colw - 12) // 2
+            fits = all(self._measure.textlength("• " + it["t"], font=self.f_stats) <= half - 6 for it in st["items"])
+            st["cols"] = 2 if fits else 1
+            rows = (len(st["items"]) + st["cols"] - 1) // st["cols"]
             items.append(("stats", self.f_sec.size + 26 + rows * (self.f_stats.size + 8) + 12, st))
 
         bottom = H - 110
@@ -236,12 +240,13 @@ class Renderer:
                 ph, b = data
                 self.paste_photo(page, ph, x, cy + 4, b["t"], colw)
             elif kind == "stats":
-                rows = (len(data["items"]) + 1) // 2
+                cols = data.get("cols", 2)
+                rows = (len(data["items"]) + cols - 1) // cols
                 bh = self.f_sec.size + 26 + rows * (self.f_stats.size + 8) + 4
                 page.d.rectangle([x - 6, cy, x + colw + 6, cy + bh], fill=BOX, outline=INK, width=1)
                 page.d.text((x + 6, cy + 8), data["title"].upper(), font=self.f_sec, fill=RED)
                 page.d.line([(x + 6, cy + self.f_sec.size + 14), (x + colw - 6, cy + self.f_sec.size + 14)], fill=RED, width=1)
-                half = (colw - 12) // 2
+                half = (colw - 12) // cols
                 for i, it in enumerate(data["items"]):
                     tx = x + 8 + (i // rows) * half
                     ty = cy + self.f_sec.size + 22 + (i % rows) * (self.f_stats.size + 8)

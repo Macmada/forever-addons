@@ -354,6 +354,28 @@ check(ns.ui.tabIndex.active and not ns.ui.tabDay.active and ns.ui.backBtn:IsShow
 ns.ShowDay(ns.Today())
 check(ns.ui.exportBtn.label:GetText() == ns.L.export and ns.ui.pdfBtn.label:GetText() == ns.L.pdf, "actions en icônes avec leur nom dessous")
 
+-- regroupements (PDF du 05/11/2026) : 5 passages de niveau = une ligne, 12 recettes = une ligne ; accord « a-t-elle »
+local evs = {}
+for lv = 2, 7 do evs[#evs + 1] = { t = now - 1000 + lv * 10, k = "level", v = { level = lv }, s = 50 } end
+for i = 1, 12 do evs[#evs + 1] = { t = now - 900 + i, k = "recipe", v = { recipe = "Recette " .. i }, s = 8 } end
+evs[#evs + 1] = { t = now - 100, k = "zone", v = { zone = "Forgefer" }, s = 15 }
+local saveSex, saveTone = _G.UnitSex, ns.db.tone
+_G.UnitSex = function() return 3 end
+ns.db.tone = "tabloid"
+local gb = ns.BuildEdition(ns.Today(), { events = evs, stats = { play = 6700, level = 7 } }, 1)
+local all, nRecipe, nLevel = {}, 0, 0
+for _, b in ipairs(gb) do
+  all[#all + 1] = b.text
+  if b.kind == "line" and b.text:find("Recette", 1, true) then nRecipe = nRecipe + 1 end
+  if b.kind == "line" and b.text:find("niveau", 1, true) then nLevel = nLevel + 1 end
+end
+local gtxt = table.concat(all, "\n")
+check(nRecipe <= 1 and gtxt:find("12", 1, true), "12 recettes : une seule ligne avec le compte")
+check(nLevel <= 1 and gtxt:find("2", 1, true) and gtxt:find("7", 1, true), "niveaux 2 à 7 : une seule ligne (ou le gros titre)")
+check(not gtxt:find("a-t-e ", 1, true) and not gtxt:find("dit-e)", 1, true), "accord : jamais « a-t-e » ni « dit-e »")
+if LANG == "fr" then check(gtxt:find("a-t-elle", 1, true), "accord : « a-t-elle triché ? » pour une prêtresse") end
+_G.UnitSex, ns.db.tone = saveSex, saveTone
+
 -- client de Forever : C_CombatLog.GetCurrentEventInfo est réservé à Blizzard (appel bloqué) : jamais appelé
 local blocked = 0
 local saveCL = _G.CombatLogGetCurrentEventInfo

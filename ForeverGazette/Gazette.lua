@@ -97,7 +97,9 @@ local function Vars(ev, d)
   local v = {}
   for k, x in pairs(ev.v or {}) do v[k] = x end
   v.name = (ns.playerName and ns.playerName()) or UnitName("player")
-  v.e = (Lang() == "fr" and UnitSex and UnitSex("player") == 3) and "e" or ""
+  local female = UnitSex and UnitSex("player") == 3
+  v.e = (Lang() == "fr" and female) and "e" or ""
+  v.il = (Lang() == "fr") and (female and "elle" or "il") or (female and "she" or "he")
   v.plevel = (d and d.stats and d.stats.level) or UnitLevel("player")
   v.playtime = d and ns.FormatPlaytime(d.stats.play) or ""
   if ev.k == "death" then v.killer = KillerText(v.killer) end
@@ -141,9 +143,41 @@ local function Companions(d)
   return { t = 0, k = "companions", v = { names = names }, s = 10 }
 end
 
+-- Regroupements (PDF du 05/11/2026 : 5 lignes « a grimpé au niveau 2… 6 », 12 lignes de recettes du maître) :
+-- 3 passages de niveau ou plus = une ligne « du niveau X au niveau Y » ; 3 recettes ou plus = une ligne avec le compte
+local function Grouped(events)
+  local levels, recipes, out = {}, {}, {}
+  for _, e in ipairs(events) do
+    if e.k == "level" then levels[#levels + 1] = e
+    elseif e.k == "recipe" then recipes[#recipes + 1] = e
+    else out[#out + 1] = e end
+  end
+  if #levels >= 3 then
+    local lo, hi = levels[1], levels[1]
+    for _, e in ipairs(levels) do
+      if (e.v.level or 0) < (lo.v.level or 0) then lo = e end
+      if (e.v.level or 0) > (hi.v.level or 0) then hi = e end
+    end
+    out[#out + 1] = { t = hi.t, k = "levelrun", s = hi.s, shot = hi.shot, v = { level = hi.v.level, from = lo.v.level } }
+  else
+    for _, e in ipairs(levels) do out[#out + 1] = e end
+  end
+  if #recipes >= 3 then
+    local names, best = {}, recipes[1]
+    for i, e in ipairs(recipes) do
+      if i <= 3 then names[#names + 1] = e.v.recipe end
+      if e.s > best.s then best = e end
+    end
+    out[#out + 1] = { t = recipes[#recipes].t, k = "recipes", s = best.s, v = { count = #recipes, names = table.concat(names, ", ") } }
+  else
+    for _, e in ipairs(recipes) do out[#out + 1] = e end
+  end
+  table.sort(out, function(a, b) return a.t < b.t end)
+  return out
+end
+
 local function Events(d)
-  local out = {}
-  for _, e in ipairs(d.events or {}) do out[#out + 1] = e end
+  local out = Grouped(d.events or {})
   local c = Companions(d)
   if c then out[#out + 1] = c end
   return out

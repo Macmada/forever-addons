@@ -1,7 +1,7 @@
 local _, ns = ...
 
 -- Modèles des articles : langue -> ton -> type d'événement -> { head = gros titres, line = brèves }.
--- Variables : {name} {e} (accord féminin en français : "e" ou "") {level} {target} {zone} {item} {killer}
+-- Variables : {name} {e} (accord féminin en français : "e" ou "") {il} (« il » ou « elle ») {level} {from} {target} {zone} {item} {killer}
 -- {faction} {standing} {skill} {rank} {gold} {count} {names} {ach} {recipe} {plevel} {playtime}
 -- Le choix entre plusieurs variantes est déterministe (même édition = même texte à chaque ouverture).
 
@@ -47,6 +47,9 @@ T.fr = {
     quiet = { head = { "Journée calme pour {name}", "Rien à signaler sur le front" } },
     level = { head = { "{name} atteint le niveau {level}", "Niveau {level} : {name} franchit un cap" },
               line = { "{name} est passé{e} au niveau {level}." } },
+    levelrun = { head = { "{name} enchaîne : du niveau {from} au niveau {level}" },
+                 line = { "{name} est passé{e} du niveau {from} au niveau {level}." } },
+    recipes = { head = { "{count} nouvelles recettes pour {name}" }, line = { "{count} recettes apprises, dont {names}." } },
     levelmax = { head = { "Consécration : {name} atteint le niveau maximum ({level})" },
                  line = { "{name} atteint le niveau {level}, le plus haut possible." } },
     boss = { head = { "{target} est tombé : {name} et ses compagnons triomphent", "Victoire à {zone} : {target} vaincu" },
@@ -82,10 +85,13 @@ T.fr = {
     lede = { "EXCLUSIF ! {name} (niveau {plevel}) a cru pouvoir passer {playtime} incognito. C'était sans compter sur nos paparazzis.",
              "Nos sources sont formelles : {name} n'a pas chômé pendant {playtime}. Révélations." },
     quiet = { head = { "{name} : la journée où il ne s'est RIEN passé (ou presque)", "Silence radio chez {name} : que cache-t-on ?" } },
-    level = { head = { "INCROYABLE : {name} passe au niveau {level} !", "Niveau {level} : {name} a-t-{e} triché ? Nous avons enquêté" },
+    level = { head = { "INCROYABLE : {name} passe au niveau {level} !", "Niveau {level} : {name} a-t-{il} triché ? Nous avons enquêté" },
               line = { "{name} a grimpé au niveau {level}, et ne s'en cache pas." } },
+    levelrun = { head = { "Du niveau {from} au niveau {level} en une journée : {name} a-t-{il} triché ?" },
+                 line = { "Du niveau {from} au niveau {level} : {name} ne s'arrête plus." } },
+    recipes = { head = { "FUITE : {count} recettes chez {name} !" }, line = { "{count} recettes ont fuité chez nous, dont {names}." } },
     levelmax = { head = { "C'EST FAIT : {name} au niveau {level}, ses rivaux sont verts de jalousie" },
-                 line = { "Niveau {level} : {name} n'a plus rien à prouver (dit-{e})." } },
+                 line = { "Niveau {level} : {name} n'a plus rien à prouver (dit-{il})." } },
     boss = { head = { "SCANDALE à {zone} : {target} humilié par {name} et sa bande !", "{target} K.O. : les photos qui font trembler {zone}" },
              line = { "{target} n'a rien pu faire. Ses proches sont sous le choc." } },
     rare = { head = { "{target} débusqué : {name} frappe là où personne ne l'attendait" },
@@ -118,6 +124,9 @@ T.fr = {
     quiet = { head = { "Le repos du héros : {name} reprend des forces", "En ce jour, {name} veilla en paix" } },
     level = { head = { "Et {name} s'éleva au rang {level} !", "La puissance de {name} grandit : niveau {level}" },
               line = { "{name} gravit un degré de plus : niveau {level}." } },
+    levelrun = { head = { "En un seul jour, {name} s'éleva du rang {from} au rang {level} !" },
+                 line = { "{name} gravit les degrés, du rang {from} au rang {level}." } },
+    recipes = { head = { "{count} savoirs anciens révélés à {name}" }, line = { "{name} apprit {count} savoirs, dont {names}." } },
     levelmax = { head = { "Gloire éternelle : {name} atteint le sommet, niveau {level} !" },
                  line = { "Niveau {level} : nul ne peut plus monter plus haut." } },
     boss = { head = { "La chute de {target} ! {name} et ses frères d'armes triomphent à {zone}", "{zone} se souviendra : {target} n'est plus" },
@@ -183,6 +192,8 @@ T.en = {
              "Our correspondent followed {name} for {playtime}. Report." },
     quiet = { head = { "A quiet day for {name}", "All quiet on the front" } },
     level = { head = { "{name} reaches level {level}", "Level {level}: {name} hits a milestone" }, line = { "{name} reached level {level}." } },
+    levelrun = { head = { "{name} on a roll: level {from} to {level}" }, line = { "{name} went from level {from} to level {level}." } },
+    recipes = { head = { "{count} new recipes for {name}" }, line = { "{count} recipes learned, including {names}." } },
     levelmax = { head = { "Crowning moment: {name} reaches the level cap ({level})" }, line = { "{name} reached level {level}, the highest possible." } },
     boss = { head = { "{target} has fallen: {name} and companions triumph", "Victory in {zone}: {target} defeated" }, line = { "{target} was defeated in {zone}." } },
     rare = { head = { "{name} slays {target}, a rare foe", "Remarkable hunt in {zone}: {target} brought down" }, line = { "{target}, a rare enemy, was slain in {zone}." } },
@@ -263,7 +274,7 @@ ns.TONES = { "serious", "tabloid", "epic" }
 
 -- Rubrique de chaque type d'événement (ordre d'affichage dans ns.SECTION_ORDER)
 ns.SECTION_OF = {
-  level = "exploits", levelmax = "exploits", boss = "exploits", rare = "exploits", pvp = "exploits",
+  level = "exploits", levelrun = "exploits", recipes = "craft", levelmax = "exploits", boss = "exploits", rare = "exploits", pvp = "exploits",
   duel_win = "exploits", duel_loss = "exploits", achievement = "exploits",
   dungeon = "travel", zone = "travel",
   loot_legendary = "loot", loot_epic = "loot", loot_rare = "loot", money = "loot",

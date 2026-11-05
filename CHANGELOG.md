@@ -1,6 +1,7 @@
 # Journal des versions
 
-## ForeverGFX 2.4.6 / ForeverPrep 1.7 / ForeverLoot 2.3 / ForeverHeal 2.1 / ForeverMetiers 2.1.1
+## ForeverGFX 2.4.6 / ForeverPrep 1.7 / ForeverLoot 2.3 / ForeverHeal 2.1 / ForeverMetiers 2.1.1 / ForeverGazette 1.6
+- **ForeverGazette (d'après ton premier PDF)** : « Alain a-t-e triché ? » devient « a-t-elle » / « a-t-il » (nouvelle variable {il}) ; 3 passages de niveau ou plus dans la journée = une seule ligne (« du niveau 2 au niveau 7 ») ; 3 recettes ou plus (maître) = une seule ligne (« 12 recettes apprises, dont… ») ; compagnon PDF : le bilan passe sur une colonne quand une ligne ne tient pas sur deux (plus de « Expérience gagnée : … » coupé).
 - **ForeverPrep : à ton niveau, avec les prix, et « Guide-moi »** :
   - la liste de courses ne garde que ce qui **s'achète chez un marchand** (nourriture, eau, composants, munitions, poisons), au meilleur rang utilisable à ton niveau ; les potions et élixirs (pas vendus par les marchands) indiquent « à l'hôtel des ventes ou chez un alchimiste », avec le prix d'Auctionator ; « Tout acheter » les prend quand même si le marchand en vend ;
   - **prix** de chaque achat (prix réel relevé chez le marchand, sinon Auctionator, sinon estimation « ~ ») et **coût total** ;
