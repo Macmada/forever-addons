@@ -152,7 +152,8 @@ end
 local function Top(events)
   local best
   for _, e in ipairs(events) do
-    if not best or e.s > best.s or (e.s == best.s and e.t < best.t) then best = e end
+    -- à score égal, le plus récent (deux passages de niveau : le titre annonce le dernier)
+    if not best or e.s > best.s or (e.s == best.s and e.t > best.t) then best = e end
   end
   return best
 end
@@ -191,7 +192,7 @@ end
 local function StatsBlocks(blocks, st, title)
   local t = T().stats
   local function add(tpl, vars) blocks[#blocks + 1] = { kind = "stats", text = Fill(tpl, vars) } end
-  blocks[#blocks + 1] = { kind = "section", text = title }
+  blocks[#blocks + 1] = { kind = "section", text = title, sec = st.days and "weeklyStats" or "stats" }
   if st.days then add(t.days, { count = st.days }) end
   add(t.playtime, { playtime = ns.FormatPlaytime(st.play) })
   if (st.xp or 0) > 0 then add(t.xp, { count = st.xp }) end
@@ -245,7 +246,7 @@ function ns.BuildEdition(key, d, number)
     if list and #list > 0 then
       if s ~= "quests" then table.sort(list, function(a, b) if a.s ~= b.s then return a.s > b.s end return a.t < b.t end)
       else table.sort(list, function(a, b) return a.t < b.t end) end
-      blocks[#blocks + 1] = { kind = "section", text = t.sections[s] }
+      blocks[#blocks + 1] = { kind = "section", text = t.sections[s], sec = s }
       local limit = (s == "quests") and 5 or SECTION_LIMIT
       for i = 1, math.min(#list, limit) do
         local e = list[i]
@@ -299,7 +300,7 @@ function ns.BuildWeekly(key)
     end
     if weekShot then blocks[#blocks + 1] = { kind = "photo", text = Fill(t.photo, { item = weekShot }), file = weekShot } end
   end
-  blocks[#blocks + 1] = { kind = "section", text = t.sections.weeklyTop }
+  blocks[#blocks + 1] = { kind = "section", text = t.sections.weeklyTop, sec = "weeklyTop" }
   local n = 0
   for i = 2, #all do
     local x = all[i]

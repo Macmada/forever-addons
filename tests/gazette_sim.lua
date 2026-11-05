@@ -333,6 +333,27 @@ local dbtn = ns.ui and ns.ui.diagBtn
 check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
 dbtn.scripts.OnClick(dbtn)
 check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
+-- titre : deux passages de niveau dans la journée, le titre annonce le dernier (capture du 05/11/2026 : « Niveau 2 » au niveau 3)
+local now = time()
+local lv = { events = { { t = now - 900, k = "level", v = { level = 2 }, s = 50 }, { t = now - 300, k = "level", v = { level = 3 }, s = 50 } },
+             stats = { play = 1800, level = 3 } }
+local hb = ns.BuildEdition(ns.Today(), lv, 1)
+local head
+for _, b in ipairs(hb) do if b.kind == "headline" then head = b.text end end
+check(head and head:find("3", 1, true) and not head:find("2", 1, true), "titre : le dernier niveau atteint (« " .. tostring(head) .. " »)")
+local secs = {}
+for _, b in ipairs(hb) do if b.kind == "section" then secs[#secs + 1] = b.sec end end
+check(#secs >= 1 and secs[#secs] == "stats", "rubriques marquées pour leur icône (bilan : stats)")
+-- fenêtre : onglets et barre de navigation
+ns.ShowDay(ns.Today())
+check(ns.ui.tabDay.active and not ns.ui.tabIndex.active and ns.ui.navLabel:GetText() == ns.FormatDate(ns.Today()),
+      "fenêtre : onglet « Édition du jour » actif, date au milieu de la barre")
+ns.ShowIndex()
+check(ns.ui.tabIndex.active and not ns.ui.tabDay.active and ns.ui.backBtn:IsShown() and not ns.ui.prevBtn:IsShown(),
+      "fenêtre : onglet Sommaire actif, bouton Retour, pas de Veille")
+ns.ShowDay(ns.Today())
+check(ns.ui.exportBtn.label:GetText() == ns.L.export and ns.ui.pdfBtn.label:GetText() == ns.L.pdf, "actions en icônes avec leur nom dessous")
+
 -- client de Forever : C_CombatLog.GetCurrentEventInfo est réservé à Blizzard (appel bloqué) : jamais appelé
 local blocked = 0
 local saveCL = _G.CombatLogGetCurrentEventInfo

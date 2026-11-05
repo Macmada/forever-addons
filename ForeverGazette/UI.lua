@@ -2,12 +2,16 @@ local _, ns = ...
 local L = ns.L
 local Print = ns.Print
 
--- Fenêtre de la gazette : une page de journal (fond papier, encre sombre) qu'on feuillette.
+-- Fenêtre de la gazette : une page de journal sur parchemin, dans le style de l'interface de WoW : onglets (édition,
+-- sommaire, hebdo), navigation par jour, actions en icônes avec leur nom, rubriques illustrées, bilan en encadré.
 
-local W, H = 600, 660
-local PAPER = { 0.93, 0.89, 0.78 }
+local W, H = 640, 700
+local PAPER = { 0.93, 0.88, 0.74 }
 local INK = { 0.16, 0.11, 0.06 }
-local INK_SOFT = { 0.36, 0.28, 0.18 }
+local INK_SOFT = { 0.38, 0.29, 0.18 }
+local RED = { 0.45, 0.10, 0.06 }
+local GOLD = { 1, 0.82, 0 }
+local TITLE_FONT = "Fonts\\MORPHEUS.TTF"           -- police des titres de quêtes et des livres
 
 local ui
 local state = { mode = "day", key = nil }
@@ -34,14 +38,86 @@ local function MakeCheck(parent, text, get, set)
   return cb
 end
 
+-- Cadre fin (quatre traits) autour d'une zone
+local function Border(parent, r, g, b, a, layer)
+  local t = {}
+  for i = 1, 4 do
+    t[i] = parent:CreateTexture(nil, layer or "BORDER")
+    t[i]:SetColorTexture(r, g, b, a)
+  end
+  t[1]:SetPoint("TOPLEFT"); t[1]:SetPoint("TOPRIGHT"); t[1]:SetHeight(1)
+  t[2]:SetPoint("BOTTOMLEFT"); t[2]:SetPoint("BOTTOMRIGHT"); t[2]:SetHeight(1)
+  t[3]:SetPoint("TOPLEFT"); t[3]:SetPoint("BOTTOMLEFT"); t[3]:SetWidth(1)
+  t[4]:SetPoint("TOPRIGHT"); t[4]:SetPoint("BOTTOMRIGHT"); t[4]:SetWidth(1)
+  return t
+end
+
+local function Tooltip(btn, title, text)
+  btn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    GameTooltip:SetText(title, GOLD[1], GOLD[2], GOLD[3])
+    if text then GameTooltip:AddLine(text, 1, 1, 1, true) end
+    GameTooltip:Show()
+  end)
+  btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
+-- Onglet maison (or sur fond sombre, souligné quand il est actif) : ne dépend d'aucun modèle propre à une version du jeu
+local function MakeTab(parent, text, onClick)
+  local b = CreateFrame("Button", nil, parent)
+  b:SetHeight(26)
+  b.bg = b:CreateTexture(nil, "BACKGROUND")
+  b.bg:SetAllPoints()
+  b.fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  b.fs:SetPoint("CENTER", 0, 1)
+  b.fs:SetText(text)
+  b:SetWidth(math.max(96, (b.fs:GetStringWidth() or 80) + 28))
+  b.line = b:CreateTexture(nil, "ARTWORK")
+  b.line:SetPoint("BOTTOMLEFT", 4, 0)
+  b.line:SetPoint("BOTTOMRIGHT", -4, 0)
+  b.line:SetHeight(2)
+  b.line:SetColorTexture(GOLD[1], GOLD[2], GOLD[3], 1)
+  b.border = Border(b, 0.55, 0.42, 0.18, 0.9)
+  local hl = b:CreateTexture(nil, "HIGHLIGHT")
+  hl:SetAllPoints()
+  hl:SetColorTexture(1, 0.82, 0.3, 0.12)
+  function b.SetActive(self, on)
+    self.active = on
+    self.bg:SetColorTexture(on and 0.32 or 0.08, on and 0.22 or 0.06, on and 0.08 or 0.04, 0.95)
+    self.fs:SetTextColor(on and 1 or 0.85, on and 0.9 or 0.72, on and 0.55 or 0.4)
+    self.line:SetShown(on)
+  end
+  b:SetScript("OnClick", onClick)
+  b:SetActive(false)
+  return b
+end
+
+-- Action en icône, avec son nom dessous et une bulle d'aide
+local function MakeAction(parent, icon, label, tip, onClick)
+  local b = CreateFrame("Button", nil, parent)
+  b:SetSize(30, 30)
+  b.icon = b:CreateTexture(nil, "ARTWORK")
+  b.icon:SetAllPoints()
+  b.icon:SetTexture(icon)
+  b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+  Border(b, 0.55, 0.42, 0.18, 1, "OVERLAY")
+  b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+  b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  b.label:SetPoint("TOP", b, "BOTTOM", 0, -2)
+  b.label:SetText(label)
+  Tooltip(b, label, tip)
+  b:SetScript("OnClick", onClick)
+  return b
+end
+
 ----------------------------------------------------------------------
 -- Mise en page des blocs sur le papier
 ----------------------------------------------------------------------
-local pool = { fs = {}, btn = {}, rule = {} }
-local used = { fs = 0, btn = 0, rule = 0 }
+local pool = { fs = {}, btn = {}, rule = {}, tex = {} }
+local used = { fs = 0, btn = 0, rule = 0, tex = 0 }
 
 local function ResetPool()
-  for _, kind in ipairs({ "fs", "btn", "rule" }) do
+  for _, kind in ipairs({ "fs", "btn", "rule", "tex" }) do
     for _, o in ipairs(pool[kind]) do o:Hide() end
     used[kind] = 0
   end
@@ -107,6 +183,21 @@ local function GetRule()
   return r
 end
 
+-- Icônes des rubriques (et fonds d'encadré)
+local function GetTex(layer)
+  used.tex = used.tex + 1
+  local t = pool.tex[used.tex]
+  if not t then
+    t = ui.content:CreateTexture(nil, layer or "ARTWORK")
+    pool.tex[used.tex] = t
+  end
+  t:SetDrawLayer(layer or "ARTWORK")
+  t:SetTexCoord(0, 1, 0, 1)
+  t:ClearAllPoints()
+  t:Show()
+  return t
+end
+
 local function ItemIcon(link)
   if not link then return nil end
   local ok, tex
@@ -115,73 +206,150 @@ local function ItemIcon(link)
   return ok and tex or nil
 end
 
-local STYLE = {
-  masthead = { font = "GameFontNormalHuge", color = INK, justify = "CENTER", gap = 4 },
-  edition = { font = "GameFontNormalSmall", color = INK_SOFT, justify = "CENTER", gap = 6, ruleAfter = true },
-  headline = { font = "GameFontNormalLarge", color = INK, justify = "CENTER", gap = 8 },
-  lede = { font = "GameFontHighlight", color = INK_SOFT, justify = "CENTER", gap = 8 },
-  photo = { font = "GameFontHighlightSmall", color = INK_SOFT, justify = "CENTER", gap = 8 },
-  section = { font = "GameFontNormal", color = { 0.45, 0.12, 0.08 }, justify = "LEFT", gap = 4, ruleBefore = true, top = 8 },
-  line = { font = "GameFontHighlight", color = INK, justify = "LEFT", gap = 3, indent = 10 },
-  item = { font = "GameFontHighlight", color = INK, justify = "LEFT", gap = 3, indent = 10 },
-  stats = { font = "GameFontHighlightSmall", color = INK, justify = "LEFT", gap = 2, indent = 10 },
-  note = { font = "GameFontHighlightSmall", color = INK_SOFT, justify = "LEFT", gap = 3, indent = 10 },
-  index = { font = "GameFontHighlight", color = INK, justify = "LEFT", gap = 4, indent = 4 },
+-- Police des titres (Morpheus) ; si le client ne la trouve pas, on garde la police de l'objet
+local function TitleFont(fs, size, fontObject)
+  fs:SetFontObject(fontObject)
+  local ok = fs:SetFont(TITLE_FONT, size, "")
+  if ok == false then fs:SetFontObject(fontObject) end
+end
+
+local SECTION_ICON = {
+  dungeons = "Interface\\Icons\\INV_Misc_Head_Dragon_01", exploits = "Interface\\Icons\\Ability_Warrior_BattleShout",
+  travel = "Interface\\Icons\\INV_Misc_Map_01", loot = "Interface\\Icons\\INV_Misc_Coin_02",
+  death = "Interface\\Icons\\Ability_Rogue_FeignDeath", social = "Interface\\Icons\\INV_Letter_02",
+  craft = "Interface\\Icons\\Trade_BlackSmithing", quests = "Interface\\GossipFrame\\ActiveQuestIcon",
+  stats = "Interface\\Icons\\INV_Misc_PocketWatch_01", weeklyTop = "Interface\\Icons\\INV_Misc_Book_09",
+  weeklyStats = "Interface\\Icons\\INV_Misc_PocketWatch_01",
 }
+
+local STYLE = {
+  masthead = { font = "GameFontNormalHuge", title = 30, color = INK, justify = "CENTER", gap = 2 },
+  edition = { font = "GameFontNormalSmall", color = INK_SOFT, justify = "CENTER", gap = 6, ruleAfter = true },
+  headline = { font = "GameFontNormalLarge", title = 21, color = RED, justify = "CENTER", gap = 6 },
+  lede = { font = "GameFontHighlight", color = INK_SOFT, justify = "CENTER", gap = 10 },
+  photo = { font = "GameFontHighlightSmall", color = INK_SOFT, justify = "CENTER", gap = 8 },
+  section = { font = "GameFontNormal", title = 17, color = RED, justify = "LEFT", gap = 6, top = 12 },
+  line = { font = "GameFontHighlight", color = INK, justify = "LEFT", gap = 4, indent = 26 },
+  item = { font = "GameFontHighlight", color = INK, justify = "LEFT", gap = 4, indent = 26 },
+  note = { font = "GameFontHighlightSmall", color = INK_SOFT, justify = "LEFT", gap = 3, indent = 26 },
+  index = { font = "GameFontHighlight", color = INK, justify = "LEFT", gap = 6, indent = 8 },
+}
+
+-- Bilan en encadré, sur deux colonnes : « Temps de jeu » à gauche, « 30 min » à droite de chaque case
+local function StatsBox(list, width, y)
+  local cols, rowH, pad = 2, 18, 8
+  local rows = math.ceil(#list / cols)
+  local boxH = rows * rowH + pad * 2
+  local bg = GetTex("BACKGROUND")
+  bg:SetColorTexture(0.55, 0.40, 0.20, 0.13)
+  bg:SetPoint("TOPLEFT", 10, y)
+  bg:SetSize(width - 20, boxH)
+  for _, edge in ipairs({ { "TOPLEFT", "TOPRIGHT", 0 }, { "TOPLEFT", "TOPRIGHT", -boxH } }) do
+    local r = GetRule()
+    r:SetColorTexture(INK_SOFT[1], INK_SOFT[2], INK_SOFT[3], 0.6)
+    r:SetHeight(1)
+    r:SetPoint("TOPLEFT", 10, y + edge[3])
+    r:SetPoint("TOPRIGHT", -10, y + edge[3])
+  end
+  local colW = (width - 20 - pad * 2) / cols
+  for i, text in ipairs(list) do
+    local c, r = (i - 1) % cols, math.floor((i - 1) / cols)
+    local label, value = text:match("^(.-)%s*:%s*(.+)$")
+    local x, yy = 10 + pad + c * colW, y - pad - r * rowH
+    local a = GetFS()
+    a:SetFontObject("GameFontHighlightSmall")
+    a:SetTextColor(INK_SOFT[1], INK_SOFT[2], INK_SOFT[3])
+    a:SetJustifyH("LEFT")
+    a:SetWidth(colW * 0.62)
+    a:SetText(label or text)
+    a:SetPoint("TOPLEFT", x, yy)
+    if value then
+      local v = GetFS()
+      v:SetFontObject("GameFontNormal")
+      v:SetTextColor(INK[1], INK[2], INK[3])
+      v:SetJustifyH("RIGHT")
+      v:SetWidth(colW * 0.38 - 10)
+      v:SetText(value)
+      v:SetPoint("TOPLEFT", x + colW * 0.62, yy)
+    end
+  end
+  return y - boxH - 6
+end
 
 local function Render(blocks)
   ResetPool()
   local width = ui.content:GetWidth()
-  local y = -10
-  for _, b in ipairs(blocks or {}) do
-    local st = STYLE[b.kind] or STYLE.line
-    y = y - (st.top or 0)
-    if st.ruleBefore then
-      local r = GetRule()
-      r:SetColorTexture(INK_SOFT[1], INK_SOFT[2], INK_SOFT[3], 0.5)
-      r:SetHeight(1)
-      r:SetPoint("TOPLEFT", 6, y)
-      r:SetPoint("TOPRIGHT", -6, y)
-      y = y - 6
-    end
-    local indent = st.indent or 0
-    local text = (b.kind == "line" or b.kind == "item" or b.kind == "stats") and ("• " .. b.text) or b.text
-    local fs, holder
-    local iconW = 0
-    if b.link or b.onClick then
-      holder = GetBtn()
-      holder.link, holder.onClick = b.link, b.onClick
-      fs = holder.fs
-      local tex = (b.kind == "item") and ItemIcon(b.link)
-      holder.icon:SetShown(tex ~= nil)
-      if tex then holder.icon:SetTexture(tex); iconW = 22 end
-      fs:ClearAllPoints()
-      fs:SetPoint("TOPLEFT", iconW, 0)
+  local y = -12
+  blocks = blocks or {}
+  local i = 1
+  while i <= #blocks do
+    local b = blocks[i]
+    if b.kind == "stats" then
+      local list = {}
+      while blocks[i] and blocks[i].kind == "stats" do list[#list + 1] = blocks[i].text; i = i + 1 end
+      y = StatsBox(list, width, y)
     else
-      fs = GetFS()
-    end
-    fs:SetFontObject(st.font)
-    fs:SetTextColor(st.color[1], st.color[2], st.color[3])
-    fs:SetJustifyH(st.justify)
-    fs:SetWidth(width - indent - 12 - iconW)
-    fs:SetText(iconW > 0 and b.text or text)
-    local h = fs:GetStringHeight()
-    if holder then
-      holder:SetPoint("TOPLEFT", 6 + indent, y)
-      holder:SetSize(width - indent - 12, h)
-    else
-      fs:SetPoint("TOPLEFT", 6 + indent, y)
-    end
-    y = y - h - (st.gap or 3)
-    if st.ruleAfter then
-      for i = 1, 2 do
-        local r = GetRule()
-        r:SetColorTexture(INK[1], INK[2], INK[3], 0.8)
-        r:SetHeight(1)
-        r:SetPoint("TOPLEFT", 6, y - (i - 1) * 3)
-        r:SetPoint("TOPRIGHT", -6, y - (i - 1) * 3)
+      local st = STYLE[b.kind] or STYLE.line
+      y = y - (st.top or 0)
+      local indent = st.indent or 0
+      local fs, holder
+      local iconW = 0
+      if b.kind == "section" then
+        -- titre de rubrique : icône, nom en lettres de livre, filet doré dessous
+        local icon = SECTION_ICON[b.sec or ""]
+        local tex = GetTex("ARTWORK")
+        tex:SetSize(20, 20)
+        tex:SetPoint("TOPLEFT", 4, y + 1)
+        tex:SetTexture(icon or SECTION_ICON.exploits)
+        if icon and icon:find("Icons", 1, true) then tex:SetTexCoord(0.07, 0.93, 0.07, 0.93) end
+        indent = 30
       end
-      y = y - 12
+      if b.link or b.onClick then
+        holder = GetBtn()
+        holder.link, holder.onClick = b.link, b.onClick
+        fs = holder.fs
+        local tex = (b.kind == "item") and ItemIcon(b.link)
+        holder.icon:SetShown(tex ~= nil)
+        if tex then holder.icon:SetTexture(tex); iconW = 22 end
+        fs:ClearAllPoints()
+        fs:SetPoint("TOPLEFT", iconW, 0)
+      else
+        fs = GetFS()
+      end
+      if st.title then TitleFont(fs, st.title, st.font) else fs:SetFontObject(st.font) end
+      fs:SetTextColor(st.color[1], st.color[2], st.color[3])
+      fs:SetJustifyH(st.justify)
+      fs:SetWidth(width - indent - 12 - iconW)
+      local text = b.text
+      if (b.kind == "line" or b.kind == "item") and iconW == 0 then text = "|cff8a6a2a•|r  " .. b.text end
+      fs:SetText(text)
+      local h = fs:GetStringHeight()
+      if holder then
+        holder:SetPoint("TOPLEFT", 6 + indent, y)
+        holder:SetSize(width - indent - 12, h)
+      else
+        fs:SetPoint("TOPLEFT", 6 + indent, y)
+      end
+      y = y - h - (st.gap or 3)
+      if b.kind == "section" then
+        local r = GetRule()
+        r:SetColorTexture(0.65, 0.48, 0.16, 0.7)
+        r:SetHeight(1)
+        r:SetPoint("TOPLEFT", 6, y + 2)
+        r:SetPoint("TOPRIGHT", -6, y + 2)
+        y = y - 4
+      end
+      if st.ruleAfter then
+        for k = 1, 2 do
+          local r = GetRule()
+          r:SetColorTexture(INK[1], INK[2], INK[3], k == 1 and 0.85 or 0.45)
+          r:SetHeight(k == 1 and 2 or 1)
+          r:SetPoint("TOPLEFT", 6, y - (k - 1) * 4)
+          r:SetPoint("TOPRIGHT", -6, y - (k - 1) * 4)
+        end
+        y = y - 14
+      end
+      i = i + 1
     end
   end
   ui.content:SetHeight(math.max(-y + 10, 10))
@@ -202,7 +370,16 @@ local function UpdateNav()
   local dayMode = state.mode == "day"
   ui.prevBtn:SetEnabled(dayMode and ((idx and idx > 1) or (not idx and #keys > 0)))
   ui.nextBtn:SetEnabled(dayMode and idx ~= nil and idx < #keys)
+  ui.prevBtn:SetShown(dayMode)
+  ui.nextBtn:SetShown(dayMode)
+  ui.todayBtn:SetShown(dayMode and state.key ~= ns.Today())
   ui.backBtn:SetShown(state.mode ~= "day")
+  local label = (state.mode == "index" and L.navIndex) or (state.mode == "weekly" and L.navWeekly)
+                or (state.mode == "demo" and L.demoTitle) or ns.FormatDate(state.key or ns.Today())
+  ui.navLabel:SetText(label)
+  ui.tabDay:SetActive(state.mode == "day" or state.mode == "demo")
+  ui.tabIndex:SetActive(state.mode == "index")
+  ui.tabWeekly:SetActive(state.mode == "weekly")
 end
 
 function ns.ShowDay(key)
@@ -387,7 +564,7 @@ function ns.Share(channel, blocks)
 end
 
 local shareFrame
-local function ShowShare()
+function ns.ShowShare()
   if not shareFrame then
     shareFrame = CreateFrame("Frame", "ForeverGazetteShareFrame", ui, "BasicFrameTemplateWithInset")
     shareFrame:SetSize(240, 150)
@@ -409,7 +586,7 @@ local function ShowShare()
 end
 
 local opt
-local function ShowOptions()
+function ns.ShowOptions()
   if not opt then
     opt = CreateFrame("Frame", "ForeverGazetteOptionsFrame", ui, "BasicFrameTemplateWithInset")
     opt:SetSize(540, 410)
@@ -491,50 +668,77 @@ function ns.CreateUI()
   ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
   tinsert(UISpecialFrames, "ForeverGazetteFrame")
   ui:Hide()
-  local title = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  title:SetPoint("TOPLEFT", 12, -6)
+  local logo = ui:CreateTexture(nil, "OVERLAY")
+  logo:SetSize(16, 16)
+  logo:SetPoint("TOPLEFT", 8, -4)
+  logo:SetTexture("Interface\\Icons\\INV_Misc_Book_09")
+  logo:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+  local title = ui:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  title:SetPoint("LEFT", logo, "RIGHT", 6, 0)
   title:SetText(L.title)
-
-  -- barre d'outils (deux rangées)
-  ui.prevBtn = MakeButton(ui, L.prev, 96, function() Step(-1) end)
-  ui.prevBtn:SetPoint("TOPLEFT", 14, -30)
-  ui.todayBtn = MakeButton(ui, L.today, 100, function() ns.ShowDay(ns.Today()) end)
-  ui.todayBtn:SetPoint("LEFT", ui.prevBtn, "RIGHT", 4, 0)
-  ui.nextBtn = MakeButton(ui, L.next, 96, function() Step(1) end)
-  ui.nextBtn:SetPoint("LEFT", ui.todayBtn, "RIGHT", 4, 0)
-  ui.indexBtn = MakeButton(ui, L.index, 96, function() ns.ShowIndex() end)
-  ui.indexBtn:SetPoint("LEFT", ui.nextBtn, "RIGHT", 12, 0)
-  ui.weeklyBtn = MakeButton(ui, L.weekly, 96, function() ns.ShowWeekly() end)
-  ui.weeklyBtn:SetPoint("LEFT", ui.indexBtn, "RIGHT", 4, 0)
   ui.diagBtn = ns.MakeDiagButton(ui)
-  ui.helpBtn = MakeButton(ui, L.help, 26, function() ns.RunTour() end)
-  ui.helpBtn:SetPoint("TOPRIGHT", -14, -30)
 
-  ui.exportBtn = MakeButton(ui, L.export, 96, function() ShowExport(ui.current) end)
-  ui.exportBtn:SetPoint("TOPLEFT", ui.prevBtn, "BOTTOMLEFT", 0, -4)
-  ui.shareBtn = MakeButton(ui, L.share, 96, function() ShowShare() end)
-  ui.shareBtn:SetPoint("LEFT", ui.exportBtn, "RIGHT", 4, 0)
-  ui.optBtn = MakeButton(ui, L.options, 96, function() ShowOptions() end)
-  ui.optBtn:SetPoint("LEFT", ui.shareBtn, "RIGHT", 4, 0)
-  ui.pdfBtn = MakeButton(ui, L.pdf, 96, function() StaticPopup_Show("FOREVERGAZETTE_PDF") end)
-  ui.pdfBtn:SetPoint("LEFT", ui.optBtn, "RIGHT", 4, 0)
-  ui.backBtn = MakeButton(ui, L.back, 150, function() ns.ShowDay(state.key) end)
-  ui.backBtn:SetPoint("TOPRIGHT", ui.helpBtn, "BOTTOMRIGHT", 0, -4)
+  -- onglets : l'édition du jour, le sommaire de toutes les éditions, l'hebdo
+  ui.tabDay = MakeTab(ui, L.tabDay, function() ns.ShowDay(state.key or ns.Today()) end)
+  ui.tabDay:SetPoint("TOPLEFT", 14, -32)
+  ui.tabIndex = MakeTab(ui, L.index, function() ns.ShowIndex() end)
+  ui.tabIndex:SetPoint("LEFT", ui.tabDay, "RIGHT", 4, 0)
+  ui.tabWeekly = MakeTab(ui, L.weekly, function() ns.ShowWeekly() end)
+  ui.tabWeekly:SetPoint("LEFT", ui.tabIndex, "RIGHT", 4, 0)
+  ui.indexBtn, ui.weeklyBtn = ui.tabIndex, ui.tabWeekly
 
-  -- le papier
+  -- actions en icônes, avec leur nom
+  ui.helpBtn = MakeAction(ui, "Interface\\Icons\\INV_Misc_QuestionMark", L.helpLabel, L.tipHelp, function() ns.RunTour() end)
+  ui.helpBtn:SetPoint("TOPRIGHT", -18, -30)
+  ui.optBtn = MakeAction(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.options, L.tipOptions, function() ns.ShowOptions() end)
+  ui.optBtn:SetPoint("RIGHT", ui.helpBtn, "LEFT", -22, 0)
+  ui.pdfBtn = MakeAction(ui, "Interface\\Icons\\INV_Scroll_05", L.pdf, L.tipPdf, function() StaticPopup_Show("FOREVERGAZETTE_PDF") end)
+  ui.pdfBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -22, 0)
+  ui.shareBtn = MakeAction(ui, "Interface\\Icons\\INV_Letter_03", L.share, L.tipShare, function() ns.ShowShare() end)
+  ui.shareBtn:SetPoint("RIGHT", ui.pdfBtn, "LEFT", -22, 0)
+  ui.exportBtn = MakeAction(ui, "Interface\\Icons\\INV_Scroll_03", L.export, L.tipExport, function() ns.ShowExport(ui.current) end)
+  ui.exportBtn:SetPoint("RIGHT", ui.shareBtn, "LEFT", -22, 0)
+
+  -- barre de navigation : « Veille », la date, « Lendemain » ; « Aujourd'hui » et « Retour » selon la vue
+  local nav = CreateFrame("Frame", nil, ui)
+  nav:SetPoint("TOPLEFT", 12, -78)
+  nav:SetPoint("TOPRIGHT", -12, -78)
+  nav:SetHeight(28)
+  local navBg = nav:CreateTexture(nil, "BACKGROUND")
+  navBg:SetAllPoints()
+  navBg:SetColorTexture(0.10, 0.07, 0.04, 0.85)
+  Border(nav, 0.55, 0.42, 0.18, 0.9)
+  ui.nav = nav
+  ui.prevBtn = MakeButton(nav, L.prev, 110, function() Step(-1) end)
+  ui.prevBtn:SetPoint("LEFT", 4, 0)
+  ui.nextBtn = MakeButton(nav, L.next, 110, function() Step(1) end)
+  ui.nextBtn:SetPoint("RIGHT", -4, 0)
+  ui.navLabel = nav:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  ui.navLabel:SetPoint("CENTER")
+  ui.todayBtn = MakeButton(nav, L.today, 100, function() ns.ShowDay(ns.Today()) end)
+  ui.todayBtn:SetPoint("RIGHT", ui.nextBtn, "LEFT", -6, 0)
+  ui.backBtn = MakeButton(nav, L.back, 190, function() ns.ShowDay(state.key) end)
+  ui.backBtn:SetPoint("LEFT", 4, 0)
+
+  -- le papier : parchemin de l'interface (ou couleur papier si le client ne l'a pas), filet doré autour
   local paper = CreateFrame("Frame", nil, ui)
-  paper:SetPoint("TOPLEFT", 12, -84)
+  paper:SetPoint("TOPLEFT", 12, -112)
   paper:SetPoint("BOTTOMRIGHT", -12, 12)
-  local bg = paper:CreateTexture(nil, "BACKGROUND")
-  bg:SetAllPoints()
-  bg:SetColorTexture(PAPER[1], PAPER[2], PAPER[3], 1)
+  local base = paper:CreateTexture(nil, "BACKGROUND", nil, -8)
+  base:SetAllPoints()
+  base:SetColorTexture(PAPER[1], PAPER[2], PAPER[3], 1)
+  local parch = paper:CreateTexture(nil, "BACKGROUND", nil, -7)
+  parch:SetAllPoints()
+  local okTex = parch:SetTexture("Interface\\ACHIEVEMENTFRAME\\UI-Achievement-Parchment-Horizontal")
+  if okTex == false then parch:Hide() else parch:SetVertexColor(1, 0.96, 0.86, 0.85) end
+  Border(paper, 0.55, 0.42, 0.18, 1)
   ui.paper = paper
   local sf = CreateFrame("ScrollFrame", nil, paper, "UIPanelScrollFrameTemplate")
-  sf:SetPoint("TOPLEFT", 6, -6)
-  sf:SetPoint("BOTTOMRIGHT", -28, 6)
+  sf:SetPoint("TOPLEFT", 10, -8)
+  sf:SetPoint("BOTTOMRIGHT", -30, 8)
   ui.scroll = sf
   local content = CreateFrame("Frame", nil, sf)
-  content:SetSize(W - 24 - 34, 10)
+  content:SetSize(W - 24 - 40, 10)
   sf:SetScrollChild(content)
   ui.content = content
 
@@ -559,7 +763,7 @@ function ns.RunTour()
   if not ui:IsShown() then ui:Show() end
   ns.StartTour({
     { target = function() return ui.paper end, title = L.t1t, text = L.t1 },
-    { target = function() return ui.todayBtn end, title = L.t2t, text = L.t2 },
+    { target = function() return ui.nav end, title = L.t2t, text = L.t2 },
     { target = function() return ui.indexBtn end, title = L.t3t, text = L.t3 },
     { target = function() return ui.weeklyBtn end, title = L.t4t, text = L.t4 },
     { target = function() return ui.exportBtn end, title = L.t5t, text = L.t5 },

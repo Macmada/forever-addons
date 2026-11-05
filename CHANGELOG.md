@@ -1,5 +1,13 @@
 # Journal des versions
 
+## ForeverGFX 2.3.6 / ForeverGazette 1.5
+- **Nouvelle fenêtre de la Gazette**, dans le style de l'interface de WoW :
+  - **onglets** « Édition du jour », « Sommaire », « L'Hebdo » (l'onglet actif est souligné d'or) ;
+  - **barre de navigation** : « Veille », la date de l'édition au milieu, « Lendemain », et « Aujourd'hui » quand tu regardes un autre jour ;
+  - **actions en icônes** avec leur nom dessous et une bulle d'aide : Exporter, Partager, PDF, Options, Aide ;
+  - page sur **parchemin** encadrée d'un filet doré, titres en lettres de livre (police des quêtes), **icône pour chaque rubrique** (exploits, voyages, quêtes, butin, donjons…), **bilan du jour en encadré** sur deux colonnes.
+- Le **gros titre** annonce le dernier niveau atteint (au lieu du premier quand il y en a eu plusieurs dans la journée).
+
 ## ForeverGFX 2.3.5 / ForeverHeal 1.8 / ForeverGazette 1.4.4 / ForeverPrep 1.4 / ForeverLoot 1.6 / ForeverMetiers 1.4 / ForeverMacros 1.6
 - **Vraie cause du message « ForeverHeal a été bloqué à cause d'une action qui n'est utilisable que par l'IU de Blizzard »** (à chaque connexion) : sur le client de WoW Forever, **s'abonner** au journal de combat est interdit aux addons. ForeverHeal et ForeverGazette ne s'y abonnent plus quand le client ne permet pas de le lire.
 - Diagnostic de tous les addons : ligne « Actions bloquées par le jeu depuis la connexion », avec l'addon et la fonction en cause, si le jeu en bloque encore une.
