@@ -362,9 +362,10 @@ function ns.DungeonLines()
   for zone, bosses in pairs(ns.gdb.dungeons) do Z(zone).bosses = bosses end
   local _, class = UnitClass("player")
   for _, r in ipairs(D.reference[class] or {}) do table.insert(Z(Zone(r.zone)).refs, r) end
+  local myFaction = UnitFactionGroup("player")
   for _, it in ipairs(ns.DJItems()) do
     local _, link = Info(it.id)
-    if link then
+    if link and not (it.faction and myFaction and it.faction ~= myFaction) then
       local r = ns.Evaluate(link)
       if r and r.wearable and (r.score or 0) > 0.3 then
         local z = Z(it.dungeon)

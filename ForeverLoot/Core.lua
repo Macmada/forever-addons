@@ -310,7 +310,11 @@ function ns.DJName(fdj, key)
   return key
 end
 
--- Liste à plat du butin de DungeonJournal : { id, dungeon, boss (ou quête), quest = true/false }
+-- Premier nombre d'un niveau DungeonJournal (« 13-20 » ou 15)
+local function FirstNum(v) return tonumber(v) or (type(v) == "string" and tonumber(v:match("%d+"))) or nil end
+
+-- Liste à plat du butin de DungeonJournal : { id, dungeon, boss (ou quête), quest, level (niveau du donjon ou de la quête),
+-- faction (« Alliance » / « Horde » si réservé à un camp) }
 local djCache
 function ns.DJItems()
   local fdj = ns.DJ()
@@ -323,14 +327,15 @@ function ns.DJItems()
       for _, b in ipairs(type(d.bosses) == "table" and d.bosses or {}) do
         for _, it in ipairs(type(b.loot) == "table" and b.loot or {}) do
           if type(it) == "table" and type(it[1]) == "number" then
-            list[#list + 1] = { id = it[1], dungeon = dname, boss = b.name or "?" }
+            list[#list + 1] = { id = it[1], dungeon = dname, boss = b.name or "?", level = FirstNum(d.level), faction = b.factionOnly }
           end
         end
       end
       for _, q in ipairs(type(d.quests) == "table" and d.quests or {}) do
         for _, it in ipairs(type(q.rewardItems) == "table" and q.rewardItems or {}) do
           if type(it) == "table" and type(it[1]) == "number" then
-            list[#list + 1] = { id = it[1], dungeon = dname, boss = q.name or "?", quest = true }
+            list[#list + 1] = { id = it[1], dungeon = dname, boss = q.name or "?", quest = true, level = FirstNum(q.level) or FirstNum(d.level),
+                                faction = (q.faction == "Alliance" or q.faction == "Horde") and q.faction or nil }
           end
         end
       end
@@ -386,7 +391,9 @@ function ns.Candidates()
     local id = ItemID(link)
     if not id or seenIds[id] then return end
     seenIds[id] = true
-    list[#list + 1] = { link = link, id = id, src = src, where = where, ref = ref }
+    local e = { link = link, id = id, src = src, where = where, ref = ref }
+    list[#list + 1] = e
+    return e
   end
   for slot = 1, 18 do
     local l = GetInventoryItemLink("player", slot)
@@ -409,15 +416,20 @@ function ns.Candidates()
     if link then add(link, "ref", nil, r) elseif C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(r.id) end
   end
   for _, e in pairs(db.seen) do if e.link then add(e.link, e.src, e.where) end end
-  -- DungeonJournal : seulement ce que ta classe peut porter ; objets pas encore chargés demandés au jeu (visibles au rafraîchissement)
+  -- DungeonJournal : seulement ce que ta classe peut porter et ce que ta faction peut obtenir ; objets pas encore chargés
+  -- demandés au jeu (visibles au rafraîchissement)
   local asked = 0
+  local myFaction = UnitFactionGroup("player")
   for _, it in ipairs(ns.DJItems()) do
-    if not seenIds[it.id] then
+    if not seenIds[it.id] and not (it.faction and myFaction and it.faction ~= myFaction) then
       local _, _, _, equipLoc = Instant(it.id)
       if equipLoc and D.slots[equipLoc] then
         local _, link = Info(it.id)
         if link then
-          if ns.Wearable(link) then add(link, it.quest and "djquest" or "dj", it.dungeon .. " — " .. it.boss) end
+          if ns.Wearable(link) then
+            local e = add(link, it.quest and "djquest" or "dj", it.dungeon .. " — " .. it.boss)
+            if e then e.srcLevel = it.level end
+          end
         elseif asked < 50 and C_Item and C_Item.RequestLoadItemDataByID then
           C_Item.RequestLoadItemDataByID(it.id)
           asked = asked + 1
@@ -430,6 +442,15 @@ function ns.Candidates()
 end
 
 -- slot -> { meilleurs candidats (gain > 0, triés) }, et l'objet de référence de cet emplacement
+-- Niveau auquel un objet devient utile : son niveau requis, ou (objet sans niveau requis, ex. récompense de quête de haut
+-- niveau) son niveau d'objet moins 5
+function ns.ReqLevel(link)
+  local _, _, _, ilvl, minLevel = Info(link)
+  if minLevel and minLevel > 0 then return minLevel end
+  if ilvl and ilvl > 0 then return math.max(1, ilvl - 5) end
+  return 0
+end
+
 -- maxLevel : seulement les objets utilisables jusqu'à ce niveau (onglet « À mon niveau ») ; sinon réglage « niveau supérieur »
 function ns.BiS(limit, maxLevel)
   local out = {}
@@ -438,7 +459,9 @@ function ns.BiS(limit, maxLevel)
     if r and r.slot and (r.wearable or c.ref) then
       local slot = (r.slot == 12) and 11 or ((r.slot == 14) and 13 or r.slot)
       local okLevel
-      if maxLevel then okLevel = (r.minLevel or 0) <= maxLevel
+      if maxLevel then
+        -- objet et source (donjon, quête) à ta portée
+        okLevel = ns.ReqLevel(c.link) <= maxLevel and (c.srcLevel or 0) <= maxLevel
       else okLevel = db.higher or (r.minLevel or 0) <= UnitLevel("player") end
       if okLevel then
         out[slot] = out[slot] or { items = {}, refs = {} }

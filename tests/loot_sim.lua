@@ -17,13 +17,16 @@ local ITEMS = {
   [108] = { "Gantelets de plaques", "INVTYPE_HAND", 4, 4, 3, 38, 400, { ITEM_MOD_STRENGTH_SHORT = 20 } },
   [109] = { "Bâton du pèlerin", "INVTYPE_2HWEAPON", 2, 10, 3, 38, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 50 } },
   [22149] = { "Perles de mojo ogre", "INVTYPE_NECK", 4, 0, 3, 60, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
+  [120] = { "Collier de Hache-tripes", "INVTYPE_NECK", 4, 0, 3, 0, 900, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 }, 61 },  -- sans niveau requis
+  [121] = { "Robe de la Horde", "INVTYPE_ROBE", 4, 1, 3, 38, 300, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 45 } },
+  [122] = { "Gants du boss horde", "INVTYPE_HAND", 4, 1, 3, 38, 300, { ITEM_MOD_SPELL_HEALING_DONE_SHORT = 40 } },
   [16693] = { "Collerette de dévot", "INVTYPE_HEAD", 4, 1, 3, 57, 900, { ITEM_MOD_INTELLECT_SHORT = 20, ITEM_MOD_SPELL_HEALING_DONE_SHORT = 20 } },
 }
 local function Link(id) local it = ITEMS[id]; return string.format("|cff0070dd|Hitem:%d::::::::60:::::::|h[%s]|h|r", id, it[1]) end
 local function ID(x) if type(x) == "number" then return x end return tonumber(tostring(x):match("item:(%d+)")) end
 _G.GetItemInfoInstant = function(x) local id = ID(x); local it = ITEMS[id]; if not it then return nil end; return id, "t", "s", it[2], "icon" .. id, it[3], it[4] end
 _G.GetItemInfo = function(x) local id = ID(x); local it = ITEMS[id]; if not it then return nil end
-  return it[1], Link(id), it[5], 40, it[6], "t", "s", 1, it[2], "icon", it[7] end
+  return it[1], Link(id), it[5], it[9] or 40, it[6], "t", "s", 1, it[2], "icon", it[7] end
 _G.GetItemStats = function(x) local it = ITEMS[ID(x)]; local t = {}; for k, v in pairs(it and it[8] or {}) do t[k] = v end; return t end
 local GEAR = { [5] = Link(100) }
 _G.GetInventoryItemLink = function(_, slot) return GEAR[slot] end
@@ -165,6 +168,25 @@ local function NT(lines) local t = {}; for _, l in ipairs(lines) do t[#t + 1] = 
 local n5 = NT(ns.NearLines(5))
 check(n5:find("Gants de l'oracle", 1, true) and n5:find("Salle des thanes", 1, true) and not n5:find("Gants de l'avenir", 1, true)
       and not n5:find("Collerette de dévot", 1, true), "À mon niveau (40, +5) : gants de l'oracle (38, La Salle des thanes), pas les objets de niveau 55-57")
+-- faction et niveau de la source (05/11/2026 : collier de Hache-tripes et objets de la Horde proposés à un Alliance niveau 5)
+local db2 = {}
+for k, v in pairs(ForeverDungeonJournal_NS.DB) do db2[k] = v end
+db2["Hache-tripes"] = { level = "55-60", bosses = {}, quests = { { name = "La vendetta", faction = "Both", rewardItems = { { 120, "Collier", 3 } } } } }
+db2["Kraal"] = { level = "25-35", bosses = { { name = "Chef horde", factionOnly = "Horde", loot = { { 122, "Gants", "Mains", 3 } } } },
+                 quests = { { name = "Pour la Horde", faction = "Horde", level = 30, rewardItems = { { 121, "Robe", 3 } } } } }
+ForeverDungeonJournal_NS.DB = db2
+ns.version = ns.version + 1
+local nf = NT(ns.NearLines(5))
+check(not nf:find("Collier de Hache-tripes", 1, true), "À mon niveau : pas de collier sans niveau requis d'un donjon de niveau 55-60")
+check(not nf:find("Robe de la Horde", 1, true) and not nf:find("Gants du boss horde", 1, true), "À mon niveau (Alliance) : ni quête ni boss réservés à la Horde")
+local saveFG = _G.UnitFactionGroup
+_G.UnitFactionGroup = function() return "Horde" end
+ns.version = ns.version + 1
+check(NT(ns.NearLines(5)):find("Robe de la Horde", 1, true), "contrôle : un personnage de la Horde, lui, voit la récompense de la Horde")
+_G.UnitFactionGroup = saveFG
+ns.version = ns.version + 1
+local dlf = NT(ns.DungeonLines())
+check(not dlf:find("Robe de la Horde", 1, true), "onglet Donjons (Alliance) : pas de récompense de quête de la Horde")
 local n0 = NT(ns.NearLines(0))
 check(n0:find("Gants de l'oracle", 1, true), "À mon niveau (40) : déjà portable")
 SlashCmdList.FOREVERLOOT("")

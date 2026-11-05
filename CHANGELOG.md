@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGFX 2.4.5 / ForeverLoot 2.2
+- **ForeverLoot ne propose plus d'objets de l'autre faction** : les récompenses de quêtes réservées à la Horde (ou à l'Alliance) et le butin des boss qu'un seul camp peut combattre (indications de DungeonJournal) sont écartés, dans « À mon niveau » comme dans l'onglet Donjons.
+- **« À mon niveau » tient compte du niveau de la source** : un objet sans niveau requis (ex. collier de Hache-tripes, récompense de quête) est jugé d'après son niveau d'objet, et un objet dont le donjon ou la quête est au-dessus du niveau choisi n'est plus proposé.
+
 ## ForeverGFX 2.4.4 / ForeverMetiers 2.1 / ForeverLoot 2.1
 - **ForeverLoot : nouvel onglet « À mon niveau »** (ouvert par défaut, `/floot`) : pour chaque emplacement, **les 2 meilleurs objets pour toi que tu peux porter maintenant ou dans quelques niveaux** (choix : mon niveau, +3, +5, +10 niveaux), avec **où les obtenir** (donjon et boss ou quête d'après DungeonJournal, sinon All The Things) et le gain en soins/s. L'ancien onglet BiS devient « BiS niveau 60 » (`/floot bis`).
 - **ForeverMetiers repensé autour de « que faire maintenant, à mon niveau ? »** (au niveau 5, la fenêtre proposait des enchantements de compétence 300 et des pièces de niveau 45) :
