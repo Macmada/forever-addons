@@ -56,9 +56,10 @@ function ns.BuildSimple(ui)
   sp:EnableMouseWheel(true)
   local bg = sp:CreateTexture(nil, "BACKGROUND")
   bg:SetAllPoints()
-  bg:SetColorTexture(0.07, 0.07, 0.09, 1)
+  bg:SetColorTexture(0.10, 0.07, 0.04, 1)
+  ns.Kit.Border(sp, 0.55, 0.42, 0.18, 0.9)
 
-  Text(sp, "GameFontNormalLarge", 14, -10, nil, L.simpleTitle)
+  ns.Kit.TitleFont(Text(sp, "GameFontNormalLarge", 14, -10, nil, L.simpleTitle), 20, "GameFontNormalLarge")
   Text(sp, "GameFontHighlightSmall", 14, -32, 590, L.simpleIntro)
 
   -- Réglage automatique

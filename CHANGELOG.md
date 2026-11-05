@@ -1,5 +1,13 @@
 # Journal des versions
 
+## ForeverGFX 2.4.0 / ForeverLoot 1.8 / ForeverMetiers 1.6 / ForeverMacros 1.8 / ForeverGazette 1.5.2 / ForeverPrep 1.6.1 / ForeverHeal 2.0.1
+- **Même style pour toutes les fenêtres Forever** (comme la Gazette, ForeverPrep et ForeverHeal) :
+  - ForeverLoot : titre doré avec icône, **onglets BiS / Donjons**, liste sur fond sombre encadré d'or, emplacements (Tête, Cou…) en lettres de livre avec filet doré ;
+  - ForeverMetiers : titre doré, **onglets Montée / Pour toi / Désenchanter / Recettes**, liste encadrée, rubriques en lettres de livre ; même habillage pour le panneau à côté de la fenêtre du métier ;
+  - ForeverMacros : titre doré, **onglets Bibliothèque / Constructeur**, bibliothèque encadrée, éditeur de macro bordé d'or ;
+  - ForeverGFX : titre doré, liste des réglages encadrée, catégories en bandeaux dorés et lettres de livre, mode simple aux couleurs Forever.
+- Module d'interface commun étendu (titre, fond encadré, titres de liste) et partagé par les sept addons.
+
 ## ForeverGFX 2.3.8 / ForeverHeal 2.0
 - **« Retour au panneau » ne fonctionnait pas** : une erreur de logique (`cond and nil or x` vaut toujours `x` en Lua) laissait le panneau bloqué sur les objets des sacs. Remplacé par deux **onglets « Mon prêtre » / « Mes sacs »** ; la vérification automatique refuse désormais ce motif.
 - **Nouveau panneau ForeverHeal**, dans le style des autres fenêtres : onglets, actions en icônes avec leur nom (Macros, Oublier, Annonces : « À l'écran » / « Discussion »), rubriques illustrées (caractéristiques, mélange de sorts, résultats, conseil de rangs, ce que vaut +10…) en lettres de livre sur fond sombre encadré d'or ; plus de texte de bouton coupé.

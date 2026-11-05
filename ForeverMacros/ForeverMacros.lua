@@ -682,6 +682,7 @@ function BuildLibrary(parent)
   area:SetPoint("TOPLEFT", classLabel, "BOTTOMLEFT", -4, -14)
   area:SetSize(386, LIB_ROWS * LIB_H)
   area:EnableMouseWheel(true)
+  ns.Kit.Backdrop(lp, area, 0.5, 6)
 
   ui.libRows = {}
   for i = 1, LIB_ROWS do
@@ -774,18 +775,16 @@ function SetTab(n)
   db.tab = n
   ui.libraryPanel:SetShown(n == 1)
   ui.builderPanel:SetShown(n == 2)
-  for i, b in ipairs(ui.tabs) do
-    if i == n then b:LockHighlight() else b:UnlockHighlight() end
-  end
+  for i, b in ipairs(ui.tabs) do b:SetActive(i == n) end
   if n == 1 then UpdateLibrary() end
 end
 
 function BuildTabs()
   ui.tabs = {}
-  local t1 = MakeButton(ui, L.tabLibrary, 190, function() SetTab(1) end)
+  local t1 = ns.Kit.Tab(ui, L.tabLibrary, function() SetTab(1) end)
   t1:SetPoint("TOPLEFT", 18, -30)
-  local t2 = MakeButton(ui, L.tabBuilder, 190, function() SetTab(2) end)
-  t2:SetPoint("LEFT", t1, "RIGHT", 6, 0)
+  local t2 = ns.Kit.Tab(ui, L.tabBuilder, function() SetTab(2) end)
+  t2:SetPoint("LEFT", t1, "RIGHT", 4, 0)
   ui.tabs = { t1, t2 }
 end
 
@@ -982,12 +981,10 @@ local function CreateUI()
   ui:Hide()
   tinsert(UISpecialFrames, "ForeverMacrosFrame")
 
-  local title = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  title:SetPoint("TOP", 0, -6)
-  title:SetText(L.title)
+  ns.Kit.Dress(ui, "Interface\\Icons\\INV_Misc_Note_01", L.title)
 
   local sep = ui:CreateTexture(nil, "ARTWORK")
-  sep:SetColorTexture(1, 1, 1, 0.12)
+  sep:SetColorTexture(0.65, 0.48, 0.16, 0.6)
   sep:SetPoint("TOPLEFT", 430, -34)
   sep:SetSize(1, 540)
 
@@ -1201,7 +1198,8 @@ local function CreateUI()
     tile = true, tileSize = 16, edgeSize = 14,
     insets = { left = 3, right = 3, top = 3, bottom = 3 },
   })
-  box:SetBackdropColor(0, 0, 0, 0.6)
+  box:SetBackdropColor(0.10, 0.07, 0.04, 0.85)
+  box:SetBackdropBorderColor(0.65, 0.48, 0.16, 1)
   local sf = CreateFrame("ScrollFrame", nil, box, "UIPanelScrollFrameTemplate")
   sf:SetPoint("TOPLEFT", 8, -8)
   sf:SetPoint("BOTTOMRIGHT", -28, 8)

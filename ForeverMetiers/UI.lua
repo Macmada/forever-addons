@@ -74,6 +74,7 @@ local function MakeList(parent, width)
       if icon then r.icon:SetTexture(icon) end
       r.hl:SetShown(l.onClick ~= nil)
       r.text:SetFontObject(l.header and "GameFontNormal" or "GameFontHighlightSmall")
+      ns.Kit.StyleHeader(r, l.header and true or false, 15)
       r.text:ClearAllPoints()
       r.text:SetPoint("LEFT", icon and 22 or (l.header and 2 or 8), 0)
       r.text:SetPoint("RIGHT", -4, 0)
@@ -81,7 +82,7 @@ local function MakeList(parent, width)
       r:ClearAllPoints()
       r:SetPoint("TOPLEFT", 0, y)
       r:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-      local h = l.header and 24 or (l.tall and 30 or 18)
+      local h = l.header and 28 or (l.tall and 30 or 18)
       r:SetHeight(h)
       y = y - h
     end
@@ -300,7 +301,7 @@ function ns.Refresh()
   if ui and ui:IsShown() then
     local lines = (tab == "foryou" and ns.ForYouLines()) or (tab == "de" and ns.DELines()) or (tab == "recipes" and ns.RecipeLines()) or ns.LevelLines()
     ui.list.Render(lines)
-    for _, t in ipairs(TABS) do ui.tabs[t[1]]:SetEnabled(tab ~= t[1]) end
+    for _, t in ipairs(TABS) do ui.tabs[t[1]]:SetActive(tab == t[1]) end
     if not InCombatLockdown() then ui.deBtn:SetShown(tab == "de") end
     if tab == "de" then ns.UpdateDEButton() end
   end
@@ -323,21 +324,20 @@ local function CreateUI()
   ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
   tinsert(UISpecialFrames, "ForeverMetiersFrame")
   ui:Hide()
-  local title = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  title:SetPoint("TOPLEFT", 12, -6)
-  title:SetText(L.title)
+  ns.Kit.Dress(ui, "Interface\\Icons\\Trade_Tailoring", L.title)
   ui.diagBtn = ns.MakeDiagButton(ui)
   ui.tabs = {}
   local prev
   for _, t in ipairs(TABS) do
-    local b = MakeButton(ui, L[t[2]], 110, function() tab = t[1]; ns.Refresh() end)
-    if prev then b:SetPoint("LEFT", prev, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 14, -30) end
+    local b = ns.Kit.Tab(ui, L[t[2]], function() tab = t[1]; ns.Refresh() end)
+    if prev then b:SetPoint("LEFT", prev, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 14, -32) end
     ui.tabs[t[1]] = b
     prev = b
   end
-  ui.list = MakeList(ui, W - 52)
-  ui.list.scroll:SetPoint("TOPLEFT", 12, -58)
-  ui.list.scroll:SetPoint("BOTTOMRIGHT", -32, 100)
+  ui.list = MakeList(ui, W - 56)
+  ui.list.scroll:SetPoint("TOPLEFT", 16, -68)
+  ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 104)
+  ns.Kit.Backdrop(ui, ui.list.scroll, 0.55, 6)
   -- bouton sécurisé rattaché à UIParent, pas à la fenêtre : un enfant sécurisé rendrait la fenêtre impossible à fermer en
   -- combat ; on ne le montre / cache / règle que hors combat
   local de = CreateFrame("Button", "ForeverMetiersDEButton", UIParent, "SecureActionButtonTemplate,UIPanelButtonTemplate")
@@ -392,13 +392,13 @@ local function CreateSide()
   side:SetSize(340, 430)
   side:SetFrameStrata("HIGH")
   side:Hide()
-  side.title = side:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  side.title:SetPoint("TOPLEFT", 12, -6)
+  side.title = ns.Kit.Dress(side, "Interface\\Icons\\Trade_Tailoring", "")
   side.title:SetPoint("RIGHT", -30, 0)
   side.title:SetJustifyH("LEFT")
-  side.list = MakeList(side, 300)
-  side.list.scroll:SetPoint("TOPLEFT", 10, -30)
-  side.list.scroll:SetPoint("BOTTOMRIGHT", -30, 36)
+  side.list = MakeList(side, 296)
+  side.list.scroll:SetPoint("TOPLEFT", 14, -34)
+  side.list.scroll:SetPoint("BOTTOMRIGHT", -32, 40)
+  ns.Kit.Backdrop(side, side.list.scroll, 0.55, 6)
   local more = MakeButton(side, L.more, 90, function() ns.ShowTab("level") end)
   more:SetPoint("BOTTOMRIGHT", -12, 8)
   return side

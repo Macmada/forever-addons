@@ -294,4 +294,5 @@ check(diag:find("API craft", 1, true) and diag:find("1248459 = Enchantement de b
 check(ForeverHub and ForeverHub.entries.ForeverMetiers, "inscrit dans l'icône commune")
 SlashCmdList.FOREVERMETIERS("recettes")
 check(ns.ui:IsShown(), "/metiers recettes")
+check(ns.ui.tabs.recipes.active and not ns.ui.tabs.level.active, "onglet Recettes actif (style Forever)")
 W.rprint("\nTOUT OK (" .. LANG .. ")")

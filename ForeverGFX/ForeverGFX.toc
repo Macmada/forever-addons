@@ -13,6 +13,7 @@ Diag.lua
 Data.lua
 Core.lua
 Tour.lua
+Widgets.lua
 UI.lua
 Simple.lua
 Overlay.lua

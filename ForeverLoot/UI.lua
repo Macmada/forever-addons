@@ -7,13 +7,6 @@ local W, H = 640, 580
 local ui
 local tab = "bis"
 
-local function MakeButton(parent, text, width, onClick)
-  local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-  b:SetSize(width, 22)
-  b:SetText(text)
-  b:SetScript("OnClick", onClick)
-  return b
-end
 
 local function Zone(key)
   local z = D.zones[key]
@@ -69,6 +62,7 @@ local function Render(lines)
     r.icon:SetShown(icon ~= nil)
     if icon then r.icon:SetTexture(icon) end
     r.text:SetFontObject(l.header and "GameFontNormal" or (l.sub and "GameFontNormalSmall" or "GameFontHighlightSmall"))
+    ns.Kit.StyleHeader(r, l.header and true or false, 15)
     r.text:ClearAllPoints()
     r.text:SetPoint("LEFT", icon and 26 or (l.header and 2 or 12), 0)
     r.text:SetPoint("RIGHT", -4, 0)
@@ -76,7 +70,7 @@ local function Render(lines)
     r:ClearAllPoints()
     r:SetPoint("TOPLEFT", 0, y)
     r:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
-    local h = l.header and 24 or 20
+    local h = l.header and 28 or 20
     r:SetHeight(h)
     y = y - h - (l.header and 2 or 0)
   end
@@ -203,8 +197,8 @@ end
 function ns.Refresh()
   if not ui or not ui:IsShown() then return end
   Render(tab == "dungeons" and ns.DungeonLines() or ns.BisLines())
-  ui.bisBtn:SetEnabled(tab ~= "bis")
-  ui.dunBtn:SetEnabled(tab ~= "dungeons")
+  ui.bisBtn:SetActive(tab == "bis")
+  ui.dunBtn:SetActive(tab == "dungeons")
 end
 
 local function CreateUI()
@@ -223,17 +217,16 @@ local function CreateUI()
   ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
   tinsert(UISpecialFrames, "ForeverLootFrame")
   ui:Hide()
-  local title = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  title:SetPoint("TOPLEFT", 12, -6)
-  title:SetText(L.title)
+  ns.Kit.Dress(ui, "Interface\\Icons\\INV_Misc_Bag_10", L.title)
   ui.diagBtn = ns.MakeDiagButton(ui)
-  ui.bisBtn = MakeButton(ui, L.tabBis, 100, function() tab = "bis"; ns.Refresh() end)
-  ui.bisBtn:SetPoint("TOPLEFT", 14, -30)
-  ui.dunBtn = MakeButton(ui, L.tabDungeons, 100, function() tab = "dungeons"; ns.Refresh() end)
+  ui.bisBtn = ns.Kit.Tab(ui, L.tabBis, function() tab = "bis"; ns.Refresh() end)
+  ui.bisBtn:SetPoint("TOPLEFT", 14, -32)
+  ui.dunBtn = ns.Kit.Tab(ui, L.tabDungeons, function() tab = "dungeons"; ns.Refresh() end)
   ui.dunBtn:SetPoint("LEFT", ui.bisBtn, "RIGHT", 4, 0)
   local sf = CreateFrame("ScrollFrame", nil, ui, "UIPanelScrollFrameTemplate")
-  sf:SetPoint("TOPLEFT", 12, -58)
-  sf:SetPoint("BOTTOMRIGHT", -32, 96)
+  sf:SetPoint("TOPLEFT", 16, -68)
+  sf:SetPoint("BOTTOMRIGHT", -34, 100)
+  ns.Kit.Backdrop(ui, sf, 0.55, 6)
   ui.scroll = sf
   local content = CreateFrame("Frame", nil, sf)
   content:SetSize(W - 52, 10)

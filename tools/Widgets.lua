@@ -120,3 +120,41 @@ function K.SetRole(tex, role)
   tex:SetTexCoord(c[1], c[2], c[3], c[4])
   tex:Show()
 end
+
+-- Barre de titre : petite icône et nom en or (remplace le titre blanc du modèle) ; renvoie le texte du titre
+function K.Dress(frame, icon, text)
+  local logo = frame:CreateTexture(nil, "OVERLAY")
+  logo:SetSize(16, 16)
+  logo:SetPoint("TOPLEFT", 8, -4)
+  logo:SetTexture(icon)
+  logo:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+  local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  title:SetPoint("LEFT", logo, "RIGHT", 6, 0)
+  title:SetText(text or "")
+  frame.kitLogo, frame.kitTitle = logo, title
+  return title
+end
+
+-- Fond sombre encadré d'or derrière une zone existante (liste, panneau) : un cadre posé dessous, mêmes ancres
+function K.Backdrop(parent, region, alpha, inset)
+  local f = CreateFrame("Frame", nil, parent)
+  inset = inset or 4
+  f:SetPoint("TOPLEFT", region, "TOPLEFT", -inset, inset)
+  f:SetPoint("BOTTOMRIGHT", region, "BOTTOMRIGHT", inset, -inset)
+  f:SetFrameLevel(math.max(0, (region:GetFrameLevel() or 1) - 1))
+  K.Panel(f, alpha or 0.55)
+  return f
+end
+
+-- Ligne de liste en titre de rubrique : lettres de livre et filet doré (row.text, row.kitRule créé au besoin)
+function K.StyleHeader(row, on, size)
+  if not row.kitRule then
+    row.kitRule = row:CreateTexture(nil, "ARTWORK")
+    row.kitRule:SetPoint("BOTTOMLEFT", 0, 1)
+    row.kitRule:SetPoint("BOTTOMRIGHT", 0, 1)
+    row.kitRule:SetHeight(1)
+    row.kitRule:SetColorTexture(0.65, 0.48, 0.16, 0.8)
+  end
+  row.kitRule:SetShown(on)
+  if on then K.TitleFont(row.text, size or 15, "GameFontNormal") end
+end

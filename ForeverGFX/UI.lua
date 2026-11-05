@@ -392,8 +392,9 @@ local function CreateRow(parent, i)
   row.hdrBg = row:CreateTexture(nil, "BACKGROUND", nil, 1)
   row.hdrBg:SetPoint("TOPLEFT", 0, -12)
   row.hdrBg:SetPoint("BOTTOMRIGHT", 0, 4)
-  row.hdrBg:SetColorTexture(0.25, 0.45, 0.85, 0.25)
+  row.hdrBg:SetColorTexture(0.65, 0.48, 0.16, 0.22)                     -- bandeau de catégorie doré (style Forever)
   row.hdr = row:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  ns.Kit.TitleFont(row.hdr, 16, "GameFontNormalLarge")
   row.hdr:SetPoint("LEFT", 10, -4)
   row:SetScript("OnMouseDown", function(self)
     if self.headerCat then
@@ -626,9 +627,7 @@ local function CreateUI()
   ui:Hide()
   tinsert(UISpecialFrames, "ForeverGFXFrame")
 
-  local title = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  title:SetPoint("TOP", 0, -6)
-  title:SetText(L.title)
+  ns.Kit.Dress(ui, "Interface\\Icons\\INV_Misc_Spyglass_03", L.title)
 
   -- Ligne du haut : recherche et options
   local search = CreateFrame("EditBox", nil, ui, "SearchBoxTemplate")
@@ -678,6 +677,7 @@ local function CreateUI()
   list:SetPoint("TOPLEFT", 12, -84)
   list:SetSize(W - 54, VISIBLE * ROW_H)
   list:EnableMouseWheel(true)
+  ns.Kit.Backdrop(ui, list, 0.5, 4)
   ui.rows = {}
   for i = 1, VISIBLE do ui.rows[i] = CreateRow(list, i) end
 
