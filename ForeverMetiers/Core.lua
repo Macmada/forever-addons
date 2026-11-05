@@ -27,6 +27,15 @@ local function Norm(s)
 end
 ns.Norm = Norm
 
+-- Nom d'un sort : C_Spell (client moderne de Forever) ou GetSpellInfo (classique)
+function ns.SpellName(id)
+  if C_Spell and C_Spell.GetSpellName then
+    local ok, n = pcall(C_Spell.GetSpellName, id)
+    if ok and n then return n end
+  end
+  if GetSpellInfo then return (GetSpellInfo(id)) end
+end
+
 local function CharKey() return (UnitName("player") or "?") .. " - " .. (GetRealmName and GetRealmName() or "?") end
 ns.CharKey = CharKey
 
@@ -102,14 +111,25 @@ function ns.SetSkill(k, rank, max)
   ns.CheckRank(k)
 end
 
--- Lignes de compétence du personnage (sans ouvrir la fenêtre du métier)
+-- Lignes de compétence du personnage (sans ouvrir la fenêtre du métier) : GetSkillLineInfo (classique)
+-- ou GetProfessions / GetProfessionInfo (client moderne de Forever)
 function ns.ReadSkills()
-  if not GetNumSkillLines then return end
   local seen = {}
-  for i = 1, GetNumSkillLines() do
-    local name, header, _, rank, _, _, max = GetSkillLineInfo(i)
-    local k = not header and ns.ProfKey(name)
-    if k then ns.SetSkill(k, rank, max); seen[k] = true end
+  if GetNumSkillLines and GetSkillLineInfo then
+    for i = 1, GetNumSkillLines() do
+      local name, header, _, rank, _, _, max = GetSkillLineInfo(i)
+      local k = not header and ns.ProfKey(name)
+      if k then ns.SetSkill(k, rank, max); seen[k] = true end
+    end
+  elseif GetProfessions and GetProfessionInfo then
+    local p1, p2 = GetProfessions()
+    for _, idx in ipairs({ p1, p2 }) do
+      local name, _, rank, max = GetProfessionInfo(idx)
+      local k = ns.ProfKey(name)
+      if k then ns.SetSkill(k, rank, max); seen[k] = true end
+    end
+  else
+    return
   end
   for _, k in ipairs(D.profOrder) do if not seen[k] then db.skills[k] = nil end end   -- métier abandonné
 end
@@ -567,7 +587,7 @@ function ns.DECandidates()
 end
 
 function ns.DEMacro(c)
-  local spell = (GetSpellInfo and GetSpellInfo(D.disenchantSpell)) or (ns.lang == "en" and "Disenchant" or "Désenchanter")
+  local spell = ns.SpellName(D.disenchantSpell) or (ns.lang == "en" and "Disenchant" or "Désenchanter")
   return "/cast " .. spell .. "\n/use " .. c.bag .. " " .. c.slot
 end
 
@@ -619,6 +639,7 @@ ns.Soon = Soon
 
 handlers.TRADE_SKILL_SHOW = function() Soon("trade") end
 handlers.TRADE_SKILL_UPDATE = function() Soon("trade") end
+handlers.TRADE_SKILL_LIST_UPDATE = function() Soon("trade") end
 handlers.CRAFT_SHOW = function() Soon("craft") end
 handlers.CRAFT_UPDATE = function() Soon("craft") end
 handlers.TRADE_SKILL_CLOSE = function() if ns.OnClose then ns.OnClose("trade") end end

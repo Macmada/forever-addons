@@ -363,7 +363,9 @@ function ns.Analyze(ctx, roleOverride)
   if hs == 0 then
     char.rows[#char.rows + 1] = { status = "info", text = L.hearthMissing }
   else
-    local start, dur = GetItemCooldown(D.HEARTHSTONE)
+    local cdf = (C_Container and C_Container.GetItemCooldown) or (C_Item and C_Item.GetItemCooldown) or GetItemCooldown
+    local start, dur
+    if cdf then start, dur = cdf(D.HEARTHSTONE) end
     local left = (start and start > 0 and dur) and (start + dur - GetTime()) or 0
     char.rows[#char.rows + 1] = { status = left > 60 and "info" or "ok",
                                   text = left > 60 and string.format(L.hearthCooldown, math.ceil(left / 60)) or L.hearthOk }

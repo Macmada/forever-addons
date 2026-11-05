@@ -581,9 +581,14 @@ handlers.UNIT_POWER_FREQUENT = function(unit, kind)
 end
 handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, function() last = ns.Snapshot() end) end
 handlers.UNIT_SPELLCAST_SUCCEEDED = function(unit, _, spellID) if unit == "player" then ns.OnCast(spellID) end end
+-- Journal de combat : CombatLogGetCurrentEventInfo (classique) ou C_CombatLog.GetCurrentEventInfo (client moderne de Forever)
+local function CombatLogInfo()
+  local f = CombatLogGetCurrentEventInfo or (C_CombatLog and C_CombatLog.GetCurrentEventInfo)
+  if f then return f() end
+end
+ns.CombatLogInfo = CombatLogInfo
 handlers.COMBAT_LOG_EVENT_UNFILTERED = function()
-  if not CombatLogGetCurrentEventInfo then return end
-  local _, sub, _, src, _, _, _, _, _, _, _, spellID, _, _, amount, over, _, crit = CombatLogGetCurrentEventInfo()
+  local _, sub, _, src, _, _, _, _, _, _, _, spellID, _, _, amount, over, _, crit = CombatLogInfo()
   if src ~= playerGUID then return end
   if sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL" then ns.OnHeal(spellID, amount, over, crit, sub == "SPELL_PERIODIC_HEAL") end
 end
@@ -647,7 +652,28 @@ function ns.DiagCollect(add)
   add("")
   add("## Sorts du grimoire qui ressemblent à des soins mais absents de la base")
   local n = 0
-  if GetNumSpellTabs and GetSpellTabInfo and GetSpellBookItemName then
+  -- grimoire : API classique, ou C_SpellBook du client moderne
+  local book = {}
+  if C_SpellBook and C_SpellBook.GetNumSpellBookSkillLines and C_SpellBook.GetSpellBookSkillLineInfo and C_SpellBook.GetSpellBookItemInfo then
+    local bank = (Enum and Enum.SpellBookSpellBank and Enum.SpellBookSpellBank.Player) or 0
+    for tab = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+      local li = C_SpellBook.GetSpellBookSkillLineInfo(tab)
+      for i = (li and li.itemIndexOffset or 0) + 1, (li and li.itemIndexOffset or 0) + (li and li.numSpellBookItems or 0) do
+        local it = C_SpellBook.GetSpellBookItemInfo(i, bank)
+        if it then book[#book + 1] = { name = it.name, rank = it.subName, id = it.spellID or it.actionID } end
+      end
+    end
+  end
+  for _, b in ipairs(book) do
+    local l = (b.name or ""):lower()
+    local healish = false
+    for _, w in ipairs(HEALWORDS) do if l:find(w, 1, true) then healish = true break end end
+    if healish and b.id and not ns.familyOf[b.id] then
+      add(string.format("  %d = %s %s", b.id, tostring(b.name), tostring(b.rank or "")))
+      n = n + 1
+    end
+  end
+  if #book == 0 and GetNumSpellTabs and GetSpellTabInfo and GetSpellBookItemName then
     for tab = 1, GetNumSpellTabs() do
       local _, _, offset, count = GetSpellTabInfo(tab)
       for i = (offset or 0) + 1, (offset or 0) + (count or 0) do

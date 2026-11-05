@@ -547,7 +547,7 @@ function ns.DiagCollect(add)
   add("")
   add("## Enchantements de soigneur (numéro = nom de ce client ; connu ; gain lu)")
   for _, e in ipairs(D.healEnchants) do
-    local name = GetSpellInfo and GetSpellInfo(e.spell)
+    local name = ns.SpellName(e.spell)
     local st = ns.db.enchStats[e.spell]
     local stTxt = st and (string.format("int %s, esprit %s, soins %s, end. %s", tostring(st.int), tostring(st.spi), tostring(st.heal), tostring(st.sta))) or "-"
     add(string.format("  %d = %s ; %s ; connu %s ; lu : %s", e.spell, tostring(name or "ABSENT"), e.name, tostring(ns.Known("enchanting", e)), stTxt))
@@ -567,12 +567,26 @@ function ns.DiagCollect(add)
   local S = _G.Syndicator
   add("Syndicator : " .. ((S and S.API) and "présent" or "absent"))
   add("ForeverHeal (évaluation) : " .. (ns.HealAPI() and ("présent, API " .. tostring(_G.ForeverHealAPI.version)) or "absent ou pas prêtre"))
-  add("Désenchanter : " .. tostring(GetSpellInfo and GetSpellInfo(D.disenchantSpell)))
+  add("Désenchanter : " .. tostring(ns.SpellName(D.disenchantSpell)))
+  local api = {}
+  for _, n in ipairs({ "GetNumSkillLines", "GetProfessions", "GetTradeSkillLine", "GetTradeSkillInfo", "GetCraftDisplaySkillLine", "GetCraftInfo",
+                       "GetTradeSkillCooldown", "TradeSkillFrame_SetSelection", "CraftFrame_SetSelection", "GetSpellInfo" }) do
+    api[#api + 1] = n .. (_G[n] and " oui" or " NON")
+  end
+  add("API du client : " .. table.concat(api, ", ") .. ", C_TradeSkillUI " .. (_G.C_TradeSkillUI and "oui" or "NON"))
+  if GetProfessions and GetProfessionInfo then
+    local p = {}
+    for _, idx in ipairs({ GetProfessions() }) do
+      local n, _, r, m, _, _, line = GetProfessionInfo(idx)
+      p[#p + 1] = string.format("%s %s/%s (ligne %s)", tostring(n), tostring(r), tostring(m), tostring(line))
+    end
+    add("Métiers (GetProfessions) : " .. (#p > 0 and table.concat(p, ", ") or "aucun"))
+  end
   ns.ATT.Diag(add)
   if ns.ATT.Available() then
     for _, e in ipairs(D.healEnchants) do
       local s = ns.Source(e)
-      if s then add(string.format("  ATT %d : appris à %s, %s", e.spell, tostring(s.learnedAt), tostring(s.text))) end
+      if s then add(string.format("  ATT %d : appris à %s, %s%s", e.spell, tostring(s.learnedAt), tostring(s.text), s.weak and (" [peu précis : " .. s.weak .. "]") or "")) end
     end
   end
   local nCd = 0

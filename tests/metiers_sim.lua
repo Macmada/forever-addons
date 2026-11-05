@@ -222,7 +222,7 @@ check(GameTooltip.lines[1] and GameTooltip.lines[1]:find("145", 1, true), "infob
 
 -- 8b. All The Things (structure réelle : recettes r(sort, { itemID, learnedAt, requireSkill, cost, minReputation }) sous un PNJ, une catégorie, une zone)
 _G.C_CurrencyInfo = { GetCurrencyInfo = function(id) return id == 3402 and { name = "Faveur marchande" } or nil end }
-_G.GetFactionInfoByID = function(id) return id == 2586 and "Administration commerciale d'Azeroth" or nil end
+_G.C_Reputation = { GetFactionDataByID = function(id) return id == 2586 and { name = "Administration commerciale d'Azeroth" } or nil end }
 local zone = { mapID = 1453, text = "Hurlevent" }
 local header = { headerID = -2, text = "Marchands", parent = zone }
 local npc = { npcID = 250001, text = "|cffffffffAlynsia|r", parent = header }
@@ -230,7 +230,9 @@ local trainer = { npcID = 1346, text = "Georgio Bolero", parent = { mapID = 1453
 local craftables = { headerID = -100, text = "Fabrications", parent = { headerID = -5, text = "Métiers" } }
 local RECIPES = {
   [1249058] = { { recipeID = 1249058, itemID = 249503, learnedAt = 225, requireSkill = 333, name = "Enchantement de collier (Pouvoir de guérison)",
-                  cost = { { "c", 3402, 120 } }, minReputation = { 2586, 3000 }, parent = npc } },
+                  cost = { { "c", 3402, 120 } }, minReputation = { 2586, 3000 }, parent = npc },
+                { recipeID = 1249058, itemID = 249503, learnedAt = 225, requireSkill = 333, cost = { { "c", 3402, 120 } }, minReputation = { 2587, 3000 },
+                  parent = { npcID = 250002, r = 1, text = "Bénéris", parent = { mapID = 1454, text = "Orgrimmar" } } } },
   [3851] = { { recipeID = 3851, learnedAt = 140, requireSkill = 197, name = "Ceinture azur en soie", parent = trainer } },
   [3863] = { { recipeID = 3863, learnedAt = 165, requireSkill = 197, name = "Cape glaciale", itemID = 4355, parent = npc } },
   [8784] = { { recipeID = 8784, learnedAt = 105, requireSkill = 197, name = "Gants de méditation", parent = trainer } },
@@ -250,6 +252,7 @@ check(src and src.text:find("^Alynsia — Hurlevent %(120 Faveur marchande, ") a
       "ATT : collier de soins chez Alynsia (Hurlevent), 120 faveurs, Amical — « " .. tostring(src and src.text) .. " »")
 local collier
 for _, e in ipairs(ns.Data.healEnchants) do if e.spell == 1249058 then collier = e end end
+check(not src.text:find("Bénéris", 1, true), "ATT : le marchand de la Horde (Bénéris, Orgrimmar) n'est pas montré à un Alliance")
 check(ns.EntrySkill(collier) == 225 and collier.skill == 210, "compétence d'ATT (225) préférée à celle du guide (210)")
 local now, soon = ns.ATTLearnable("tailoring")
 check(#now == 1 and now[1].name == "Ceinture azur en soie" and #soon == 1 and soon[1].name == "Cape glaciale",
@@ -261,6 +264,17 @@ _G.ATTC = { SearchForField = function() error("structure changée") end, SearchF
 check(ns.ATT.Source("recipeID", 1) == nil and #ns.ATT.Search("itemID", 1) == 0, "ATT qui change de structure : aucune erreur, rien affiché")
 check(Txt(ns.RecipeLines()) ~= nil, "onglet Recettes sans planter si ATT change")
 _G.ATTC = nil
+
+-- 8c. client moderne de Forever : pas de GetNumSkillLines, métiers par GetProfessions / GetProfessionInfo
+_G.GetNumSkillLines, _G.GetSkillLineInfo = nil, nil
+_G.GetProfessions = function() return 3, 7, nil, nil, nil end
+_G.GetProfessionInfo = function(i) if i == 3 then return "Couture", "icon", 152, 225 end return "Enchantement", "icon", 97, 150 end
+ns.ReadSkills()
+check(ns.db.skills.tailoring.rank == 152 and ns.db.skills.tailoring.max == 225 and ns.db.skills.enchanting.rank == 97,
+      "client moderne : couture 152/225 et enchantement 97 lus par GetProfessions")
+_G.GetSpellInfo = nil
+_G.C_Spell = { GetSpellName = function(id) return ({ [13262] = "Désenchanter", [1248459] = "Enchantement de brassards (Pouvoir de guérison mineur)" })[id] end }
+check(ns.SpellName(13262) == "Désenchanter" and ns.DEMacro({ bag = 1, slot = 2 }):find("/cast Désenchanter", 1, true), "client moderne : nom du sort par C_Spell.GetSpellName")
 
 -- 9. diagnostic, icône commune, commandes
 local diag = ns.DiagText()

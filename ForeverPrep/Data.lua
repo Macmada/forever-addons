@@ -17,7 +17,7 @@ D.consumables = {
     key = "healpot", need = { 5, 10 }, roles = "all",
     items = { { 118, 1 }, { 858, 3 }, { 929, 12 }, { 1710, 21 }, { 3928, 35 }, { 13446, 45 } },
     -- pierres de soins des démonistes : comptent comme soins, jamais à acheter
-    extra = { { 5512, 1 }, { 5511, 1 }, { 5509, 1 }, { 5510, 1 }, { 9421, 1 } },
+    extra = { { 5512, 1 }, { 5511, 12 }, { 5509, 24 }, { 5510, 36 }, { 9421, 48 } },
   },
   {
     key = "manapot", need = { 5, 10 }, roles = "all", mana = true,

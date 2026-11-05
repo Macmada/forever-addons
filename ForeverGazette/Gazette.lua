@@ -452,6 +452,13 @@ function ns.DiagCollect(add)
   add("## Fonctions du jeu")
   local function has(path, v) add(path .. " : " .. (v and "oui" or "NON")) end
   has("CombatLogGetCurrentEventInfo", CombatLogGetCurrentEventInfo)
+  has("C_CombatLog.GetCurrentEventInfo", C_CombatLog and C_CombatLog.GetCurrentEventInfo)
+  if C_CombatLog then
+    local keys = {}
+    for k in pairs(C_CombatLog) do keys[#keys + 1] = tostring(k) end
+    table.sort(keys)
+    add("  C_CombatLog : " .. table.concat(keys, ", "))
+  end
   has("C_QuestLog.GetTitleForQuestID", C_QuestLog and C_QuestLog.GetTitleForQuestID)
   has("C_QuestLog.GetQuestInfo", C_QuestLog and C_QuestLog.GetQuestInfo)
   has("C_Reputation.GetFactionDataByIndex", C_Reputation and C_Reputation.GetFactionDataByIndex)

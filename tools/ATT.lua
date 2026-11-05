@@ -42,11 +42,19 @@ function A.Search(field, id)
   return (ok and type(list) == "table") and list or {}
 end
 
--- Chemin lisible : PNJ ou quête, boss, puis zone ou donjon (catégories générales ignorées). good = vraie source.
+-- Faction du joueur au sens d'ATT (champ r : 1 Horde, 2 Alliance)
+local function MyR() return UnitFactionGroup("player") == "Horde" and 1 or 2 end
+
+-- Chemin lisible : PNJ ou quête, boss, puis zone ou donjon (catégories générales ignorées). good = vraie source ;
+-- nil si la source est réservée à l'autre faction.
 local function Path(g)
   local parts, p, n, good = {}, Get(g, "parent"), 0, false
+  local gr = Get(g, "r")
+  if gr and gr ~= MyR() then return nil, false end
   while p and n < 10 do
     n = n + 1
+    local pr = Get(p, "r")
+    if pr and pr ~= MyR() then return nil, false end
     local t = Clean(Get(p, "text") or Get(p, "name"))
     local isPlace = Get(p, "mapID") or Get(p, "instanceID")
     if Get(p, "npcID") or Get(p, "creatureID") or Get(p, "questID") or Get(p, "encounterID") or Get(p, "objectID") then good = true end
@@ -59,7 +67,16 @@ end
 
 local function ItemName(id)
   local n = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(id)
+  if not n and C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(id) end
   return n or ("#" .. id)
+end
+
+local function FactionName(id)
+  if C_Reputation and C_Reputation.GetFactionDataByID then
+    local ok, d = pcall(C_Reputation.GetFactionDataByID, id)
+    if ok and type(d) == "table" and d.name then return d.name end
+  end
+  if GetFactionInfoByID then return (GetFactionInfoByID(id)) end
 end
 
 local function Money(c)
@@ -90,7 +107,7 @@ local function Extra(g)
   end
   local rep = Get(g, "minReputation")
   if type(rep) == "table" and rep[1] then
-    local fname = GetFactionInfoByID and GetFactionInfoByID(rep[1])
+    local fname = FactionName(rep[1])
     local st = STANDING[#STANDING][2]
     for _, s in ipairs(STANDING) do if (rep[2] or 0) >= s[1] then st = s[2]; break end end
     out[#out + 1] = st .. (FR and " avec " or " with ") .. (fname or ("#" .. rep[1]))
@@ -117,10 +134,11 @@ function A.Source(field, id, max)
       end
     end
   end
-  if #paths == 0 and fallback then paths[1] = fallback end
   while #paths > (max or 2) do table.remove(paths) end
-  if #paths == 0 and not learnedAt then return nil end
-  return { text = #paths > 0 and table.concat(paths, " ; ") or nil, learnedAt = tonumber(learnedAt), collected = collected and true or false }
+  if #paths == 0 and not learnedAt and not fallback then return nil end
+  -- text : vraie source (PNJ, quête, boss, zone) ; weak : catégorie générale d'ATT, quand il n'a rien de plus précis
+  return { text = #paths > 0 and table.concat(paths, " ; ") or nil, weak = (#paths == 0) and fallback or nil,
+           learnedAt = tonumber(learnedAt), collected = collected and true or false }
 end
 
 -- Toutes les recettes d'un métier connues d'ATT (skillID : 197 couture, 333 enchantement) : { spell, item, name, learnedAt }

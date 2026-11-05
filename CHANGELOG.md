@@ -1,5 +1,13 @@
 # Journal des versions
 
+## ForeverGFX 2.3.2 / ForeverPrep 1.3 / ForeverHeal 1.5 / ForeverGazette 1.4.2 / ForeverMetiers 1.2 / ForeverLoot 1.4
+Corrections d'après les premiers diagnostics en jeu (05/11/2026, client 1.60.1 build 70790) : le client de WoW Forever utilise l'API moderne de WoW, où plusieurs fonctions classiques n'existent plus.
+- ForeverPrep : **erreur à l'analyse** corrigée (`GetItemCooldown` absent : temps de recharge de la pierre de foyer lu par `C_Container`) ; niveaux des pierres de soins (12, 24, 36, 48).
+- ForeverHeal et ForeverGazette : **journal de combat** lu par `C_CombatLog.GetCurrentEventInfo` quand `CombatLogGetCurrentEventInfo` manque (soins effectifs, excédent, talents mesurés, rubrique Donjons) ; ForeverHeal lit aussi le grimoire par `C_SpellBook`.
+- ForeverMetiers : métiers lus par `GetProfessions` (pas de `GetNumSkillLines` sur ce client) ; noms des sorts par `C_Spell` (Désenchanter, enchantements) ; fenêtre du métier aussi suivie par `TRADE_SKILL_LIST_UPDATE` ; le diagnostic liste les fonctions de métier présentes.
+- All The Things (ForeverMetiers, ForeverLoot) : seulement les sources de **ta faction** ; noms de réputation par `C_Reputation` ; une catégorie trop vague d'ATT (« Enchantement — Recettes ») laisse la place au texte du guide.
+- ForeverGazette : le diagnostic dit si `C_CombatLog` existe et ce qu'il contient.
+
 ## ForeverGFX 2.3.1 / ForeverMetiers 1.1 / ForeverLoot 1.3
 - **All The Things** (s'il est installé ; sa base propre à WoW Forever, tirée des données du jeu) :
   - ForeverMetiers : où apprendre chaque recette (PNJ ou quête, zone, coût en faveur marchande, réputation requise) et à quelle compétence, à la place des textes du guide ; onglet Recettes : **toutes les recettes de couture et d'enchantement à apprendre maintenant** et celles des 25 prochains points, avec leur source.

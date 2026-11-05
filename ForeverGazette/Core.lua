@@ -324,16 +324,19 @@ end
 local ENV_KEYS = { Falling = "@fall", Drowning = "@drown", Fatigue = "@fatigue", Fire = "@fire", Lava = "@lava", Slime = "@slime",
                    FALLING = "@fall", DROWNING = "@drown", FATIGUE = "@fatigue", FIRE = "@fire", LAVA = "@lava", SLIME = "@slime" }
 
+-- Journal de combat : CombatLogGetCurrentEventInfo (classique) ou C_CombatLog.GetCurrentEventInfo (client moderne de Forever)
+local function CLInfoFunc() return CombatLogGetCurrentEventInfo or (C_CombatLog and C_CombatLog.GetCurrentEventInfo) end
 local function OnCombatLog(...)
   local _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _, p12 = ...
-  if CombatLogGetCurrentEventInfo then
-    _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _, p12 = CombatLogGetCurrentEventInfo()
+  local clf = CLInfoFunc()
+  if clf then
+    _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _, p12 = clf()
   end
   if not sub then return end
   if db.run then
     if (sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL") and srcGUID == playerGUID then
       local amount, over = select(15, ...), select(16, ...)
-      if CombatLogGetCurrentEventInfo then amount, over = select(15, CombatLogGetCurrentEventInfo()), select(16, CombatLogGetCurrentEventInfo()) end
+      if clf then amount, over = select(15, clf()), select(16, clf()) end
       db.run.heal = db.run.heal + math.max((amount or 0) - (over or 0), 0)
       db.run.over = db.run.over + (over or 0)
     elseif sub == "UNIT_DIED" and dstGUID and dstGUID:find("^Player") and (dstGUID == playerGUID or Group(dstFlags)) then

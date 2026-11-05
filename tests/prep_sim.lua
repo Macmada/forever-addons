@@ -324,4 +324,11 @@ for _ = 1, 30 do Fire("UNIT_AURA", "player") end
 RunTimers(5)
 check(analyses <= 2, "30 changements de buffs en rafale : regroupés (" .. analyses .. " analyse(s))")
 ns.Analyze = realAnalyze
+-- client moderne de Forever : pas de GetItemCooldown global (diagnostic du 05/11/2026 : Core.lua:366)
+_G.GetItemCooldown = nil
+_G.C_Container = _G.C_Container or {}
+_G.C_Container.GetItemCooldown = function() return 0, 0 end
+local okModern, resModern = pcall(ns.Analyze, "dungeon")
+check(okModern and resModern, "client moderne : analyse sans GetItemCooldown global")
+check(not ns.DiagText():find("Erreur", 1, true), "client moderne : diagnostic sans erreur")
 print("\nTOUT OK (" .. LANG .. ")")
