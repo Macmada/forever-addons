@@ -153,8 +153,9 @@ local function Grouped(events)
   end
   for _, e in ipairs(events) do
     local z = (e.k == "zone" or e.k == "dungeon") and e.v and e.v.zone
-    if z and (places[z] == true or (e.k == "zone" and places[z] == "dungeon")) then
-      -- doublon : ignoré
+    local dup = z and (places[z] == true or (e.k == "zone" and places[z] == "dungeon"))
+    if dup then
+      z = nil       -- doublon : ignoré
     elseif e.k == "level" then levels[#levels + 1] = e
     elseif e.k == "recipe" then recipes[#recipes + 1] = e
     else out[#out + 1] = e end
