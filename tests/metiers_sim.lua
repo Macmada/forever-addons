@@ -349,7 +349,6 @@ _G.C_TradeSkillUI = nil
 local diag = ns.DiagText()
 check((diag:find("API craft", 1, true) or diag:find("API modern", 1, true)) and diag:find("méthode de lecture", 1, true) and diag:find("1248459 = Enchantement de brassards", 1, true) and diag:find("Auctionator : présent", 1, true)
       and not diag:find("Erreur", 1, true), "diagnostic complet")
-check(ForeverHub and ForeverHub.entries.ForeverMetiers, "inscrit dans l'icône commune")
 SlashCmdList.FOREVERMETIERS("recettes")
 check(ns.ui:IsShown(), "/metiers recettes")
 check(ns.ui.tabs.recipes.active and not ns.ui.tabs.level.active, "onglet Recettes actif (style Forever)")

@@ -31,9 +31,14 @@ import urllib.request
 import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+# Version du compagnon : celle de ForeverGazette. WowUp livre une copie à jour du compagnon dans le dossier de l'addon
+# (Interface/AddOns/ForeverGazette/Companion) : au lancement, et toutes les heures en surveillance, le compagnon s'y
+# compare et se remplace lui-même par la copie plus récente (le .ini et l'état restent), puis se relance.
+VERSION = "1.7.0"
+UPDATE_FILES = ("gazette_discord.py", "gazette_render.py")
 CHUNK = 1900                      # limite Discord : 2 000 caractères par message
 MAX_FILE = 9 * 1024 * 1024        # limite des pièces jointes d'un webhook (10 Mo), avec marge
-USER_AGENT = "ForeverGazette-Discord (https://github.com/Macmada/forever-addons, 1.3)"
+USER_AGENT = f"ForeverGazette-Discord (https://github.com/Macmada/forever-addons, {VERSION})"
 
 try:
     sys.path.insert(0, HERE)
@@ -307,6 +312,51 @@ def load_config(path: str) -> dict:
             "discord": discord, "discord_pdf": c.getboolean("discord_pdf", False)}
 
 
+def _vtuple(v: str) -> tuple:
+    return tuple(int(x) for x in re.findall(r"\d+", v or "")[:4])
+
+
+def addon_companion(dirs: list[str]) -> tuple[str, str] | None:
+    """Copie du compagnon livrée avec l'addon (WowUp) la plus récente : (dossier, version), ou None."""
+    best = None
+    for d in dirs:
+        src = os.path.join(d, "Interface", "AddOns", "ForeverGazette", "Companion")
+        try:
+            with open(os.path.join(src, "gazette_discord.py"), encoding="utf-8") as f:
+                m = re.search(r'^VERSION = "([^"]+)"', f.read(), re.M)
+        except OSError:
+            continue
+        if m and (best is None or _vtuple(m.group(1)) > _vtuple(best[1])):
+            best = (src, m.group(1))
+    return best
+
+
+def self_update(dirs: list[str], log) -> bool:
+    """Remplace ce compagnon par la copie de l'addon si elle est plus récente ; relance. False si rien à faire."""
+    found = addon_companion(dirs)
+    if not found or _vtuple(found[1]) <= _vtuple(VERSION) or os.environ.get("FOREVER_GAZETTE_UPDATED") == found[1]:
+        return False
+    src, version = found
+    if os.path.normcase(os.path.abspath(src)) == os.path.normcase(HERE):
+        return False
+    try:
+        for name in UPDATE_FILES:
+            p = os.path.join(src, name)
+            if os.path.isfile(p):
+                tmp = os.path.join(HERE, name + ".new")
+                with open(p, "rb") as a, open(tmp, "wb") as b:
+                    b.write(a.read())
+                os.replace(tmp, os.path.join(HERE, name))
+    except OSError as e:
+        log(f"Mise à jour du compagnon {VERSION} -> {version} impossible : {e}")
+        return False
+    log(f"Compagnon mis à jour : {VERSION} -> {version} (copie livrée avec l'addon). Relance.")
+    os.environ["FOREVER_GAZETTE_UPDATED"] = version
+    sys.stdout.flush()
+    os.execv(sys.executable, [sys.executable, os.path.join(HERE, "gazette_discord.py")] + sys.argv[1:])
+    return True
+
+
 def saved_files(dirs: list[str]) -> list[tuple[str, str]]:
     out = []
     for d in dirs:
@@ -444,6 +494,7 @@ def main():
     ap.add_argument("--weekly", action="store_true", help="poste aussi l'Hebdo (une fois par jour)")
     ap.add_argument("--watch", action="store_true", help="vérifie toutes les minutes (à laisser tourner)")
     ap.add_argument("--dry-run", action="store_true", help="affiche sans rien envoyer")
+    ap.add_argument("--no-update", action="store_true", help="ne pas se mettre à jour depuis la copie livrée avec l'addon")
     ap.add_argument("--log", help="écrit les messages dans ce fichier (lancement sans fenêtre, au démarrage de Windows)")
     args = ap.parse_args()
     if args.log:
@@ -456,13 +507,21 @@ def main():
     def log(msg):
         print(time.strftime("%H:%M:%S"), msg, flush=True)
 
+    if not args.dry_run and not args.no_update:
+        self_update(cfg["dirs"], log)
+    log(f"Compagnon ForeverGazette {VERSION}.")
+
     if not args.watch:
         n = run_once(cfg, state_path, args, log)
         log(f"{n} édition(s) traitée(s).")
         return
     last = None
     log("Surveillance : Ctrl+C pour arrêter.")
+    checked = time.time()
     while True:
+        if not args.no_update and time.time() - checked > 3600:       # WowUp a pu mettre l'addon à jour entre-temps
+            checked = time.time()
+            self_update(cfg["dirs"], log)
         stamp = tuple((p, os.path.getmtime(p)) for _, p in saved_files(cfg["dirs"])) + (dt.date.today().isoformat(),)
         if stamp != last:
             last = stamp

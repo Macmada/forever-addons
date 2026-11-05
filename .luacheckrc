@@ -15,12 +15,13 @@ globals = {
   "ForeverHub", "SLASH_FOREVERHUB1", "ForeverHealAPI", "ForeverLootDB", "ForeverLootGlobalDB", "ForeverDungeonJournal_NS", "Syndicator",
   "SLASH_FOREVERLOOT1", "SLASH_FOREVERLOOT2", "ForeverLoot_OnCompartmentClick",
   "ForeverMetiersDB", "ForeverMetiersGlobalDB", "SLASH_FOREVERMETIERS1", "SLASH_FOREVERMETIERS2", "ForeverMetiers_OnCompartmentClick", "Auctionator", "ATTC", "ForeverBlockedActions", "TomTom",
+  "ForeverPretreDB", "ForeverPretre_OnCompartmentClick", "SLASH_FOREVERPRETRE1", "SLASH_FOREVERPRETRE2",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
 -- API WoW lue (présente sur Forever, TBC Anniversary et retail, ou testée avant usage)
 read_globals = {
-  "GetContainerItemID", "PickupContainerItem", "AutoEquipCursorItem", "CursorHasItem",
+  "DisableAddOn", "GetContainerItemID", "PickupContainerItem", "AutoEquipCursorItem", "CursorHasItem",
   "C_AddOns", "C_CVar", "C_Console", "C_Item", "C_Spell", "C_Timer", "ChatFontNormal",
   "ClearCursor", "ConsoleExec", "ConsoleGetAllCommands", "CopyTable", "CreateFrame",
   "CreateMacro", "DeleteMacro", "EditMacro", "Enum", "GameTooltip", "GetBuildInfo", "GetCVar",

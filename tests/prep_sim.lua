@@ -158,10 +158,7 @@ _G.GetBuildInfo = _G.GetBuildInfo or function() return "1.16.0", "60000", "Nov 1
 _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
 _G.IsAddOnLoaded = function() return true end
 _G.ChatFontNormal = _G.ChatFontNormal or {}
-local ns = {}
-for _, f in ipairs({ "Locale", "Diag", "ATT", "Data", "Core", "Tour", "Widgets", "UI" }) do
-  assert(loadfile("ForeverPrep/" .. f .. ".lua"))("ForeverPrep", ns)
-end
+local ns = dofile("tests/pretre_load.lua")("ForeverPrep")
 local evf = ns.eventFrame
 local function Fire(e, ...) evf.scripts.OnEvent(evf, e, ...) end
 local function check(c, msg) if not c then error("ÉCHEC : " .. msg, 2) end print("ok  " .. msg) end

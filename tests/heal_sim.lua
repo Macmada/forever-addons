@@ -120,8 +120,7 @@ _G.GetBuildInfo = _G.GetBuildInfo or function() return "1.16.0", "60000", "Nov 1
 _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
 _G.IsAddOnLoaded = function() return true end
 _G.ChatFontNormal = _G.ChatFontNormal or {}
-local ns = {}
-for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "Widgets", "UI" }) do assert(loadfile("ForeverHeal/" .. f .. ".lua"))("ForeverHeal", ns) end
+local ns = dofile("tests/pretre_load.lua")("ForeverHeal")
 -- infobulle de lecture : relie SetHyperlink / SetInventoryItem à nos objets
 local realCF = _G.CreateFrame
 _G.CreateFrame = function(kind, name, ...)

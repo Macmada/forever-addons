@@ -27,7 +27,7 @@ end
 
 local function Header(add)
   local v, build, d, iface = GetBuildInfo()
-  add("### " .. ADDON .. " " .. tostring(Meta(ADDON, "Version") or "?") .. " — diagnostic du " .. date("%Y-%m-%d %H:%M"))
+  add("### " .. ADDON .. " " .. tostring(Meta(ns.ROOT or ADDON, "Version") or "?") .. (ns.ROOT and (" (" .. ns.ROOT .. ")") or "") .. " — diagnostic du " .. date("%Y-%m-%d %H:%M"))
   add(string.format("Client : %s build %s (%s), interface %s, langue %s", tostring(v), tostring(build), tostring(d), tostring(iface), GetLocale()))
   local _, race = UnitRace("player")
   local _, class = UnitClass("player")

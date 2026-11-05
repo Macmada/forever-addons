@@ -1,5 +1,17 @@
 # Journal des versions
 
+## v3.0.0 : ForeverPrêtre (ForeverGFX 3.0.0 / ForeverPretre 3.0.0 / ForeverGazette 1.7.0)
+- **ForeverPrêtre** : ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers ne font plus qu'un addon, avec **une seule fenêtre** : une barre d'onglets à gauche (Maintenant, Soins, Équipement, Préparation, Métiers), une seule fenêtre visible à la fois, à la même place. Les commandes restent (`/fheal`, `/floot`, `/prep`, `/metiers`) et passent par la même barre ; nouvelle commande `/fp`. Une seule entrée « Prêtre » dans l'icône Forever.
+- **Écran « Maintenant »** : que faire à ton niveau, en un coup d'œil : ton prêtre (soins/s, autonomie, régénération), les meilleures améliorations d'équipement à portée et où les trouver, ce qu'il manque avant un donjon avec « Guide-moi vers le vendeur », la prochaine étape de tes métiers. En combat : dernier état, aucun calcul.
+- **Lien avec le jeu** (`Compat.lua`) : un seul endroit pour les fonctions qui diffèrent sur le client de Forever (équiper, marchand, sacs, sorts, mana secrète en combat).
+- **Auto-test en jeu** (`/fp test`) : chaque fonction importante essayée pour de vrai sur ton client, rapport à copier (OK, échec, non testé et pourquoi).
+- **Sonde du client** (`/fp sonde`) : fonctions présentes et absentes de ton client ; le rapport devient le profil du client Forever dans les tests hors jeu (`tests/forever_client.lua`).
+- **Diag commun** (`/fp diag`) : toutes les parties en un texte.
+- Les anciens dossiers ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers deviennent des coquilles vides qui se désactivent (supprimables). **Les réglages repartent de zéro.**
+- **ForeverGazette 1.7.0** : le compagnon PDF/Discord est livré dans le dossier de l'addon (`Companion`) et **se met à jour tout seul** depuis cette copie (au lancement puis toutes les heures). Il faut recopier une dernière fois `gazette_discord.py` et `gazette_render.py` à la main (ceux d'avant ne savent pas se mettre à jour).
+- Modules communs : une seule copie dans ForeverPrêtre (`Shared/`), en-têtes de liste cliquables.
+
+
 ## ForeverGFX 2.4.10 / ForeverLoot 2.3.2
 - **Bouton « Équiper » de l'alerte sans effet** : le client de WoW Forever n'a plus `EquipItemByName` en global. Le bouton passe par `C_Item.EquipItemByName`, sinon prend l'objet dans le sac et l'équipe ; si l'objet est introuvable, un message le dit (l'alerte reste affichée) au lieu de se fermer sans rien faire.
 

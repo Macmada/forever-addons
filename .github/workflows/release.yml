@@ -27,26 +27,21 @@ jobs:
           echo "macros=${MACROS}" >> "$GITHUB_OUTPUT"
           GAZETTE="$(sed -n 's/^## Version: *//p' ForeverGazette/ForeverGazette.toc | tr -d '\r')"
           echo "gazette=${GAZETTE}" >> "$GITHUB_OUTPUT"
-          PREP="$(sed -n 's/^## Version: *//p' ForeverPrep/ForeverPrep.toc | tr -d '\r')"
-          echo "prep=${PREP}" >> "$GITHUB_OUTPUT"
-          HEAL="$(sed -n 's/^## Version: *//p' ForeverHeal/ForeverHeal.toc | tr -d '\r')"
-          echo "heal=${HEAL}" >> "$GITHUB_OUTPUT"
-          LOOT="$(sed -n 's/^## Version: *//p' ForeverLoot/ForeverLoot.toc | tr -d '\r')"
-          echo "loot=${LOOT}" >> "$GITHUB_OUTPUT"
-          METIERS="$(sed -n 's/^## Version: *//p' ForeverMetiers/ForeverMetiers.toc | tr -d '\r')"
-          echo "metiers=${METIERS}" >> "$GITHUB_OUTPUT"
+          PRETRE="$(sed -n 's/^## Version: *//p' ForeverPretre/ForeverPretre.toc | tr -d '\r')"
+          echo "pretre=${PRETRE}" >> "$GITHUB_OUTPUT"
 
       - name: Créer les archives
         run: |
           mkdir dist
-          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers
+          # compagnon PDF/Discord livré aussi dans le dossier de l'addon : il s'y met à jour tout seul (WowUp)
+          mkdir -p ForeverGazette/Companion
+          cp tools/gazette-discord/*.py tools/gazette-discord/*.bat tools/gazette-discord/*.ini tools/gazette-discord/README.md ForeverGazette/Companion/
+          # ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers : coquilles qui remplacent les anciens dossiers (fusionnés dans ForeverPretre)
+          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverGazette ForeverPretre ForeverHeal ForeverLoot ForeverPrep ForeverMetiers
           zip -r "dist/ForeverGFX-v${{ steps.v.outputs.gfx }}.zip" ForeverGFX
           zip -r "dist/ForeverMacros-v${{ steps.v.outputs.macros }}.zip" ForeverMacros
           zip -r "dist/ForeverGazette-v${{ steps.v.outputs.gazette }}.zip" ForeverGazette
-          zip -r "dist/ForeverPrep-v${{ steps.v.outputs.prep }}.zip" ForeverPrep
-          zip -r "dist/ForeverHeal-v${{ steps.v.outputs.heal }}.zip" ForeverHeal
-          zip -r "dist/ForeverLoot-v${{ steps.v.outputs.loot }}.zip" ForeverLoot
-          zip -r "dist/ForeverMetiers-v${{ steps.v.outputs.metiers }}.zip" ForeverMetiers
+          zip -r "dist/ForeverPretre-v${{ steps.v.outputs.pretre }}.zip" ForeverPretre
           (cd tools && zip -r "../dist/ForeverGazette-Discord-v${{ steps.v.outputs.gazette }}.zip" gazette-discord)
 
       - name: Créer release.json (WowUp)

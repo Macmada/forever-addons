@@ -176,7 +176,7 @@ end
 
 ----------------------------------------------------------------------
 -- Liste de cartes (ForeverMetiers…) : bandeaux de rubrique, cartes d'objets, lignes d'information.
--- Éléments : { kind = "head", icon, crop, title, right, link }
+-- Éléments : { kind = "head", icon, crop, title, right, link, onClick }
 --            { kind = "card", icon, quality, name, tags, source, gain, gainSub, link, star, onClick, onRight }
 --            { kind = "info", display (ou text), boss }
 ----------------------------------------------------------------------
@@ -277,6 +277,7 @@ function K.CardList(parent, width)
       h.rule:SetPoint("BOTTOMLEFT"); h.rule:SetPoint("BOTTOMRIGHT"); h.rule:SetHeight(1)
       h.rule:SetColorTexture(0.75, 0.56, 0.18, 0.9)
       Tip(h)
+      h:SetScript("OnClick", function(o) if o.onClick then o.onClick() end end)
       self.heads[hu] = h
     end
     h:Show()
@@ -316,7 +317,7 @@ function K.CardList(parent, width)
         if l.crop ~= false then h.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) else h.icon:SetTexCoord(0, 1, 0, 1) end
         h.title:SetText(l.title or "")
         h.right:SetText(l.right or "")
-        h.link = l.link
+        h.link, h.onClick = l.link, l.onClick
         y = y - 44
         stripe = 0
       elseif l.kind == "card" then

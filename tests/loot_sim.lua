@@ -259,7 +259,6 @@ W.class, W.level = "PRIEST", 40
 -- 8. diagnostic, icône commune, commande
 local diag = ns.DiagText()
 check(diag:find("Liste de référence", 1, true) and diag:find("272406", 1, true) and not diag:find("Erreur", 1, true), "diagnostic complet")
-check(ForeverHub and ForeverHub.entries.ForeverLoot, "inscrit dans l'icône commune")
 SlashCmdList.FOREVERLOOT("donjons")
 check(ns.ui:IsShown(), "/floot donjons")
 check(ns.ui.dunBtn.active and not ns.ui.bisBtn.active, "onglet Donjons actif (style Forever)")

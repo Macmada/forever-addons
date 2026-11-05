@@ -146,13 +146,25 @@ return function(LANG)
   _G.Enum = { ConsoleCommandType = { Cvar = 0 } }
 
   W.addons = {}
-  function W.load(addon)          -- chaque addon a son propre espace (comme dans le jeu)
-    local ns = {}
+  local function tocFiles(addon)
+    local files = {}
     local toc = io.open(addon .. "/" .. addon .. ".toc"):read("*a")
-    for file in toc:gmatch("\n([%w_]+%.lua)") do
-      local chunk = assert(loadfile(addon .. "/" .. file))
-      chunk(addon, ns)
-    end
+    for file in toc:gmatch("\n([%w_\\]+%.lua)") do files[#files + 1] = file end
+    return files
+  end
+  local function run(addon, file, ns) assert(loadfile(addon .. "/" .. file:gsub("\\", "/")))(addon, ns) end
+  -- Une partie de ForeverPretre seule (ancien addon), comme avant la fusion : voir tests/pretre_load.lua
+  local MODDIR = { ForeverHeal = true, ForeverLoot = true, ForeverPrep = true, ForeverMetiers = true }
+  function W.loadModule(name)
+    local ns, root = dofile("tests/pretre_load.lua")(name, W.pretreRoot)
+    W.pretreRoot = root
+    W.addons[name] = ns
+    return ns
+  end
+  function W.load(addon)          -- chaque addon a son propre espace (comme dans le jeu)
+    if MODDIR[addon] then return W.loadModule(addon) end
+    local ns = {}
+    for _, file in ipairs(tocFiles(addon)) do run(addon, file, ns) end
     W.addons[addon] = ns
     return ns
   end
@@ -160,6 +172,15 @@ return function(LANG)
   function W.fire(event, ...)
     for _, f in ipairs(W.frames) do
       if f.scripts.OnEvent then f.scripts.OnEvent(f, event, ...) end
+    end
+  end
+  -- Applique un profil de client (tests/forever_client.lua, rapport de /fp sonde) : retire les fonctions absentes
+  function W.client(profile)
+    for _, path in ipairs(profile.absent or {}) do
+      local parent, key = _G, path
+      local ns, fn = path:match("^(.-)%.([^%.]+)$")
+      if ns then parent, key = _G[ns], fn end
+      if type(parent) == "table" then parent[key] = nil end
     end
   end
   function W.check(c, msg) if not c then error("ÉCHEC : " .. msg, 2) end rprint("ok  " .. msg) end

@@ -7,6 +7,13 @@ Pourquoi un programme à part ? Un addon WoW ne peut ni écrire de fichier ni li
 dans sa sauvegarde (`WTF\Account\<compte>\<royaume>\<personnage>\SavedVariables\ForeverGazette.lua`), que le jeu écrit
 **à la déconnexion, après un `/reload` ou avec le bouton « PDF » de la gazette**. Le compagnon lit ce fichier sur ton PC.
 
+
+> **Mises à jour automatiques (depuis la 1.7.0)** : WowUp livre la dernière version du compagnon avec l'addon, dans
+> `Interface\AddOns\ForeverGazette\Companion`. Au lancement, puis toutes les heures, le compagnon compare sa version à
+> cette copie et, si elle est plus récente, remplace ses fichiers `.py` (ton `gazette_discord.ini` et son état ne bougent
+> pas) puis se relance. Le journal le dit : « Compagnon mis à jour : 1.7.0 -> 1.7.1 ». Pour l'empêcher : `--no-update`.
+> Une version d'avant la 1.7.0 ne sait pas le faire : recopie une dernière fois les deux fichiers `.py` à la main.
+
 ## Installation (Windows)
 
 1. Installe [Python 3](https://www.python.org/downloads/) (coche « Add Python to PATH »).

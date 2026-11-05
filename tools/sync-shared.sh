@@ -1,11 +1,12 @@
 #!/bin/sh
 # Copie les modules communs (tools/*.lua) dans les addons. --check : échoue si une copie diffère.
-#   Diag.lua : diagnostic (tous) ; Hub.lua : icône commune « Forever » (tous) ; Tour.lua : tutoriel (addons qui en ont un) ;
-#   ATT.lua : sources d'All The Things (ForeverMetiers, ForeverLoot)
+#   Diag.lua : diagnostic ; Hub.lua : icône commune « Forever » ; Tour.lua : tutoriel ; ATT.lua : sources d'All The Things ;
+#   Widgets.lua : composants d'interface.
+# ForeverPretre (Soins, Équipement, Préparation, Métiers en un seul addon) : une seule copie de chaque module, enveloppée
+# dans une fonction (ForeverPretre/Shared/*.lua) que chaque module appelle avec son propre espace de noms.
 set -e
 cd "$(dirname "$0")/.."
-ALL="ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers"
-TOUR="ForeverGFX ForeverMacros ForeverGazette ForeverPrep"
+SEP="ForeverGFX ForeverMacros ForeverGazette"
 sync() { # fichier addons...
   f="$1"; shift
   for a in "$@"; do
@@ -16,10 +17,25 @@ sync() { # fichier addons...
     fi
   done
 }
+wrap() { # fichier : ForeverPretre/Shared/<fichier>, même code dans une fonction
+  f="$1"; n="${f%.lua}"; out="ForeverPretre/Shared/$f"
+  tmp="$(mktemp)"
+  { printf -- '-- Généré par tools/sync-shared.sh depuis tools/%s : ne pas modifier ici.\n' "$f"
+    printf 'local _, root = ...\nroot.Shared.%s = function(...)\n' "$n"
+    cat "tools/$f"
+    printf '\nend\n'; } > "$tmp"
+  if [ "$CHECK" = 1 ]; then
+    cmp -s "$tmp" "$out" || { rm -f "$tmp"; echo "$out n'est pas à jour (lance tools/sync-shared.sh)"; exit 1; }
+    rm -f "$tmp"
+  else
+    mkdir -p ForeverPretre/Shared
+    mv "$tmp" "$out"
+  fi
+}
 [ "$1" = "--check" ] && CHECK=1
-sync Diag.lua $ALL
-sync Hub.lua $ALL
-sync Tour.lua $TOUR
-sync ATT.lua ForeverMetiers ForeverLoot ForeverPrep
-sync Widgets.lua ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers ForeverMacros ForeverGFX
+sync Diag.lua $SEP
+sync Hub.lua $SEP
+sync Tour.lua ForeverGFX ForeverMacros ForeverGazette
+sync Widgets.lua $SEP
+for f in Diag.lua Hub.lua Tour.lua ATT.lua Widgets.lua; do wrap "$f"; done
 echo "modules communs : ok"

@@ -1,0 +1,50 @@
+## Interface: 16000, 16001
+## Title: ForeverPrêtre
+## Notes: Tout pour ton prêtre en une fenêtre : que faire maintenant, soins, équipement à ton niveau, préparation de donjon, couture et enchantement.
+## Notes-enUS: Everything for your priest in one window: what to do now, healing, gear at your level, dungeon preparation, tailoring and enchanting.
+## Author: ForeverGFX
+## Version: 3.0.0
+## SavedVariables: ForeverPretreDB, ForeverLootGlobalDB, ForeverMetiersGlobalDB
+## SavedVariablesPerCharacter: ForeverHealDB, ForeverLootDB, ForeverPrepDB, ForeverMetiersDB
+## IconTexture: Interface\Icons\Spell_Holy_PowerWordShield
+## AddonCompartmentFunc: ForeverPretre_OnCompartmentClick
+
+Root.lua
+Shared\Diag.lua
+Shared\Widgets.lua
+Shared\ATT.lua
+Shared\Tour.lua
+Shared\Hub.lua
+Compat.lua
+Heal\Locale.lua
+Heal\Diag.lua
+Heal\Data.lua
+Heal\Core.lua
+Heal\Widgets.lua
+Heal\UI.lua
+Loot\Locale.lua
+Loot\Diag.lua
+Loot\ATT.lua
+Loot\Data.lua
+Loot\Core.lua
+Loot\Widgets.lua
+Loot\UI.lua
+Prep\Locale.lua
+Prep\Diag.lua
+Prep\ATT.lua
+Prep\Data.lua
+Prep\Core.lua
+Prep\Tour.lua
+Prep\Widgets.lua
+Prep\UI.lua
+Metiers\Locale.lua
+Metiers\Diag.lua
+Metiers\ATT.lua
+Metiers\Data.lua
+Metiers\Core.lua
+Metiers\Widgets.lua
+Metiers\UI.lua
+Window.lua
+Now.lua
+Probe.lua
+SelfTest.lua

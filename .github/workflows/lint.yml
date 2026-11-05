@@ -12,13 +12,13 @@ jobs:
       - name: Luacheck
         uses: lunarmodules/luacheck@v1
         with:
-          args: ForeverGFX ForeverMacros ForeverGazette ForeverPrep ForeverHeal ForeverLoot ForeverMetiers
+          args: ForeverGFX ForeverMacros ForeverGazette ForeverPretre ForeverHeal ForeverLoot ForeverPrep ForeverMetiers
       - name: Modules communs identiques dans chaque addon (diagnostic, icône, tutoriel)
         run: sh tools/sync-shared.sh --check
       - name: Caractères absents de la police du jeu (→ ≈ ✓ ● ○ ★ s'affichent en carré)
-        run: "! grep -n '[→≈✓●○★☆]' Forever*/*.lua tools/*.lua"
+        run: "! grep -rn --include='*.lua' '[→≈✓●○★☆]' Forever* tools"
       - name: Piège Lua « cond and nil or x » (vaut toujours x)
-        run: "! grep -n 'and nil or' Forever*/*.lua tools/*.lua"
+        run: "! grep -rn --include='*.lua' 'and nil or' Forever* tools"
 
   gazette-sim:
     runs-on: ubuntu-latest
@@ -43,5 +43,7 @@ jobs:
           lua5.1 tests/metiers_sim.lua en
           lua5.1 tests/forbidden_sim.lua fr
           lua5.1 tests/forbidden_sim.lua en
+          lua5.1 tests/pretre_sim.lua fr
+          lua5.1 tests/pretre_sim.lua en
       - name: Compagnon Discord (syntaxe)
         run: python3 -m py_compile tools/gazette-discord/gazette_discord.py tools/gazette-discord/gazette_render.py
