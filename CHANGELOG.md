@@ -1,5 +1,10 @@
 # Journal des versions
 
+## ForeverGFX 2.3.5 / ForeverHeal 1.8 / ForeverGazette 1.4.4 / ForeverPrep 1.4 / ForeverLoot 1.6 / ForeverMetiers 1.4 / ForeverMacros 1.6
+- **Vraie cause du message « ForeverHeal a été bloqué à cause d'une action qui n'est utilisable que par l'IU de Blizzard »** (à chaque connexion) : sur le client de WoW Forever, **s'abonner** au journal de combat est interdit aux addons. ForeverHeal et ForeverGazette ne s'y abonnent plus quand le client ne permet pas de le lire.
+- Diagnostic de tous les addons : ligne « Actions bloquées par le jeu depuis la connexion », avec l'addon et la fonction en cause, si le jeu en bloque encore une.
+- Nouvelle simulation : les sept addons chargés comme sur le client de Forever, aucun abonnement au journal de combat.
+
 ## ForeverGFX 2.3.4 / ForeverHeal 1.7 / ForeverLoot 1.5 / ForeverMetiers 1.3
 - La **flèche « → » s'affichait en carré** (la police du jeu ne l'a pas) : remplacée par « » » dans tous les addons ; « ≈ » et « ✓ » aussi retirés. La vérification automatique refuse désormais ces caractères.
 - ForeverHeal : l'annonce d'un changement qui ne touche pas tes soins (armure, résistances, Endurance) n'affiche plus la ligne inutile « Soin moyen 0 · 0 soins/s · autonomie 0 s ».

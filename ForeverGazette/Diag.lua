@@ -40,12 +40,29 @@ local function Header(add)
   add("Addons Forever chargés : " .. table.concat(list, ", "))
 end
 
+-- Actions bloquées par le jeu (« … a été bloqué à cause d'une action qui n'est utilisable que par l'IU de Blizzard ») :
+-- notées avec le nom de la fonction, pour le diagnostic. Une seule fenêtre commune à tous les addons Forever.
+local blocked = _G.ForeverBlockedActions
+if not blocked then
+  blocked = {}
+  _G.ForeverBlockedActions = blocked
+  local bf = CreateFrame("Frame")
+  for _, e in ipairs({ "ADDON_ACTION_FORBIDDEN", "ADDON_ACTION_BLOCKED" }) do pcall(bf.RegisterEvent, bf, e) end
+  bf:SetScript("OnEvent", function(_, event, addon, func)
+    if #blocked < 30 then
+      blocked[#blocked + 1] = string.format("%s %s %s %s", date("%H:%M:%S"), tostring(event), tostring(addon), tostring(func))
+    end
+  end)
+end
+
 -- Lignes du diagnostic (en-tête + section de l'addon) ; une erreur est écrite dans le texte au lieu de bloquer
 function ns.DiagText()
   local lines = {}
   local function add(s) lines[#lines + 1] = tostring(s) end
   local ok, err = pcall(Header, add)
   if not ok then add("Erreur en-tête : " .. tostring(err)) end
+  add("Actions bloquées par le jeu depuis la connexion : " .. (#blocked == 0 and "aucune" or ""))
+  for _, b in ipairs(blocked) do add("  " .. b) end
   if ns.DiagCollect then
     ok, err = pcall(ns.DiagCollect, add)
     if not ok then add("Erreur pendant le diagnostic : " .. tostring(err)) end

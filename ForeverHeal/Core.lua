@@ -598,7 +598,11 @@ ev:SetScript("OnEvent", function(_, event, ...)
   if event == "ADDON_LOADED" then
     if ... ~= ADDON then return end
     InitDB()
-    for e in pairs(handlers) do pcall(ev.RegisterEvent, ev, e) end
+    for e in pairs(handlers) do
+      -- Journal de combat : sur le client de Forever, s'y abonner est interdit aux addons (« ForeverHeal a été bloqué… »
+      -- à chaque connexion, 05/11/2026) ; seulement si le client permet de le lire
+      if e ~= "COMBAT_LOG_EVENT_UNFILTERED" or CombatLogGetCurrentEventInfo then pcall(ev.RegisterEvent, ev, e) end
+    end
     if ns.OnLoaded then ns.OnLoaded() end
     return
   end

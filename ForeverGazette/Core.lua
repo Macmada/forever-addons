@@ -536,7 +536,12 @@ local ev = CreateFrame("Frame")
 ns.eventFrame = ev
 ns.registered = {}
 ns.diag = { encounterEnd = 0, bossLog = 0, rareLog = 0, deaths = 0, shots = 0 }
-local function Safe(e) ns.registered[e] = pcall(ev.RegisterEvent, ev, e) end
+local function Safe(e)
+  -- Journal de combat : s'y abonner est interdit aux addons sur le client de Forever (action bloquée à la connexion,
+  -- 05/11/2026) ; seulement si le client permet de le lire
+  if e == "COMBAT_LOG_EVENT_UNFILTERED" and not CombatLogGetCurrentEventInfo then ns.registered[e] = false; return end
+  ns.registered[e] = pcall(ev.RegisterEvent, ev, e)
+end
 
 local handlers = {}
 handlers.PLAYER_LOGIN = function()
