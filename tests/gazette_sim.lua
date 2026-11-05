@@ -376,6 +376,28 @@ check(not gtxt:find("a-t-e ", 1, true) and not gtxt:find("dit-e)", 1, true), "ac
 if LANG == "fr" then check(gtxt:find("a-t-elle", 1, true), "accord : « a-t-elle triché ? » pour une prêtresse") end
 _G.UnitSex, ns.db.tone = saveSex, saveTone
 
+-- gazette du 05/11/2026 : Forgefer et la salle des Thanes apparaissaient deux fois (« Vue pour la première fois » + « Aperçu »)
+local dup = {
+  { t = now - 50, k = "dungeon", v = { zone = "Forgefer" }, s = 35 },
+  { t = now - 40, k = "zone", v = { zone = "Forgefer" }, s = 15 },
+  { t = now - 30, k = "zone", v = { zone = "Dun Morogh" }, s = 15 },
+  { t = now - 20, k = "zone", v = { zone = "Dun Morogh" }, s = 15 },
+}
+local nForge, nDun = 0, 0
+for _, b in ipairs(ns.BuildEdition(ns.Today(), { events = dup, stats = { play = 60, level = 7 } }, 1)) do
+  if b.text and b.text:find("Forgefer", 1, true) then nForge = nForge + 1 end
+  if b.text and b.text:find("Dun Morogh", 1, true) then nDun = nDun + 1 end
+end
+check(nForge == 1 and nDun == 1, "un lieu n'apparaît qu'une fois dans la gazette")
+-- une ville vue comme « scénario » par le client de Forever n'est pas un donjon
+local saveII, saveZT = _G.IsInInstance, _G.GetRealZoneText
+_G.IsInInstance = function() return true, "scenario" end
+_G.GetRealZoneText = function() return "La salle des Thanes" end
+ns.db.seen.zones["La salle des Thanes"], ns.db.seen.instances["La salle des Thanes"] = nil, nil
+pcall(Fire, "ZONE_CHANGED_NEW_AREA")
+check(not ns.db.seen.instances["La salle des Thanes"] and ns.db.seen.zones["La salle des Thanes"], "ville en « scénario » : simple visite, pas un donjon")
+_G.IsInInstance, _G.GetRealZoneText = saveII, saveZT
+
 -- client de Forever : C_CombatLog.GetCurrentEventInfo est réservé à Blizzard (appel bloqué) : jamais appelé
 local blocked = 0
 local saveCL = _G.CombatLogGetCurrentEventInfo

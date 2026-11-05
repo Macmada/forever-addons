@@ -147,10 +147,18 @@ end
 -- 3 passages de niveau ou plus = une ligne « du niveau X au niveau Y » ; 3 recettes ou plus = une ligne avec le compte
 local function Grouped(events)
   local levels, recipes, out = {}, {}, {}
+  local places = {}     -- une seule ligne par lieu (donjon prioritaire sur la simple visite)
   for _, e in ipairs(events) do
-    if e.k == "level" then levels[#levels + 1] = e
+    if e.k == "dungeon" and e.v and e.v.zone then places[e.v.zone] = "dungeon" end
+  end
+  for _, e in ipairs(events) do
+    local z = (e.k == "zone" or e.k == "dungeon") and e.v and e.v.zone
+    if z and (places[z] == true or (e.k == "zone" and places[z] == "dungeon")) then
+      -- doublon : ignoré
+    elseif e.k == "level" then levels[#levels + 1] = e
     elseif e.k == "recipe" then recipes[#recipes + 1] = e
     else out[#out + 1] = e end
+    if z and places[z] ~= true and not (e.k == "zone" and places[z] == "dungeon") then places[z] = true end
   end
   if #levels >= 3 then
     local lo, hi = levels[1], levels[1]

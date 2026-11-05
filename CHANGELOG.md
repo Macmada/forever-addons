@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGazette 1.6.2 (non publiée)
+- **Lieux en double** (gazette du 05/11/2026 : « Vue pour la première fois à Forgefer » puis « Aperçu à Forgefer ») : le client de WoW Forever présente Forgefer et la salle des Thanes comme des « scénarios », que la gazette prenait pour des donjons. Seuls donjons et raids comptent maintenant comme « première fois à… », et chaque lieu n'apparaît qu'une fois par édition (y compris les éditions déjà enregistrées).
+- Compagnon PDF : plus de nom de fichier (« WoWScrnShot_….jpg ») sous la photo de une.
+
 ## ForeverGFX 2.4.8 / ForeverPrep 1.7.2 / ForeverMetiers 2.2
 - ForeverMetiers : **erreur à l'ouverture d'un métier** (« Core.lua:143: attempt to call a nil value ») : le client de WoW Forever n'a plus les anciennes fonctions de métier (`GetTradeSkillLine`, `GetCraftInfo`…). La fenêtre est maintenant lue par l'API moderne `C_TradeSkillUI` (recettes apprises, difficulté, composants et ce que tu en as, recharge, clic pour ouvrir la recette) ; l'ancienne reste utilisée si un client l'a.
 - ForeverPrep : **erreur chez le marchand** (« Core.lua:498: attempt to call a nil value ») : `GetMerchantItemInfo` n'existe plus sur le client de WoW Forever ; les articles sont lus par `C_MerchantFrame.GetItemInfo`. Le relevé des prix, le panneau « Tout acheter » et l'achat en un clic fonctionnent de nouveau.

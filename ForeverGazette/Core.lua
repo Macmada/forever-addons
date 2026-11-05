@@ -288,14 +288,16 @@ local function OnZone(silent)
     db.run = { zone = zone, start = time(), bosses = {}, deaths = 0, heal = 0, over = 0, raid = itype == "raid" }
   end
   Day().stats.zones[zone] = true
-  if inInstance and (itype == "party" or itype == "raid" or itype == "scenario") then
+  -- seuls donjons et raids comptent comme « première fois à… » : sur Forever, Forgefer et la salle des Thanes
+  -- passent pour des scénarios, d'où deux lignes par ville dans la gazette du 05/11/2026
+  if dungeon then
     if not db.seen.instances[zone] then
       db.seen.instances[zone] = true
       if not silent then ns.Record("dungeon", { zone = zone }, zone, itype == "raid" and 10 or 0) end
     end
-  elseif not db.seen.zones[zone] then
+  elseif not db.seen.zones[zone] and not db.seen.instances[zone] then
     db.seen.zones[zone] = true
-    if not silent and not inInstance then ns.Record("zone", { zone = zone }, zone) end
+    if not silent then ns.Record("zone", { zone = zone }, zone) end
   end
 end
 

@@ -175,7 +175,7 @@ class Renderer:
         if im:
             pw = W - 2 * M - 160
             im = self.fit_photo(im, pw, 400, 2.35)
-            y = self.paste_photo(page, im, M + 80 + (pw - im.width) // 2 + 0, y, une.get("f"), pw) + 10
+            y = self.paste_photo(page, im, M + 80 + (pw - im.width) // 2 + 0, y, None, pw) + 10
         lede = get("lede")
         if lede:
             y = self.draw_text(page, M + 60, y, lede[0]["t"], self.f_lede, W - 2 * M - 120, fill=SOFT, center=True) + 10
