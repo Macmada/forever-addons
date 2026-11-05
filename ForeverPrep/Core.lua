@@ -169,6 +169,18 @@ local function Pool(list, extras, level)
   return best, have, any
 end
 
+-- Article d'un marchand : GetMerchantItemInfo (classique) ou C_MerchantFrame.GetItemInfo (client moderne de Forever,
+-- où l'ancienne fonction n'existe plus : erreur chez le marchand le 05/11/2026). Mêmes valeurs que l'ancienne fonction.
+function ns.MerchantItemInfo(i)
+  if GetMerchantItemInfo then return GetMerchantItemInfo(i) end
+  if C_MerchantFrame and C_MerchantFrame.GetItemInfo then
+    local ok, t = pcall(C_MerchantFrame.GetItemInfo, i)
+    if ok and type(t) == "table" then
+      return t.name, t.texture, t.price, t.stackCount, t.numAvailable, t.isPurchasable, t.isUsable, t.hasExtendedCost
+    end
+  end
+end
+
 -- Prix d'un objet : relevé chez un marchand, sinon Auctionator (marchand puis hôtel des ventes), sinon estimation
 -- (4 × prix de revente). Renvoie prix, et « estimé » si c'est l'estimation.
 function ns.Price(id, ah)
@@ -493,9 +505,12 @@ handlers.MERCHANT_SHOW = function()
   -- prix réels des marchands, gardés pour la liste de courses
   db.vendorPrices = db.vendorPrices or {}
   for i = 1, (GetMerchantNumItems and GetMerchantNumItems() or 0) do
-    local link = GetMerchantItemLink and GetMerchantItemLink(i)
-    local id = link and tonumber(link:match("item:(%d+)"))
-    local _, _, price, batch, _, _, _, extended = GetMerchantItemInfo(i)
+    local id = GetMerchantItemID and GetMerchantItemID(i)
+    if not id then
+      local link = GetMerchantItemLink and GetMerchantItemLink(i)
+      id = link and tonumber(link:match("item:(%d+)"))
+    end
+    local _, _, price, batch, _, _, _, extended = ns.MerchantItemInfo(i)
     if id and price and price > 0 and not extended then db.vendorPrices[id] = price / math.max(batch or 1, 1) end
   end
   if db.merchant and ns.OnMerchant then ns.OnMerchant() end

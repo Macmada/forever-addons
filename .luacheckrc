@@ -59,5 +59,5 @@ read_globals = {
   "TradeSkillFrame_SetSelection", "TradeSkillFrame_Update", "GetCraftDisplaySkillLine", "GetCraftSkillLine", "GetNumCrafts",
   "GetCraftInfo", "GetCraftItemLink", "GetCraftRecipeLink", "GetCraftNumReagents", "GetCraftReagentInfo",
   "GetCraftReagentItemLink", "GetCraftDescription", "CraftFrame_SetSelection", "CraftFrame_Update", "GetNumSkillLines",
-  "GetSkillLineInfo", "C_CurrencyInfo", "GetFactionInfoByID", "GetProfessions", "GetProfessionInfo", "C_SpellBook", "C_CombatLog", "GetInventoryItemTexture", "GetInventorySlotInfo", "issecretvalue", "C_Minimap", "GetNumTrackingTypes", "GetTrackingInfo", "SetTracking", "C_Map", "UiMapPoint", "C_SuperTrack", "MINIMAP_TRACKING_VENDOR_FOOD", "EquipItemByName", "PlaySound", "SOUNDKIT", "LOOT_ITEM_SELF_MULTIPLE", "LOOT_ITEM_PUSHED_SELF", "LOOT_ITEM_PUSHED_SELF_MULTIPLE",
+  "GetSkillLineInfo", "C_CurrencyInfo", "GetFactionInfoByID", "GetProfessions", "GetProfessionInfo", "C_SpellBook", "C_CombatLog", "GetInventoryItemTexture", "GetInventorySlotInfo", "issecretvalue", "C_MerchantFrame", "C_Minimap", "GetNumTrackingTypes", "GetTrackingInfo", "SetTracking", "C_Map", "UiMapPoint", "C_SuperTrack", "MINIMAP_TRACKING_VENDOR_FOOD", "EquipItemByName", "PlaySound", "SOUNDKIT", "LOOT_ITEM_SELF_MULTIPLE", "LOOT_ITEM_PUSHED_SELF", "LOOT_ITEM_PUSHED_SELF_MULTIPLE",
 }

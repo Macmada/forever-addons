@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGFX 2.4.8 / ForeverPrep 1.7.2 / ForeverMetiers 2.1.3
+- ForeverPrep : **erreur chez le marchand** (« Core.lua:498: attempt to call a nil value ») : `GetMerchantItemInfo` n'existe plus sur le client de WoW Forever ; les articles sont lus par `C_MerchantFrame.GetItemInfo`. Le relevé des prix, le panneau « Tout acheter » et l'achat en un clic fonctionnent de nouveau.
+- ForeverMetiers : lecture de la fenêtre du métier protégée ; si une fonction de métier manque sur ce client, l'erreur va dans le Diag au lieu de se répéter.
+
 ## ForeverGFX 2.4.7 / ForeverHeal 2.1.1 / ForeverGazette 1.6.1 (et module commun des autres)
 - **« ForeverHeal provoque un grand nombre d'erreurs »** (« attempt to perform arithmetic on a secret number value », 36 fois) : en combat, le client de WoW Forever donne la mana sous forme de **valeur secrète**, inutilisable par les addons. L'alerte de mana en combat se met en veille au lieu de planter, et les calculs de ForeverHeal en combat réutilisent le dernier relevé fait hors combat.
 - ForeverGazette : expérience et or comptés seulement quand le jeu donne des valeurs utilisables (même protection).

@@ -286,6 +286,19 @@ check(tracked[2] == true and tracked[3] == true and not tracked[1], "Guide-moi :
 check(wp and wp[1] == 1426 and wp[4] == "Aubergiste proche", "Guide-moi : repère TomTom vers le marchand le plus proche de ta faction")
 _G.ATTC, _G.TomTom, _G.C_Minimap, _G.C_Map = nil, nil, nil, nil
 
+-- 6c. client moderne de Forever : pas de GetMerchantItemInfo (erreur chez le marchand le 05/11/2026), C_MerchantFrame.GetItemInfo
+local oldInfo = _G.GetMerchantItemInfo
+_G.GetMerchantItemInfo = nil
+_G.C_MerchantFrame = { GetItemInfo = function(i) local m = P.merchant[i]
+  return { name = ITEMS[m.id].name, texture = "icon", price = m.price, stackCount = m.batch or 1, numAvailable = -1, isPurchasable = true } end }
+Char({ level = 38, class = "MAGE", talents = { 31 }, known = {}, bags = {}, money = 500000,
+       merchant = { { id = 1645, price = 400 }, { id = 4601, price = 400 } } })
+ForeverPrepDB.vendorPrices = {}
+local okM, errM = pcall(Fire, "MERCHANT_SHOW")
+check(okM, "chez le marchand, client moderne : aucune erreur (" .. tostring(errM) .. ")")
+check(ForeverPrepDB.vendorPrices[1645] == 400, "prix relevé avec C_MerchantFrame.GetItemInfo")
+_G.GetMerchantItemInfo, _G.C_MerchantFrame = oldInfo, nil
+
 -- 7. Ouverture automatique
 local shown = 0
 local realShow = ns.Show

@@ -586,7 +586,7 @@ local function Offers()
   for i = 1, GetMerchantNumItems() do
     local id = MerchantItemID(i)
     if id and want[id] then
-      local name, texture, price, batch, numAvailable, _, _, extendedCost = GetMerchantItemInfo(i)
+      local name, texture, price, batch, numAvailable, _, _, extendedCost = ns.MerchantItemInfo(i)
       batch = (batch and batch > 0) and batch or 1
       if not extendedCost and (numAvailable == -1 or (numAvailable or 0) > 0) then
         local qty = want[id].qty
@@ -616,7 +616,10 @@ local function Buy(offer, done)
   end
   for k, n in ipairs(calls) do
     C_Timer.After((k - 1) * 0.3, function()
-      if offer.batch > 1 then BuyMerchantItem(offer.index) else BuyMerchantItem(offer.index, n) end
+      local buy = BuyMerchantItem or (C_MerchantFrame and C_MerchantFrame.BuyItem)
+      if buy then
+        if offer.batch > 1 then buy(offer.index) else buy(offer.index, n) end
+      end
       if k == #calls then
         Print(L.merchantBought, offer.qty, offer.name or "?")
         if done then done() end

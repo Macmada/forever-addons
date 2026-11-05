@@ -677,6 +677,7 @@ function ns.DiagCollect(add)
   local sc = ns.lastScan
   add("")
   add("## Dernière fenêtre de métier")
+  if ns.lastScanError then add("  ERREUR de lecture : " .. ns.lastScanError) end
   if not sc then add("  aucune ouverte depuis le chargement")
   else
     add(string.format("  %s (API %s), %s recettes, %s/%s", tostring(sc.name or sc.prof), tostring(sc.kind), tostring(sc.recipes and #sc.recipes or 0),

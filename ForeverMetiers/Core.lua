@@ -699,7 +699,9 @@ local function Soon(kind)
   pending[kind] = true
   C_Timer.After(0.3, function()
     pending[kind] = nil
-    local sc = ns.Scan(ns.API[kind])
+    -- protégé : si une fonction de métier manque sur ce client, l'erreur va dans le diagnostic au lieu de se répéter
+    local ok, sc = pcall(ns.Scan, ns.API[kind])
+    if not ok then ns.lastScanError = tostring(sc); return end
     if ns.OnScan then ns.OnScan(sc, ns.API[kind]) end
   end)
 end
