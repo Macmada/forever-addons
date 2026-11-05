@@ -1,5 +1,6 @@
 -- Simulation hors jeu de ForeverLoot (Lua 5.1). Lancer depuis la racine : lua5.1 tests/loot_sim.lua [fr|en]
 local LANG = arg and arg[1] or "fr"
+local equipped
 local W = dofile("tests/wowmock.lua")(LANG)
 local check = W.check
 
@@ -193,6 +194,28 @@ SlashCmdList.FOREVERLOOT("")
 check(ns.ui.nearBtn.active and ns.ui.spanBtns[5].active, "/floot : onglet « À mon niveau » (+5 niveaux par défaut)")
 ns.ui.spanBtns[10].scripts.OnClick(ns.ui.spanBtns[10])
 check(ns.nearSpan == 10 and ns.ui.spanBtns[10].active, "choix « +10 niveaux »")
+
+-- 5e. alerte quand tu ramasses un objet qui t'améliore (05/11/2026)
+_G.EquipItemByName = function(l) equipped = l end
+_G.LOOT_ITEM_SELF = "Vous recevez le butin : %s."
+_G.LOOT_ITEM_PUSHED_SELF = "Vous recevez l'objet : %s."
+ns.lastLootAlert = nil
+W.fire("CHAT_MSG_LOOT", "Grosbill reçoit le butin : " .. Link(101) .. ".")
+W.run(1)
+check(not ns.lastLootAlert, "butin d'un autre joueur : pas d'alerte")
+W.fire("CHAT_MSG_LOOT", "Vous recevez le butin : " .. Link(105) .. ".")
+W.run(1)
+check(not ns.lastLootAlert, "objet sans intérêt (os rongé) : pas d'alerte")
+W.fire("CHAT_MSG_LOOT", "Vous recevez l'objet : " .. Link(101) .. ".")
+W.run(1)
+check(ns.lastLootAlert and ns.lastLootAlert.link == Link(101) and not ns.lastLootAlert.later and ForeverLootUpgradeAlert:IsShown(),
+      "récompense de quête qui t'améliore : alerte à l'écran")
+ForeverLootUpgradeAlert.equip.scripts.OnClick(ForeverLootUpgradeAlert.equip)
+check(equipped == Link(101) and not ForeverLootUpgradeAlert:IsShown(), "bouton Équiper : l'objet est équipé")
+ns.lastLootAlert = nil
+W.fire("CHAT_MSG_LOOT", "Vous recevez le butin : " .. Link(106) .. ".")
+W.run(1)
+check(ns.lastLootAlert and ns.lastLootAlert.later, "objet de niveau 55 qui t'améliore : « à garder pour le niveau 55 »")
 
 -- 6. infobulle d'un objet de référence
 GameTooltip.link, GameTooltip.lines = Link(16693), {}

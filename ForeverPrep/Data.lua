@@ -14,17 +14,17 @@ ns.Data = D
 ----------------------------------------------------------------------
 D.consumables = {
   {
-    key = "healpot", need = { 5, 10 }, roles = "all",
+    key = "healpot", need = { 5, 10 }, roles = "all", noBuy = true, ah = true,     -- pas chez les marchands : hôtel des ventes, alchimistes
     items = { { 118, 1 }, { 858, 3 }, { 929, 12 }, { 1710, 21 }, { 3928, 35 }, { 13446, 45 } },
     -- pierres de soins des démonistes : comptent comme soins, jamais à acheter
     extra = { { 5512, 1 }, { 5511, 12 }, { 5509, 24 }, { 5510, 36 }, { 9421, 48 } },
   },
   {
-    key = "manapot", need = { 5, 10 }, roles = "all", mana = true,
+    key = "manapot", need = { 5, 10 }, roles = "all", mana = true, noBuy = true, ah = true,
     items = { { 2455, 5 }, { 3385, 14 }, { 3827, 22 }, { 6149, 31 }, { 13443, 41 }, { 13444, 49 } },
   },
   {
-    key = "food", need = { 20, 20 }, roles = "all",
+    key = "food", need = { 20, 20 }, roles = "all", vendor = "food",
     items = {
       { 4540, 1 }, { 4541, 5 }, { 4542, 15 }, { 4544, 25 }, { 4601, 35 }, { 8950, 45 },          -- pains
       { 117, 1 }, { 2287, 5 }, { 3770, 15 }, { 3771, 25 }, { 4599, 35 }, { 8952, 45 },           -- viandes
@@ -34,7 +34,7 @@ D.consumables = {
     extra = { { 5349, 1 }, { 1113, 5 }, { 1114, 15 }, { 1487, 25 }, { 8075, 35 }, { 8076, 45 } },  -- pain du mage
   },
   {
-    key = "water", need = { 20, 40 }, roles = "all", mana = true,
+    key = "water", need = { 20, 40 }, roles = "all", mana = true, vendor = "food",
     items = { { 159, 1 }, { 1179, 5 }, { 1205, 15 }, { 1708, 25 }, { 1645, 35 }, { 8766, 45 } },
     extra = { { 5350, 1 }, { 2288, 5 }, { 2136, 15 }, { 3772, 25 }, { 8077, 35 }, { 8078, 45 }, { 8079, 55 } },  -- eau du mage
   },
@@ -177,3 +177,11 @@ D.roleByTree = {
 D.ROLES = { "tank", "heal", "melee", "caster" }
 
 D.HEARTHSTONE = 6948
+
+-- Suivi de la minicarte à activer pour trouver un marchand (noms donnés par le jeu ; secours en clair)
+D.tracking = {
+  food = { "MINIMAP_TRACKING_VENDOR_FOOD", "MINIMAP_TRACKING_INNKEEPER", "Nourriture et boissons", "Food & Drink", "Aubergiste", "Innkeeper" },
+  reagent = { "MINIMAP_TRACKING_VENDOR_REAGENT", "Composants", "Reagents" },
+  ammo = { "MINIMAP_TRACKING_VENDOR_AMMO", "Munitions", "Ammunition" },
+  poison = { "MINIMAP_TRACKING_VENDOR_POISON", "Poisons" },
+}

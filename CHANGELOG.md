@@ -1,5 +1,13 @@
 # Journal des versions
 
+## ForeverGFX 2.4.6 / ForeverPrep 1.7 / ForeverLoot 2.3 / ForeverHeal 2.1 / ForeverMetiers 2.1.1
+- **ForeverPrep : à ton niveau, avec les prix, et « Guide-moi »** :
+  - la liste de courses ne garde que ce qui **s'achète chez un marchand** (nourriture, eau, composants, munitions, poisons), au meilleur rang utilisable à ton niveau ; les potions et élixirs (pas vendus par les marchands) indiquent « à l'hôtel des ventes ou chez un alchimiste », avec le prix d'Auctionator ; « Tout acheter » les prend quand même si le marchand en vend ;
+  - **prix** de chaque achat (prix réel relevé chez le marchand, sinon Auctionator, sinon estimation « ~ ») et **coût total** ;
+  - bouton **« Guide-moi »** : active sur la minicarte le suivi des marchands utiles (nourriture et boissons, aubergiste, composants…) et, si All The Things connaît un marchand de l'objet sur ta carte, pose un **repère vers le plus proche** de ta faction (TomTom s'il est installé, sinon le repère du jeu).
+- **ForeverLoot : alerte quand tu ramasses un objet qui t'améliore** (butin, récompense de quête, jet gagné) : en haut de l'écran, avec un son, l'icône, le gain et un bouton **« Équiper »** (hors combat) ; « à garder pour le niveau X » s'il faut monter un peu. Option dans les réglages.
+- **ForeverHeal : « Mes sacs » voyait trop peu d'améliorations** (une robe +1 Esprit +2 armure était ignorée) : le score compte maintenant aussi la régénération de mana hors combat, l'armure, l'Endurance, l'Intelligence et l'Esprit ; le même score sert à l'infobulle, aux sacs, à ForeverLoot et à l'alerte. Titre de « Mes sacs » raccourci (il débordait).
+
 ## ForeverGFX 2.4.5 / ForeverLoot 2.2
 - **ForeverLoot ne propose plus d'objets de l'autre faction** : les récompenses de quêtes réservées à la Horde (ou à l'Alliance) et le butin des boss qu'un seul camp peut combattre (indications de DungeonJournal) sont écartés, dans « À mon niveau » comme dans l'onglet Donjons.
 - **« À mon niveau » tient compte du niveau de la source** : un objet sans niveau requis (ex. collier de Hache-tripes, récompense de quête) est jugé d'après son niveau d'objet, et un objet dont le donjon ou la quête est au-dessus du niveau choisi n'est plus proposé.

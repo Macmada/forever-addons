@@ -34,7 +34,12 @@ local function GainParts(r)
     local sub = {}
     if math.abs(r.healed or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHealed, ns.Signed(r.healed)) end
     if math.abs(r.hp or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHp, ns.Signed(r.hp)) end
-    if math.abs(r.hps or 0) < 0.05 then return L.cardNoHps, table.concat(sub, " · ") end
+    if math.abs(r.armor or 0) >= 1 then sub[#sub + 1] = string.format(L.gainArmor, ns.Signed(r.armor)) end
+    if math.abs(r.hps or 0) < 0.05 then
+      -- pas de soins en plus : la régénération hors combat (Esprit) est le gain principal, sinon la survie
+      if math.abs(r.regen or 0) >= 0.01 then return ns.Signed(r.regen, 2) .. " |cffd8c8a0" .. L.cardRegen .. "|r", table.concat(sub, " · ") end
+      return L.cardNoHps, table.concat(sub, " · ")
+    end
     return ns.Signed(r.hps, 1) .. " |cffd8c8a0" .. L.cardHps .. "|r", table.concat(sub, " · ")
   end
   return ns.Signed(r.score, 1) .. " |cffd8c8a0" .. L.cardPoints .. "|r", ""
@@ -367,7 +372,7 @@ function ns.DungeonLines()
     local _, link = Info(it.id)
     if link and not (it.faction and myFaction and it.faction ~= myFaction) then
       local r = ns.Evaluate(link)
-      if r and r.wearable and (r.score or 0) > 0.3 then
+      if r and r.wearable and (r.score or 0) > ns.MIN_GAIN then
         local z = Z(it.dungeon)
         if not z.dj[it.boss] then z.dj[it.boss] = {}; table.insert(z.djOrder, it.boss) end
         table.insert(z.dj[it.boss], { link = link, eval = r, quest = it.quest, id = it.id })
@@ -403,7 +408,7 @@ function ns.DungeonLines()
       for _, e in pairs(zz.bosses[b]) do
         any = true
         local r = ns.Evaluate(e.link)
-        local good = r and r.wearable and (r.score or 0) > 0.3
+        local good = r and r.wearable and (r.score or 0) > ns.MIN_GAIN
         local card = CardFrom({ link = e.link, id = ns.ItemID(e.link), eval = good and r or nil, src = "loot", where = zname .. " — " .. bname },
                               nil, { "|cffa0a0a0×" .. e.n .. "|r" })
         if not good then card.gain, card.gainSub = "", "" end
@@ -438,12 +443,73 @@ end
 ----------------------------------------------------------------------
 -- Fenêtre, options
 ----------------------------------------------------------------------
+----------------------------------------------------------------------
+-- Alerte « amélioration ramassée » : en haut de l'écran, icône, gain, bouton Équiper (hors combat)
+----------------------------------------------------------------------
+local alert
+function ns.ShowLootAlert(link, r, later)
+  if not alert then
+    alert = CreateFrame("Frame", "ForeverLootUpgradeAlert", UIParent)
+    alert:SetSize(420, 64)
+    alert:SetPoint("TOP", 0, -120)
+    alert:SetFrameStrata("HIGH")
+    K.Panel(alert, 0.92)
+    alert.iconFrame = CreateFrame("Button", nil, alert)
+    alert.iconFrame:SetSize(44, 44)
+    alert.iconFrame:SetPoint("LEFT", 10, 0)
+    alert.icon = alert.iconFrame:CreateTexture(nil, "ARTWORK")
+    alert.icon:SetPoint("TOPLEFT", 1, -1)
+    alert.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+    alert.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    alert.qborder = K.Border(alert.iconFrame, 1, 1, 1, 1, "OVERLAY")
+    alert.iconFrame:SetScript("OnEnter", function(self)
+      if alert.link then GameTooltip:SetOwner(self, "ANCHOR_BOTTOM"); pcall(GameTooltip.SetHyperlink, GameTooltip, alert.link); GameTooltip:Show() end
+    end)
+    alert.iconFrame:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    alert.title = alert:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    alert.title:SetPoint("TOPLEFT", alert.iconFrame, "TOPRIGHT", 10, -2)
+    K.TitleFont(alert.title, 15, "GameFontNormal")
+    alert.name = alert:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    alert.name:SetPoint("TOPLEFT", alert.title, "BOTTOMLEFT", 0, -3)
+    alert.gain = alert:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    alert.gain:SetPoint("TOPLEFT", alert.name, "BOTTOMLEFT", 0, -3)
+    alert.equip = CreateFrame("Button", nil, alert, "UIPanelButtonTemplate")
+    alert.equip:SetSize(80, 22)
+    alert.equip:SetPoint("RIGHT", -10, 0)
+    alert.equip:SetText(L.alertEquip)
+    alert.equip:SetScript("OnClick", function()
+      if InCombatLockdown() then return Print(L.alertCombat) end
+      if alert.link and EquipItemByName then EquipItemByName(alert.link) end
+      alert:Hide()
+    end)
+    alert:EnableMouse(true)
+    alert:SetScript("OnMouseUp", function(_, button) if button == "RightButton" then alert:Hide() end end)
+  end
+  local name, _, quality, _, _, _, _, _, _, icon = Info(link)
+  local _, _, _, _, iconI = Instant(link)
+  local q = QUALITY[quality or 1] or QUALITY[1]
+  for _, t in ipairs(alert.qborder) do t:SetColorTexture(q[1], q[2], q[3], 1) end
+  alert.link = link
+  alert.icon:SetTexture(icon or iconI)
+  alert.title:SetText(later and string.format(L.alertLater, r.minLevel) or L.alertTitle)
+  alert.title:SetTextColor(later and 1 or 0.25, later and 0.75 or 0.85, later and 0.3 or 0.25)
+  alert.name:SetText(link or name or "?")
+  local gain, sub = GainParts(r)
+  alert.gain:SetText(gain .. ((sub ~= "") and ("  ·  " .. sub) or ""))
+  alert.equip:SetShown(not later)
+  alert:Show()
+  if PlaySound then pcall(PlaySound, (SOUNDKIT and SOUNDKIT.READY_CHECK) or 8960) end
+  Print(later and L.alertChatLater or L.alertChat, link, gain)
+  alert.shownAt = GetTime()
+  C_Timer.After(15, function() if alert.shownAt and GetTime() - alert.shownAt >= 14.5 then alert:Hide() end end)
+end
+
 local opt
 local function ShowOptions()
   if not opt then
     opt = CreateFrame("Frame", "ForeverLootOptionsFrame", ui, "BasicFrameTemplateWithInset")
     ns.SafeClose(opt)
-    opt:SetSize(420, 180)
+    opt:SetSize(420, 210)
     opt:SetPoint("TOPRIGHT", ui, "TOPRIGHT", -10, -70)
     opt:SetFrameStrata("DIALOG")
     K.Dress(opt, "Interface\\Icons\\INV_Misc_Gear_01", L.optTitle)
@@ -463,6 +529,7 @@ local function ShowOptions()
     C(L.optQuest, "questHelp")
     C(L.optTip, "tooltipHint")
     C(L.optHigher, "higher")
+    C(L.optLootAlert, "lootAlert")
     opt:Hide()
   end
   opt:SetShown(not opt:IsShown())
@@ -596,7 +663,7 @@ local function OnTooltipItem(tt)
   -- le prêtre a déjà le détail de ForeverHeal dans l'infobulle : ligne de gain seulement pour les autres classes
   if not (class == "PRIEST" and _G.ForeverHealAPI) then
     local r = ns.Evaluate(link)
-    if r and r.wearable and (r.score or 0) > 0.3 then tt:AddLine(string.format(L.tipGain, ns.GainText(r)), 0.4, 0.85, 0.4, true) end
+    if r and r.wearable and (r.score or 0) > ns.MIN_GAIN then tt:AddLine(string.format(L.tipGain, ns.GainText(r)), 0.4, 0.85, 0.4, true) end
   end
 end
 ns.OnTooltipItem = OnTooltipItem

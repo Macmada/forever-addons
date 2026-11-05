@@ -446,12 +446,18 @@ function ns.PanelRaw()
 end
 
 function ns.UpgradesRaw()
-  local out = { H(L.upTitle) }
+  local out = { H(L.upTitle), "|cffa0a0a0" .. L.upIntro .. "|r" }
   local list = ns.BagUpgrades()
   if #list == 0 then out[#out + 1] = L.upNone end
   for _, u in ipairs(list) do
     local cur = GetInventoryItemLink("player", u.slot)
+    local regen = (u.cmp.after.regenOut or 0) - (u.cmp.before.regenOut or 0)
+    local extra = {}
+    if math.abs(regen) >= 0.01 then extra[#extra + 1] = string.format(L.upRegen, Signed(regen, 2)) end
+    if (u.d.sta or 0) ~= 0 then extra[#extra + 1] = string.format(L.upSta, Signed(u.d.sta)) end
+    if (u.d.armor or 0) ~= 0 then extra[#extra + 1] = string.format(L.upArmor, Signed(u.d.armor)) end
     out[#out + 1] = string.format(L.upLine, u.link, cur or L.upEmpty, Signed(u.hps, 1), Signed(u.healed))
+                    .. (#extra > 0 and (", " .. table.concat(extra, ", ")) or "")
   end
   return table.concat(out, "\n")
 end

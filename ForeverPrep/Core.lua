@@ -169,18 +169,42 @@ local function Pool(list, extras, level)
   return best, have, any
 end
 
-local function CountRow(label, best, have, need, optional, noBuy)
+-- Prix d'un objet : relevé chez un marchand, sinon Auctionator (marchand puis hôtel des ventes), sinon estimation
+-- (4 × prix de revente). Renvoie prix, et « estimé » si c'est l'estimation.
+function ns.Price(id, ah)
+  if not ah and ns.db and ns.db.vendorPrices and ns.db.vendorPrices[id] then return ns.db.vendorPrices[id] end
+  local A = _G.Auctionator and _G.Auctionator.API and _G.Auctionator.API.v1
+  if A then
+    local f = ah and A.GetAuctionPriceByItemID or A.GetVendorPriceByItemID
+    if f then
+      local ok, p = pcall(f, "ForeverPrep", id)
+      if ok and p and p > 0 then return p end
+    end
+  end
+  if not ah then
+    local sell = select(11, ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(id))
+    if sell and sell > 0 then return sell * 4, true end
+  end
+end
+
+local function CountRow(label, best, have, need, optional, noBuy, vendor, ah)
   local st = Status(have, need, optional)
   local row = { status = st, icon = best and best.icon, have = have, need = need }
   local name = best and best.name or "?"   -- meilleur rang utilisable (à égalité de niveau : le dernier de la liste)
   if st == "ok" then
     row.text = string.format(L.rowOk, label, have, need)
+  elseif ah and best then
+    -- pas chez les marchands : hôtel des ventes ou alchimiste, avec le prix d'Auctionator si connu
+    local p = ns.Price(best.id, true)
+    row.text = string.format(L.rowMissingAH, label, have, need, need - have, best.name)
+               .. (p and string.format(L.priceEach, ns.FormatMoney(p)) or "")
+    row.ahID, row.ahQty = best.id, need - have
   elseif noBuy or not best then
     row.text = string.format(L.rowMissingNoBuy, label, have, need)
     if st == "bad" then row.status = "warn" end                     -- impossible à acheter : à faire, pas bloquant
   else
     row.text = string.format(L.rowMissing, label, have, need, need - have, name)
-    row.buyID, row.buyQty, row.buyName = best.id, need - have, best.name
+    row.buyID, row.buyQty, row.buyName, row.vendor = best.id, need - have, best.name, vendor
   end
   row.itemID = best and best.id
   return row
@@ -210,7 +234,7 @@ function ns.Analyze(ctx, roleOverride)
       local best, have, any = Pool(cat.items, cat.extra, level)
       -- rien d'utilisable à ton niveau (ex. potions de mana avant le niveau 5) : pas de ligne
       if any and (best or have > 0) then
-        cons.rows[#cons.rows + 1] = CountRow(L["cat_" .. cat.key], best, have, cat.need[ci], cat.optional, cat.noBuy)
+        cons.rows[#cons.rows + 1] = CountRow(L["cat_" .. cat.key], best, have, cat.need[ci], cat.optional, cat.noBuy, cat.vendor, cat.ah)
       end
     end
   end
@@ -218,7 +242,7 @@ function ns.Analyze(ctx, roleOverride)
   if ctx == "raid" or level >= 50 then
     local best, have = Pool(D.elixirs[role], nil, level)
     if best then
-      cons.rows[#cons.rows + 1] = CountRow(L.cat_elixir, best, have, D.elixirNeed[ci], ctx ~= "raid")
+      cons.rows[#cons.rows + 1] = CountRow(L.cat_elixir, best, have, D.elixirNeed[ci], ctx ~= "raid", true, nil, true)
     end
   end
 
@@ -229,13 +253,13 @@ function ns.Analyze(ctx, roleOverride)
     if need > 0 and ns.KnowsAny(r.spells) and not (r.unless and ns.KnowsAny(r.unless)) then
       local it = ns.Item(r.item)
       if it then
-        reag.rows[#reag.rows + 1] = CountRow(it.name, it, ns.Count(r.item), need)
+        reag.rows[#reag.rows + 1] = CountRow(it.name, it, ns.Count(r.item), need, nil, nil, "reagent")
       end
     end
   end
   if class == "ROGUE" and level >= 20 then
     local best, have = Pool(D.poisons, nil, level)
-    if best then reag.rows[#reag.rows + 1] = CountRow(L.cat_poison, best, have, D.poisonNeed[ci]) end
+    if best then reag.rows[#reag.rows + 1] = CountRow(L.cat_poison, best, have, D.poisonNeed[ci], nil, nil, "poison") end
   end
   if class == "HUNTER" then
     local link = GetInventoryItemLink("player", 18)
@@ -244,7 +268,7 @@ function ns.Analyze(ctx, roleOverride)
       local kind = (classID == 2 and (subID == 2 or subID == 18)) and "arrow" or ((classID == 2 and subID == 3) and "bullet") or nil
       if kind then
         local best, have = Pool(D.ammo[kind], nil, level)
-        if best then reag.rows[#reag.rows + 1] = CountRow(L["cat_" .. kind], best, have, D.ammoNeed[ci]) end
+        if best then reag.rows[#reag.rows + 1] = CountRow(L["cat_" .. kind], best, have, D.ammoNeed[ci], nil, nil, "ammo") end
       end
     end
   end
@@ -379,7 +403,15 @@ function ns.Analyze(ctx, roleOverride)
     for _, r in ipairs(s.rows) do
       if RANK[r.status] > RANK[worst] then worst = r.status end
       if r.buyID and r.buyQty and r.buyQty > 0 then
-        res.shopping[#res.shopping + 1] = { id = r.buyID, qty = r.buyQty, name = r.buyName, icon = r.icon }
+        local p, est = ns.Price(r.buyID)
+        res.shopping[#res.shopping + 1] = { id = r.buyID, qty = r.buyQty, name = r.buyName, icon = r.icon, vendor = r.vendor,
+                                            price = p, estimated = est }
+        if p then res.shopCost = (res.shopCost or 0) + p * r.buyQty end
+      end
+      -- objets de l'hôtel des ventes : achetés quand même si le marchand ouvert en vend
+      if r.ahID and r.ahQty and r.ahQty > 0 then
+        res.ahWanted = res.ahWanted or {}
+        res.ahWanted[#res.ahWanted + 1] = { id = r.ahID, qty = r.ahQty }
       end
     end
   end
@@ -457,7 +489,17 @@ end
 handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, SoonRefresh) end
 handlers.UPDATE_INVENTORY_DURABILITY = function() SoonRefresh() end
 handlers.GROUP_ROSTER_UPDATE = function() SoonRefresh() end
-handlers.MERCHANT_SHOW = function() if db.merchant and ns.OnMerchant then ns.OnMerchant() end end
+handlers.MERCHANT_SHOW = function()
+  -- prix réels des marchands, gardés pour la liste de courses
+  db.vendorPrices = db.vendorPrices or {}
+  for i = 1, (GetMerchantNumItems and GetMerchantNumItems() or 0) do
+    local link = GetMerchantItemLink and GetMerchantItemLink(i)
+    local id = link and tonumber(link:match("item:(%d+)"))
+    local _, _, price, batch, _, _, _, extended = GetMerchantItemInfo(i)
+    if id and price and price > 0 and not extended then db.vendorPrices[id] = price / math.max(batch or 1, 1) end
+  end
+  if db.merchant and ns.OnMerchant then ns.OnMerchant() end
+end
 handlers.MERCHANT_CLOSED = function() if ns.OnMerchantClosed then ns.OnMerchantClosed() end end
 handlers.BAG_UPDATE_DELAYED = SoonRefresh
 handlers.PLAYER_REGEN_ENABLED = function()

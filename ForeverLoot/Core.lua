@@ -11,6 +11,9 @@ function ns.Print(fmt, ...)
   print("|cffe6b84dForeverLoot|r " .. msg)
 end
 
+-- Gain minimal pour parler d'amélioration (même seuil que ForeverHeal)
+ns.MIN_GAIN = 0.1
+
 local Instant = function(x) return ((C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant)(x) end
 local Info = function(x) return ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(x) end
 local function ItemID(link) return link and tonumber(link:match("item:(%d+)")) end
@@ -71,6 +74,7 @@ function ns.Evaluate(link)
       local e = api.Evaluate(link)
       if e then
         r.method, r.slot, r.score, r.hps, r.healed, r.hp = "heal", e.slot, e.score, e.hps, e.healed, e.hp
+        r.regen, r.armor = e.regen, e.armor
       end
     end
     if not r.method then
@@ -103,6 +107,8 @@ function ns.GainText(r)
     if math.abs(r.hps or 0) >= 0.05 then parts[#parts + 1] = string.format(L.gainHps, ns.Signed(r.hps, 1)) end
     if math.abs(r.healed or 0) >= 1 then parts[#parts + 1] = string.format(L.gainHealed, ns.Signed(r.healed)) end
     if math.abs(r.hp or 0) >= 1 then parts[#parts + 1] = string.format(L.gainHp, ns.Signed(r.hp)) end
+    if math.abs(r.regen or 0) >= 0.01 then parts[#parts + 1] = string.format(L.gainRegen, ns.Signed(r.regen, 2)) end
+    if math.abs(r.armor or 0) >= 1 then parts[#parts + 1] = string.format(L.gainArmor, ns.Signed(r.armor)) end
     return #parts > 0 and table.concat(parts, ", ") or L.gainNone
   end
   return string.format(L.gainPoints, ns.Signed(r.score, 1))
@@ -169,7 +175,7 @@ function ns.RollAdvice(link)
   if not r then return "greed", L.adviceNotGear end
   if not r.wearable then return "greed", L.adviceNotWearable end
   if (r.minLevel or 0) > UnitLevel("player") + 5 then return "greed", string.format(L.adviceTooHigh, r.minLevel) end
-  if (r.score or 0) > 0.3 then return "need", ns.GainText(r) end
+  if (r.score or 0) > ns.MIN_GAIN then return "need", ns.GainText(r) end
   return "greed", L.adviceNoGain
 end
 
@@ -178,7 +184,7 @@ function ns.QuestChoice(links)
   local best, bestScore, dear, dearPrice
   for i, link in ipairs(links) do
     local r = link and ns.Evaluate(link)
-    if r and r.wearable and (r.score or 0) > 0.3 and (r.minLevel or 0) <= UnitLevel("player") and (not bestScore or r.score > bestScore) then
+    if r and r.wearable and (r.score or 0) > ns.MIN_GAIN and (r.minLevel or 0) <= UnitLevel("player") and (not bestScore or r.score > bestScore) then
       best, bestScore = i, r.score
     end
     local price = link and select(11, Info(link)) or 0
@@ -198,6 +204,7 @@ local function InitDB()
   db.version = db.version or 1
   db.seen = db.seen or {}
   if db.rollHelp == nil then db.rollHelp = true end
+  if db.lootAlert == nil then db.lootAlert = true end
   if db.questHelp == nil then db.questHelp = true end
   if db.tooltipHint == nil then db.tooltipHint = true end
   if db.higher == nil then db.higher = true end
@@ -243,11 +250,51 @@ handlers.START_LOOT_ROLL = function(rollID)
   if Where() then ns.RecordDungeonLoot(Where(), lastBoss or "?", link) end
   if db.rollHelp and ns.ShowRollAdvice then ns.ShowRollAdvice(rollID, link) end
 end
+-- Messages « tu reçois » du jeu (butin, objet poussé par une quête, objet créé) transformés en motifs
+local selfPatterns
+local function SelfPatterns()
+  if selfPatterns then return selfPatterns end
+  selfPatterns = {}
+  local fr = GetLocale() == "frFR"
+  local defaults = {
+    LOOT_ITEM_SELF = fr and "Vous recevez le butin : %s." or "You receive loot: %s.",
+    LOOT_ITEM_SELF_MULTIPLE = fr and "Vous recevez le butin : %sx%d." or "You receive loot: %sx%d.",
+    LOOT_ITEM_PUSHED_SELF = fr and "Vous recevez l'objet : %s." or "You receive item: %s.",
+    LOOT_ITEM_PUSHED_SELF_MULTIPLE = fr and "Vous recevez l'objet : %sx%d." or "You receive item: %sx%d.",
+  }
+  for key, def in pairs(defaults) do
+    local t = _G[key] or def
+    t = t:gsub("([%(%)%.%[%]%*%+%-%?%^%$])", "%%%1"):gsub("%%s", "(.+)"):gsub("%%d", "%%d+")
+    selfPatterns[#selfPatterns + 1] = "^" .. t
+  end
+  return selfPatterns
+end
+function ns.IsSelfLoot(msg)
+  for _, p in ipairs(SelfPatterns()) do if msg:find(p) then return true end end
+  return false
+end
+
+-- Objet reçu : amélioration pour toi ? (une seule alerte par objet en 15 s)
+local recentAlerts = {}
+function ns.CheckLootUpgrade(link)
+  local id = ItemID(link)
+  if not (db and db.lootAlert and id) then return end
+  if recentAlerts[id] and GetTime() - recentAlerts[id] < 15 then return end
+  local r = ns.Evaluate(link)
+  if not (r and r.wearable and (r.score or 0) > ns.MIN_GAIN) then return end
+  recentAlerts[id] = GetTime()
+  local later = (r.minLevel or 0) > UnitLevel("player")
+  ns.lastLootAlert = { link = link, eval = r, later = later }
+  if ns.ShowLootAlert then ns.ShowLootAlert(link, r, later) end
+end
+
 handlers.CHAT_MSG_LOOT = function(msg)
   local link = msg and msg:match("(|c[^|]*|Hitem:.-|h.-|h|r)")
   if link then
     Remember(link, "chat", Where())
     if Where() then ns.RecordDungeonLoot(Where(), lastBoss or "?", link) end
+    -- c'est toi qui le reçois : amélioration ? (petit délai : l'objet arrive dans les sacs)
+    if ns.IsSelfLoot(msg) then C_Timer.After(0.5, function() ns.CheckLootUpgrade(link) end) end
   end
 end
 local function QuestLinks()
@@ -467,7 +514,7 @@ function ns.BiS(limit, maxLevel)
         out[slot] = out[slot] or { items = {}, refs = {} }
         c.eval = r
         if c.ref then table.insert(out[slot].refs, c) end
-        if c.src ~= "equipped" and (r.score or 0) > 0.3 and r.wearable then table.insert(out[slot].items, c) end
+        if c.src ~= "equipped" and (r.score or 0) > ns.MIN_GAIN and r.wearable then table.insert(out[slot].items, c) end
       end
     end
   end

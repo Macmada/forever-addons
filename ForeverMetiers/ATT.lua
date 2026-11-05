@@ -166,6 +166,39 @@ function A.Recipes(skillID)
   return list
 end
 
+-- Marchands qui vendent un objet, avec leurs positions : { { name, mapID, x, y } } (coordonnées 0-100, carte d'ATT = uiMapID).
+-- Seulement ta faction ; vide si ATT ne le connaît pas (beaucoup de consommables ne sont pas suivis par ATT).
+function A.Vendors(itemID)
+  local out = {}
+  for _, g in ipairs(A.Search("itemID", itemID)) do
+    local p, n = Get(g, "parent"), 0
+    while p and n < 4 do
+      n = n + 1
+      if Get(p, "npcID") or Get(p, "creatureID") then
+        local r = Get(p, "r")
+        if not (r and r ~= MyR()) then
+          local name = Clean(Get(p, "text") or Get(p, "name")) or "?"
+          local coords = Get(p, "coords")
+          if type(coords) == "table" then
+            for mapID, list in pairs(coords) do
+              if type(mapID) == "number" and type(list) == "table" then
+                for _, c in ipairs(list) do
+                  if type(c) == "table" and c[1] and c[2] then out[#out + 1] = { name = name, mapID = mapID, x = c[1], y = c[2] } end
+                end
+              elseif type(list) == "table" and list[1] and list[2] and list[3] then      -- autre forme : { x, y, mapID }
+                out[#out + 1] = { name = name, mapID = list[3], x = list[1], y = list[2] }
+              end
+            end
+          end
+        end
+        break
+      end
+      p = Get(p, "parent")
+    end
+  end
+  return out
+end
+
 function A.Diag(add)
   local a = _G.ATTC
   if not a then add("All The Things : absent"); return end

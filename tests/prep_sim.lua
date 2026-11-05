@@ -159,7 +159,7 @@ _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
 _G.IsAddOnLoaded = function() return true end
 _G.ChatFontNormal = _G.ChatFontNormal or {}
 local ns = {}
-for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "Tour", "Widgets", "UI" }) do
+for _, f in ipairs({ "Locale", "Diag", "ATT", "Data", "Core", "Tour", "Widgets", "UI" }) do
   assert(loadfile("ForeverPrep/" .. f .. ".lua"))("ForeverPrep", ns)
 end
 local evf = ns.eventFrame
@@ -191,8 +191,8 @@ local r = ns.Analyze("dungeon")
 print("\n-- Mage 38, donjon"); Dump(r)
 check(r.role == "caster", "rôle deviné par les talents (Arcanes -> dégâts magiques)")
 local hp = Find(r, ns.L.cat_healpot)
-check(hp and hp.status == "warn" and hp.text:find("Potion de soins excellente", 1, true) and hp.buyQty == 2,
-      "potions de soins : 3/5, achète 2 × la meilleure à son niveau (excellente, niv. 35), pas la majeure (niv. 45)")
+check(hp and hp.status == "warn" and hp.text:find("Potion de soins excellente", 1, true) and hp.ahQty == 2 and not hp.buyID,
+      "potions de soins : 3/5, 2 × la meilleure à son niveau (excellente, niv. 35) à l'hôtel des ventes (pas chez un marchand)")
 local water = Find(r, ns.L.cat_water)
 check(water and water.status == "warn" and water.buyQty == 8 and water.text:find("Jus de lunebaie", 1, true), "boisson : 12/20 (eau du mage comptée), achète 8 jus de lunebaie (niv. 35)")
 check(Find(r, ns.L.cat_food).status == "ok", "nourriture : 25/20, rien à acheter")
@@ -256,6 +256,35 @@ local got = {}
 for _, b in ipairs(bought) do got[b[1]] = (got[b[1]] or 0) + b[2] end
 check(got[3928] == 5 and got[1645] == 20 and got[4601] == 20, "achats : 5 potions (niv. 35), 20 jus de lunebaie, 20 pains (par piles de 20)")
 check(got[3030] == nil, "pas de flèches pour un mage")
+
+-- 6b. prix et « Guide-moi » (05/11/2026) : prix relevé chez le marchand, suivi de la minicarte, repère vers le plus proche
+Char({ level = 10, class = "MAGE", talents = { 31 }, known = {}, bags = {}, money = 500000 })
+ForeverPrepDB.vendorPrices = { [1179] = 25 }
+local rG = ns.Analyze("dungeon")
+local milk
+for _, it in ipairs(rG.shopping) do if it.id == 1179 then milk = it end end
+check(milk and milk.price == 25 and milk.vendor == "food" and rG.shopCost and rG.shopCost >= 25 * milk.qty,
+      "liste de courses : lait glacé (niv. 5) au prix relevé chez le marchand, coût total")
+local tracked = {}
+_G.MINIMAP_TRACKING_VENDOR_FOOD = "Nourriture et boissons"
+_G.C_Minimap = { GetNumTrackingTypes = function() return 3 end,
+  GetTrackingInfo = function(i) return ({ { name = "Trouver des herbes" }, { name = "Nourriture et boissons", active = false }, { name = "Aubergiste" } })[i] end,
+  SetTracking = function(i, on) tracked[i] = on end }
+_G.C_Map = { GetBestMapForUnit = function() return 1426 end,
+  GetPlayerMapPosition = function() return { GetXY = function() return 0.40, 0.50 end } end }
+local wp
+_G.TomTom = { AddWaypoint = function(_, m, x, y, o) wp = { m, x, y, o.title } end }
+_G.ATTC = { SearchForField = function(field, id)
+  if field == "itemID" and id == 1179 then
+    return { { itemID = 1179, parent = { npcID = 1, text = "Marchand lointain", coords = { [1426] = { { 90, 90 } } } } },
+             { itemID = 1179, parent = { npcID = 2, text = "Aubergiste proche", coords = { [1426] = { { 42, 51 } } } } },
+             { itemID = 1179, parent = { npcID = 3, text = "Marchand de la Horde", r = 1, coords = { [1426] = { { 40, 50 } } } } } }
+  end
+end }
+ns.GuideToVendor()
+check(tracked[2] == true and tracked[3] == true and not tracked[1], "Guide-moi : suivi « Nourriture et boissons » et « Aubergiste » activé sur la minicarte")
+check(wp and wp[1] == 1426 and wp[4] == "Aubergiste proche", "Guide-moi : repère TomTom vers le marchand le plus proche de ta faction")
+_G.ATTC, _G.TomTom, _G.C_Minimap, _G.C_Map = nil, nil, nil, nil
 
 -- 7. Ouverture automatique
 local shown = 0

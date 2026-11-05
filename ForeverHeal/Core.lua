@@ -466,6 +466,19 @@ local function Wearable(link)
 end
 ns.Wearable = Wearable
 
+-- Score d'un changement de caractéristiques, commun à l'infobulle, aux sacs et aux autres addons : soins par seconde et
+-- soins avant d'être à sec d'abord, puis régénération hors combat (Esprit : compte beaucoup à bas niveau), Endurance,
+-- armure, Intelligence et Esprit (petits poids pour que tout vrai gain compte), avec leurs pertes. 05/11/2026 : une robe
+-- +1 Esprit +2 armure n'était pas vue comme une amélioration.
+function ns.Score(before, after, d)
+  local hps = after.hps - before.hps
+  local healed = (after.healedBeforeOom or 0) - (before.healedBeforeOom or 0)
+  local regen = (after.regenOut or 0) - (before.regenOut or 0)
+  return hps * 30 + healed / 100 + regen * 2 + (d.sta or 0) * 0.05 + (d.armor or 0) * 0.01
+         + (d.int or 0) * 0.02 + (d.spi or 0) * 0.02 + (d.heal or 0) * 0.02 + (d.mp5 or 0) * 0.05
+end
+ns.MIN_UPGRADE = 0.1
+
 function ns.BagUpgrades()
   local best = {}
   for bag = 0, 4 do
@@ -479,8 +492,8 @@ function ns.BagUpgrades()
         if cmp then
           local hps = cmp.after.hps - cmp.before.hps
           local healed = (cmp.after.healedBeforeOom or 0) - (cmp.before.healedBeforeOom or 0)
-          local score = hps * 30 + healed / 100 + (cmp.d.sta or 0) * 0.05
-          if score > 0.5 and (not best[cmp.slot] or score > best[cmp.slot].score) then
+          local score = ns.Score(cmp.before, cmp.after, cmp.d)
+          if score > ns.MIN_UPGRADE and (not best[cmp.slot] or score > best[cmp.slot].score) then
             best[cmp.slot] = { link = link, slot = cmp.slot, hps = hps, healed = healed, d = cmp.d, score = score, cmp = cmp }
           end
         end
@@ -754,7 +767,7 @@ _G.ForeverHealAPI = {
       local hps = after.hps - before.hps
       local healed = (after.healedBeforeOom or 0) - (before.healedBeforeOom or 0)
       return { hps = hps, healed = healed, hp = (d.sta or 0) * rates.hpPerSta + (d.hp or 0),
-               score = hps * 30 + healed / 100 + (d.sta or 0) * 0.05 }
+               regen = (after.regenOut or 0) - (before.regenOut or 0), score = ns.Score(before, after, d) }
     end)
     return ok and r or nil
   end,
@@ -764,6 +777,7 @@ _G.ForeverHealAPI = {
     local hps = cmp.after.hps - cmp.before.hps
     local healed = (cmp.after.healedBeforeOom or 0) - (cmp.before.healedBeforeOom or 0)
     local hp = (cmp.d.sta or 0) * ns.Rates(ns.Snapshot()).hpPerSta + (cmp.d.hp or 0)
-    return { slot = cmp.slot, hps = hps, healed = healed, hp = hp, score = hps * 30 + healed / 100 + (cmp.d.sta or 0) * 0.05 }
+    return { slot = cmp.slot, hps = hps, healed = healed, hp = hp, regen = (cmp.after.regenOut or 0) - (cmp.before.regenOut or 0),
+             armor = cmp.d.armor or 0, score = ns.Score(cmp.before, cmp.after, cmp.d) }
   end,
 }

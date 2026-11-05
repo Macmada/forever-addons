@@ -5,6 +5,7 @@ local Print = ns.Print
 local W, H = 600, 660
 local COLORS = { ok = { 0.25, 0.8, 0.3 }, info = { 0.6, 0.6, 0.6 }, warn = { 1, 0.6, 0.1 }, bad = { 0.95, 0.2, 0.2 } }
 local K = ns.Kit
+local D = ns.Data
 local ui
 local state = { ctx = nil, reason = nil }
 
@@ -190,7 +191,13 @@ local function Render(res)
   if #res.shopping == 0 then
     Row({ status = "ok", text = L.shopEmpty })
   else
-    for _, it in ipairs(res.shopping) do Row({ icon = it.icon, itemID = it.id, text = string.format(L.shopLine, it.qty, it.name) }, true) end
+    for _, it in ipairs(res.shopping) do
+      local price = it.price and (" |cffffd100" .. ns.FormatMoney(it.price * it.qty) .. "|r |cffa0a0a0(" .. (it.estimated and "~" or "")
+                    .. string.format(L.priceUnit, ns.FormatMoney(it.price)) .. ")|r") or ""
+      local where = it.vendor and ("  |cff66ccff" .. (L["vendor_" .. it.vendor] or "") .. "|r") or ""
+      Row({ icon = it.icon, itemID = it.id, text = string.format(L.shopLine, it.qty, it.name) .. price .. where }, true)
+    end
+    if res.shopCost then Row({ text = "|cffffd100" .. string.format(L.shopTotal, ns.FormatMoney(res.shopCost)) .. "|r" }, true) end
     Row({ text = "|cffa0a0a0" .. L.shopHint .. "|r" }, true)
   end
   ui.content:SetHeight(-y + 8)
@@ -290,6 +297,8 @@ local function CreateUI()
   ui.optBtn:SetPoint("RIGHT", ui.helpBtn, "LEFT", -22, 0)
   ui.refreshBtn = K.Action(ui, "Interface\\Icons\\Spell_Holy_Renew", L.refresh, L.tipRefresh, function() ns.Refresh() end)
   ui.refreshBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -22, 0)
+  ui.guideBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Map_01", L.guideLabel, L.tipGuide, function() ns.GuideToVendor() end)
+  ui.guideBtn:SetPoint("RIGHT", ui.refreshBtn, "LEFT", -22, 0)
 
   -- la fiche, sur fond sombre encadré d'or
   local sheet = CreateFrame("Frame", nil, ui)
@@ -313,6 +322,99 @@ local function CreateUI()
     if not ns.db.tourDone then C_Timer.After(0.3, function() if ui:IsShown() then ns.RunTour() end end) end
   end)
   return ui
+end
+
+----------------------------------------------------------------------
+-- « Guide-moi » : suivi des marchands sur la minicarte, et repère vers le plus proche si All The Things le connaît
+----------------------------------------------------------------------
+local function TrackingCount()
+  if C_Minimap and C_Minimap.GetNumTrackingTypes then return C_Minimap.GetNumTrackingTypes() end
+  return GetNumTrackingTypes and GetNumTrackingTypes() or 0
+end
+local function TrackingInfo(i)
+  if C_Minimap and C_Minimap.GetTrackingInfo then
+    local a, _, c = C_Minimap.GetTrackingInfo(i)
+    if type(a) == "table" then return a.name, a.active end
+    return a, c
+  end
+  if GetTrackingInfo then local n, _, active = GetTrackingInfo(i); return n, active end
+end
+local function SetTrack(i)
+  if C_Minimap and C_Minimap.SetTracking then pcall(C_Minimap.SetTracking, i, true)
+  elseif SetTracking then pcall(SetTracking, i, true) end
+end
+
+-- Active le suivi des marchands utiles ; renvoie les noms activés
+function ns.EnableTracking(kinds)
+  local wanted = {}
+  for kind in pairs(kinds) do
+    for _, key in ipairs(D.tracking[kind] or {}) do
+      local name = _G[key] or key
+      if type(name) == "string" then wanted[name:lower()] = true end
+    end
+  end
+  local on = {}
+  for i = 1, TrackingCount() do
+    local name, active = TrackingInfo(i)
+    if type(name) == "string" and wanted[name:lower()] then
+      if not active then SetTrack(i) end
+      on[#on + 1] = name
+    end
+  end
+  return on
+end
+
+local function PlayerPos()
+  if not (C_Map and C_Map.GetBestMapForUnit) then return nil end
+  local map = C_Map.GetBestMapForUnit("player")
+  local pos = map and C_Map.GetPlayerMapPosition and C_Map.GetPlayerMapPosition(map, "player")
+  if not pos then return map end
+  local x, y = pos:GetXY()
+  return map, (x or 0) * 100, (y or 0) * 100
+end
+
+local function Waypoint(v)
+  local TT = _G.TomTom
+  if TT and TT.AddWaypoint then
+    local ok = pcall(TT.AddWaypoint, TT, v.mapID, v.x / 100, v.y / 100, { title = v.name, persistent = false })
+    if ok then return "TomTom" end
+  end
+  if C_Map and C_Map.SetUserWaypoint and UiMapPoint and UiMapPoint.CreateFromCoordinates then
+    local ok = pcall(C_Map.SetUserWaypoint, UiMapPoint.CreateFromCoordinates(v.mapID, v.x / 100, v.y / 100))
+    if ok then
+      if C_SuperTrack and C_SuperTrack.SetSuperTrackedUserWaypoint then pcall(C_SuperTrack.SetSuperTrackedUserWaypoint, true) end
+      return "map"
+    end
+  end
+end
+
+function ns.GuideToVendor()
+  -- analyse à jour hors combat ; en combat, la dernière (le jeu cache alors une partie des informations)
+  local res = (InCombatLockdown and InCombatLockdown() and ui and ui.current) or ns.Analyze()
+  if not res or #res.shopping == 0 then return Print(L.guideNothing) end
+  local kinds = {}
+  for _, it in ipairs(res.shopping) do if it.vendor then kinds[it.vendor] = true end end
+  local on = ns.EnableTracking(kinds)
+  -- marchand le plus proche sur ta carte (All The Things)
+  local map, px, py = PlayerPos()
+  local best, bestD
+  if ns.ATT and ns.ATT.Available() then
+    for _, it in ipairs(res.shopping) do
+      for _, v in ipairs(ns.ATT.Vendors(it.id)) do
+        if v.mapID == map and px then
+          local d = (v.x - px) ^ 2 + (v.y - py) ^ 2
+          if not bestD or d < bestD then best, bestD = v, d end
+        end
+      end
+    end
+  end
+  ns.lastGuide = { tracking = on, vendor = best }
+  if best then
+    local how = Waypoint(best)
+    Print(L.guideVendor, best.name, best.x, best.y, how == "TomTom" and L.guideTomTom or (how and L.guideMap or ""))
+  end
+  if #on > 0 then Print(L.guideTracking, table.concat(on, ", "))
+  elseif not best then Print(L.guideNone) end
 end
 
 ----------------------------------------------------------------------
@@ -479,6 +581,7 @@ local function Offers()
   local res = ns.Analyze()
   local want = {}
   for _, s in ipairs(res.shopping) do want[s.id] = s end
+  for _, s in ipairs(res.ahWanted or {}) do want[s.id] = want[s.id] or s end
   local offers = {}
   for i = 1, GetMerchantNumItems() do
     local id = MerchantItemID(i)

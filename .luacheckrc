@@ -14,7 +14,7 @@ globals = {
   "SLASH_FOREVERHEAL1", "SLASH_FOREVERHEAL2", "ForeverHeal_OnCompartmentClick",
   "ForeverHub", "SLASH_FOREVERHUB1", "ForeverHealAPI", "ForeverLootDB", "ForeverLootGlobalDB", "ForeverDungeonJournal_NS", "Syndicator",
   "SLASH_FOREVERLOOT1", "SLASH_FOREVERLOOT2", "ForeverLoot_OnCompartmentClick",
-  "ForeverMetiersDB", "ForeverMetiersGlobalDB", "SLASH_FOREVERMETIERS1", "SLASH_FOREVERMETIERS2", "ForeverMetiers_OnCompartmentClick", "Auctionator", "ATTC", "ForeverBlockedActions",
+  "ForeverMetiersDB", "ForeverMetiersGlobalDB", "SLASH_FOREVERMETIERS1", "SLASH_FOREVERMETIERS2", "ForeverMetiers_OnCompartmentClick", "Auctionator", "ATTC", "ForeverBlockedActions", "TomTom",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
@@ -59,5 +59,5 @@ read_globals = {
   "TradeSkillFrame_SetSelection", "TradeSkillFrame_Update", "GetCraftDisplaySkillLine", "GetCraftSkillLine", "GetNumCrafts",
   "GetCraftInfo", "GetCraftItemLink", "GetCraftRecipeLink", "GetCraftNumReagents", "GetCraftReagentInfo",
   "GetCraftReagentItemLink", "GetCraftDescription", "CraftFrame_SetSelection", "CraftFrame_Update", "GetNumSkillLines",
-  "GetSkillLineInfo", "C_CurrencyInfo", "GetFactionInfoByID", "GetProfessions", "GetProfessionInfo", "C_SpellBook", "C_CombatLog", "GetInventoryItemTexture", "GetInventorySlotInfo",
+  "GetSkillLineInfo", "C_CurrencyInfo", "GetFactionInfoByID", "GetProfessions", "GetProfessionInfo", "C_SpellBook", "C_CombatLog", "GetInventoryItemTexture", "GetInventorySlotInfo", "C_Minimap", "GetNumTrackingTypes", "GetTrackingInfo", "SetTracking", "C_Map", "UiMapPoint", "C_SuperTrack", "MINIMAP_TRACKING_VENDOR_FOOD", "EquipItemByName", "PlaySound", "SOUNDKIT", "LOOT_ITEM_SELF_MULTIPLE", "LOOT_ITEM_PUSHED_SELF", "LOOT_ITEM_PUSHED_SELF_MULTIPLE",
 }

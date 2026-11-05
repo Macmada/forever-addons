@@ -80,6 +80,9 @@ local ITEMS = {
   old = { loc = "INVTYPE_CHEST", stats = { ITEM_MOD_STAMINA_SHORT = 10, RESISTANCE0_NAME = 120 }, tip = { "Vieille tunique" } },
   ring = { loc = "INVTYPE_FINGER", stats = { ITEM_MOD_SPIRIT_SHORT = 12 }, tip = { "Anneau d'esprit" } },
   plate = { loc = "INVTYPE_CHEST", cls = 4, sub = 4, stats = { ITEM_MOD_STAMINA_SHORT = 60, ITEM_MOD_INTELLECT_SHORT = 30 }, tip = { "Cuirasse" } },
+  -- capture du 05/11/2026 : robe +1 Esprit +2 armure (ici des gants) pas vue comme une amélioration
+  gantsold = { loc = "INVTYPE_HAND", stats = { RESISTANCE0_NAME = 4 }, tip = { "Gants râpés" } },
+  gantsmoine = { loc = "INVTYPE_HAND", stats = { ITEM_MOD_SPIRIT_SHORT = 1, RESISTANCE0_NAME = 6 }, tip = { "Gants de moine" } },
 }
 P.gear[5] = "item:old"
 _G.GetInventoryItemLink = function(_, slot) return P.gear[slot] end
@@ -241,6 +244,15 @@ check(#MACROS == 1, "second clic : macro mise à jour, pas de doublon")
 local ups = ns.BagUpgrades()
 check(#ups == 1 and ups[1].link == "item:robe", "meilleurs objets des sacs : robe proposée, plaques ignorées")
 check(strip(ns.UpgradesText()):find("item:robe", 1, true), "liste des objets des sacs affichée")
+P.gear[10] = "item:gantsold"
+table.insert(P.bags, "item:gantsmoine")
+local found
+for _, u in ipairs(ns.BagUpgrades()) do if u.link == "item:gantsmoine" then found = u end end
+check(found, "sacs : +1 Esprit +2 armure compte comme une amélioration (régénération hors combat, armure)")
+check(strip(ns.UpgradesText()):find(LANG == "fr" and "mana/s hors combat" or "mana/s out of combat", 1, true), "sacs : gain de mana hors combat affiché")
+check(ForeverHealAPI.Evaluate("item:gantsmoine").score > 0.1, "API : même score pour ForeverLoot (alerte de butin)")
+table.remove(P.bags)
+P.gear[10] = nil
 -- 10. alerte de mana en combat
 P.combat = true
 Fire("PLAYER_REGEN_DISABLED")
