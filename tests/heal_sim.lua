@@ -118,7 +118,7 @@ _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
 _G.IsAddOnLoaded = function() return true end
 _G.ChatFontNormal = _G.ChatFontNormal or {}
 local ns = {}
-for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "UI" }) do assert(loadfile("ForeverHeal/" .. f .. ".lua"))("ForeverHeal", ns) end
+for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "Widgets", "UI" }) do assert(loadfile("ForeverHeal/" .. f .. ".lua"))("ForeverHeal", ns) end
 -- infobulle de lecture : relie SetHyperlink / SetInventoryItem à nos objets
 local realCF = _G.CreateFrame
 _G.CreateFrame = function(kind, name, ...)
@@ -273,6 +273,22 @@ _G.C_CombatLog = { GetCurrentEventInfo = function() blockedCalls = blockedCalls 
 Fire("COMBAT_LOG_EVENT_UNFILTERED")
 check(blockedCalls == 0, "client de Forever : C_CombatLog.GetCurrentEventInfo (protégé) jamais appelé")
 _G.C_CombatLog, _G.CombatLogGetCurrentEventInfo = nil, saveCL
+
+-- 11c. panneau : onglets « Mon prêtre » / « Mes sacs » (le bouton « Retour au panneau » restait sans effet, 05/11/2026)
+local pnl = ns.panel
+pnl:Show()
+pnl.tabBags.scripts.OnClick(pnl.tabBags)
+check(pnl.mode == "upgrades" and pnl.tabBags.active and not pnl.tabMain.active, "onglet « Mes sacs »")
+pnl.tabMain.scripts.OnClick(pnl.tabMain)
+check(rawget(pnl, "mode") == nil and pnl.tabMain.active and not pnl.tabBags.active, "retour à l'onglet « Mon prêtre » (l'ancien bouton restait bloqué sur les sacs : « and nil or »)")
+local realRaw = ns.PanelRaw
+ns.PanelRaw = function() error("test de panne") end
+ns.RefreshPanel()
+check(ns.lastPanelError and ns.lastPanelError:find("test de panne", 1, true), "calcul en échec : erreur gardée et affichée dans le panneau")
+check(ns.DiagText():find("Calcul du panneau : ERREUR", 1, true), "diagnostic : le calcul du panneau en échec est signalé")
+ns.PanelRaw = realRaw
+ns.RefreshPanel()
+check(ns.DiagText():find("Calcul du panneau : ok", 1, true), "diagnostic : calcul du panneau ok")
 
 -- 12. API pour les autres addons : écart de caractéristiques seul (enchantement)
 local e16 = ForeverHealAPI.EvaluateStats({ heal = 16 })

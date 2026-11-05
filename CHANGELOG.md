@@ -1,5 +1,10 @@
 # Journal des versions
 
+## ForeverGFX 2.3.8 / ForeverHeal 2.0
+- **« Retour au panneau » ne fonctionnait pas** : une erreur de logique (`cond and nil or x` vaut toujours `x` en Lua) laissait le panneau bloqué sur les objets des sacs. Remplacé par deux **onglets « Mon prêtre » / « Mes sacs »** ; la vérification automatique refuse désormais ce motif.
+- **Nouveau panneau ForeverHeal**, dans le style des autres fenêtres : onglets, actions en icônes avec leur nom (Macros, Oublier, Annonces : « À l'écran » / « Discussion »), rubriques illustrées (caractéristiques, mélange de sorts, résultats, conseil de rangs, ce que vaut +10…) en lettres de livre sur fond sombre encadré d'or ; plus de texte de bouton coupé.
+- Si un calcul du panneau échoue, l'erreur s'affiche dans le panneau et dans le Diag (« Calcul du panneau ») au lieu de le laisser figé.
+
 ## ForeverGFX 2.3.7 / ForeverPrep 1.6 / ForeverGazette 1.5.1 / ForeverHeal 1.9 / ForeverLoot 1.7 / ForeverMetiers 1.5 / ForeverMacros 1.7
 - **« Échec d'une action d'interface » en fermant une fenêtre par la croix** (en combat) : la croix du modèle standard passe par une fonction réservée à Blizzard en combat ; dans toutes les fenêtres des addons Forever, elle cache maintenant la fenêtre directement.
 - ForeverPrep **ouvert en combat : la fiche n'est plus vide**. Le jeu cache une partie des informations aux addons pendant un combat : la fiche montre la dernière analyse faite avant le combat (signalé dans le bandeau) et se met à jour dès la sortie du combat ; une analyse qui échoue s'affiche dans le bandeau au lieu de laisser la fenêtre vide.

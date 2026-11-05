@@ -212,12 +212,96 @@ end
 -- Panneau à côté de la fiche personnage
 ----------------------------------------------------------------------
 local panel
+local K = ns.Kit
+local SECTION_ICON = {}
+local function SectionIcons()
+  SECTION_ICON[L.p_stats] = "Interface\\Icons\\Spell_Holy_InnerFire"
+  SECTION_ICON[L.p_mix] = "Interface\\Icons\\Spell_Holy_LesserHeal"
+  SECTION_ICON[L.p_results] = "Interface\\Icons\\Spell_Holy_GreaterHeal"
+  SECTION_ICON[L.p_ranks] = "Interface\\Icons\\Spell_Holy_FlashHeal"
+  SECTION_ICON[L.p_worth] = "Interface\\Icons\\INV_Misc_Coin_02"
+  SECTION_ICON[L.upTitle] = "Interface\\Icons\\INV_Misc_Bag_10"
+end
+
+-- Panneau : titres de rubrique (icône, lettres de livre, filet doré) et lignes, recréés à chaque affichage
+local pool = { head = {}, fs = {} }
+local pused = { head = 0, fs = 0 }
+local function PHead()
+  pused.head = pused.head + 1
+  local h = pool.head[pused.head]
+  if not h then
+    h = CreateFrame("Frame", nil, panel.child)
+    h:SetHeight(26)
+    h.icon = h:CreateTexture(nil, "ARTWORK")
+    h.icon:SetSize(20, 20)
+    h.icon:SetPoint("LEFT", 2, 0)
+    h.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    h.fs = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    h.fs:SetPoint("LEFT", h.icon, "RIGHT", 8, 0)
+    K.TitleFont(h.fs, 15, "GameFontNormal")
+    h.rest = h:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    h.rest:SetPoint("LEFT", h.fs, "RIGHT", 6, 0)
+    h.rule = h:CreateTexture(nil, "ARTWORK")
+    h.rule:SetPoint("BOTTOMLEFT"); h.rule:SetPoint("BOTTOMRIGHT"); h.rule:SetHeight(1)
+    h.rule:SetColorTexture(0.65, 0.48, 0.16, 0.8)
+    pool.head[pused.head] = h
+  end
+  h:Show()
+  return h
+end
+local function PLine()
+  pused.fs = pused.fs + 1
+  local f = pool.fs[pused.fs]
+  if not f then
+    f = panel.child:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f:SetJustifyH("LEFT")
+    f:SetJustifyV("TOP")
+    f:SetSpacing(2)
+    pool.fs[pused.fs] = f
+  end
+  f:ClearAllPoints()
+  f:Show()
+  return f
+end
+
+-- text : le texte du panneau (titres marqués \1titre\2suite)
+local function RenderPanel(text)
+  for _, k in ipairs({ "head", "fs" }) do for _, o in ipairs(pool[k]) do o:Hide() end; pused[k] = 0 end
+  local width = panel.child:GetWidth()
+  if type(width) ~= "number" or width <= 0 then width = 380 end
+  local y = -2
+  for line in (text .. "\n"):gmatch("(.-)\n") do
+    local title, rest = line:match("^\1(.-)\2(.*)$")
+    if title then
+      local h = PHead()
+      h:ClearAllPoints()
+      h:SetPoint("TOPLEFT", 0, y - 4)
+      h:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
+      h.icon:SetTexture(SECTION_ICON[title] or SECTION_ICON[L.p_stats])
+      h.fs:SetText(title)
+      h.rest:SetText(rest or "")
+      y = y - 34
+    elseif line == "" then
+      y = y - 4
+    else
+      local f = PLine()
+      f:SetWidth(width - 14)
+      f:SetText(line)
+      f:SetPoint("TOPLEFT", 10, y)
+      local fh = f:GetStringHeight()
+      y = y - ((type(fh) == "number" and fh > 0) and fh or 12) - 3
+    end
+  end
+  panel.child:SetHeight(-y + 8)
+end
+
 local function CreatePanel()
   if panel then return panel end
+  SectionIcons()
   panel = CreateFrame("Frame", "ForeverHealPanel", UIParent, "BasicFrameTemplateWithInset")
   ns.SafeClose(panel)
   ns.panel = panel
-  panel:SetSize(420, 560)
+  panel:SetSize(440, 600)
   panel:SetPoint("CENTER")
   panel:SetFrameStrata("HIGH")
   panel:SetMovable(true)
@@ -226,59 +310,58 @@ local function CreatePanel()
   panel:SetScript("OnDragStart", panel.StartMoving)
   panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
   panel:Hide()
-  local title = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  title:SetPoint("TOPLEFT", 12, -6)
+  local logo = panel:CreateTexture(nil, "OVERLAY")
+  logo:SetSize(16, 16)
+  logo:SetPoint("TOPLEFT", 8, -4)
+  logo:SetTexture("Interface\\Icons\\Spell_Holy_GreaterHeal")
+  logo:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+  local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  title:SetPoint("LEFT", logo, "RIGHT", 6, 0)
   title:SetText(L.panelTitle)
   panel.diagBtn = ns.MakeDiagButton(panel)
-  local sf = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
-  sf:SetPoint("TOPLEFT", 10, -30)
-  sf:SetPoint("BOTTOMRIGHT", -30, 66)
-  local child = CreateFrame("Frame", nil, sf)
-  child:SetSize(370, 10)
-  sf:SetScrollChild(child)
-  panel.child = child
-  panel.text = child:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  panel.text:SetPoint("TOPLEFT", 4, -2)
-  panel.text:SetWidth(362)
-  panel.text:SetJustifyH("LEFT")
-  panel.text:SetJustifyV("TOP")
-  panel.text:SetSpacing(2)
-  local reset = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-  reset:SetSize(190, 22)
-  reset:SetPoint("BOTTOMLEFT", 12, 10)
-  reset:SetText(L.reset)
-  reset:SetScript("OnClick", function()
+
+  -- onglets : ton prêtre / tes sacs
+  local function SetMode(m) panel.mode = m; ns.RefreshPanel() end
+  panel.tabMain = K.Tab(panel, L.tabMain, function() SetMode(nil) end)
+  panel.tabMain:SetPoint("TOPLEFT", 14, -32)
+  panel.tabBags = K.Tab(panel, L.tabBags, function() SetMode("upgrades") end)
+  panel.tabBags:SetPoint("LEFT", panel.tabMain, "RIGHT", 4, 0)
+  panel.upBtn = panel.tabBags
+
+  -- actions en icônes
+  panel.whereBtn = K.Action(panel, "Interface\\Icons\\INV_Letter_03", "", L.tipWhere, function(self)
+    ns.db.announceWhere = (ns.db.announceWhere == "screen") and "chat" or "screen"
+    self.label:SetText(L["whereShort_" .. ns.db.announceWhere])
+  end)
+  panel.whereBtn:SetPoint("TOPRIGHT", -18, -30)
+  panel.resetBtn = K.Action(panel, "Interface\\Icons\\Spell_Holy_DispelMagic", L.resetShort, L.reset, function()
     wipe(ns.db.usage); wipe(ns.db.mult); ns.db.effective = { total = 0, over = 0 }
     Print(L.resetDone); ns.RefreshPanel()
   end)
-  local opt = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-  opt:SetSize(190, 22)
-  opt:SetPoint("BOTTOMRIGHT", -12, 10)
-  opt:SetScript("OnShow", function(self) self:SetText(string.format(L.optWhere, L["where_" .. ns.db.announceWhere])) end)
-  opt:SetScript("OnClick", function(self)
-    ns.db.announceWhere = (ns.db.announceWhere == "screen") and "chat" or "screen"
-    self:SetText(string.format(L.optWhere, L["where_" .. ns.db.announceWhere]))
-  end)
-  local macros = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-  macros:SetSize(190, 22)
-  macros:SetPoint("BOTTOMLEFT", 12, 36)
-  macros:SetText(L.btnMacros)
-  macros:SetScript("OnClick", function() ns.MakeMacros() end)
-  local up = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-  up:SetSize(190, 22)
-  up:SetPoint("BOTTOMRIGHT", -12, 36)
-  up:SetText(L.btnUpgrades)
-  up:SetScript("OnClick", function(self)
-    panel.mode = (panel.mode == "upgrades") and nil or "upgrades"
-    self:SetText(panel.mode == "upgrades" and L.btnBack or L.btnUpgrades)
+  panel.resetBtn:SetPoint("RIGHT", panel.whereBtn, "LEFT", -22, 0)
+  panel.macroBtn = K.Action(panel, "Interface\\Icons\\INV_Misc_Note_01", L.macrosShort, L.btnMacros, function() ns.MakeMacros() end)
+  panel.macroBtn:SetPoint("RIGHT", panel.resetBtn, "LEFT", -22, 0)
+
+  local sheet = CreateFrame("Frame", nil, panel)
+  sheet:SetPoint("TOPLEFT", 12, -76)
+  sheet:SetPoint("BOTTOMRIGHT", -12, 12)
+  K.Panel(sheet, 0.55)
+  local sf = CreateFrame("ScrollFrame", nil, sheet, "UIPanelScrollFrameTemplate")
+  sf:SetPoint("TOPLEFT", 8, -6)
+  sf:SetPoint("BOTTOMRIGHT", -28, 6)
+  local child = CreateFrame("Frame", nil, sf)
+  child:SetSize(380, 10)
+  sf:SetScrollChild(child)
+  panel.child = child
+  panel:SetScript("OnShow", function()
+    panel.whereBtn.label:SetText(L["whereShort_" .. ns.db.announceWhere])
     ns.RefreshPanel()
   end)
-  panel.upBtn = up
-  panel:SetScript("OnShow", function() ns.RefreshPanel() end)
   return panel
 end
 
-local function H(t) return "|cffffd100" .. t .. "|r" end
+-- titre de rubrique, marqué pour l'affichage (\1titre\2) ; ns.PanelText() rend le texte lisible
+local function H(t) return "\1" .. t .. "\2" end
 
 -- HealBot Continued chargé ? (le conseil de rangs indique alors aussi quoi changer dans ses sorts)
 local function HealBotLoaded()
@@ -286,7 +369,13 @@ local function HealBotLoaded()
   return IsAddOnLoaded and IsAddOnLoaded("HealBot") or false
 end
 
-function ns.PanelText()
+local function Readable(t) return (t:gsub("\1(.-)\2", "|cffffd100%1|r")) end
+ns.Readable = Readable
+
+function ns.PanelText() return Readable(ns.PanelRaw()) end
+function ns.UpgradesText() return Readable(ns.UpgradesRaw()) end
+
+function ns.PanelRaw()
   local S = ns.Snapshot()
   local rates = ns.Rates(S)
   local mix = ns.Mix()
@@ -356,8 +445,8 @@ function ns.PanelText()
   return table.concat(out, "\n")
 end
 
-function ns.UpgradesText()
-  local out = { H(L.upTitle), "" }
+function ns.UpgradesRaw()
+  local out = { H(L.upTitle) }
   local list = ns.BagUpgrades()
   if #list == 0 then out[#out + 1] = L.upNone end
   for _, u in ipairs(list) do
@@ -367,10 +456,17 @@ function ns.UpgradesText()
   return table.concat(out, "\n")
 end
 
+-- Un calcul qui échoue s'affiche dans le panneau (et dans le diagnostic) au lieu de le laisser figé (05/11/2026)
 function ns.RefreshPanel()
   if not panel or not panel:IsShown() then return end
-  if panel.mode == "upgrades" then panel.text:SetText(ns.UpgradesText()) else panel.text:SetText(ns.PanelText()) end
-  panel.child:SetHeight((panel.text:GetStringHeight() or 400) + 8)
+  panel.tabMain:SetActive(panel.mode ~= "upgrades")
+  panel.tabBags:SetActive(panel.mode == "upgrades")
+  local ok, text = pcall(panel.mode == "upgrades" and ns.UpgradesRaw or ns.PanelRaw)
+  if not ok then
+    ns.lastPanelError = tostring(text)
+    text = "|cffff6a5a" .. string.format(L.panelError, tostring(text)) .. "|r"
+  end
+  RenderPanel(text)
 end
 
 function ns.MakeMacros()
@@ -451,7 +547,7 @@ SlashCmdList.FOREVERHEAL = function(msg)
     ns.db.manaAlert = not ns.db.manaAlert; Print(L.optManaAlert .. " : " .. (ns.db.manaAlert and L.on or L.off))
   elseif cmd == "macros" then ns.MakeMacros()
   elseif cmd == "sacs" or cmd == "bags" then
-    CreatePanel(); panel.mode = "upgrades"; panel.upBtn:SetText(L.btnBack)
+    CreatePanel(); panel.mode = "upgrades"
     if not panel:IsShown() then panel:ClearAllPoints(); panel:SetPoint("CENTER"); panel:Show() else ns.RefreshPanel() end
   elseif cmd == "chat" then ns.db.announceWhere = "chat"; Print(string.format(L.optWhere, L.where_chat))
   elseif cmd == "panneau" or cmd == "panel" then

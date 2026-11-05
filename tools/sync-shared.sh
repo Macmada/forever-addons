@@ -21,5 +21,5 @@ sync Diag.lua $ALL
 sync Hub.lua $ALL
 sync Tour.lua $TOUR
 sync ATT.lua ForeverMetiers ForeverLoot
-sync Widgets.lua ForeverGazette ForeverPrep
+sync Widgets.lua ForeverGazette ForeverPrep ForeverHeal
 echo "modules communs : ok"

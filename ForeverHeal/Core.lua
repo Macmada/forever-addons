@@ -619,6 +619,13 @@ local HEALWORDS = { "soin", "heal", "rénov", "renew", "prière", "prayer", "ré
 local STATWORDS = { "soin", "heal", "mana", "critique", "critical", "esprit", "spirit", "intell", "endurance", "stamina", "équipé", "equip", "%+" }
 
 function ns.DiagCollect(add)
+  -- calcul du panneau (il peut échouer sans que le reste du diagnostic le voie)
+  if ns.PanelRaw then
+    local okP, errP = pcall(ns.PanelRaw)
+    add("Calcul du panneau : " .. (okP and "ok" or ("ERREUR " .. tostring(errP))))
+    local okU, errU = pcall(ns.UpgradesRaw)
+    add("Calcul des objets des sacs : " .. (okU and "ok" or ("ERREUR " .. tostring(errU))))
+  end
   local S = ns.Snapshot()
   local r = ns.Rates(S)
   add("")
