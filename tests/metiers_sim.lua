@@ -143,8 +143,9 @@ check(adv[3].r.name == "Épaulières vertes en soie" and adv[3].guide and adv[3]
 for _, e in ipairs(adv) do check(e.r.type ~= "trivial", "recette grise exclue : " .. e.r.name) end
 check(ns.side and ns.side:IsShown(), "panneau de conseils affiché à côté de la fenêtre du métier")
 local row
-for _, r in ipairs(ns.side.list.rows) do if r.onClick and not row then row = r end end
-check(row and ns.side.list.rows[1].text:GetText():find("Lawrence", 1, true), "panneau : rappel du maître en tête, puis lignes cliquables")
+for _, r in ipairs(ns.side.list.cards) do if r.onClick and not row then row = r end end
+check(row and ns.side.list.infos[1]:GetText():find("Lawrence", 1, true), "panneau : rappel du maître en tête, puis cartes cliquables")
+check(row.name:GetText() == "Rouleau de tisse-mage" and row.gain:GetText():find(ns.Money(10000), 1, true), "carte : meilleur craft avec son coût par point à droite")
 row.onClick()
 check(selected == 3, "clic : la recette est sélectionnée dans la fenêtre du métier")
 check(ForeverMetiersGlobalDB.cooldowns[ns.CharKey()]["Étoffe lunaire"], "temps de recharge relevé (Étoffe lunaire)")
@@ -295,4 +296,13 @@ check(ForeverHub and ForeverHub.entries.ForeverMetiers, "inscrit dans l'icône c
 SlashCmdList.FOREVERMETIERS("recettes")
 check(ns.ui:IsShown(), "/metiers recettes")
 check(ns.ui.tabs.recipes.active and not ns.ui.tabs.level.active, "onglet Recettes actif (style Forever)")
+ns.ShowTab("foryou")
+local wrist
+for _, c in ipairs(ns.ui.list.cards) do
+  if c:IsShown() and c.name:GetText():find(ns.L.slot9, 1, true) then wrist = c end
+end
+check(wrist and wrist.tags:GetText() == ns.L.enchMissing and wrist.gain:GetText():find(ns.L.cardHps, 1, true),
+      "carte « Poignets » : sans enchantement, gain du meilleur enchantement à droite")
+ns.ui.optBtn.scripts.OnClick(ns.ui.optBtn)
+check(_G.ForeverMetiersOptionsFrame and _G.ForeverMetiersOptionsFrame:IsShown(), "options dans une petite fenêtre")
 W.rprint("\nTOUT OK (" .. LANG .. ")")

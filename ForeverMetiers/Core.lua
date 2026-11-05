@@ -244,7 +244,7 @@ function ns.Scan(api)
   for key in pairs(known) do if not key:match("^[is]%d+$") then names[key] = true end end
   gdb.known[me][k] = names
   ns.lastScan = sc
-  db.lastAdvice[k] = { t = time(), lines = ns.AdviceSummary(sc) }
+  db.lastAdvice[k] = { t = time(), lines = ns.AdviceSummary(sc), items = ns.AdviceItems(sc) }
   return sc
 end
 
@@ -444,6 +444,16 @@ function ns.CraftText(e)
 end
 
 -- Résumé gardé pour l'onglet Montée quand la fenêtre est fermée
+-- Même résumé, en données (pour les cartes de l'onglet Montée)
+function ns.AdviceItems(sc)
+  local out = {}
+  for _, e in ipairs(ns.Advise(sc, 5)) do
+    out[#out + 1] = { name = e.r.name, link = e.r.link, item = e.r.item, spell = e.r.spell, type = e.r.type, avail = e.r.avail,
+                      perPoint = e.perPoint, guide = e.guide, de = e.de, up = e.upgrade and ns.GainText(e.upgrade) or nil }
+  end
+  return out
+end
+
 function ns.AdviceSummary(sc)
   local lines = {}
   for _, e in ipairs(ns.Advise(sc, 5)) do lines[#lines + 1] = ns.CraftText(e) end

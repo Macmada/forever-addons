@@ -2,8 +2,12 @@ local _, ns = ...
 local L = ns.L
 local D = ns.Data
 local Print = ns.Print
+local K = ns.Kit
 
-local W, H = 640, 580
+-- Fenêtre de ForeverMetiers : bandeaux de rubrique et cartes (icône encadrée de la couleur de qualité, nom, étiquettes,
+-- détail dessous, chiffre important à droite), comme ForeverLoot.
+
+local W, H = 700, 640
 local ui, side
 local tab = "level"
 
@@ -16,117 +20,94 @@ local function MakeButton(parent, text, width, onClick, template)
 end
 
 local function Gray(s) return "|cffa0a0a0" .. s .. "|r" end
+local function Colored(c, s) return c .. s .. "|r" end
 
-----------------------------------------------------------------------
--- Liste défilante réutilisable (fenêtre principale et panneau à côté du métier)
-----------------------------------------------------------------------
-local function MakeList(parent, width)
-  local L2 = { rows = {}, used = 0 }
-  local sf = CreateFrame("ScrollFrame", nil, parent, "UIPanelScrollFrameTemplate")
-  local content = CreateFrame("Frame", nil, sf)
-  content:SetSize(width, 10)
-  sf:SetScrollChild(content)
-  L2.scroll, L2.content = sf, content
-  local function Row()
-    L2.used = L2.used + 1
-    local r = L2.rows[L2.used]
-    if not r then
-      r = CreateFrame("Button", nil, content)
-      r:SetHeight(20)
-      r:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-      r.icon = r:CreateTexture(nil, "ARTWORK")
-      r.icon:SetSize(16, 16)
-      r.icon:SetPoint("LEFT", 2, 0)
-      r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-      r.text:SetJustifyH("LEFT")
-      r.hl = r:CreateTexture(nil, "HIGHLIGHT")
-      r.hl:SetAllPoints()
-      r.hl:SetColorTexture(1, 1, 1, 0.08)
-      r:SetScript("OnEnter", function(self)
-        if self.link then
-          GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-          pcall(GameTooltip.SetHyperlink, GameTooltip, self.link)
-          GameTooltip:Show()
-        end
-      end)
-      r:SetScript("OnLeave", function() GameTooltip:Hide() end)
-      r:SetScript("OnClick", function(self, button)
-        if self.link and IsShiftKeyDown() and ChatEdit_InsertLink then ChatEdit_InsertLink(self.link); return end
-        if button == "RightButton" and self.onRight then self.onRight() elseif button ~= "RightButton" and self.onClick then self.onClick() end
-      end)
-      L2.rows[L2.used] = r
-    end
-    r:Show()
-    return r
+local function SpellIcon(id)
+  if not id then return nil end
+  if C_Spell and C_Spell.GetSpellTexture then
+    local ok, t = pcall(C_Spell.GetSpellTexture, id)
+    if ok and t then return t end
   end
-  function L2.Render(lines)
-    for _, r in ipairs(L2.rows) do r:Hide() end
-    L2.used = 0
-    local y = -2
-    for _, l in ipairs(lines) do
-      local r = Row()
-      r.link, r.onClick, r.onRight = l.link, l.onClick, l.onRight
-      local icon = l.icon
-      if not icon and l.link and l.link:find("item:", 1, true) then
-        icon = select(5, ((C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant)(l.link))
-      end
-      r.icon:SetShown(icon ~= nil)
-      if icon then r.icon:SetTexture(icon) end
-      r.hl:SetShown(l.onClick ~= nil)
-      r.text:SetFontObject(l.header and "GameFontNormal" or "GameFontHighlightSmall")
-      r.text:ClearAllPoints()
-      r.text:SetPoint("LEFT", icon and 22 or (l.header and 2 or 8), 0)
-      r.text:SetPoint("RIGHT", -4, 0)
-      r.text:SetText(l.text)
-      ns.Kit.StyleHeader(r, l.header and true or false, 15)
-      r:ClearAllPoints()
-      r:SetPoint("TOPLEFT", 0, y)
-      r:SetPoint("RIGHT", content, "RIGHT", 0, 0)
-      local h = l.header and 28 or (l.tall and 30 or 18)
-      r:SetHeight(h)
-      y = y - h
-    end
-    content:SetHeight(-y + 8)
-  end
-  return L2
+  if GetSpellTexture then return GetSpellTexture(id) end
 end
 
+-- Objet : nom, lien, qualité, icône (même s'il n'est pas encore chargé)
+local function ItemBits(idOrLink)
+  if not idOrLink then return nil end
+  local name, link, quality = ns.Info(idOrLink)
+  local _, _, _, _, icon = ns.Instant(idOrLink)
+  if not name and type(idOrLink) == "number" then name = ns.ItemName(idOrLink) end
+  return name, link, quality, icon
+end
+
+-- Gain de ForeverHeal en deux parties : le grand chiffre et le détail
+local function GainParts(r)
+  if not r then return "", "" end
+  local sub = {}
+  if math.abs(r.healed or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHealed, ns.Signed(r.healed)) end
+  if math.abs(r.hp or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHp, ns.Signed(r.hp)) end
+  if math.abs(r.hps or 0) < 0.05 then return #sub > 0 and Gray(L.cardSurvival) or Gray(L.gainNone), table.concat(sub, " · ") end
+  return ns.Signed(r.hps, 1) .. " |cffd8c8a0" .. L.cardHps .. "|r", table.concat(sub, " · ")
+end
+
+local DIFF = { optimal = "|cffff8040", medium = "|cffffff00", easy = "|cff40c040", trivial = "|cff808080" }
+
 ----------------------------------------------------------------------
--- Contenu des onglets
+-- Onglet Montée
 ----------------------------------------------------------------------
-local function ShopLines(k, lines, max)
+local function ShopCards(k, lines, max)
   local sh = ns.Shopping(k)
   local s = ns.db.skills[k]
   if not sh then
-    if s and s.rank >= 300 then lines[#lines + 1] = { text = Gray(L.guideDone) } end
+    if s and s.rank >= 300 then lines[#lines + 1] = { kind = "info", text = Gray(L.guideDone) } end
     return
   end
   local st = sh.st
-  lines[#lines + 1] = { text = "|cff66ccff" .. string.format(L.guideStep, st.from, st.to, st.name, sh.crafts) .. "|r",
-                        link = st.item and select(2, ns.Info(st.item)) or nil }
-  lines[#lines + 1] = { text = L.shopping }
+  local sname, slink, sq, sicon = ItemBits(st.item)
+  lines[#lines + 1] = { kind = "card", link = slink, icon = sicon or SpellIcon(st.spell) or D.profs[k].icon, quality = sq or 1,
+                        name = (st.item and sname) or ns.SpellName(st.spell or 0) or st.name, nameColor = not st.item and { 1, 0.82, 0 } or nil,
+                        tags = Colored("|cff66ccff", string.format(L.tagStep, st.from, st.to)),
+                        source = string.format(L.stepCrafts, sh.crafts) .. "  ·  " .. L.guideSource,
+                        text = string.format(L.guideStep, st.from, st.to, st.name, sh.crafts) }
   for i, m in ipairs(sh.items) do
     if max and i > max then break end
-    local extra = m.missing > 0
-      and string.format(L.shopMissing, m.missing, (m.vendor and L.shopVendor or "") .. (m.price and string.format(L.shopPrice, ns.Money(m.price)) or ""))
-      or L.shopOk
-    lines[#lines + 1] = { link = select(2, ns.Info(m.id)), text = string.format(L.shopLine, ns.ItemName(m.id), m.need, m.bags, m.bank,
-                          m.alts > 0 and string.format(L.shopAlts, m.alts) or "", extra) }
+    local name, link, q, icon = ItemBits(m.id)
+    local tags = m.missing > 0 and Colored("|cffff6a5a", string.format(L.tagMissing, m.missing)) or Colored("|cff40d860", L.tagOk)
+    lines[#lines + 1] = { kind = "card", link = link, icon = icon, quality = q or 1, name = name or ns.ItemName(m.id), tags = tags,
+                          source = string.format(L.shopDetail, m.need, m.bags, m.bank, m.alts > 0 and string.format(L.shopAlts, m.alts) or ""),
+                          gain = m.price and ("|cffffd100" .. ns.Money(m.price) .. "|r") or "", gainSub = m.vendor and L.shopVendorShort or (m.price and L.perUnit or ""),
+                          text = string.format(L.shopLine, ns.ItemName(m.id), m.need, m.bags, m.bank, m.alts > 0 and string.format(L.shopAlts, m.alts) or "",
+                                 m.missing > 0 and string.format(L.shopMissing, m.missing, "") or L.shopOk) }
   end
-  if sh.cost > 0 then lines[#lines + 1] = { text = Gray(string.format(L.shopTotal, ns.Money(sh.cost))) } end
+  if sh.cost > 0 then lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.shopTotal, ns.Money(sh.cost))) } end
 end
 
-local function RankLines(k, lines)
+local function CraftCard(e, onClick)
+  local name, link, q, icon = ItemBits(e.item)
+  local tags = { (DIFF[e.type] or "") .. (L["diffWord_" .. (e.type or "")] or e.type or "") .. "|r" }
+  if e.guide then tags[#tags + 1] = Colored("|cff66ccff", L.tagGuide) end
+  if e.de then tags[#tags + 1] = Colored("|cffb070ff", L.tagDE) end
+  if e.up then tags[#tags + 1] = Colored("|cff40d860", L.tagUp) end
+  return { kind = "card", link = e.link or link, icon = icon or SpellIcon(e.spell) or "Interface\\Icons\\INV_Misc_QuestionMark",
+           quality = q or 1, name = e.name or name, nameColor = not e.item and { 1, 0.82, 0 } or nil, tags = table.concat(tags, "  "),
+           source = ((e.avail or 0) > 0 and string.format(L.canCraft, e.avail) or L.cantCraft) .. (e.up and ("  ·  " .. e.up) or ""),
+           gain = e.perPoint and ("|cffffd100" .. ns.Money(e.perPoint) .. "|r") or "", gainSub = e.perPoint and L.perPointShort or "",
+           onClick = onClick, text = e.name }
+end
+
+local function RankHead(k, lines)
   local ri = ns.RankInfo(k)
   if not ri then return false end
-  lines[#lines + 1] = { header = true, icon = D.profs[k].icon,
+  lines[#lines + 1] = { kind = "head", icon = D.profs[k].icon, title = L["prof_" .. k],
+                        right = string.format("|cffffd100%d|r / %d  ·  %s", ri.rank, ri.max, L["rank_" .. ri.cur.key]),
                         text = string.format(L.skillLine, L["prof_" .. k], ri.rank, ri.max, L["rank_" .. ri.cur.key]) }
   if ri.next then
     local lvl = UnitLevel("player") < ri.next.level and string.format(L.nextRankLevel, ri.next.level) or ""
-    lines[#lines + 1] = { tall = true, text = string.format(L.nextRank, L["rank_" .. ri.next.key], ri.next.cap, ri.next.skill, ri.next.level,
-                          ns.Trainer(k, ri.next.key)) .. lvl }
+    local soon = ri.rank >= ri.max - 10
+    lines[#lines + 1] = { kind = "info", text = (soon and "|cffff9a1a" or "|cffd8c8a0") .. string.format(L.nextRank, L["rank_" .. ri.next.key], ri.next.cap,
+                          ri.next.skill, ri.next.level, ns.Trainer(k, ri.next.key)) .. "|r" .. lvl }
   else
-    lines[#lines + 1] = { text = Gray(L.maxRank) }
+    lines[#lines + 1] = { kind = "info", text = Gray(L.maxRank) }
   end
   return true
 end
@@ -135,79 +116,114 @@ function ns.LevelLines()
   local lines = {}
   local any = false
   for _, k in ipairs(D.profOrder) do
-    if RankLines(k, lines) then
+    if RankHead(k, lines) then
       any = true
-      ShopLines(k, lines)
+      ShopCards(k, lines)
       local adv = ns.db.lastAdvice[k]
-      lines[#lines + 1] = { text = L.bestTitle }
-      if adv and #adv.lines > 0 then
-        for _, t in ipairs(adv.lines) do lines[#lines + 1] = { text = "  " .. t } end
-        lines[#lines + 1] = { text = string.format(L.bestOld, date("%d/%m %H:%M", adv.t)) }
+      lines[#lines + 1] = { kind = "info", boss = true, text = "|cffffd100" .. L.bestTitle .. "|r" }
+      if adv and adv.items and #adv.items > 0 then
+        for _, e in ipairs(adv.items) do lines[#lines + 1] = CraftCard(e) end
+        lines[#lines + 1] = { kind = "info", text = string.format(L.bestOld, date("%d/%m %H:%M", adv.t)) }
+      elseif adv and adv.lines and #adv.lines > 0 then
+        for _, t in ipairs(adv.lines) do lines[#lines + 1] = { kind = "info", text = t } end
       elseif adv then
-        lines[#lines + 1] = { text = Gray(L.bestNone) }
+        lines[#lines + 1] = { kind = "info", text = Gray(L.bestNone) }
       else
-        lines[#lines + 1] = { text = Gray(string.format(L.skillUnknown, L["prof_" .. k])) }
+        lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.skillUnknown, L["prof_" .. k])) }
       end
     else
-      lines[#lines + 1] = { text = Gray(string.format(L.notLearned, L["prof_" .. k])) }
+      lines[#lines + 1] = { kind = "head", icon = D.profs[k].icon, title = L["prof_" .. k], right = Gray(L.notLearnedShort),
+                            text = string.format(L.notLearned, L["prof_" .. k]) }
     end
   end
-  if any and not (_G.Auctionator and _G.Auctionator.API) then lines[#lines + 1] = { text = Gray(L.auctionatorOff) } end
+  if any and not (_G.Auctionator and _G.Auctionator.API) then lines[#lines + 1] = { kind = "info", text = Gray(L.auctionatorOff) } end
   return lines
 end
 
+----------------------------------------------------------------------
+-- Onglet Pour toi
+----------------------------------------------------------------------
+local SrcText
 function ns.ForYouLines()
   local lines = {}
-  if not ns.HealAPI() then lines[#lines + 1] = { text = Gray(L.healOnly) } end
-  lines[#lines + 1] = { header = true, text = L.enchTitle, icon = D.profs.enchanting.icon }
+  if not ns.HealAPI() then lines[#lines + 1] = { kind = "info", text = Gray(L.healOnly) } end
+  lines[#lines + 1] = { kind = "head", icon = D.profs.enchanting.icon, title = L.enchTitle, text = L.enchTitle }
   for _, a in ipairs(ns.EnchantAdvice()) do
-    local state = not a.link and Gray(L.enchNone) or (a.enchanted and L.enchDone or L.enchMissing)
-    lines[#lines + 1] = { link = a.link, text = string.format(L.enchSlot, L["slot" .. a.slot] or a.slot, (a.link or "") .. "  " .. state) }
-    if a.link then
+    local slotName = L["slot" .. a.slot] or tostring(a.slot)
+    if not a.link then
+      lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.enchSlot, slotName, L.enchNone)) }
+    else
+      local name, _, q, icon = ItemBits(a.link)
+      local src, legacy = {}, {}
       if a.known then
-        lines[#lines + 1] = { text = string.format(L.enchKnown, a.known.e.name, a.known.gain and ns.GainText(a.known.gain) or "?") }
+        src[#src + 1] = string.format(L.cardKnown, a.known.e.name)
+        legacy[#legacy + 1] = string.format(L.enchKnown, a.known.e.name, a.known.gain and ns.GainText(a.known.gain) or "?")
       end
       if a.soon then
         local e = a.soon.e
-        lines[#lines + 1] = { tall = true, text = string.format(L.enchSoon, e.name, ns.EntrySkill(e), a.soon.gain and ns.GainText(a.soon.gain) or "?", ns.SrcText(e))
-                                                .. (e.new and L.newTag or "") }
+        src[#src + 1] = string.format(L.cardSoon, e.name, ns.EntrySkill(e), SrcText(e))
+        legacy[#legacy + 1] = string.format(L.enchSoon, e.name, ns.EntrySkill(e), a.soon.gain and ns.GainText(a.soon.gain) or "?", SrcText(e))
       end
       if a.learn then
         local e = a.learn.e
-        lines[#lines + 1] = { tall = true, text = string.format(L.enchLearn, e.name, ns.EntrySkill(e), a.learn.gain and ns.GainText(a.learn.gain) or "?", ns.SrcText(e))
-                                                .. (e.new and L.newTag or "") }
+        src[#src + 1] = string.format(L.cardLearn, e.name, ns.EntrySkill(e), SrcText(e)) .. (e.new and L.newTag or "")
+        legacy[#legacy + 1] = string.format(L.enchLearn, e.name, ns.EntrySkill(e), a.learn.gain and ns.GainText(a.learn.gain) or "?", SrcText(e))
       end
-      if not a.any then lines[#lines + 1] = { text = Gray(L.enchNoOption) } end
+      if not a.any then src[#src + 1] = Gray(L.enchNoOption) end
+      local best = a.known or a.soon or a.learn
+      local gain, sub = GainParts(best and best.gain)
+      lines[#lines + 1] = { kind = "card", link = a.link, icon = icon, quality = q or 1, name = slotName .. " : " .. (name or "?"),
+                            tags = a.enchanted and L.enchDone or L.enchMissing, source = table.concat(src, "\n"), gain = gain, gainSub = sub,
+                            text = string.format(L.enchSlot, slotName, a.link .. "  " .. (a.enchanted and L.enchDone or L.enchMissing))
+                                   .. "\n" .. table.concat(legacy, "\n") }
     end
   end
-  lines[#lines + 1] = { header = true, text = L.tailorTitle, icon = D.profs.tailoring.icon }
+  lines[#lines + 1] = { kind = "head", icon = D.profs.tailoring.icon, title = L.tailorTitle, text = L.tailorTitle }
   local ups = ns.TailorUpgrades()
-  if #ups == 0 then lines[#lines + 1] = { text = Gray(L.tailorNone) } end
+  if #ups == 0 then lines[#lines + 1] = { kind = "info", text = Gray(L.tailorNone) } end
   for _, u in ipairs(ups) do
-    lines[#lines + 1] = { link = u.link, text = string.format(L.tailorItem, u.link, u.minLevel, ns.GainText(u.gain),
-                          u.known and L.tailorKnown or string.format(L.tailorLearn, (u.src or "?") .. (u.skill and (" (" .. u.skill .. ")") or ""))) }
+    local name, _, q, icon = ItemBits(u.link)
+    local tags = { (u.minLevel or 0) > UnitLevel("player") and Colored("|cffff6a5a", string.format(L.cardLevel, u.minLevel)) or Gray(string.format(L.cardLevel, u.minLevel or 0)) }
+    tags[#tags + 1] = u.known and Colored("|cff40d860", L.tailorKnown) or Colored("|cffffd100", L.tagToLearn)
+    local gain, sub = GainParts(u.gain)
+    lines[#lines + 1] = { kind = "card", link = u.link, icon = icon, quality = q or 2, name = name or "?", tags = table.concat(tags, "  "),
+                          source = u.known and L.tailorKnownSrc or ((u.src or "?") .. (u.skill and ("  ·  " .. string.format(L.skillTag, u.skill)) or "")),
+                          gain = gain, gainSub = sub,
+                          text = string.format(L.tailorItem, u.link, u.minLevel, ns.GainText(u.gain), u.known and L.tailorKnown or string.format(L.tailorLearn, u.src or "?")) }
   end
-  lines[#lines + 1] = { tall = true, text = Gray(L.raidSets) }
+  lines[#lines + 1] = { kind = "info", text = Gray(L.raidSets) }
   return lines
 end
 
+----------------------------------------------------------------------
+-- Onglet Désenchanter
+----------------------------------------------------------------------
 function ns.DELines()
   local lines = {}
-  if not ns.db.skills.enchanting then lines[#lines + 1] = { tall = true, text = Gray(L.deNoEnchanting) } end
-  lines[#lines + 1] = { header = true, text = L.deTitle }
+  if not ns.db.skills.enchanting then lines[#lines + 1] = { kind = "info", text = Gray(L.deNoEnchanting) } end
+  lines[#lines + 1] = { kind = "head", icon = "Interface\\Icons\\INV_Enchant_Disenchant", title = L.deTitleShort, right = Gray(L.deKeepHint), text = L.deTitle }
   local list = ns.DECandidates()
-  if #list == 0 then lines[#lines + 1] = { text = Gray(L.deNone) } end
+  if #list == 0 then lines[#lines + 1] = { kind = "info", text = Gray(L.deNone) } end
   for _, c in ipairs(list) do
     local res = {}
     for _, id in ipairs(c.res.items) do res[#res + 1] = ns.ItemName(id) end
-    lines[#lines + 1] = { link = c.link, text = string.format(L.deLine, c.link, c.ilvl, table.concat(res, " / "),
-                          c.ok and "" or string.format(L.deSkill, c.res.skill)),
-                          onRight = function() ns.db.keep[c.id] = true; Print(L.deKeep, c.link); ns.Refresh() end }
+    local name, _, q, icon = ItemBits(c.link)
+    local _, _, _, resIcon = ItemBits(c.res.items[1])
+    local tags = { Gray(string.format(L.ilvlTag, c.ilvl)) }
+    if not c.ok then tags[#tags + 1] = Colored("|cffff6a5a", string.format(L.skillTag, c.res.skill)) end
+    lines[#lines + 1] = { kind = "card", link = c.link, icon = icon, quality = q or 2, name = name or "?", tags = table.concat(tags, "  "),
+                          source = string.format(L.deGives, table.concat(res, " / ")),
+                          gain = resIcon and ("|T" .. resIcon .. ":22|t") or "",
+                          onRight = function() ns.db.keep[c.id] = true; Print(L.deKeep, c.link); ns.Refresh() end,
+                          text = string.format(L.deLine, c.link, c.ilvl, table.concat(res, " / "), c.ok and "" or string.format(L.deSkill, c.res.skill)) }
   end
-  if ns.db.skills.tailoring and ns.db.skills.enchanting then lines[#lines + 1] = { tall = true, text = Gray(L.deLoop) } end
+  if ns.db.skills.tailoring and ns.db.skills.enchanting then lines[#lines + 1] = { kind = "info", text = Gray(L.deLoop) } end
   return lines
 end
 
+----------------------------------------------------------------------
+-- Onglet Recettes
+----------------------------------------------------------------------
 local function Status(k, entry)
   if ns.Known(k, entry) then return L.recKnown end
   local s = ns.db.skills[k]
@@ -217,67 +233,81 @@ local function Status(k, entry)
 end
 
 -- Où l'obtenir : All The Things (base Forever) en priorité, sinon le guide
-local function SrcText(entry)
+SrcText = function(entry)
   local s = ns.Source(entry)
   if s and s.text then return "|cff66ccffATT|r " .. s.text end
   return entry.src or "?"
 end
 ns.SrcText = SrcText
 
+local SECTION_ICON = { camp = "Interface\\Icons\\Spell_Fire_Fire", rods = "Interface\\Icons\\INV_Staff_Goldfeathered_01",
+                       ench = "Interface\\Icons\\Trade_Engraving", pat = "Interface\\Icons\\Trade_Tailoring",
+                       cd = "Interface\\Icons\\INV_Misc_PocketWatch_01" }
+
 function ns.RecipeLines()
   local lines = {}
-  local function section(title, k, filter, list)
-    if title then lines[#lines + 1] = { header = true, text = title } end
+  local function section(title, icon, k, filter, list)
+    if title then lines[#lines + 1] = { kind = "head", icon = icon, title = title, text = title } end
     for _, p in ipairs(list) do
       if filter(p) then
-        local link = p.id and select(2, ns.Info(p.id)) or nil
-        lines[#lines + 1] = { tall = true, link = link, text = string.format(L.recLine, Status(k, p), link or p.name, SrcText(p)) .. (p.new and L.newTag or "") }
+        local name, link, q, iicon
+        if p.id then name, link, q, iicon = ItemBits(p.id) end
+        local status = Status(k, p)
+        lines[#lines + 1] = { kind = "card", link = link, icon = iicon or SpellIcon(p.spell) or icon, quality = q or 1,
+                              name = name or p.name, nameColor = not name and { 1, 0.82, 0 } or nil,
+                              tags = status .. (p.new and L.newTag or ""), source = SrcText(p), star = p.heal and not p.camp,
+                              text = string.format(L.recLine, status, link or p.name, SrcText(p)) .. (p.new and L.newTag or "") }
       end
     end
   end
-  section(L.recTitleCamp, "tailoring", function(p) return p.camp end, D.patterns.tailoring)
-  section(nil, "enchanting", function(p) return p.camp end, D.patterns.enchanting)
-  section(L.recTitleRods, "enchanting", function(p) return p.rod end, D.patterns.enchanting)
-  section(L.recTitleEnch, "enchanting", function() return true end, D.healEnchants)
-  section(nil, "enchanting", function(p) return p.heal end, D.patterns.enchanting)
-  section(L.recTitlePat, "tailoring", function(p) return p.heal or (not p.camp and p.new) end, D.patterns.tailoring)
+  section(L.recTitleCamp, SECTION_ICON.camp, "tailoring", function(p) return p.camp end, D.patterns.tailoring)
+  section(nil, nil, "enchanting", function(p) return p.camp end, D.patterns.enchanting)
+  section(L.recTitleRods, SECTION_ICON.rods, "enchanting", function(p) return p.rod end, D.patterns.enchanting)
+  section(L.recTitleEnch, SECTION_ICON.ench, "enchanting", function() return true end, D.healEnchants)
+  section(nil, nil, "enchanting", function(p) return p.heal end, D.patterns.enchanting)
+  section(L.recTitlePat, SECTION_ICON.pat, "tailoring", function(p) return p.heal or (not p.camp and p.new) end, D.patterns.tailoring)
   -- toutes les recettes du métier d'après All The Things : à apprendre maintenant, puis bientôt
   if ns.ATT.Available() then
     for _, k in ipairs(D.profOrder) do
       local now, soon = ns.ATTLearnable(k)
       if now then
-        lines[#lines + 1] = { header = true, text = string.format(L.attNow, L["prof_" .. k], ns.db.skills[k].rank) }
-        if #now == 0 then lines[#lines + 1] = { text = Gray(L.attNone) } end
-        for i, r in ipairs(now) do
-          if i > 15 then lines[#lines + 1] = { text = Gray(string.format(L.attMore, #now - 15)) }; break end
+        local title = string.format(L.attNow, L["prof_" .. k], ns.db.skills[k].rank)
+        lines[#lines + 1] = { kind = "head", icon = D.profs[k].icon, title = L["prof_" .. k], right = Gray(L.attNowShort), text = title }
+        if #now == 0 then lines[#lines + 1] = { kind = "info", text = Gray(L.attNone) } end
+        local function card(r, later)
           local src = ns.ATT.Source("recipeID", r.spell)
-          lines[#lines + 1] = { tall = true, link = r.item and select(2, ns.Info(r.item)) or nil,
-                                text = string.format(L.attLine, r.learnedAt, r.name, src and src.text or "?") }
+          local name, link, q, icon = ItemBits(r.item)
+          return { kind = "card", link = link, icon = icon or SpellIcon(r.spell), quality = q or 1, name = r.name or name or "?",
+                   nameColor = later and { 0.6, 0.6, 0.6 } or { 1, 0.82, 0 },
+                   tags = later and Gray(string.format(L.skillTag, r.learnedAt)) or Colored("|cffffd100", string.format(L.skillTag, r.learnedAt)),
+                   source = src and src.text or "?", text = string.format(L.attLine, r.learnedAt, r.name, src and src.text or "?") }
+        end
+        for i, r in ipairs(now) do
+          if i > 15 then lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.attMore, #now - 15)) }; break end
+          lines[#lines + 1] = card(r)
         end
         if #soon > 0 then
-          lines[#lines + 1] = { text = string.format(L.attSoon, #soon) }
+          lines[#lines + 1] = { kind = "info", boss = true, text = "|cffffd100" .. string.format(L.attSoon, #soon) .. "|r" }
           for i, r in ipairs(soon) do
             if i > 8 then break end
-            local src = ns.ATT.Source("recipeID", r.spell)
-            lines[#lines + 1] = { tall = true, link = r.item and select(2, ns.Info(r.item)) or nil,
-                                  text = Gray(string.format(L.attLine, r.learnedAt, r.name, src and src.text or "?")) }
+            lines[#lines + 1] = card(r, true)
           end
         end
       end
     end
   else
-    lines[#lines + 1] = { text = Gray(L.attOff) }
+    lines[#lines + 1] = { kind = "info", text = Gray(L.attOff) }
   end
   -- temps de recharge de tous tes personnages
-  lines[#lines + 1] = { header = true, text = L.cdTitle }
+  lines[#lines + 1] = { kind = "head", icon = SECTION_ICON.cd, title = L.cdTitle, text = L.cdTitle }
   local now, any = time(), false
   for char, list in pairs(ns.gdb.cooldowns) do
     for recipe, t in pairs(list) do
       any = true
-      lines[#lines + 1] = { text = char .. " — " .. recipe .. " : " .. (t <= now and L.cdReady or string.format(L.cdLeft, ns.Duration(t - now))) }
+      lines[#lines + 1] = { kind = "info", text = char .. " — " .. recipe .. " : " .. (t <= now and L.cdReady or string.format(L.cdLeft, ns.Duration(t - now))) }
     end
   end
-  if not any then lines[#lines + 1] = { text = Gray(L.cdNone) } end
+  if not any then lines[#lines + 1] = { kind = "info", text = Gray(L.cdNone) } end
   return lines
 end
 
@@ -308,6 +338,36 @@ function ns.Refresh()
   if side and side:IsShown() and ns.lastScan and ns.lastScan.prof then ns.RenderSide(ns.lastScan) end
 end
 
+local opt
+local function ShowOptions()
+  if not opt then
+    opt = CreateFrame("Frame", "ForeverMetiersOptionsFrame", ui, "BasicFrameTemplateWithInset")
+    ns.SafeClose(opt)
+    opt:SetSize(420, 150)
+    opt:SetPoint("TOPRIGHT", ui, "TOPRIGHT", -10, -70)
+    opt:SetFrameStrata("DIALOG")
+    K.Dress(opt, "Interface\\Icons\\INV_Misc_Gear_01", L.optTitle)
+    local y = -34
+    local function C(text, key)
+      local cb = CreateFrame("CheckButton", nil, opt, "UICheckButtonTemplate")
+      cb:SetSize(22, 22)
+      cb:SetPoint("TOPLEFT", 14, y)
+      local lab = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      lab:SetPoint("LEFT", cb, "RIGHT", 2, 0)
+      lab:SetText(text)
+      cb:SetScript("OnShow", function(self) self:SetChecked(ns.db[key]) end)
+      cb:SetScript("OnClick", function(self) ns.db[key] = self:GetChecked() and true or false; ns.Refresh() end)
+      y = y - 28
+    end
+    C(L.optSide, "side")
+    C(L.optTip, "tooltip")
+    C(L.optRank, "rankReminder")
+    opt:Hide()
+  end
+  opt:SetShown(not opt:IsShown())
+end
+ns.ShowOptions = ShowOptions
+
 local function CreateUI()
   if ui then return ui end
   ui = CreateFrame("Frame", "ForeverMetiersFrame", UIParent, "BasicFrameTemplateWithInset")
@@ -324,27 +384,29 @@ local function CreateUI()
   ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
   tinsert(UISpecialFrames, "ForeverMetiersFrame")
   ui:Hide()
-  ns.Kit.Dress(ui, "Interface\\Icons\\Trade_Tailoring", L.title)
+  K.Dress(ui, "Interface\\Icons\\Trade_Tailoring", L.title)
   ui.diagBtn = ns.MakeDiagButton(ui)
   ui.tabs = {}
   local prev
   for _, t in ipairs(TABS) do
-    local b = ns.Kit.Tab(ui, L[t[2]], function() tab = t[1]; ns.Refresh() end)
+    local b = K.Tab(ui, L[t[2]], function() tab = t[1]; ns.Refresh() end)
     if prev then b:SetPoint("LEFT", prev, "RIGHT", 4, 0) else b:SetPoint("TOPLEFT", 14, -32) end
     ui.tabs[t[1]] = b
     prev = b
   end
-  ui.list = MakeList(ui, W - 56)
-  ui.list.scroll:SetPoint("TOPLEFT", 16, -68)
-  ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 104)
-  ns.Kit.Backdrop(ui, ui.list.scroll, 0.55, 6)
+  ui.optBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.optShort, L.optTip2, function() ShowOptions() end)
+  ui.optBtn:SetPoint("TOPRIGHT", -18, -30)
+  ui.list = K.CardList(ui, W - 60)
+  ui.list.scroll:SetPoint("TOPLEFT", 16, -82)
+  ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 48)
+  K.Backdrop(ui, ui.list.scroll, 0.6, 6)
   -- bouton sécurisé rattaché à UIParent, pas à la fenêtre : un enfant sécurisé rendrait la fenêtre impossible à fermer en
   -- combat ; on ne le montre / cache / règle que hors combat
   local de = CreateFrame("Button", "ForeverMetiersDEButton", UIParent, "SecureActionButtonTemplate,UIPanelButtonTemplate")
   de:SetFrameStrata("DIALOG")
   de:Hide()
-  de:SetSize(200, 24)
-  de:SetPoint("BOTTOMRIGHT", ui, "BOTTOMRIGHT", -16, 70)
+  de:SetSize(220, 26)
+  de:SetPoint("BOTTOMRIGHT", ui, "BOTTOMRIGHT", -16, 12)
   de:SetText(L.deButton)
   de:RegisterForClicks("AnyUp", "AnyDown")
   de:SetScript("OnEnter", function(self)
@@ -356,21 +418,6 @@ local function CreateUI()
   de:HookScript("PostClick", function() C_Timer.After(2, function() if ns.OnBags then ns.OnBags() end end) end)
   ui.deBtn = de
   ui:HookScript("OnHide", function() if not InCombatLockdown() then de:Hide() else ns.deHidePending = true end end)
-  local y = 92
-  local function C(text, key)
-    local cb = CreateFrame("CheckButton", nil, ui, "UICheckButtonTemplate")
-    cb:SetSize(22, 22)
-    cb:SetPoint("BOTTOMLEFT", 14, y - 22)
-    local lab = cb:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    lab:SetPoint("LEFT", cb, "RIGHT", 2, 0)
-    lab:SetText(text)
-    cb:SetScript("OnShow", function(self) self:SetChecked(ns.db[key]) end)
-    cb:SetScript("OnClick", function(self) ns.db[key] = self:GetChecked() and true or false; ns.Refresh() end)
-    y = y - 22
-  end
-  C(L.optSide, "side")
-  C(L.optTip, "tooltip")
-  C(L.optRank, "rankReminder")
   ui:SetScript("OnShow", function() ns.Refresh() end)
   return ui
 end
@@ -389,16 +436,16 @@ local function CreateSide()
   side = CreateFrame("Frame", "ForeverMetiersSide", UIParent, "BasicFrameTemplateWithInset")
   ns.SafeClose(side)
   ns.side = side
-  side:SetSize(340, 430)
+  side:SetSize(380, 470)
   side:SetFrameStrata("HIGH")
   side:Hide()
-  side.title = ns.Kit.Dress(side, "Interface\\Icons\\Trade_Tailoring", "")
+  side.title = K.Dress(side, "Interface\\Icons\\Trade_Tailoring", "")
   side.title:SetPoint("RIGHT", -30, 0)
   side.title:SetJustifyH("LEFT")
-  side.list = MakeList(side, 296)
+  side.list = K.CardList(side, 330)
   side.list.scroll:SetPoint("TOPLEFT", 14, -34)
   side.list.scroll:SetPoint("BOTTOMRIGHT", -32, 40)
-  ns.Kit.Backdrop(side, side.list.scroll, 0.55, 6)
+  K.Backdrop(side, side.list.scroll, 0.6, 6)
   local more = MakeButton(side, L.more, 90, function() ns.ShowTab("level") end)
   more:SetPoint("BOTTOMRIGHT", -12, 8)
   return side
@@ -411,16 +458,20 @@ function ns.RenderSide(sc)
   side.title:SetText("ForeverMetiers — " .. L["prof_" .. sc.prof] .. string.format(" %d/%d", sc.rank or 0, sc.max or 0))
   local lines = {}
   if ri and ri.next and ri.rank >= ri.max - 10 then
-    lines[#lines + 1] = { tall = true, text = "|cffff8000" .. string.format(L.rankSoon, L["prof_" .. sc.prof], ri.rank, ri.max,
+    lines[#lines + 1] = { kind = "info", text = "|cffff9a1a" .. string.format(L.rankSoon, L["prof_" .. sc.prof], ri.rank, ri.max,
                           L["rank_" .. ri.next.key], ns.Trainer(sc.prof, ri.next.key)) .. "|r" }
   end
-  lines[#lines + 1] = { text = L.bestTitle }
+  lines[#lines + 1] = { kind = "info", boss = true, text = "|cffffd100" .. L.bestTitle .. "|r" }
   local adv = ns.Advise(sc, 5)
-  if #adv == 0 then lines[#lines + 1] = { tall = true, text = Gray(L.bestNone) } end
+  if #adv == 0 then lines[#lines + 1] = { kind = "info", text = Gray(L.bestNone) } end
   for _, e in ipairs(adv) do
-    lines[#lines + 1] = { tall = true, link = e.r.link, text = ns.CraftText(e), onClick = function() api.select(e.r.index) end }
+    local card = CraftCard({ name = e.r.name, link = e.r.link, item = e.r.item, spell = e.r.spell, type = e.r.type, avail = e.r.avail,
+                             perPoint = e.perPoint, guide = e.guide, de = e.de, up = e.upgrade and ns.GainText(e.upgrade) or nil },
+                           function() api.select(e.r.index) end)
+    card.text = ns.CraftText(e)
+    lines[#lines + 1] = card
   end
-  ShopLines(sc.prof, lines, 6)
+  ShopCards(sc.prof, lines, 6)
   side.list.Render(lines)
 end
 

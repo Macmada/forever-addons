@@ -3,7 +3,7 @@
 ## Notes: Préparation donjon et raid : consommables, composants, améliorations, équipement, selon ta classe, ton rôle et ton niveau.
 ## Notes-enUS: Dungeon and raid preparation: consumables, reagents, buffs and gear, by class, role and level.
 ## Author: ForeverGFX
-## Version: 1.6.2
+## Version: 1.6.3
 ## SavedVariablesPerCharacter: ForeverPrepDB
 ## IconTexture: Interface\Icons\INV_Potion_51
 ## AddonCompartmentFunc: ForeverPrep_OnCompartmentClick

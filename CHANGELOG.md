@@ -1,5 +1,15 @@
 # Journal des versions
 
+## ForeverGFX 2.4.3 / ForeverMetiers 2.0 (et module d'interface commun des autres)
+- **Nouvelle fenêtre ForeverMetiers**, refaite de zéro dans le style de ForeverLoot : bandeaux de rubrique et **cartes** (icône encadrée de la couleur de qualité, nom, étiquettes, détail dessous, chiffre important à droite) :
+  - **Montée** : bandeau du métier (compétence, rang), prochain rang en couleur quand il approche, carte de l'étape du guide, **une carte par composant** (« il en manque 4 » en rouge ou « ok » en vert, sacs / banque / rerolls, prix à droite), meilleurs crafts en cartes (couleur de difficulté, guide, à désenchanter, amélioration, coût par point à droite) ;
+  - **Pour toi** : une carte par pièce portée (enchantée ou non, ce que tu sais faire, à apprendre maintenant, le meilleur à viser, gain en soins/s à droite) ; pièces de couture en cartes avec leur gain ;
+  - **Désenchanter** : une carte par objet, avec ce qu'il donne et l'icône du résultat à droite ; clic droit pour le garder ; bouton « Désenchanter le premier » en bas ;
+  - **Recettes** : cartes avec l'état (appris, à apprendre maintenant, compétence requise) et la source ; recettes d'All The Things en cartes ;
+  - le **panneau à côté de la fenêtre du métier** utilise les mêmes cartes (clic pour sélectionner la recette) ;
+  - les options passent dans une petite fenêtre (icône Options).
+- Les cartes et bandeaux sont dans le module d'interface commun (`Kit.CardList`).
+
 ## ForeverGFX 2.4.2 / ForeverLoot 2.0
 - **Nouvelle fenêtre ForeverLoot**, refaite de zéro :
   - chaque emplacement a son **bandeau** : icône de l'objet porté (ou de l'emplacement vide, comme la fiche personnage), nom en lettres de livre, ce que tu portes à droite ;
