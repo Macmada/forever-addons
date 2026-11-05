@@ -344,7 +344,7 @@ function ns.Import(text)
   return map, n
 end
 
--- Lignes « nom : actuel → cible » pour ce qui diffère
+-- Lignes « nom : actuel » cible » pour ce qui diffère
 function ns.Compare(map)
   local names, seen = {}, {}
   local function add(k) if not seen[k:lower()] then seen[k:lower()] = true; names[#names + 1] = k end end
@@ -357,7 +357,7 @@ function ns.Compare(map)
     if cur ~= nil then
       local target = map[k] or default
       if not ns.Same(cur, target) then
-        lines[#lines + 1] = string.format("%s : %s → %s", k, tostring(cur), tostring(target))
+        lines[#lines + 1] = string.format("%s : %s » %s", k, tostring(cur), tostring(target))
       end
     end
   end

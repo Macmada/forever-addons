@@ -155,7 +155,7 @@ GameTooltip.lines = {}
 ns.OnTooltipItem(GameTooltip)
 local tip = strip(table.concat(GameTooltip.lines, "\n"))
 print("\n" .. tip .. "\n")
-check(tip:find("+35 Endurance → +350 PV", 1, true) or tip:find("+35 Stamina → +350 HP", 1, true), "robe vs tunique : +35 Endurance → +350 PV (45 − 10)")
+check(tip:find("+35 Endurance » +350 PV", 1, true) or tip:find("+35 Stamina » +350 HP", 1, true), "robe vs tunique : +35 Endurance » +350 PV (45 − 10)")
 check(tip:find("+225 mana", 1, true), "+15 Intelligence → +225 mana")
 check(tip:find("+22", 1, true) and (tip:find("par Soins supérieurs", 1, true) or tip:find("per Soins supérieurs", 1, true)), "+22 soins (lu dans l'infobulle) → par Soins supérieurs")
 check(tip:find("mana / 5", 1, true), "+4 mana / 5 s lu dans l'infobulle")
@@ -174,6 +174,8 @@ Fire("PLAYER_EQUIPMENT_CHANGED"); Run(1)
 check(ns.db.rates.hpPerSta and math.abs(ns.db.rates.hpPerSta - 12) < 0.01, "PV par Endurance appris sur le personnage : 12")
 check(ns.lastAnnounce and strip(ns.lastAnnounce[1]):find("+30", 1, true) and strip(ns.lastAnnounce[1]):find("+360", 1, true),
       "annonce : +30 Endurance → +360 PV")
+check(#ns.lastAnnounce == 1 and ns.lastAnnounce[1]:find("»", 1, true) and not ns.lastAnnounce[1]:find("→", 1, true),
+      "annonce : pas de ligne « Soin moyen 0 · 0 soins/s » quand les soins ne changent pas ; flèche » (la police du jeu n'a pas →)")
 
 -- 4. en combat : pas d'annonce
 ns.lastAnnounce = nil

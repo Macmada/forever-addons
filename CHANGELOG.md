@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGFX 2.3.4 / ForeverHeal 1.7 / ForeverLoot 1.5 / ForeverMetiers 1.3
+- La **flèche « → » s'affichait en carré** (la police du jeu ne l'a pas) : remplacée par « » » dans tous les addons ; « ≈ » et « ✓ » aussi retirés. La vérification automatique refuse désormais ces caractères.
+- ForeverHeal : l'annonce d'un changement qui ne touche pas tes soins (armure, résistances, Endurance) n'affiche plus la ligne inutile « Soin moyen 0 · 0 soins/s · autonomie 0 s ».
+
 ## ForeverGFX 2.3.3 / ForeverHeal 1.6 / ForeverGazette 1.4.3
 - **Correctif « ForeverHeal a été bloqué à cause d'une action qui n'est utilisable que par l'IU de Blizzard »** : sur le client de WoW Forever, la lecture du journal de combat (`C_CombatLog.GetCurrentEventInfo`, ajoutée en 2.3.2) est réservée à l'interface de Blizzard. ForeverHeal et ForeverGazette ne l'appellent plus.
 - Conséquence sur ce client : les soins effectifs, l'excédent et l'effet des talents mesurés par ForeverHeal, et les soins / morts de la rubrique Donjons de la Gazette, restent indisponibles ; le reste fonctionne (le modèle de ForeverHeal utilise les valeurs lues dans le jeu et le mélange de sorts de tes lancers).

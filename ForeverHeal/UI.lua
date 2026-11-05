@@ -46,7 +46,7 @@ end
 local function IsPriest() return select(2, UnitClass("player")) == "PRIEST" end
 
 ----------------------------------------------------------------------
--- Lignes « +45 Endurance → +450 PV » pour un écart de caractéristiques
+-- Lignes « +45 Endurance » +450 PV » pour un écart de caractéristiques
 ----------------------------------------------------------------------
 function ns.ConversionLines(d, S, rates, mix)
   local lines = {}
@@ -85,6 +85,9 @@ end
 -- Ligne de résultat : soin moyen, soins/s, autonomie
 function ns.ResultLine(before, after)
   if not IsPriest() or (before.hps == 0 and after.hps == 0) then return nil end
+  -- rien ne change pour tes soins (armure, résistances…) : pas de ligne « Soin moyen 0 · 0 soins/s »
+  local sameOom = (before.oom == after.oom) or (before.oom and after.oom and math.abs(after.oom - before.oom) < 0.5)
+  if math.abs(after.perCast - before.perCast) < 0.5 and math.abs(after.hps - before.hps) < 0.05 and sameOom then return nil end
   local line = string.format(L.res_line, Signed(after.perCast - before.perCast), Signed(after.hps - before.hps, 1),
                              DurationDelta(before.oom, after.oom))
   if before.healedBeforeOom and after.healedBeforeOom then

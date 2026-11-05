@@ -187,7 +187,7 @@ local function ShowHistory()
     local b = ns.history[i]
     lines[#lines + 1] = date("%H:%M:%S", b.time) .. "  " .. b.label .. "  (" .. #b.changes .. ")"
     for _, c in ipairs(b.changes) do
-      lines[#lines + 1] = "      " .. c.name .. " : " .. tostring(c.old) .. " → " .. tostring(c.new)
+      lines[#lines + 1] = "      " .. c.name .. " : " .. tostring(c.old) .. " » " .. tostring(c.new)
     end
   end
   ns.ShowText(L.historyTitle, #lines > 0 and table.concat(lines, "\n") or L.historyEmpty)
