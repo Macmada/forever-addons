@@ -229,7 +229,8 @@ local function Tick()
 end
 
 local function OnXP()
-  local cur, max = UnitXP("player"), UnitXPMax("player")
+  local cur, max = ns.Plain(UnitXP("player")), ns.Plain(UnitXPMax("player"))
+  if not (cur and max) then return end                         -- valeur secrète (combat sur Forever) : prochain relevé
   if lastXP then
     local delta = cur - lastXP
     if delta < 0 then delta = (lastXPMax - lastXP) + cur end      -- passage de niveau
@@ -247,7 +248,8 @@ local function MoneyStep(copper)
 end
 
 local function OnMoney()
-  local cur = GetMoney()
+  local cur = ns.Plain(GetMoney())
+  if not cur then return end
   if lastMoney then
     local delta = cur - lastMoney
     local st = Day().stats
@@ -547,8 +549,8 @@ local handlers = {}
 handlers.PLAYER_LOGIN = function()
   playerGUID = UnitGUID("player")
   BuildPatterns()
-  lastXP, lastXPMax, lastMoney = UnitXP("player"), UnitXPMax("player"), GetMoney()
-  if db.seen.money == nil then db.seen.money = MoneyStep(lastMoney) end
+  lastXP, lastXPMax, lastMoney = ns.Plain(UnitXP("player")), ns.Plain(UnitXPMax("player")), ns.Plain(GetMoney())
+  if db.seen.money == nil and lastMoney then db.seen.money = MoneyStep(lastMoney) end
   Tick()
   C_Timer.NewTicker(30, Tick)
   C_Timer.After(5, function() ScanReputation(); ScanGroup() end)

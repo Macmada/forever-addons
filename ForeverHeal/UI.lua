@@ -486,7 +486,9 @@ local alert
 function ns.UpdateManaAlert()
   if not ns.db.manaAlert or select(2, UnitClass("player")) ~= "PRIEST" then if alert then alert:Hide() end return end
   local left = InCombatLockdown() and ns.ManaTimeLeft()
-  local pct = UnitPower("player", 0) / math.max(UnitPowerMax("player", 0), 1)
+  local cur, max = ns.Plain(UnitPower("player", 0)), ns.Plain(UnitPowerMax("player", 0))
+  if not (cur and max) then if alert then alert:Hide() end return end   -- valeur secrète (combat sur Forever)
+  local pct = cur / math.max(max, 1)
   if not left or left > ns.db.manaAlertSeconds or pct > 0.6 then
     if alert then alert:Hide() end
     return

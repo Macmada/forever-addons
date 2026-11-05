@@ -13,23 +13,33 @@ end
 ----------------------------------------------------------------------
 -- Relevé des caractéristiques actuelles (valeurs données par le jeu)
 ----------------------------------------------------------------------
+-- En combat, le client de Forever peut rendre ces valeurs « secrètes » (inutilisables) : on garde alors le dernier
+-- relevé fait hors combat (05/11/2026 : erreurs en boucle de l'alerte de mana).
+local lastGood
+local function Copy(S) local T = {}; for k, v in pairs(S) do T[k] = v end; T.res = {}; for k, v in pairs(S.res or {}) do T.res[k] = v end; return T end
 function ns.Snapshot()
+  if lastGood and InCombatLockdown and InCombatLockdown() then return Copy(lastGood) end
+  local P = ns.Plain
   local S = {}
+  local secret = false
+  local function V(v) local n = P(v); if v ~= nil and n == nil then secret = true end; return n or 0 end
   S.level = UnitLevel("player")
-  S.sta = select(2, UnitStat("player", 3)) or 0
-  S.int = select(2, UnitStat("player", 4)) or 0
-  S.spi = select(2, UnitStat("player", 5)) or 0
-  S.hp = UnitHealthMax("player") or 0
-  S.mana = UnitPowerMax("player", 0) or 0
-  S.heal = (GetSpellBonusHealing and GetSpellBonusHealing()) or 0
-  S.crit = ((GetSpellCritChance and GetSpellCritChance(2)) or 0) / 100        -- école Sacré
+  S.sta = V(select(2, UnitStat("player", 3)))
+  S.int = V(select(2, UnitStat("player", 4)))
+  S.spi = V(select(2, UnitStat("player", 5)))
+  S.hp = V(UnitHealthMax("player"))
+  S.mana = V(UnitPowerMax("player", 0))
+  S.heal = V(GetSpellBonusHealing and GetSpellBonusHealing())
+  S.crit = V(GetSpellCritChance and GetSpellCritChance(2)) / 100        -- école Sacré
   local base, casting = 0, 0
   if GetManaRegen then base, casting = GetManaRegen() end
-  S.regenOut, S.regenIn = base or 0, casting or 0                             -- mana par seconde, hors / pendant incantation
+  S.regenOut, S.regenIn = V(base), V(casting)                         -- mana par seconde, hors / pendant incantation
   local _, armor = UnitArmor("player")
-  S.armor = armor or 0
+  S.armor = V(armor)
   S.res = {}
-  for school = 2, 6 do S.res[school] = select(2, UnitResistance("player", school)) or 0 end
+  for school = 2, 6 do S.res[school] = V(select(2, UnitResistance("player", school))) end
+  if secret and lastGood then return Copy(lastGood) end
+  if not secret then lastGood = Copy(S) end
   return S
 end
 
@@ -589,7 +599,9 @@ end
 handlers.PLAYER_REGEN_DISABLED = function() ns.ManaReset() end
 handlers.UNIT_POWER_FREQUENT = function(unit, kind)
   if unit ~= "player" or (kind and kind ~= "MANA") or not InCombatLockdown() then return end
-  ns.ManaSample(GetTime(), UnitPower("player", 0))
+  local mana = ns.Plain(UnitPower("player", 0))
+  if not mana then ns.manaSecret = true; return end            -- mana secrète en combat : alerte en veille
+  ns.ManaSample(GetTime(), mana)
   if ns.UpdateManaAlert then ns.UpdateManaAlert() end
 end
 handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, function() last = ns.Snapshot() end) end
@@ -632,6 +644,7 @@ local HEALWORDS = { "soin", "heal", "rénov", "renew", "prière", "prayer", "ré
 local STATWORDS = { "soin", "heal", "mana", "critique", "critical", "esprit", "spirit", "intell", "endurance", "stamina", "équipé", "equip", "%+" }
 
 function ns.DiagCollect(add)
+  add("Mana en combat : " .. (ns.manaSecret and "valeur secrète (alerte de mana en veille sur ce client)" or "lisible ou pas encore vue en combat"))
   -- calcul du panneau (il peut échouer sans que le reste du diagnostic le voie)
   if ns.PanelRaw then
     local okP, errP = pcall(ns.PanelRaw)

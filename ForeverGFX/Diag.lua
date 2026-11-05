@@ -40,6 +40,19 @@ local function Header(add)
   add("Addons Forever chargés : " .. table.concat(list, ", "))
 end
 
+-- Nombre utilisable, ou nil : sur le client de Forever, certaines valeurs (mana, vie… en combat) sont « secrètes » :
+-- toute opération dessus provoque une erreur (« attempt to perform arithmetic on a secret number value », 05/11/2026)
+function ns.Plain(v)
+  if type(v) ~= "number" then return nil end
+  if issecretvalue then
+    local ok, secret = pcall(issecretvalue, v)
+    if ok and secret then return nil end
+    if ok then return v end
+  end
+  local ok = pcall(function() return v + 0 end)
+  return ok and v or nil
+end
+
 -- Croix de fermeture sûre : celle du modèle BasicFrameTemplate passe par HideUIPanel, réservé à Blizzard en combat
 -- (« Échec d'une action d'interface », 05/11/2026) ; on cache simplement la fenêtre
 function ns.SafeClose(f)

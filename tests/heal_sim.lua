@@ -266,6 +266,24 @@ check(_G.ForeverHealManaAlert and _G.ForeverHealManaAlert.shown, "alerte affich�
 P.combat = false
 Fire("PLAYER_REGEN_ENABLED")
 check(not _G.ForeverHealManaAlert.shown, "alerte masquée après le combat")
+-- 10b. client de Forever : mana « secrète » en combat (05/11/2026 : 36 erreurs « arithmetic on a secret number value »)
+-- une vraie « valeur secrète » fait échouer tout calcul : imitée par une table sans opérations
+local SECRET = setmetatable({}, { __tostring = function() return "<secret number>" end })
+local snapBefore = ns.Snapshot()
+P.combat = true
+P.manaCur = SECRET
+local okSecret, errSecret = pcall(function()
+  for _ = 1, 5 do Fire("UNIT_POWER_FREQUENT", "player", "MANA") end
+  ns.UpdateManaAlert()
+end)
+check(okSecret, "mana secrète en combat : aucune erreur (" .. tostring(errSecret) .. ")")
+check(ns.manaSecret and not (_G.ForeverHealManaAlert and _G.ForeverHealManaAlert.shown), "alerte de mana en veille, rien d'affiché")
+local okSnap, snapIn = pcall(ns.Snapshot)
+check(okSnap and snapIn.mana == snapBefore.mana, "relevé en combat : le dernier relevé hors combat est réutilisé")
+P.combat = false
+P.manaCur = 4000
+Fire("PLAYER_REGEN_ENABLED")
+
 -- 11. cache des infobulles
 local before = ns.tooltipStats.computed
 GameTooltip.link = "item:robe"; GameTooltip.lines = {}; ns.OnTooltipItem(GameTooltip)

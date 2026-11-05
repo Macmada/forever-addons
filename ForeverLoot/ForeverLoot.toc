@@ -3,7 +3,7 @@
 ## Notes: Équipement et butin : BiS calculé pour ton personnage, conseils de jet de butin et de récompense de quête, butin des donjons.
 ## Notes-enUS: Gear and loot: computed BiS for your character, loot roll and quest reward advice, dungeon loot.
 ## Author: ForeverGFX
-## Version: 2.3
+## Version: 2.3.1
 ## SavedVariablesPerCharacter: ForeverLootDB
 ## SavedVariables: ForeverLootGlobalDB
 ## IconTexture: Interface\Icons\INV_Misc_Bag_10

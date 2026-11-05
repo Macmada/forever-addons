@@ -1,5 +1,10 @@
 # Journal des versions
 
+## ForeverGFX 2.4.7 / ForeverHeal 2.1.1 / ForeverGazette 1.6.1 (et module commun des autres)
+- **« ForeverHeal provoque un grand nombre d'erreurs »** (« attempt to perform arithmetic on a secret number value », 36 fois) : en combat, le client de WoW Forever donne la mana sous forme de **valeur secrète**, inutilisable par les addons. L'alerte de mana en combat se met en veille au lieu de planter, et les calculs de ForeverHeal en combat réutilisent le dernier relevé fait hors combat.
+- ForeverGazette : expérience et or comptés seulement quand le jeu donne des valeurs utilisables (même protection).
+- Module commun : `ns.Plain` (nombre utilisable ou rien), pour tous les addons ; le Diag de ForeverHeal dit si la mana est secrète en combat.
+
 ## ForeverGFX 2.4.6 / ForeverPrep 1.7 / ForeverLoot 2.3 / ForeverHeal 2.1 / ForeverMetiers 2.1.1 / ForeverGazette 1.6
 - **ForeverGazette (d'après ton premier PDF)** : « Alain a-t-e triché ? » devient « a-t-elle » / « a-t-il » (nouvelle variable {il}) ; 3 passages de niveau ou plus dans la journée = une seule ligne (« du niveau 2 au niveau 7 ») ; 3 recettes ou plus (maître) = une seule ligne (« 12 recettes apprises, dont… ») ; compagnon PDF : le bilan passe sur une colonne quand une ligne ne tient pas sur deux (plus de « Expérience gagnée : … » coupé).
 - **ForeverPrep : à ton niveau, avec les prix, et « Guide-moi »** :
