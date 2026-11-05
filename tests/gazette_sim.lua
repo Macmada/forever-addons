@@ -333,6 +333,14 @@ local dbtn = ns.ui and ns.ui.diagBtn
 check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
 dbtn.scripts.OnClick(dbtn)
 check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
+-- client de Forever : C_CombatLog.GetCurrentEventInfo est réservé à Blizzard (appel bloqué) : jamais appelé
+local blocked = 0
+local saveCL = _G.CombatLogGetCurrentEventInfo
+_G.CombatLogGetCurrentEventInfo = nil
+_G.C_CombatLog = { GetCurrentEventInfo = function() blocked = blocked + 1 end }
+local okCL = pcall(Fire, "COMBAT_LOG_EVENT_UNFILTERED")
+check(okCL and blocked == 0, "client de Forever : C_CombatLog.GetCurrentEventInfo (protégé) jamais appelé")
+_G.C_CombatLog, _G.CombatLogGetCurrentEventInfo = nil, saveCL
 print("\nTOUT OK (" .. LANG .. ")")
 
 -- Écrit la base au format SavedVariables du jeu (pour tester le compagnon Discord)

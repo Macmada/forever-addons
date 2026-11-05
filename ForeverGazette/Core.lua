@@ -324,8 +324,9 @@ end
 local ENV_KEYS = { Falling = "@fall", Drowning = "@drown", Fatigue = "@fatigue", Fire = "@fire", Lava = "@lava", Slime = "@slime",
                    FALLING = "@fall", DROWNING = "@drown", FATIGUE = "@fatigue", FIRE = "@fire", LAVA = "@lava", SLIME = "@slime" }
 
--- Journal de combat : CombatLogGetCurrentEventInfo (classique) ou C_CombatLog.GetCurrentEventInfo (client moderne de Forever)
-local function CLInfoFunc() return CombatLogGetCurrentEventInfo or (C_CombatLog and C_CombatLog.GetCurrentEventInfo) end
+-- Journal de combat : seulement CombatLogGetCurrentEventInfo. Sur le client de Forever, C_CombatLog.GetCurrentEventInfo est
+-- réservé à l'interface de Blizzard (appel bloqué, 05/11/2026) : ne jamais l'utiliser.
+local function CLInfoFunc() return CombatLogGetCurrentEventInfo end
 local function OnCombatLog(...)
   local _, sub, _, srcGUID, srcName, srcFlags, _, dstGUID, dstName, dstFlags, _, p12 = ...
   local clf = CLInfoFunc()

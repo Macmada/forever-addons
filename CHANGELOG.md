@@ -1,5 +1,10 @@
 # Journal des versions
 
+## ForeverGFX 2.3.3 / ForeverHeal 1.6 / ForeverGazette 1.4.3
+- **Correctif « ForeverHeal a été bloqué à cause d'une action qui n'est utilisable que par l'IU de Blizzard »** : sur le client de WoW Forever, la lecture du journal de combat (`C_CombatLog.GetCurrentEventInfo`, ajoutée en 2.3.2) est réservée à l'interface de Blizzard. ForeverHeal et ForeverGazette ne l'appellent plus.
+- Conséquence sur ce client : les soins effectifs, l'excédent et l'effet des talents mesurés par ForeverHeal, et les soins / morts de la rubrique Donjons de la Gazette, restent indisponibles ; le reste fonctionne (le modèle de ForeverHeal utilise les valeurs lues dans le jeu et le mélange de sorts de tes lancers).
+- Autres addons : inchangés.
+
 ## ForeverGFX 2.3.2 / ForeverPrep 1.3 / ForeverHeal 1.5 / ForeverGazette 1.4.2 / ForeverMetiers 1.2 / ForeverLoot 1.4
 Corrections d'après les premiers diagnostics en jeu (05/11/2026, client 1.60.1 build 70790) : le client de WoW Forever utilise l'API moderne de WoW, où plusieurs fonctions classiques n'existent plus.
 - ForeverPrep : **erreur à l'analyse** corrigée (`GetItemCooldown` absent : temps de recharge de la pierre de foyer lu par `C_Container`) ; niveaux des pierres de soins (12, 24, 36, 48).

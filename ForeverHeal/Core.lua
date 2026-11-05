@@ -581,10 +581,10 @@ handlers.UNIT_POWER_FREQUENT = function(unit, kind)
 end
 handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, function() last = ns.Snapshot() end) end
 handlers.UNIT_SPELLCAST_SUCCEEDED = function(unit, _, spellID) if unit == "player" then ns.OnCast(spellID) end end
--- Journal de combat : CombatLogGetCurrentEventInfo (classique) ou C_CombatLog.GetCurrentEventInfo (client moderne de Forever)
+-- Journal de combat : seulement CombatLogGetCurrentEventInfo. Sur le client de Forever (05/11/2026), il n'existe pas et
+-- C_CombatLog.GetCurrentEventInfo est réservé à l'interface de Blizzard : l'appeler bloque l'addon. Ne jamais l'utiliser.
 local function CombatLogInfo()
-  local f = CombatLogGetCurrentEventInfo or (C_CombatLog and C_CombatLog.GetCurrentEventInfo)
-  if f then return f() end
+  if CombatLogGetCurrentEventInfo then return CombatLogGetCurrentEventInfo() end
 end
 ns.CombatLogInfo = CombatLogInfo
 handlers.COMBAT_LOG_EVENT_UNFILTERED = function()

@@ -262,13 +262,15 @@ local dbtn = ns.panel and ns.panel.diagBtn
 check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
 dbtn.scripts.OnClick(dbtn)
 check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
--- 11b. client moderne de Forever : C_CombatLog.GetCurrentEventInfo au lieu de CombatLogGetCurrentEventInfo
-local overBefore = ns.db.effective.total
+-- 11b. client de Forever : pas de CombatLogGetCurrentEventInfo, et C_CombatLog.GetCurrentEventInfo réservé à Blizzard
+-- (l'appeler bloque l'addon) : il ne doit jamais être appelé
+local blockedCalls = 0
+local saveCL = _G.CombatLogGetCurrentEventInfo
 _G.CombatLogGetCurrentEventInfo = nil
-_G.C_CombatLog = { GetCurrentEventInfo = function() return 0, "SPELL_HEAL", false, "Player-1", "", 0, 0, "x", "", 0, 0, 10963, "", 2, 800, 0, 0, false end }
+_G.C_CombatLog = { GetCurrentEventInfo = function() blockedCalls = blockedCalls + 1 end }
 Fire("COMBAT_LOG_EVENT_UNFILTERED")
-check(ns.db.effective.total > overBefore, "client moderne : soins lus par C_CombatLog.GetCurrentEventInfo")
-_G.C_CombatLog = nil
+check(blockedCalls == 0, "client de Forever : C_CombatLog.GetCurrentEventInfo (protégé) jamais appelé")
+_G.C_CombatLog, _G.CombatLogGetCurrentEventInfo = nil, saveCL
 
 -- 12. API pour les autres addons : écart de caractéristiques seul (enchantement)
 local e16 = ForeverHealAPI.EvaluateStats({ heal = 16 })
