@@ -255,3 +255,21 @@ D.patterns = {
 
 -- Les rangs et feux de camp : objets à vérifier dans le diagnostic
 D.checkItems = { 279972, 279973, 279943, 279959, 279976, 279985, 279987, 247786, 249385, 279246 }
+
+-- Capitale la plus proche selon la race (maîtres Apprenti et Compagnon des deux métiers)
+D.capital = {
+  Human = "Hurlevent", Dwarf = "Forgefer", Gnome = "Forgefer", NightElf = "Darnassus",
+  Orc = "Orgrimmar", Troll = "Orgrimmar", Tauren = "Pitons-du-Tonnerre", Scourge = "Fossoyeuse", Undead = "Fossoyeuse",
+}
+D.capitalEn = {
+  Human = "Stormwind", Dwarf = "Ironforge", Gnome = "Ironforge", NightElf = "Darnassus",
+  Orc = "Orgrimmar", Troll = "Orgrimmar", Tauren = "Thunder Bluff", Scourge = "Undercity", Undead = "Undercity",
+}
+
+-- Étoffes : sur quels monstres (humanoïdes) les trouver, par niveau
+D.cloth = {
+  [2589] = { 5, 15 }, [2592] = { 15, 25 }, [4306] = { 25, 35 }, [4338] = { 35, 45 }, [14047] = { 45, 60 },
+}
+
+-- Fenêtre « à ta portée » : objets jusqu'à ton niveau + 5, recettes jusqu'à ta compétence + 30
+D.nearLevel, D.nearSkill = 5, 30

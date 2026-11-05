@@ -203,7 +203,18 @@ check(lv:find("148", 1, true) and lv:find("Épaulières vertes en soie", 1, true
 local fy = Txt(ns.ForYouLines())
 check(fy:find("Pouvoir de guérison", 1, true) and fy:find("Gants de méditation", 1, true), "onglet Pour toi : enchantements et couture")
 local rc = Txt(ns.RecipeLines())
-check(rc:find(L.recKnown, 1, true) and rc:find("Récupérateur arcanique", 1, true) and rc:find("Étoffe lunaire", 1, true), "onglet Recettes : appris, feux de camp, temps de recharge")
+check(rc:find(L.recKnown, 1, true) and not rc:find("Récupérateur arcanique", 1, true) and not rc:find("Torche de lumière", 1, true)
+      and rc:find("Étoffe lunaire", 1, true), "onglet Recettes : à ta portée seulement (pas le récupérateur à 140 pour un enchanteur à 95), recharges")
+ns.showAll = true
+rc = Txt(ns.RecipeLines())
+check(rc:find("Récupérateur arcanique", 1, true) and rc:find("Torche de lumière", 1, true), "« Tout afficher » : catalogue complet")
+ns.showAll = false
+-- « Que faire ? » et « Pour toi » : rien au-delà de ta portée (capture du 05/11/2026 : compétence 300 et niveau 45 pour un niveau 5)
+local fy3 = Txt(ns.ForYouLines())
+check(not fy3:find("(300)", 1, true) and not fy3:find("Pouvoir de guérison)", 1, true) or fy3:find("mineur", 1, true),
+      "Pour toi : pas d'enchantement de compétence 300 proposé")
+local todo = Txt(ns.LevelLines())
+check(todo:find("Épaulières vertes en soie", 1, true) and todo:find(L.todoUsefulTitle, 1, true), "Que faire ? : étape en cours et prochaine chose utile")
 
 -- 8. infobulles : patron appris, patron utile au prêtre, patron appris par un reroll, composant de l'étape
 GameTooltip.link, GameTooltip.lines = Link(500), {}
@@ -258,7 +269,9 @@ check(ns.EntrySkill(collier) == 225 and collier.skill == 210, "compétence d'ATT
 local now, soon = ns.ATTLearnable("tailoring")
 check(#now == 1 and now[1].name == "Ceinture azur en soie" and #soon == 1 and soon[1].name == "Cape glaciale",
       "ATT : à apprendre maintenant en couture 148 : Ceinture azur (140) ; bientôt : Cape glaciale (165) ; Gants de méditation déjà connus")
+ns.showAll = true            -- le collier (compétence 225) est hors de portée d'un enchanteur à 95 : catalogue complet
 local rc2 = Txt(ns.RecipeLines())
+ns.showAll = false
 check(rc2:find("Georgio Bolero", 1, true) and rc2:find("ATT", 1, true) and rc2:find("Alynsia", 1, true), "onglet Recettes : sources d'ATT")
 check(ns.DiagText():find("All The Things : présent", 1, true), "diagnostic : ATT détecté")
 _G.ATTC = { SearchForField = function() error("structure changée") end, SearchForFieldContainer = function() error("x") end }
@@ -287,6 +300,20 @@ check(de:IsShown() and ns.deHidePending, "fenêtre fermée en combat : le bouton
 W.combat = false
 W.fire("PLAYER_REGEN_ENABLED")
 check(not de:IsShown(), "sortie du combat : bouton caché")
+
+-- 8e. ton cas (capture du 05/11/2026) : prêtre niveau 5, aucun métier appris
+local saveSkills, saveLevel = ns.db.skills, W.level
+ns.db.skills = {}
+W.level = 5
+local todo5 = Txt(ns.LevelLines())
+check(todo5:find(L.todoLearn_tailoring, 1, true) and todo5:find(L.todoLearn_enchanting, 1, true) and (todo5:find("Hurlevent", 1, true) or todo5:find("Stormwind", 1, true)),
+      "niveau 5 sans métier : « Apprendre la couture » chez le maître de la capitale la plus proche")
+check(todo5:find(L.todoClothTitle, 1, true) and todo5:find(L.todoFirstCraftE, 1, true), "puis étoffe de lin, et bâtonnet runique pour l'enchantement")
+local fy5 = Txt(ns.ForYouLines())
+for _, bad in ipairs({ "Brassards (Pouvoir de guérison)", "Arme 2M (Puissance des soins supérieure)", "Gants (Pouvoir de guérison)" }) do
+  check(not fy5:find(bad, 1, true), "niveau 5 : pas de « " .. bad .. " » (compétence 300)")
+end
+ns.db.skills, W.level = saveSkills, saveLevel
 
 -- 9. diagnostic, icône commune, commandes
 local diag = ns.DiagText()

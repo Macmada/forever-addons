@@ -95,103 +95,184 @@ local function CraftCard(e, onClick)
            onClick = onClick, text = e.name }
 end
 
-local function RankHead(k, lines)
+local SrcText
+
+local function Capital()
+  local _, race = UnitRace("player")
+  return (ns.lang == "en" and D.capitalEn[race or ""]) or D.capital[race or ""] or (ns.lang == "en" and "your capital" or "ta capitale")
+end
+
+-- Une étape numérotée, en carte
+local function Step(n, icon, title, detail, right, rightSub, tags, link)
+  return { kind = "card", icon = icon, quality = 1, name = (n and (n .. ". ") or "") .. title, nameColor = { 1, 0.82, 0 },
+           tags = tags, source = detail, gain = right, gainSub = rightSub, link = link, text = title .. " " .. (detail or "") }
+end
+
+-- Où trouver une étoffe (humanoïdes du bon niveau)
+local function ClothHint(id)
+  local c = D.cloth[id]
+  if not c then return nil end
+  return string.format(L.clothWhere, ns.ItemName(id), c[1], c[2])
+end
+
+-- « Que faire ? » pour un métier pas encore appris : apprendre, puis la toute première étape
+local function TodoNotLearned(k, lines)
+  lines[#lines + 1] = { kind = "head", icon = D.profs[k].icon, title = L["prof_" .. k], right = Gray(L.notLearnedShort),
+                        text = string.format(L.notLearned, L["prof_" .. k]) }
+  lines[#lines + 1] = Step(1, "Interface\\Icons\\INV_Misc_Book_08", L["todoLearn_" .. k], string.format(L["todoWhere_" .. k], Capital()))
+  if k == "tailoring" then
+    local _, _, _, icon = ItemBits(2589)
+    lines[#lines + 1] = Step(2, icon, L.todoClothTitle, ClothHint(2589))
+    local _, _, _, bicon = ItemBits(2996)
+    lines[#lines + 1] = Step(3, bicon, L.todoFirstCraftT, L.todoFirstCraftTDetail)
+  else
+    local _, _, _, ricon = ItemBits(6218)
+    lines[#lines + 1] = Step(2, ricon, L.todoFirstCraftE, L.todoFirstCraftEDetail)
+    lines[#lines + 1] = Step(3, "Interface\\Icons\\INV_Enchant_Disenchant", L.todoDE, L.todoDEDetail)
+  end
+end
+
+-- « Que faire ? » pour un métier appris : maître si besoin, étape en cours et ce qui manque, meilleurs crafts, prochaine chose utile
+local function TodoLearned(k, lines)
   local ri = ns.RankInfo(k)
-  if not ri then return false end
   lines[#lines + 1] = { kind = "head", icon = D.profs[k].icon, title = L["prof_" .. k],
                         right = string.format("|cffffd100%d|r / %d  ·  %s", ri.rank, ri.max, L["rank_" .. ri.cur.key]),
                         text = string.format(L.skillLine, L["prof_" .. k], ri.rank, ri.max, L["rank_" .. ri.cur.key]) }
-  if ri.next then
-    local lvl = UnitLevel("player") < ri.next.level and string.format(L.nextRankLevel, ri.next.level) or ""
-    local soon = ri.rank >= ri.max - 10
-    lines[#lines + 1] = { kind = "info", text = (soon and "|cffff9a1a" or "|cffd8c8a0") .. string.format(L.nextRank, L["rank_" .. ri.next.key], ri.next.cap,
-                          ri.next.skill, ri.next.level, ns.Trainer(k, ri.next.key)) .. "|r" .. lvl }
-  else
-    lines[#lines + 1] = { kind = "info", text = Gray(L.maxRank) }
+  local n = 0
+  local function num() n = n + 1; return n end
+  -- maître : seulement quand le plafond approche
+  if ri.next and ri.rank >= ri.max - 15 then
+    local lvlOk = UnitLevel("player") >= ri.next.level
+    lines[#lines + 1] = Step(num(), "Interface\\Icons\\INV_Misc_Book_08", string.format(L.todoTrainer, L["rank_" .. ri.next.key]),
+      string.format(L.todoTrainerDetail, ri.next.skill, ri.next.cap, ns.Trainer(k, ri.next.key)), nil, nil,
+      lvlOk and Colored("|cff40d860", L.tagReady) or Colored("|cffff6a5a", string.format(L.tagLevelNeeded, ri.next.level)))
   end
-  return true
+  -- étape en cours du guide et ce qui manque
+  local sh = ns.Shopping(k)
+  if sh then
+    local st = sh.st
+    local name, link, _, icon = ItemBits(st.item)
+    local missing, hints = {}, {}
+    for _, m in ipairs(sh.items) do
+      if m.missing > 0 then
+        missing[#missing + 1] = m.missing .. " " .. ns.ItemName(m.id)
+        local h = ClothHint(m.id)
+        if h then hints[#hints + 1] = h end
+      end
+    end
+    local detail = string.format(L.todoStepDetail, st.from, st.to)
+                   .. "\n" .. (#missing > 0 and (string.format(L.todoMissing, table.concat(missing, ", "))) or ("|cff40d860" .. L.todoAllMats .. "|r"))
+                   .. (#hints > 0 and ("\n" .. table.concat(hints, "\n")) or "")
+    lines[#lines + 1] = Step(num(), icon or SpellIcon(st.spell) or D.profs[k].icon,
+      string.format(L.todoCraft, (st.item and name) or ns.SpellName(st.spell or 0) or st.name, sh.crafts), detail,
+      sh.cost > 0 and ("|cffffd100" .. ns.Money(sh.cost) .. "|r") or nil, sh.cost > 0 and L.todoToBuy or nil, nil, link)
+    -- composants en détail
+    for _, m in ipairs(sh.items) do
+      local mname, mlink, q, micon = ItemBits(m.id)
+      lines[#lines + 1] = { kind = "card", link = mlink, icon = micon, quality = q or 1, name = mname or ns.ItemName(m.id),
+                            tags = m.missing > 0 and Colored("|cffff6a5a", string.format(L.tagMissing, m.missing)) or Colored("|cff40d860", L.tagOk),
+                            source = string.format(L.shopDetail, m.need, m.bags, m.bank, m.alts > 0 and string.format(L.shopAlts, m.alts) or ""),
+                            gain = m.price and ("|cffffd100" .. ns.Money(m.price) .. "|r") or "", gainSub = m.vendor and L.shopVendorShort or (m.price and L.perUnit or ""),
+                            text = string.format(L.shopLine, ns.ItemName(m.id), m.need, m.bags, m.bank, "", "") }
+    end
+  elseif ri.rank >= 300 then
+    lines[#lines + 1] = { kind = "info", text = Gray(L.guideDone) }
+  end
+  -- meilleurs crafts relevés dans la fenêtre du métier
+  local adv = ns.db.lastAdvice[k]
+  if adv and adv.items and #adv.items > 0 then
+    lines[#lines + 1] = { kind = "info", boss = true, text = "|cffffd100" .. L.bestTitle .. "|r" }
+    for i, e in ipairs(adv.items) do if i <= 3 then lines[#lines + 1] = CraftCard(e) end end
+    lines[#lines + 1] = { kind = "info", text = string.format(L.bestOld, date("%d/%m %H:%M", adv.t)) }
+  elseif not adv then
+    lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.skillUnknown, L["prof_" .. k])) }
+  end
+end
+
+-- Prochaine chose utile pour toi (une seule) : la pièce ou l'enchantement le plus proche au-delà de ta portée
+local function NextUseful(lines)
+  local _, nextE = ns.EnchantNear()
+  local near, nextP = ns.TailorNear()
+  if #near > 0 then
+    local u = near[1]
+    local name, _, q, icon = ItemBits(u.link)
+    local gain, sub = GainParts(u.gain)
+    lines[#lines + 1] = { kind = "card", link = u.link, icon = icon, quality = q or 2, name = name or "?",
+                          tags = Colored("|cff40d860", L.tagNow), source = u.known and L.tailorKnownSrc or ((u.src or "?") .. "  ·  " .. string.format(L.skillTag, u.need or 0)),
+                          gain = gain, gainSub = sub, text = name or "" }
+  elseif nextP then
+    local name, _, q, icon = ItemBits(nextP.link)
+    lines[#lines + 1] = { kind = "card", link = nextP.link, icon = icon, quality = q or 2, name = name or "?",
+                          tags = Gray(string.format(L.tagFrom, nextP.minLevel or 0, nextP.need or 0)),
+                          source = L.todoNextPiece, text = name or "" }
+  end
+  if nextE then
+    lines[#lines + 1] = { kind = "card", icon = SpellIcon(nextE.e.spell) or D.profs.enchanting.icon, quality = 1, name = nextE.e.name, nameColor = { 1, 0.82, 0 },
+                          tags = Gray(string.format(L.skillTag, nextE.need)), source = L.todoNextEnch .. "  ·  " .. SrcText(nextE.e), text = nextE.e.name }
+  end
 end
 
 function ns.LevelLines()
   local lines = {}
-  local any = false
+  lines[#lines + 1] = { kind = "info", text = "|cffd8c8a0" .. L.todoIntro .. "|r" }
   for _, k in ipairs(D.profOrder) do
-    if RankHead(k, lines) then
-      any = true
-      ShopCards(k, lines)
-      local adv = ns.db.lastAdvice[k]
-      lines[#lines + 1] = { kind = "info", boss = true, text = "|cffffd100" .. L.bestTitle .. "|r" }
-      if adv and adv.items and #adv.items > 0 then
-        for _, e in ipairs(adv.items) do lines[#lines + 1] = CraftCard(e) end
-        lines[#lines + 1] = { kind = "info", text = string.format(L.bestOld, date("%d/%m %H:%M", adv.t)) }
-      elseif adv and adv.lines and #adv.lines > 0 then
-        for _, t in ipairs(adv.lines) do lines[#lines + 1] = { kind = "info", text = t } end
-      elseif adv then
-        lines[#lines + 1] = { kind = "info", text = Gray(L.bestNone) }
-      else
-        lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.skillUnknown, L["prof_" .. k])) }
-      end
-    else
-      lines[#lines + 1] = { kind = "head", icon = D.profs[k].icon, title = L["prof_" .. k], right = Gray(L.notLearnedShort),
-                            text = string.format(L.notLearned, L["prof_" .. k]) }
-    end
+    if ns.RankInfo(k) then TodoLearned(k, lines) else TodoNotLearned(k, lines) end
   end
-  if any and not (_G.Auctionator and _G.Auctionator.API) then lines[#lines + 1] = { kind = "info", text = Gray(L.auctionatorOff) } end
+  lines[#lines + 1] = { kind = "head", icon = "Interface\\Icons\\INV_Misc_Note_02", title = L.todoUsefulTitle, text = L.todoUsefulTitle }
+  local before = #lines
+  NextUseful(lines)
+  if #lines == before then lines[#lines + 1] = { kind = "info", text = Gray(L.todoNothing) } end
+  if not (_G.Auctionator and _G.Auctionator.API) then lines[#lines + 1] = { kind = "info", text = Gray(L.auctionatorOff) } end
   return lines
 end
 
 ----------------------------------------------------------------------
--- Onglet Pour toi
+-- Onglet Pour toi : seulement ce qui est à ta portée
 ----------------------------------------------------------------------
-local SrcText
 function ns.ForYouLines()
   local lines = {}
+  lines[#lines + 1] = { kind = "info", text = "|cffd8c8a0" .. string.format(L.nearIntro, ns.LevelWindow(), ns.SkillWindow("tailoring"),
+                        ns.SkillWindow("enchanting")) .. "|r" }
   if not ns.HealAPI() then lines[#lines + 1] = { kind = "info", text = Gray(L.healOnly) } end
+  -- enchantements : seulement les emplacements où quelque chose est à ta portée
   lines[#lines + 1] = { kind = "head", icon = D.profs.enchanting.icon, title = L.enchTitle, text = L.enchTitle }
-  for _, a in ipairs(ns.EnchantAdvice()) do
-    local slotName = L["slot" .. a.slot] or tostring(a.slot)
-    if not a.link then
-      lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.enchSlot, slotName, L.enchNone)) }
-    else
+  local list, nextE = ns.EnchantNear()
+  local shown = 0
+  for _, a in ipairs(list) do
+    local best = a.known or a.now or a.soon
+    if a.link and best then
+      shown = shown + 1
+      local slotName = L["slot" .. a.slot] or tostring(a.slot)
       local name, _, q, icon = ItemBits(a.link)
-      local src, legacy = {}, {}
-      if a.known then
-        src[#src + 1] = string.format(L.cardKnown, a.known.e.name)
-        legacy[#legacy + 1] = string.format(L.enchKnown, a.known.e.name, a.known.gain and ns.GainText(a.known.gain) or "?")
-      end
-      if a.soon then
-        local e = a.soon.e
-        src[#src + 1] = string.format(L.cardSoon, e.name, ns.EntrySkill(e), SrcText(e))
-        legacy[#legacy + 1] = string.format(L.enchSoon, e.name, ns.EntrySkill(e), a.soon.gain and ns.GainText(a.soon.gain) or "?", SrcText(e))
-      end
-      if a.learn then
-        local e = a.learn.e
-        src[#src + 1] = string.format(L.cardLearn, e.name, ns.EntrySkill(e), SrcText(e)) .. (e.new and L.newTag or "")
-        legacy[#legacy + 1] = string.format(L.enchLearn, e.name, ns.EntrySkill(e), a.learn.gain and ns.GainText(a.learn.gain) or "?", SrcText(e))
-      end
-      if not a.any then src[#src + 1] = Gray(L.enchNoOption) end
-      local best = a.known or a.soon or a.learn
-      local gain, sub = GainParts(best and best.gain)
+      local src = {}
+      if a.known then src[#src + 1] = "|cff40d860" .. string.format(L.cardKnown, a.known.e.name) .. "|r" end
+      if a.now then src[#src + 1] = string.format(L.cardNow, a.now.e.name, SrcText(a.now.e)) end
+      if a.soon then src[#src + 1] = Gray(string.format(L.cardSoon2, a.soon.e.name, a.soon.need)) end
+      local gain, sub = GainParts(best.gain)
       lines[#lines + 1] = { kind = "card", link = a.link, icon = icon, quality = q or 1, name = slotName .. " : " .. (name or "?"),
                             tags = a.enchanted and L.enchDone or L.enchMissing, source = table.concat(src, "\n"), gain = gain, gainSub = sub,
-                            text = string.format(L.enchSlot, slotName, a.link .. "  " .. (a.enchanted and L.enchDone or L.enchMissing))
-                                   .. "\n" .. table.concat(legacy, "\n") }
+                            text = slotName .. " " .. (a.link or "") .. " " .. best.e.name .. " " .. table.concat(src, " ") }
     end
   end
+  if shown == 0 then
+    lines[#lines + 1] = { kind = "info", text = Gray(nextE and string.format(L.nearNoEnch, nextE.e.name, nextE.need) or L.nearNoEnchAtAll) }
+  end
+  -- couture : pièces à ta portée
   lines[#lines + 1] = { kind = "head", icon = D.profs.tailoring.icon, title = L.tailorTitle, text = L.tailorTitle }
-  local ups = ns.TailorUpgrades()
-  if #ups == 0 then lines[#lines + 1] = { kind = "info", text = Gray(L.tailorNone) } end
-  for _, u in ipairs(ups) do
+  local near, nextP = ns.TailorNear()
+  for _, u in ipairs(near) do
     local name, _, q, icon = ItemBits(u.link)
-    local tags = { (u.minLevel or 0) > UnitLevel("player") and Colored("|cffff6a5a", string.format(L.cardLevel, u.minLevel)) or Gray(string.format(L.cardLevel, u.minLevel or 0)) }
+    local tags = { (u.minLevel or 0) > UnitLevel("player") and Colored("|cffff9a1a", string.format(L.cardLevel, u.minLevel)) or Gray(string.format(L.cardLevel, u.minLevel or 0)) }
     tags[#tags + 1] = u.known and Colored("|cff40d860", L.tailorKnown) or Colored("|cffffd100", L.tagToLearn)
     local gain, sub = GainParts(u.gain)
     lines[#lines + 1] = { kind = "card", link = u.link, icon = icon, quality = q or 2, name = name or "?", tags = table.concat(tags, "  "),
-                          source = u.known and L.tailorKnownSrc or ((u.src or "?") .. (u.skill and ("  ·  " .. string.format(L.skillTag, u.skill)) or "")),
-                          gain = gain, gainSub = sub,
-                          text = string.format(L.tailorItem, u.link, u.minLevel, ns.GainText(u.gain), u.known and L.tailorKnown or string.format(L.tailorLearn, u.src or "?")) }
+                          source = u.known and L.tailorKnownSrc or ((u.src or "?") .. "  ·  " .. string.format(L.skillTag, u.need or 0)),
+                          gain = gain, gainSub = sub, text = (u.link or "") .. " " .. ns.GainText(u.gain) }
   end
-  lines[#lines + 1] = { kind = "info", text = Gray(L.raidSets) }
+  if #near == 0 then
+    local nm = nextP and ItemBits(nextP.link)
+    lines[#lines + 1] = { kind = "info", text = Gray(nextP and string.format(L.nearNoPiece, nm or "?", nextP.minLevel or 0, nextP.need or 0) or L.nearNoPieceAtAll) }
+  end
   return lines
 end
 
@@ -244,12 +325,20 @@ local SECTION_ICON = { camp = "Interface\\Icons\\Spell_Fire_Fire", rods = "Inter
                        ench = "Interface\\Icons\\Trade_Engraving", pat = "Interface\\Icons\\Trade_Tailoring",
                        cd = "Interface\\Icons\\INV_Misc_PocketWatch_01" }
 
+ns.showAll = false
 function ns.RecipeLines()
   local lines = {}
+  lines[#lines + 1] = { kind = "info", text = "|cffd8c8a0" .. (ns.showAll and L.recAllIntro or string.format(L.recNearIntro, D.nearSkill)) .. "|r" }
+  local function near(k, p)
+    if ns.showAll or ns.Known(k, p) then return true end
+    return ns.EntrySkill(p) <= ns.SkillWindow(k)
+  end
   local function section(title, icon, k, filter, list)
-    if title then lines[#lines + 1] = { kind = "head", icon = icon, title = title, text = title } end
+    local head = title and { kind = "head", icon = icon, title = title, text = title }
+    local added = false
     for _, p in ipairs(list) do
-      if filter(p) then
+      if filter(p) and near(k, p) then
+        if head and not added then lines[#lines + 1] = head; added = true end
         local name, link, q, iicon
         if p.id then name, link, q, iicon = ItemBits(p.id) end
         local status = Status(k, p)
@@ -332,6 +421,8 @@ function ns.Refresh()
     local lines = (tab == "foryou" and ns.ForYouLines()) or (tab == "de" and ns.DELines()) or (tab == "recipes" and ns.RecipeLines()) or ns.LevelLines()
     ui.list.Render(lines)
     for _, t in ipairs(TABS) do ui.tabs[t[1]]:SetActive(tab == t[1]) end
+    ui.allBtn:SetShown(tab == "recipes")
+    ui.allBtn:SetText(ns.showAll and L.showNear or L.showAll)
     if not InCombatLockdown() then ui.deBtn:SetShown(tab == "de") end
     if tab == "de" then ns.UpdateDEButton() end
   end
@@ -396,6 +487,9 @@ local function CreateUI()
   end
   ui.optBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.optShort, L.optTip2, function() ShowOptions() end)
   ui.optBtn:SetPoint("TOPRIGHT", -18, -30)
+  ui.allBtn = MakeButton(ui, L.showAll, 130, function() ns.showAll = not ns.showAll; ns.Refresh() end)
+  ui.allBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -16, 4)
+  ui.allBtn:Hide()
   ui.list = K.CardList(ui, W - 60)
   ui.list.scroll:SetPoint("TOPLEFT", 16, -82)
   ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 48)

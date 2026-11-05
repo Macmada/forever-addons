@@ -548,6 +548,64 @@ function ns.ATTLearnable(k)
 end
 
 ----------------------------------------------------------------------
+-- « À ta portée » : ce qui sert maintenant ou très bientôt (niveau du personnage, compétence du métier)
+----------------------------------------------------------------------
+function ns.SkillOf(k) return db.skills[k] and db.skills[k].rank or 0 end
+function ns.SkillWindow(k) return ns.SkillOf(k) + D.nearSkill end
+function ns.LevelWindow() return UnitLevel("player") + D.nearLevel end
+
+-- Enchantements à ta portée, par emplacement porté : known (tu sais faire), now (apprenable maintenant),
+-- soon (dans les 30 prochains points) ; next = le premier utile au-delà (pour dire « à partir de… »)
+function ns.EnchantNear()
+  local out, nextE = {}, nil
+  local skill, win = ns.SkillOf("enchanting"), ns.SkillWindow("enchanting")
+  for _, a in ipairs(ns.EnchantAdvice()) do
+    local n = { slot = a.slot, link = a.link, enchanted = a.enchanted }
+    if a.link then
+      for _, e in ipairs(D.healEnchants) do
+        local need = ns.EntrySkill(e)
+        local applies = false
+        if e.slot == a.slot then
+          local _, _, _, loc = ns.Instant(a.link)
+          applies = (not e.two or loc == "INVTYPE_2HWEAPON") and (not e.off or loc == "INVTYPE_HOLDABLE")
+        end
+        if applies then
+          local g = ns.StatGain(ns.EnchantStats(e))
+          local score = g and g.score or (1 / (need + 1))
+          if not g or score > 0 then
+            local c = { e = e, gain = g, score = score, need = need }
+            local key = ns.Known("enchanting", e) and "known" or (need <= skill and "now") or (need <= win and "soon") or nil
+            if key then
+              if not n[key] or score > n[key].score then n[key] = c end
+            elseif not nextE or need < nextE.need then
+              nextE = { e = e, need = need, slot = a.slot, gain = g }
+            end
+          end
+        end
+      end
+    end
+    out[#out + 1] = n
+  end
+  return out, nextE
+end
+
+-- Pièces de couture à ta portée (niveau requis ≤ ton niveau + 5, recette ≤ ta compétence + 30) ; next = la première au-delà
+function ns.TailorNear()
+  local near, nextP = {}, nil
+  local lvlWin, win = ns.LevelWindow(), ns.SkillWindow("tailoring")
+  for _, u in ipairs(ns.TailorUpgrades()) do
+    local need = u.known and 0 or (u.skill or 0)
+    for _, p in ipairs(D.patterns.tailoring) do
+      if p.id == u.id then need = u.known and 0 or ns.EntrySkill(p) end
+    end
+    u.need = need
+    if (u.minLevel or 0) <= lvlWin and need <= win then near[#near + 1] = u
+    elseif not nextP or (u.minLevel or 0) < (nextP.minLevel or 0) then nextP = u end
+  end
+  return near, nextP
+end
+
+----------------------------------------------------------------------
 -- Désenchantement
 ----------------------------------------------------------------------
 function ns.DEResult(ilvl, quality, classID)
