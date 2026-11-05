@@ -28,6 +28,7 @@ local function Clean(s)
   s = s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|T.-|t", "")
   s = s:match("^%s*(.-)%s*$")
   if s == "" or s:find("^%[?Retrieving") or s:find("^%[?Récupération") then return nil end
+  if s:find("^Quest #%d+") or s:find("^Quête #%d+") then return nil end     -- quête pas encore chargée par le jeu
   return s
 end
 
@@ -55,7 +56,9 @@ local function Path(g)
     n = n + 1
     local pr = Get(p, "r")
     if pr and pr ~= MyR() then return nil, false end
+    if not Get(p, "parent") and not (Get(p, "mapID") or Get(p, "instanceID")) then break end   -- racine d'ATT (« ALL THE THINGS »)
     local t = Clean(Get(p, "text") or Get(p, "name"))
+    if not t and Get(p, "questID") then t = FR and "quête" or "quest" end
     local isPlace = Get(p, "mapID") or Get(p, "instanceID")
     if Get(p, "npcID") or Get(p, "creatureID") or Get(p, "questID") or Get(p, "encounterID") or Get(p, "objectID") then good = true end
     if t and not Get(p, "headerID") and (#parts < 2 or isPlace) then parts[#parts + 1] = t end

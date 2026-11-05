@@ -146,7 +146,9 @@ function K.Backdrop(parent, region, alpha, inset)
   return f
 end
 
--- Ligne de liste en titre de rubrique : lettres de livre et filet doré (row.text, row.kitRule créé au besoin)
+-- Ligne de liste en titre de rubrique : lettres de livre et filet doré. À appeler APRÈS row.text:SetText.
+-- Le titre a son propre texte (row.kitHead) : dans WoW, une police posée par SetFont l'emporte ensuite sur SetFontObject,
+-- donc un texte de ligne réutilisé ne doit jamais recevoir la police des titres (lignes illisibles, 05/11/2026).
 function K.StyleHeader(row, on, size)
   if not row.kitRule then
     row.kitRule = row:CreateTexture(nil, "ARTWORK")
@@ -155,6 +157,19 @@ function K.StyleHeader(row, on, size)
     row.kitRule:SetHeight(1)
     row.kitRule:SetColorTexture(0.65, 0.48, 0.16, 0.8)
   end
+  if on and not row.kitHead then
+    row.kitHead = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    K.TitleFont(row.kitHead, size or 15, "GameFontNormal")
+    row.kitHead:SetJustifyH("LEFT")
+  end
   row.kitRule:SetShown(on)
-  if on then K.TitleFont(row.text, size or 15, "GameFontNormal") end
+  if row.kitHead then
+    row.kitHead:SetShown(on)
+    if on then
+      row.kitHead:ClearAllPoints()
+      row.kitHead:SetAllPoints(row.text)
+      row.kitHead:SetText(row.text:GetText())
+    end
+  end
+  row.text:SetAlpha(on and 0 or 1)
 end

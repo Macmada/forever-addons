@@ -1,5 +1,9 @@
 # Journal des versions
 
+## ForeverGFX 2.4.1 / ForeverLoot 1.8.1 / ForeverMetiers 1.6.1 / ForeverGazette 1.5.3 (et modules communs des autres)
+- **Lignes illisibles dans ForeverLoot** (certaines en grandes lettres de livre) : une ligne qui avait servi de titre gardait la police des titres quand elle était réutilisée (dans WoW, une police posée directement l'emporte ensuite sur le style). Les titres ont maintenant leur propre texte ; même correction pour ForeverMetiers et la Gazette.
+- All The Things : plus de « ALL THE THINGS » (la racine d'ATT) ni de « Quest #6502* » (quête pas encore chargée) comme source.
+
 ## ForeverGFX 2.4.0 / ForeverLoot 1.8 / ForeverMetiers 1.6 / ForeverMacros 1.8 / ForeverGazette 1.5.2 / ForeverPrep 1.6.1 / ForeverHeal 2.0.1
 - **Même style pour toutes les fenêtres Forever** (comme la Gazette, ForeverPrep et ForeverHeal) :
   - ForeverLoot : titre doré avec icône, **onglets BiS / Donjons**, liste sur fond sombre encadré d'or, emplacements (Tête, Cou…) en lettres de livre avec filet doré ;

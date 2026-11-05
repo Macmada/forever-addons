@@ -147,6 +147,14 @@ _G.ATTC = { SearchForField = function(field, id)
   end
 end }
 check(ns.ATTWhere(13345) == "Baron Rivendare — Stratholme", "ATT : Sceau de Rivendare sur le Baron Rivendare (Stratholme)")
+-- racine d'ATT et quête pas encore chargée (diagnostic du 05/11/2026 : « ALL THE THINGS », « Quest #6502* »)
+local root = { text = "ALL THE THINGS" }
+_G.ATTC.SearchForField = function(field, id)
+  if id == 22149 then return { { itemID = 22149, parent = { questID = 7, text = "Quest #6502*", parent = { headerID = -1, text = "Quêtes", parent = root } } } } end
+  if id == 13345 then return { { itemID = 13345, parent = { encounterID = 456, text = "Baron Rivendare", parent = { instanceID = 236, text = "Stratholme", parent = { headerID = -1, text = "Donjons", parent = root } } } } } end
+end
+local w = ns.ATTWhere(22149)
+check(w == nil or (not w:find("ALL THE THINGS", 1, true) and not w:find("Quest #", 1, true)), "ATT : ni « ALL THE THINGS » ni « Quest #… » (« " .. tostring(w) .. " »)")
 local al = {}
 for _, l in ipairs(ns.BisLines()) do al[#al + 1] = l.text end
 check(table.concat(al, "\n"):find("ATT[^|]*Baron Rivendare — Stratholme"), "onglet BiS : source d'ATT")

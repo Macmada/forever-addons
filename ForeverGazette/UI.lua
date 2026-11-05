@@ -45,11 +45,33 @@ local Border, MakeTab, MakeAction = K.Border, K.Tab, K.Action
 local pool = { fs = {}, btn = {}, rule = {}, tex = {} }
 local used = { fs = 0, btn = 0, rule = 0, tex = 0 }
 
+-- Textes en lettres de livre : réserve à part par taille (une police posée par SetFont ne se retire plus ensuite)
+local tpool, tused = {}, {}
 local function ResetPool()
   for _, kind in ipairs({ "fs", "btn", "rule", "tex" }) do
     for _, o in ipairs(pool[kind]) do o:Hide() end
     used[kind] = 0
   end
+  for size, list in pairs(tpool) do
+    for _, o in ipairs(list) do o:Hide() end
+    tused[size] = 0
+  end
+end
+
+local function GetTitleFS(size, fontObject)
+  tpool[size] = tpool[size] or {}
+  tused[size] = (tused[size] or 0) + 1
+  local fs = tpool[size][tused[size]]
+  if not fs then
+    fs = ui.content:CreateFontString(nil, "OVERLAY", fontObject)
+    fs:SetJustifyV("TOP")
+    fs:SetSpacing(2)
+    K.TitleFont(fs, size, fontObject)
+    tpool[size][tused[size]] = fs
+  end
+  fs:ClearAllPoints()
+  fs:Show()
+  return fs
 end
 
 local function GetFS()
@@ -134,8 +156,6 @@ local function ItemIcon(link)
   if (not ok or not tex) and GetItemIcon then ok, tex = pcall(GetItemIcon, link) end
   return ok and tex or nil
 end
-
-local TitleFont = K.TitleFont
 
 local SECTION_ICON = {
   dungeons = "Interface\\Icons\\INV_Misc_Head_Dragon_01", exploits = "Interface\\Icons\\Ability_Warrior_BattleShout",
@@ -231,16 +251,28 @@ local function Render(blocks)
       if b.link or b.onClick then
         holder = GetBtn()
         holder.link, holder.onClick = b.link, b.onClick
-        fs = holder.fs
+        -- texte du bouton : normal, ou un texte de titre à part (gros titre lié à un objet)
+        local key = st.title and ("tfs" .. st.title)
+        if key and not holder[key] then
+          holder[key] = holder:CreateFontString(nil, "OVERLAY", st.font)
+          holder[key]:SetJustifyV("TOP")
+          K.TitleFont(holder[key], st.title, st.font)
+        end
+        for k, o in pairs(holder) do
+          if type(k) == "string" and k:find("^tfs") and type(o) == "table" and o.Hide then o:Hide() end
+        end
+        holder.fs:SetShown(not key)
+        fs = key and holder[key] or holder.fs
+        fs:Show()
         local tex = (b.kind == "item") and ItemIcon(b.link)
         holder.icon:SetShown(tex ~= nil)
         if tex then holder.icon:SetTexture(tex); iconW = 22 end
         fs:ClearAllPoints()
         fs:SetPoint("TOPLEFT", iconW, 0)
       else
-        fs = GetFS()
+        fs = st.title and GetTitleFS(st.title, st.font) or GetFS()
       end
-      if st.title then TitleFont(fs, st.title, st.font) else fs:SetFontObject(st.font) end
+      if not st.title then fs:SetFontObject(st.font) end
       fs:SetTextColor(st.color[1], st.color[2], st.color[3])
       fs:SetJustifyH(st.justify)
       fs:SetWidth(width - indent - 12 - iconW)
