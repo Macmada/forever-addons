@@ -1,6 +1,12 @@
 # Journal des versions
 
-## ForeverGFX 2.3.6 / ForeverGazette 1.5
+## ForeverGFX 2.3.6 / ForeverGazette 1.5 / ForeverPrep 1.5
+- **Nouvelle fenêtre de ForeverPrep**, même style :
+  - **bandeau d'état** en haut : « Prêt pour le donjon ! » (coche verte), « Presque prêt : 2 point(s) à régler » (orange) ou « Pas encore prêt » (croix rouge), avec ton niveau et ton rôle ;
+  - **onglets Donjon / Raid**, **rôle avec son icône** (clic pour en changer), actions en icônes : Actualiser, Options, Aide ;
+  - chaque ligne avec la **pastille de l'appel** (coche, point d'interrogation, croix) et l'icône de l'objet ; rubriques illustrées avec le nombre de points à faire ; liste de courses avec rappel du bouton « Tout acheter ».
+- ForeverPrep : plus de ligne « Potions de mana » avant le niveau où la première est utilisable (5) ; ce qui ne s'achète pas (bandages, potions de mana…) passe en orange (à faire) au lieu de rouge ; niveaux corrigés d'après le jeu (Élixir des Sages 38, Huile de sorcier inférieure 30, Huile de sorcier 40).
+- Éléments d'interface communs (`tools/Widgets.lua`) : onglets, actions en icônes, cadres, pastilles d'état.
 - **Nouvelle fenêtre de la Gazette**, dans le style de l'interface de WoW :
   - **onglets** « Édition du jour », « Sommaire », « L'Hebdo » (l'onglet actif est souligné d'or) ;
   - **barre de navigation** : « Veille », la date de l'édition au milieu, « Lendemain », et « Aujourd'hui » quand tu regardes un autre jour ;

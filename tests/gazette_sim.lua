@@ -138,7 +138,7 @@ _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
 _G.IsAddOnLoaded = function() return true end
 _G.ChatFontNormal = _G.ChatFontNormal or {}
 local ns = {}
-for _, f in ipairs({ "Locale", "Diag", "Templates", "Core", "Gazette", "Tour", "UI" }) do
+for _, f in ipairs({ "Locale", "Diag", "Templates", "Core", "Gazette", "Tour", "Widgets", "UI" }) do
   local chunk = assert(loadfile("ForeverGazette/" .. f .. ".lua"))
   chunk("ForeverGazette", ns)
 end

@@ -177,6 +177,7 @@ local function CountRow(label, best, have, need, optional, noBuy)
     row.text = string.format(L.rowOk, label, have, need)
   elseif noBuy or not best then
     row.text = string.format(L.rowMissingNoBuy, label, have, need)
+    if st == "bad" then row.status = "warn" end                     -- impossible à acheter : à faire, pas bloquant
   else
     row.text = string.format(L.rowMissing, label, have, need, need - have, name)
     row.buyID, row.buyQty, row.buyName = best.id, need - have, best.name
@@ -207,7 +208,8 @@ function ns.Analyze(ctx, roleOverride)
   for _, cat in ipairs(D.consumables) do
     if (not cat.mana or mana) and level >= (cat.minLevel or 1) then
       local best, have, any = Pool(cat.items, cat.extra, level)
-      if any then
+      -- rien d'utilisable à ton niveau (ex. potions de mana avant le niveau 5) : pas de ligne
+      if any and (best or have > 0) then
         cons.rows[#cons.rows + 1] = CountRow(L["cat_" .. cat.key], best, have, cat.need[ci], cat.optional, cat.noBuy)
       end
     end

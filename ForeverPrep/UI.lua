@@ -2,8 +2,9 @@ local _, ns = ...
 local L = ns.L
 local Print = ns.Print
 
-local W, H = 560, 600
+local W, H = 600, 660
 local COLORS = { ok = { 0.25, 0.8, 0.3 }, info = { 0.6, 0.6, 0.6 }, warn = { 1, 0.6, 0.1 }, bad = { 0.95, 0.2, 0.2 } }
+local K = ns.Kit
 local ui
 local state = { ctx = nil, reason = nil }
 
@@ -37,13 +38,24 @@ function ns.FormatMoney(copper)
   return string.format(fr and "%d pc" or "%dc", c)
 end
 
+local function RoleKey(res)
+  if ns.db.role == "auto" then return ns.AutoRole(res.class) end
+  return ns.db.role
+end
+
 local function RoleLabel(res)
   if ns.db.role == "auto" then return string.format(L.role_auto, L["role_" .. ns.AutoRole(res.class)]) end
   return L["role_" .. ns.db.role]
 end
 
+local SECTION_ICON = {
+  consumables = "Interface\\Icons\\INV_Potion_54", reagents = "Interface\\Icons\\INV_Misc_Bag_07",
+  buffs = "Interface\\Icons\\Spell_Holy_WordFortitude", gear = "Interface\\Icons\\INV_Chest_Chain",
+  character = "Interface\\Icons\\INV_Misc_Rune_01", shopping = "Interface\\Icons\\INV_Misc_Coin_01",
+}
+
 ----------------------------------------------------------------------
--- Lignes de la fiche (réutilisées)
+-- Lignes de la fiche (réutilisées) : pastille d'état comme l'appel, icône de l'objet, texte ; une ligne sur deux plus claire
 ----------------------------------------------------------------------
 local rows, used = {}, 0
 local function GetRow()
@@ -51,18 +63,24 @@ local function GetRow()
   local r = rows[used]
   if not r then
     r = CreateFrame("Button", nil, ui.content)
-    r:SetHeight(20)
+    r:SetHeight(22)
+    r.stripe = r:CreateTexture(nil, "BACKGROUND")
+    r.stripe:SetAllPoints()
     r.dot = r:CreateTexture(nil, "ARTWORK")
-    r.dot:SetSize(10, 10)
-    r.dot:SetPoint("LEFT", 4, 0)
+    r.dot:SetSize(16, 16)
+    r.dot:SetPoint("LEFT", 6, 0)
     r.icon = r:CreateTexture(nil, "ARTWORK")
-    r.icon:SetSize(18, 18)
-    r.icon:SetPoint("LEFT", 20, 0)
+    r.icon:SetSize(20, 20)
+    r.icon:SetPoint("LEFT", 28, 0)
+    r.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    r.text:SetPoint("LEFT", 42, 0)
+    r.text:SetPoint("LEFT", 54, 0)
     r.text:SetPoint("RIGHT", -4, 0)
     r.text:SetJustifyH("LEFT")
     r.text:SetWordWrap(true)
+    local hl = r:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetAllPoints()
+    hl:SetColorTexture(1, 0.82, 0.3, 0.08)
     r:SetScript("OnEnter", function(self)
       if self.itemID then
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -77,13 +95,28 @@ local function GetRow()
   return r
 end
 
+-- Titre de rubrique : icône, nom en lettres de livre, filet doré
 local headers, hused = {}, 0
 local function GetHeader()
   hused = hused + 1
   local h = headers[hused]
   if not h then
-    h = ui.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    h:SetJustifyH("LEFT")
+    h = CreateFrame("Frame", nil, ui.content)
+    h:SetHeight(26)
+    h.icon = h:CreateTexture(nil, "ARTWORK")
+    h.icon:SetSize(20, 20)
+    h.icon:SetPoint("LEFT", 2, 0)
+    h.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    h.fs = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    h.fs:SetPoint("LEFT", h.icon, "RIGHT", 8, 0)
+    K.TitleFont(h.fs, 16, "GameFontNormal")
+    h.count = h:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    h.count:SetPoint("RIGHT", -6, 0)
+    h.rule = h:CreateTexture(nil, "ARTWORK")
+    h.rule:SetPoint("BOTTOMLEFT", 0, 0)
+    h.rule:SetPoint("BOTTOMRIGHT", 0, 0)
+    h.rule:SetHeight(1)
+    h.rule:SetColorTexture(0.65, 0.48, 0.16, 0.8)
     headers[hused] = h
   end
   h:Show()
@@ -96,50 +129,70 @@ local function Render(res)
   used, hused = 0, 0
   local y = -4
   local width = ui.content:GetWidth()
-  local nWarn, nInfo = 0, 0
-  local function Header(text)
+  local nWarn, nInfo, stripe = 0, 0, 0
+  local function Header(key, text, nTodo)
     local h = GetHeader()
     h:ClearAllPoints()
-    h:SetPoint("TOPLEFT", 2, y - 6)
-    h:SetText(text)
-    y = y - 26
+    h:SetPoint("TOPLEFT", 0, y - 6)
+    h:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
+    h.icon:SetTexture(SECTION_ICON[key] or SECTION_ICON.consumables)
+    h.fs:SetText(text)
+    h.count:SetText(nTodo and nTodo > 0 and ("|cffff9a1a" .. string.format(L.todoCount, nTodo) .. "|r") or "")
+    y = y - 34
+    stripe = 0
   end
-  local function Row(r)
+  local function Row(r, noStatus)
     local row = GetRow()
-    local c = COLORS[r.status] or COLORS.info
-    row.dot:SetColorTexture(c[1], c[2], c[3], 1)
+    stripe = stripe + 1
+    row.stripe:SetColorTexture(1, 1, 1, stripe % 2 == 0 and 0.04 or 0)
+    row.dot:SetShown(not noStatus)
+    if not noStatus then K.SetStatus(row.dot, r.status) end
     row.icon:SetShown(r.icon ~= nil)
     if r.icon then row.icon:SetTexture(r.icon) end
     row.itemID = r.itemID or r.id
-    row.text:SetWidth(width - 50)
-    row.text:SetText(r.text)
-    local h = math.max(20, row.text:GetStringHeight() + 4)
+    row.text:SetWidth(width - 60)
+    local c = (r.status == "bad" and "|cffff6a5a") or (r.status == "warn" and "|cffffc860") or ""
+    row.text:SetText(c ~= "" and (c .. r.text .. "|r") or r.text)
+    local h = math.max(22, row.text:GetStringHeight() + 6)
     row:SetHeight(h)
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", 0, y)
     row:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
-    y = y - h - 2
+    y = y - h - 1
   end
   for _, s in ipairs(res.sections) do
     if #s.rows > 0 then
-      Header(L["sec_" .. s.key])
+      local todo = 0
+      for _, r in ipairs(s.rows) do if r.status == "warn" or r.status == "bad" then todo = todo + 1 end end
+      Header(s.key, L["sec_" .. s.key], todo)
       for _, r in ipairs(s.rows) do
         Row(r)
         if r.status == "warn" or r.status == "bad" then nWarn = nWarn + 1 elseif r.status == "info" then nInfo = nInfo + 1 end
       end
     end
   end
-  Header(L.sec_shopping)
+  Header("shopping", L.sec_shopping)
   if #res.shopping == 0 then
     Row({ status = "ok", text = L.shopEmpty })
   else
-    for _, it in ipairs(res.shopping) do Row({ status = "info", icon = it.icon, itemID = it.id, text = string.format(L.shopLine, it.qty, it.name) }) end
+    for _, it in ipairs(res.shopping) do Row({ icon = it.icon, itemID = it.id, text = string.format(L.shopLine, it.qty, it.name) }, true) end
+    Row({ text = "|cffa0a0a0" .. L.shopHint .. "|r" }, true)
   end
   ui.content:SetHeight(-y + 8)
+  -- bandeau d'état : prêt (vert), presque (orange), pas prêt (rouge)
+  local worst = res.worst or (nWarn > 0 and "warn" or "ok")
+  K.SetStatus(ui.bannerIcon, worst == "info" and "ok" or worst)
+  local c = COLORS[worst == "info" and "ok" or worst] or COLORS.ok
+  ui.bannerText:SetTextColor(c[1], c[2], c[3])
+  ui.bannerText:SetText((nWarn == 0) and (res.context == "raid" and L.bannerOkRaid or L.bannerOk)
+                        or string.format(worst == "bad" and L.bannerBad or L.bannerWarn, nWarn))
+  ui.bannerSub:SetText((state.reason and (state.reason .. " · ") or "") .. string.format(L.bannerSub, res.level, RoleLabel(res)))
   ui.summary:SetText((nWarn == 0) and ("|cff40cc4d" .. L.allGood .. "|r") or string.format(L.summary, nWarn, nInfo))
   ui.title:SetText(res.context == "raid" and L.titleRaid or L.title)
-  ui.ctxBtn:SetText(L["ctx_" .. res.context])
-  ui.roleBtn:SetText(string.format(L.role, RoleLabel(res)))
+  ui.tabDungeon:SetActive(res.context ~= "raid")
+  ui.tabRaid:SetActive(res.context == "raid")
+  ui.roleBtn.fs:SetText(string.format(L.role, RoleLabel(res)))
+  K.SetRole(ui.roleBtn.icon, RoleKey(res))
   ui.reason:SetText(state.reason or "")
 end
 
@@ -161,39 +214,77 @@ local function CreateUI()
   ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
   tinsert(UISpecialFrames, "ForeverPrepFrame")
   ui:Hide()
-  ui.title = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  ui.title:SetPoint("TOPLEFT", 12, -6)
-  ui.reason = ui:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  ui.reason:SetPoint("TOPLEFT", 16, -32)
+  local logo = ui:CreateTexture(nil, "OVERLAY")
+  logo:SetSize(16, 16)
+  logo:SetPoint("TOPLEFT", 8, -4)
+  logo:SetTexture("Interface\\Icons\\INV_Potion_51")
+  logo:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+  ui.title = ui:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  ui.title:SetPoint("LEFT", logo, "RIGHT", 6, 0)
+  ui.diagBtn = ns.MakeDiagButton(ui)
 
-  ui.ctxBtn = MakeButton(ui, "", 90, function()
-    state.ctx = ((state.ctx or ns.Context()) == "raid") and "dungeon" or "raid"
-    ns.db.context = state.ctx
-    ns.Refresh()
-  end)
-  ui.ctxBtn:SetPoint("TOPLEFT", 14, -50)
-  ui.roleBtn = MakeButton(ui, "", 230, function()
+  -- bandeau : prêt ou pas, en grand
+  local banner = CreateFrame("Frame", nil, ui)
+  banner:SetPoint("TOPLEFT", 12, -30)
+  banner:SetPoint("TOPRIGHT", -12, -30)
+  banner:SetHeight(52)
+  K.Panel(banner, 0.9)
+  ui.banner = banner
+  ui.bannerIcon = banner:CreateTexture(nil, "ARTWORK")
+  ui.bannerIcon:SetSize(34, 34)
+  ui.bannerIcon:SetPoint("LEFT", 10, 0)
+  ui.bannerText = banner:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  ui.bannerText:SetPoint("TOPLEFT", ui.bannerIcon, "TOPRIGHT", 10, 0)
+  ui.bannerText:SetPoint("RIGHT", -10, 0)
+  ui.bannerText:SetJustifyH("LEFT")
+  K.TitleFont(ui.bannerText, 19, "GameFontNormalLarge")
+  ui.bannerSub = banner:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  ui.bannerSub:SetPoint("BOTTOMLEFT", ui.bannerIcon, "BOTTOMRIGHT", 10, 0)
+  ui.bannerSub:SetPoint("RIGHT", -10, 0)
+  ui.bannerSub:SetJustifyH("LEFT")
+  ui.reason = banner:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")   -- gardé pour le tutoriel ; affiché dans bannerSub
+  ui.reason:Hide()
+
+  -- onglets Donjon / Raid, rôle, actions en icônes
+  local function SetCtx(c) state.ctx = c; ns.db.context = c; ns.Refresh() end
+  ui.tabDungeon = K.Tab(ui, L.ctx_dungeon, function() SetCtx("dungeon") end)
+  ui.tabDungeon:SetPoint("TOPLEFT", 14, -92)
+  ui.tabRaid = K.Tab(ui, L.ctx_raid, function() SetCtx("raid") end)
+  ui.tabRaid:SetPoint("LEFT", ui.tabDungeon, "RIGHT", 4, 0)
+  ui.ctxBtn = ui.tabDungeon
+  ui.roleBtn = K.Tab(ui, "", function()
     local order = { "auto", "tank", "heal", "melee", "caster" }
     local cur = 1
     for i, r in ipairs(order) do if r == ns.db.role then cur = i end end
     ns.db.role = order[cur % #order + 1]
     ns.Refresh()
   end)
-  ui.roleBtn:SetPoint("LEFT", ui.ctxBtn, "RIGHT", 6, 0)
-  ui.refreshBtn = MakeButton(ui, L.refresh, 90, function() ns.Refresh() end)
-  ui.refreshBtn:SetPoint("LEFT", ui.roleBtn, "RIGHT", 6, 0)
-  ui.diagBtn = ns.MakeDiagButton(ui)
-  ui.helpBtn = MakeButton(ui, L.help, 26, function() ns.RunTour() end)
-  ui.helpBtn:SetPoint("TOPRIGHT", -14, -50)
-  ui.optBtn = MakeButton(ui, L.options, 80, function() ns.ShowOptions() end)
-  ui.optBtn:SetPoint("RIGHT", ui.helpBtn, "LEFT", -4, 0)
+  ui.roleBtn:SetWidth(210)
+  ui.roleBtn:SetPoint("LEFT", ui.tabRaid, "RIGHT", 12, 0)
+  ui.roleBtn.icon = ui.roleBtn:CreateTexture(nil, "OVERLAY")
+  ui.roleBtn.icon:SetSize(18, 18)
+  ui.roleBtn.icon:SetPoint("LEFT", 6, 0)
+  ui.roleBtn.fs:ClearAllPoints()
+  ui.roleBtn.fs:SetPoint("LEFT", 28, 1)
+  K.Tooltip(ui.roleBtn, L.roleTipTitle, L.roleTip)
+  ui.helpBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_QuestionMark", L.helpLabel, L.tipHelp, function() ns.RunTour() end)
+  ui.helpBtn:SetPoint("TOPRIGHT", -18, -90)
+  ui.optBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.options, L.tipOptions, function() ns.ShowOptions() end)
+  ui.optBtn:SetPoint("RIGHT", ui.helpBtn, "LEFT", -22, 0)
+  ui.refreshBtn = K.Action(ui, "Interface\\Icons\\Spell_Holy_Renew", L.refresh, L.tipRefresh, function() ns.Refresh() end)
+  ui.refreshBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -22, 0)
 
-  local sf = CreateFrame("ScrollFrame", nil, ui, "UIPanelScrollFrameTemplate")
-  sf:SetPoint("TOPLEFT", 12, -80)
-  sf:SetPoint("BOTTOMRIGHT", -32, 36)
+  -- la fiche, sur fond sombre encadré d'or
+  local sheet = CreateFrame("Frame", nil, ui)
+  sheet:SetPoint("TOPLEFT", 12, -138)
+  sheet:SetPoint("BOTTOMRIGHT", -12, 40)
+  K.Panel(sheet, 0.55)
+  local sf = CreateFrame("ScrollFrame", nil, sheet, "UIPanelScrollFrameTemplate")
+  sf:SetPoint("TOPLEFT", 8, -6)
+  sf:SetPoint("BOTTOMRIGHT", -28, 6)
   ui.scroll = sf
   local content = CreateFrame("Frame", nil, sf)
-  content:SetSize(W - 50, 10)
+  content:SetSize(W - 24 - 40, 10)
   sf:SetScrollChild(content)
   ui.content = content
   ui.summary = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -462,7 +553,7 @@ function ns.RunTour()
     { target = function() return ui.scroll end, title = L.t1t, text = L.t1 },
     { target = function() return ui.ctxBtn end, title = L.t2t, text = L.t2 },
     { target = function() return ui.roleBtn end, title = L.t3t, text = L.t3 },
-    { target = function() return ui.summary end, title = L.t4t, text = L.t4 },
+    { target = function() return ui.banner end, title = L.t4t, text = L.t4 },
     { target = function() return ui.optBtn end, title = L.t5t, text = L.t5 },
     { target = function() return ns.minimapButton end, title = L.t6t, text = L.t6 },
     { target = function() return ns.floatButton end, title = L.t7t, text = L.t7 },

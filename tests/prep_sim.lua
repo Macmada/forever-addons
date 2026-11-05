@@ -159,7 +159,7 @@ _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
 _G.IsAddOnLoaded = function() return true end
 _G.ChatFontNormal = _G.ChatFontNormal or {}
 local ns = {}
-for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "Tour", "UI" }) do
+for _, f in ipairs({ "Locale", "Diag", "Data", "Core", "Tour", "Widgets", "UI" }) do
   assert(loadfile("ForeverPrep/" .. f .. ".lua"))("ForeverPrep", ns)
 end
 local evf = ns.eventFrame
@@ -324,6 +324,28 @@ for _ = 1, 30 do Fire("UNIT_AURA", "player") end
 RunTimers(5)
 check(analyses <= 2, "30 changements de buffs en rafale : regroupés (" .. analyses .. " analyse(s))")
 ns.Analyze = realAnalyze
+-- niveau 3 (diagnostic du 05/11/2026) : pas de potion de mana utilisable avant le niveau 5, bandages impossibles à acheter
+local saveLevel = P.level
+P.level = 3
+local r3 = ns.Analyze("dungeon")
+local mana3, band3
+for _, sct in ipairs(r3.sections) do
+  for _, r in ipairs(sct.rows) do
+    if r.text:find(ns.L.cat_manapot, 1, true) then mana3 = r end
+    if r.text:find(ns.L.cat_bandage, 1, true) then band3 = r end
+  end
+end
+check(not mana3, "niveau 3 : pas de ligne « Potions de mana » (la première est au niveau 5)")
+check(not band3 or band3.status ~= "bad", "bandages manquants : à faire (orange), pas bloquant (rouge)")
+P.level = saveLevel
+-- fenêtre : bandeau d'état, onglets Donjon / Raid, rôle avec icône
+if not ns.ui:IsShown() then ns.Toggle() end
+ns.ui.tabDungeon.scripts.OnClick(ns.ui.tabDungeon)
+check(ns.ui.bannerText:GetText() ~= "" and ns.ui.tabDungeon.active and not ns.ui.tabRaid.active, "fenêtre : bandeau d'état, onglet Donjon actif")
+ns.ui.tabRaid.scripts.OnClick(ns.ui.tabRaid)
+check(ns.ui.tabRaid.active and ns.ui.title:GetText() == ns.L.titleRaid, "onglet Raid : fiche du raid")
+ns.ui.tabDungeon.scripts.OnClick(ns.ui.tabDungeon)
+
 -- client moderne de Forever : pas de GetItemCooldown global (diagnostic du 05/11/2026 : Core.lua:366)
 _G.GetItemCooldown = nil
 _G.C_Container = _G.C_Container or {}

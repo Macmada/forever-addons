@@ -14,5 +14,6 @@ Templates.lua
 Core.lua
 Gazette.lua
 Tour.lua
+Widgets.lua
 UI.lua
 Hub.lua

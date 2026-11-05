@@ -10,8 +10,6 @@ local PAPER = { 0.93, 0.88, 0.74 }
 local INK = { 0.16, 0.11, 0.06 }
 local INK_SOFT = { 0.38, 0.29, 0.18 }
 local RED = { 0.45, 0.10, 0.06 }
-local GOLD = { 1, 0.82, 0 }
-local TITLE_FONT = "Fonts\\MORPHEUS.TTF"           -- police des titres de quêtes et des livres
 
 local ui
 local state = { mode = "day", key = nil }
@@ -38,77 +36,8 @@ local function MakeCheck(parent, text, get, set)
   return cb
 end
 
--- Cadre fin (quatre traits) autour d'une zone
-local function Border(parent, r, g, b, a, layer)
-  local t = {}
-  for i = 1, 4 do
-    t[i] = parent:CreateTexture(nil, layer or "BORDER")
-    t[i]:SetColorTexture(r, g, b, a)
-  end
-  t[1]:SetPoint("TOPLEFT"); t[1]:SetPoint("TOPRIGHT"); t[1]:SetHeight(1)
-  t[2]:SetPoint("BOTTOMLEFT"); t[2]:SetPoint("BOTTOMRIGHT"); t[2]:SetHeight(1)
-  t[3]:SetPoint("TOPLEFT"); t[3]:SetPoint("BOTTOMLEFT"); t[3]:SetWidth(1)
-  t[4]:SetPoint("TOPRIGHT"); t[4]:SetPoint("BOTTOMRIGHT"); t[4]:SetWidth(1)
-  return t
-end
-
-local function Tooltip(btn, title, text)
-  btn:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText(title, GOLD[1], GOLD[2], GOLD[3])
-    if text then GameTooltip:AddLine(text, 1, 1, 1, true) end
-    GameTooltip:Show()
-  end)
-  btn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-end
-
--- Onglet maison (or sur fond sombre, souligné quand il est actif) : ne dépend d'aucun modèle propre à une version du jeu
-local function MakeTab(parent, text, onClick)
-  local b = CreateFrame("Button", nil, parent)
-  b:SetHeight(26)
-  b.bg = b:CreateTexture(nil, "BACKGROUND")
-  b.bg:SetAllPoints()
-  b.fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  b.fs:SetPoint("CENTER", 0, 1)
-  b.fs:SetText(text)
-  b:SetWidth(math.max(96, (b.fs:GetStringWidth() or 80) + 28))
-  b.line = b:CreateTexture(nil, "ARTWORK")
-  b.line:SetPoint("BOTTOMLEFT", 4, 0)
-  b.line:SetPoint("BOTTOMRIGHT", -4, 0)
-  b.line:SetHeight(2)
-  b.line:SetColorTexture(GOLD[1], GOLD[2], GOLD[3], 1)
-  b.border = Border(b, 0.55, 0.42, 0.18, 0.9)
-  local hl = b:CreateTexture(nil, "HIGHLIGHT")
-  hl:SetAllPoints()
-  hl:SetColorTexture(1, 0.82, 0.3, 0.12)
-  function b.SetActive(self, on)
-    self.active = on
-    self.bg:SetColorTexture(on and 0.32 or 0.08, on and 0.22 or 0.06, on and 0.08 or 0.04, 0.95)
-    self.fs:SetTextColor(on and 1 or 0.85, on and 0.9 or 0.72, on and 0.55 or 0.4)
-    self.line:SetShown(on)
-  end
-  b:SetScript("OnClick", onClick)
-  b:SetActive(false)
-  return b
-end
-
--- Action en icône, avec son nom dessous et une bulle d'aide
-local function MakeAction(parent, icon, label, tip, onClick)
-  local b = CreateFrame("Button", nil, parent)
-  b:SetSize(30, 30)
-  b.icon = b:CreateTexture(nil, "ARTWORK")
-  b.icon:SetAllPoints()
-  b.icon:SetTexture(icon)
-  b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-  Border(b, 0.55, 0.42, 0.18, 1, "OVERLAY")
-  b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-  b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  b.label:SetPoint("TOP", b, "BOTTOM", 0, -2)
-  b.label:SetText(label)
-  Tooltip(b, label, tip)
-  b:SetScript("OnClick", onClick)
-  return b
-end
+local K = ns.Kit
+local Border, MakeTab, MakeAction = K.Border, K.Tab, K.Action
 
 ----------------------------------------------------------------------
 -- Mise en page des blocs sur le papier
@@ -206,12 +135,7 @@ local function ItemIcon(link)
   return ok and tex or nil
 end
 
--- Police des titres (Morpheus) ; si le client ne la trouve pas, on garde la police de l'objet
-local function TitleFont(fs, size, fontObject)
-  fs:SetFontObject(fontObject)
-  local ok = fs:SetFont(TITLE_FONT, size, "")
-  if ok == false then fs:SetFontObject(fontObject) end
-end
+local TitleFont = K.TitleFont
 
 local SECTION_ICON = {
   dungeons = "Interface\\Icons\\INV_Misc_Head_Dragon_01", exploits = "Interface\\Icons\\Ability_Warrior_BattleShout",
