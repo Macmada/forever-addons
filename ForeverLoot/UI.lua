@@ -9,7 +9,7 @@ local K = ns.Kit
 
 local W, H = 700, 640
 local ui
-local tab = "bis"
+local tab = "near"
 
 local function Zone(key)
   local z = D.zones[key]
@@ -314,6 +314,47 @@ function ns.BisLines()
   return lines
 end
 
+-- « À mon niveau » : pour chaque emplacement, les 2 meilleurs objets portables jusqu'au niveau choisi, et où les avoir
+ns.nearSpan = 5
+function ns.NearLines(span)
+  span = span or ns.nearSpan
+  local level = UnitLevel("player")
+  local maxLevel = math.min(60, level + span)
+  local lines = {}
+  lines[#lines + 1] = { kind = "info", display = "|cffd8c8a0" .. string.format(L.nearIntro, maxLevel) .. "|r", text = string.format(L.nearIntro, maxLevel) }
+  if not ns.DJ() then lines[#lines + 1] = { kind = "info", display = "|cffa0a0a0" .. L.djOff .. "|r", text = L.djOff } end
+  local bis = ns.BiS(2, maxLevel)
+  local empty = {}
+  for _, slot in ipairs(D.slotOrder) do
+    local s = bis[slot]
+    local items = s and s.items or {}
+    if #items == 0 then
+      empty[#empty + 1] = L["slot" .. slot] or tostring(slot)
+    else
+      local worn = GetInventoryItemLink("player", slot)
+      local icon = GetInventoryItemTexture and GetInventoryItemTexture("player", slot)
+      local crop = icon ~= nil
+      if not icon and GetInventorySlotInfo and SLOT_NAME[slot] then
+        local ok, _, tex = pcall(GetInventorySlotInfo, SLOT_NAME[slot])
+        if ok then icon = tex end
+      end
+      lines[#lines + 1] = { kind = "slot", icon = icon, iconCrop = crop, link = worn, title = L["slot" .. slot] or tostring(slot),
+                            right = "|cffa0a0a0" .. string.format(L.equipped, worn or L.nothing) .. "|r",
+                            text = (L["slot" .. slot] or "") .. " " .. string.format(L.equipped, worn or L.nothing) }
+      for _, c in ipairs(items) do
+        local card = CardFrom(c, c.ref)
+        card.text = c.link .. " — " .. ns.GainText(c.eval) .. " " .. (c.where or ns.ATTWhere(c.id) or "")
+        lines[#lines + 1] = card
+      end
+    end
+  end
+  if #empty > 0 then
+    lines[#lines + 1] = { kind = "info", display = "|cff808080" .. string.format(L.nearEmpty, table.concat(empty, ", ")) .. "|r",
+                          text = string.format(L.nearEmpty, table.concat(empty, ", ")) }
+  end
+  return lines
+end
+
 function ns.DungeonLines()
   local lines = { { kind = "info", display = "|cffa0a0a0" .. L.dungeonsHelp .. "|r", text = L.dungeonsHelp } }
   local zones = {}
@@ -384,9 +425,13 @@ end
 
 function ns.Refresh()
   if not ui or not ui:IsShown() then return end
-  Render(tab == "dungeons" and ns.DungeonLines() or ns.BisLines())
+  Render((tab == "dungeons" and ns.DungeonLines()) or (tab == "bis" and ns.BisLines()) or ns.NearLines())
+  ui.nearBtn:SetActive(tab == "near")
   ui.bisBtn:SetActive(tab == "bis")
   ui.dunBtn:SetActive(tab == "dungeons")
+  for span, b in pairs(ui.spanBtns) do b:SetActive(ns.nearSpan == span); b:SetShown(tab == "near") end
+  ui.spanLabel:SetShown(tab == "near")
+  ui.scroll:SetPoint("TOPLEFT", 16, tab == "near" and -112 or -82)
 end
 
 ----------------------------------------------------------------------
@@ -441,12 +486,28 @@ local function CreateUI()
   ui:Hide()
   K.Dress(ui, "Interface\\Icons\\INV_Misc_Bag_10", L.title)
   ui.diagBtn = ns.MakeDiagButton(ui)
-  ui.bisBtn = K.Tab(ui, L.tabBis, function() tab = "bis"; ns.Refresh() end)
-  ui.bisBtn:SetPoint("TOPLEFT", 14, -32)
+  ui.nearBtn = K.Tab(ui, L.tabNear, function() tab = "near"; ns.Refresh() end)
+  ui.nearBtn:SetPoint("TOPLEFT", 14, -32)
+  ui.bisBtn = K.Tab(ui, L.tabBis60, function() tab = "bis"; ns.Refresh() end)
+  ui.bisBtn:SetPoint("LEFT", ui.nearBtn, "RIGHT", 4, 0)
   ui.dunBtn = K.Tab(ui, L.tabDungeons, function() tab = "dungeons"; ns.Refresh() end)
   ui.dunBtn:SetPoint("LEFT", ui.bisBtn, "RIGHT", 4, 0)
   ui.optBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.optShort, L.optTip2, function() ShowOptions() end)
   ui.optBtn:SetPoint("TOPRIGHT", -18, -30)
+  -- jusqu'à quel niveau regarder (onglet « À mon niveau »)
+  ui.spanLabel = ui:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  ui.spanLabel:SetPoint("TOPLEFT", 18, -80)
+  ui.spanLabel:SetText(L.spanLabel)
+  ui.spanBtns = {}
+  local prevSpan
+  for _, span in ipairs({ 0, 3, 5, 10 }) do
+    local b = K.Tab(ui, span == 0 and L.spanNow or string.format(L.spanPlus, span), function() ns.nearSpan = span; ns.Refresh() end)
+    b:SetHeight(22)
+    b:SetWidth(96)
+    if prevSpan then b:SetPoint("LEFT", prevSpan, "RIGHT", 4, 0) else b:SetPoint("LEFT", ui.spanLabel, "RIGHT", 10, 0) end
+    ui.spanBtns[span] = b
+    prevSpan = b
+  end
   local sf = CreateFrame("ScrollFrame", nil, ui, "UIPanelScrollFrameTemplate")
   sf:SetPoint("TOPLEFT", 16, -82)
   sf:SetPoint("BOTTOMRIGHT", -34, 16)
@@ -599,7 +660,8 @@ SLASH_FOREVERLOOT2 = "/bis"
 SlashCmdList.FOREVERLOOT = function(msg)
   msg = ((msg or ""):match("^%s*(.-)%s*$")):lower()
   local cmd, arg = msg:match("^(%S*)%s*(.-)$")
-  if cmd == "" or cmd == "bis" then ns.ShowTab("bis")
+  if cmd == "" or cmd == "niveau" or cmd == "level" then ns.ShowTab("near")
+  elseif cmd == "bis" then ns.ShowTab("bis")
   elseif cmd == "donjons" or cmd == "dungeons" then ns.ShowTab("dungeons")
   elseif cmd == "diag" then ns.ShowDiag()
   elseif cmd == "lang" and (arg == "fr" or arg == "en") then ns.lang, ns.db.lang = arg, arg; ns.Refresh()

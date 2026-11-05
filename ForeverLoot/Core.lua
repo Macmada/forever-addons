@@ -430,13 +430,17 @@ function ns.Candidates()
 end
 
 -- slot -> { meilleurs candidats (gain > 0, triés) }, et l'objet de référence de cet emplacement
-function ns.BiS(limit)
+-- maxLevel : seulement les objets utilisables jusqu'à ce niveau (onglet « À mon niveau ») ; sinon réglage « niveau supérieur »
+function ns.BiS(limit, maxLevel)
   local out = {}
   for _, c in ipairs(ns.Candidates()) do
     local r = ns.Evaluate(c.link)
     if r and r.slot and (r.wearable or c.ref) then
       local slot = (r.slot == 12) and 11 or ((r.slot == 14) and 13 or r.slot)
-      if db.higher or (r.minLevel or 0) <= UnitLevel("player") then
+      local okLevel
+      if maxLevel then okLevel = (r.minLevel or 0) <= maxLevel
+      else okLevel = db.higher or (r.minLevel or 0) <= UnitLevel("player") end
+      if okLevel then
         out[slot] = out[slot] or { items = {}, refs = {} }
         c.eval = r
         if c.ref then table.insert(out[slot].refs, c) end

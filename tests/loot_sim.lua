@@ -160,6 +160,18 @@ for _, l in ipairs(ns.BisLines()) do al[#al + 1] = l.text end
 check(table.concat(al, "\n"):find("ATT[^|]*Baron Rivendare — Stratholme"), "onglet BiS : source d'ATT")
 _G.ATTC = nil
 
+-- 5d. « À mon niveau » (05/11/2026) : meilleurs objets portables jusqu'à ton niveau + N, et où les avoir
+local function NT(lines) local t = {}; for _, l in ipairs(lines) do t[#t + 1] = l.text end; return table.concat(t, "\n") end
+local n5 = NT(ns.NearLines(5))
+check(n5:find("Gants de l'oracle", 1, true) and n5:find("Salle des thanes", 1, true) and not n5:find("Gants de l'avenir", 1, true)
+      and not n5:find("Collerette de dévot", 1, true), "À mon niveau (40, +5) : gants de l'oracle (38, La Salle des thanes), pas les objets de niveau 55-57")
+local n0 = NT(ns.NearLines(0))
+check(n0:find("Gants de l'oracle", 1, true), "À mon niveau (40) : déjà portable")
+SlashCmdList.FOREVERLOOT("")
+check(ns.ui.nearBtn.active and ns.ui.spanBtns[5].active, "/floot : onglet « À mon niveau » (+5 niveaux par défaut)")
+ns.ui.spanBtns[10].scripts.OnClick(ns.ui.spanBtns[10])
+check(ns.nearSpan == 10 and ns.ui.spanBtns[10].active, "choix « +10 niveaux »")
+
 -- 6. infobulle d'un objet de référence
 GameTooltip.link, GameTooltip.lines = Link(16693), {}
 ns.OnTooltipItem(GameTooltip)

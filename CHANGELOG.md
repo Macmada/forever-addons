@@ -1,6 +1,7 @@
 # Journal des versions
 
-## ForeverGFX 2.4.4 / ForeverMetiers 2.1
+## ForeverGFX 2.4.4 / ForeverMetiers 2.1 / ForeverLoot 2.1
+- **ForeverLoot : nouvel onglet « À mon niveau »** (ouvert par défaut, `/floot`) : pour chaque emplacement, **les 2 meilleurs objets pour toi que tu peux porter maintenant ou dans quelques niveaux** (choix : mon niveau, +3, +5, +10 niveaux), avec **où les obtenir** (donjon et boss ou quête d'après DungeonJournal, sinon All The Things) et le gain en soins/s. L'ancien onglet BiS devient « BiS niveau 60 » (`/floot bis`).
 - **ForeverMetiers repensé autour de « que faire maintenant, à mon niveau ? »** (au niveau 5, la fenêtre proposait des enchantements de compétence 300 et des pièces de niveau 45) :
   - nouvel onglet **« Que faire ? »** (ouvert par défaut) : des **étapes numérotées** pour chaque métier. Métier pas encore appris : 1. l'apprendre chez le maître de la capitale la plus proche, 2. où trouver la première étoffe (humanoïdes de niveau 5 à 15), 3. la première recette. Métier appris : le maître à aller voir quand le plafond approche (et le niveau requis), l'étape en cours avec **ce qui te manque** et où trouver l'étoffe, les meilleurs crafts, puis **la prochaine chose utile** pour toi ;
   - **« Pour toi »** ne montre plus que ce qui est **à ta portée** : objets jusqu'à ton niveau + 5, recettes jusqu'à ta compétence + 30 (ce que tu sais faire, à apprendre maintenant, bientôt) ; sinon, il dit quelle sera la première chose utile et à quelle compétence ;
