@@ -1,6 +1,6 @@
 # Journal des versions
 
-## ForeverGazette 1.6.2 (non publiée)
+## ForeverGFX 2.4.9 / ForeverGazette 1.6.2
 - **Lieux en double** (gazette du 05/11/2026 : « Vue pour la première fois à Forgefer » puis « Aperçu à Forgefer ») : le client de WoW Forever présente Forgefer et la salle des Thanes comme des « scénarios », que la gazette prenait pour des donjons. Seuls donjons et raids comptent maintenant comme « première fois à… », et chaque lieu n'apparaît qu'une fois par édition (y compris les éditions déjà enregistrées).
 - Compagnon PDF : plus de nom de fichier (« WoWScrnShot_….jpg ») sous la photo de une.
 
