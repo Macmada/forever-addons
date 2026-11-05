@@ -462,6 +462,7 @@ handlers.MERCHANT_CLOSED = function() if ns.OnMerchantClosed then ns.OnMerchantC
 handlers.BAG_UPDATE_DELAYED = SoonRefresh
 handlers.PLAYER_REGEN_ENABLED = function()
   if deferredByCombat then deferredByCombat = false; SoonRefresh() end
+  if ns.AfterCombat then ns.AfterCombat() end
 end
 handlers.UNIT_AURA = function(unit) if unit == "player" then SoonRefresh() end end
 handlers.GET_ITEM_INFO_RECEIVED = function(id)

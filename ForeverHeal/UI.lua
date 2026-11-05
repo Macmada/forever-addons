@@ -215,6 +215,7 @@ local panel
 local function CreatePanel()
   if panel then return panel end
   panel = CreateFrame("Frame", "ForeverHealPanel", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(panel)
   ns.panel = panel
   panel:SetSize(420, 560)
   panel:SetPoint("CENTER")

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## ForeverGFX 2.3.7 / ForeverPrep 1.6 / ForeverGazette 1.5.1 / ForeverHeal 1.9 / ForeverLoot 1.7 / ForeverMetiers 1.5 / ForeverMacros 1.7
+- **« Échec d'une action d'interface » en fermant une fenêtre par la croix** (en combat) : la croix du modèle standard passe par une fonction réservée à Blizzard en combat ; dans toutes les fenêtres des addons Forever, elle cache maintenant la fenêtre directement.
+- ForeverPrep **ouvert en combat : la fiche n'est plus vide**. Le jeu cache une partie des informations aux addons pendant un combat : la fiche montre la dernière analyse faite avant le combat (signalé dans le bandeau) et se met à jour dès la sortie du combat ; une analyse qui échoue s'affiche dans le bandeau au lieu de laisser la fenêtre vide.
+- ForeverMetiers : le bouton « Désenchanter le premier » (bouton sécurisé) n'est plus dans la fenêtre elle-même, pour qu'elle puisse être fermée en combat ; il n'est jamais montré ni caché en combat.
+
 ## ForeverGFX 2.3.6 / ForeverGazette 1.5 / ForeverPrep 1.5
 - **Nouvelle fenêtre de ForeverPrep**, même style :
   - **bandeau d'état** en haut : « Prêt pour le donjon ! » (coche verte), « Presque prêt : 2 point(s) à régler » (orange) ou « Pas encore prêt » (croix rouge), avec ton niveau et ton rôle ;

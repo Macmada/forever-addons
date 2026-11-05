@@ -414,6 +414,7 @@ local function ShowExport(blocks)
   if not blocks then return Print(L.noEdition) end
   if not tw then
     tw = CreateFrame("Frame", "ForeverGazetteExportFrame", UIParent, "BasicFrameTemplateWithInset")
+    ns.SafeClose(tw)
     tw:SetSize(620, 440)
     tw:SetPoint("CENTER", 40, -20)
     tw:SetFrameStrata("FULLSCREEN")
@@ -491,6 +492,7 @@ local shareFrame
 function ns.ShowShare()
   if not shareFrame then
     shareFrame = CreateFrame("Frame", "ForeverGazetteShareFrame", ui, "BasicFrameTemplateWithInset")
+    ns.SafeClose(shareFrame)
     shareFrame:SetSize(240, 150)
     shareFrame:SetPoint("TOPRIGHT", ui, "TOPRIGHT", -20, -60)
     shareFrame:SetFrameStrata("DIALOG")
@@ -513,6 +515,7 @@ local opt
 function ns.ShowOptions()
   if not opt then
     opt = CreateFrame("Frame", "ForeverGazetteOptionsFrame", ui, "BasicFrameTemplateWithInset")
+    ns.SafeClose(opt)
     opt:SetSize(540, 410)
     opt:SetPoint("CENTER", ui, "CENTER", 0, -10)
     opt:SetFrameStrata("DIALOG")
@@ -580,6 +583,7 @@ end
 function ns.CreateUI()
   if ui then return ui end
   ui = CreateFrame("Frame", "ForeverGazetteFrame", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(ui)
   ns.ui = ui
   ui:SetSize(W, H)
   ui:SetPoint("CENTER")

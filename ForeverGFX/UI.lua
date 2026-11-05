@@ -126,6 +126,7 @@ local tw
 function ns.ShowText(title, text, onAccept)
   if not tw then
     tw = CreateFrame("Frame", "ForeverGFXTextFrame", UIParent, "BasicFrameTemplateWithInset")
+    ns.SafeClose(tw)
     tw:SetSize(600, 400)
     tw:SetPoint("CENTER", 60, -30)
     tw:SetFrameStrata("FULLSCREEN")
@@ -213,6 +214,7 @@ end
 function ns.ShowContext()
   if not cw then
     cw = CreateFrame("Frame", "ForeverGFXContextFrame", UIParent, "BasicFrameTemplateWithInset")
+    ns.SafeClose(cw)
     cw:SetSize(480, 300)
     cw:SetPoint("CENTER", 40, 40)
     cw:SetFrameStrata("FULLSCREEN")
@@ -611,6 +613,7 @@ end
 ----------------------------------------------------------------------
 local function CreateUI()
   ui = CreateFrame("Frame", "ForeverGFXFrame", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(ui)
   ui:SetSize(W, H)
   ui:SetPoint("CENTER")
   ui:SetFrameStrata("DIALOG")

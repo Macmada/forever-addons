@@ -873,6 +873,7 @@ local tw
 function ShowText(title, text, onAccept)
   if not tw then
     tw = CreateFrame("Frame", "ForeverMacrosTextFrame", UIParent, "BasicFrameTemplateWithInset")
+    ns.SafeClose(tw)
     tw:SetSize(600, 400)
     tw:SetPoint("CENTER", 60, -30)
     tw:SetFrameStrata("FULLSCREEN")
@@ -967,6 +968,7 @@ end
 
 local function CreateUI()
   ui = CreateFrame("Frame", "ForeverMacrosFrame", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(ui)
   ui:SetSize(860, 600)
   ui:SetPoint("CENTER")
   ui:SetFrameStrata("DIALOG")

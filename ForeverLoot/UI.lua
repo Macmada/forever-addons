@@ -210,6 +210,7 @@ end
 local function CreateUI()
   if ui then return ui end
   ui = CreateFrame("Frame", "ForeverLootFrame", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(ui)
   ns.ui = ui
   ui:SetSize(W, H)
   ui:SetPoint("CENTER", -60, 20)

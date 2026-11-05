@@ -40,6 +40,18 @@ local function Header(add)
   add("Addons Forever chargés : " .. table.concat(list, ", "))
 end
 
+-- Croix de fermeture sûre : celle du modèle BasicFrameTemplate passe par HideUIPanel, réservé à Blizzard en combat
+-- (« Échec d'une action d'interface », 05/11/2026) ; on cache simplement la fenêtre
+function ns.SafeClose(f)
+  if not f then return end
+  local c = rawget(f, "CloseButton") or f.CloseButton
+  if type(c) ~= "table" then
+    local name = type(f.GetName) == "function" and f:GetName()
+    c = type(name) == "string" and _G[name .. "CloseButton"] or nil
+  end
+  if type(c) == "table" and type(c.SetScript) == "function" then c:SetScript("OnClick", function() f:Hide() end) end
+end
+
 -- Actions bloquées par le jeu (« … a été bloqué à cause d'une action qui n'est utilisable que par l'IU de Blizzard ») :
 -- notées avec le nom de la fonction, pour le diagnostic. Une seule fenêtre commune à tous les addons Forever.
 local blocked = _G.ForeverBlockedActions
@@ -76,6 +88,7 @@ function ns.ShowDiag()
   if not frame then
     local name = ADDON .. "DiagFrame"
     frame = CreateFrame("Frame", name, UIParent, "BasicFrameTemplateWithInset")
+    ns.SafeClose(frame)
     frame:SetSize(680, 480)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("FULLSCREEN_DIALOG")

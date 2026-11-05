@@ -127,6 +127,21 @@ local function Render(res)
   for _, r in ipairs(rows) do r:Hide() end
   for _, h in ipairs(headers) do h:Hide() end
   used, hused = 0, 0
+  if res.message then
+    -- message seul (combat sans analyse précédente, erreur d'analyse) : bandeau et titres remplis quand même
+    K.SetStatus(ui.bannerIcon, "warn")
+    ui.bannerText:SetTextColor(1, 0.75, 0.3)
+    ui.bannerText:SetText(res.message)
+    ui.bannerSub:SetText(string.format(L.bannerSub, res.level or 0, RoleLabel(res)))
+    ui.summary:SetText("")
+    ui.title:SetText(res.context == "raid" and L.titleRaid or L.title)
+    ui.tabDungeon:SetActive(res.context ~= "raid")
+    ui.tabRaid:SetActive(res.context == "raid")
+    ui.roleBtn.fs:SetText(string.format(L.role, RoleLabel(res)))
+    K.SetRole(ui.roleBtn.icon, RoleKey(res))
+    ui.content:SetHeight(10)
+    return
+  end
   local y = -4
   local width = ui.content:GetWidth()
   local nWarn, nInfo, stripe = 0, 0, 0
@@ -186,7 +201,8 @@ local function Render(res)
   ui.bannerText:SetTextColor(c[1], c[2], c[3])
   ui.bannerText:SetText((nWarn == 0) and (res.context == "raid" and L.bannerOkRaid or L.bannerOk)
                         or string.format(worst == "bad" and L.bannerBad or L.bannerWarn, nWarn))
-  ui.bannerSub:SetText((state.reason and (state.reason .. " · ") or "") .. string.format(L.bannerSub, res.level, RoleLabel(res)))
+  ui.bannerSub:SetText((state.stale and ("|cffffc860" .. L.combatStale .. "|r · ") or "") .. (state.reason and (state.reason .. " · ") or "")
+                       .. string.format(L.bannerSub, res.level, RoleLabel(res)))
   ui.summary:SetText((nWarn == 0) and ("|cff40cc4d" .. L.allGood .. "|r") or string.format(L.summary, nWarn, nInfo))
   ui.title:SetText(res.context == "raid" and L.titleRaid or L.title)
   ui.tabDungeon:SetActive(res.context ~= "raid")
@@ -202,6 +218,7 @@ end
 local function CreateUI()
   if ui then return ui end
   ui = CreateFrame("Frame", "ForeverPrepFrame", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(ui)
   ns.ui = ui
   ui:SetSize(W, H)
   ui:SetPoint("CENTER", 220, 40)
@@ -346,13 +363,14 @@ local function CreateFloat()
 end
 
 function ns.UpdateFloat()
-  if not ns.db then return end
+  if not ns.db or (InCombatLockdown and InCombatLockdown()) then return end
   if not ns.db.float.shown then
     if float then float:Hide() end
     return
   end
   CreateFloat():Show()
-  local res = ns.Analyze()
+  local okA, res = pcall(ns.Analyze)
+  if not okA or type(res) ~= "table" then return end
   local c = COLORS[res.worst] or COLORS.info
   float.ring:SetColorTexture(c[1], c[2], c[3], 1)
   local nWarn = 0
@@ -362,13 +380,37 @@ function ns.UpdateFloat()
   float.summary = (nWarn == 0) and L.allGood or string.format(L.summary, nWarn, #res.shopping)
 end
 
+-- En combat, le jeu cache aux addons une partie des informations (buffs, ressources) : pas d'analyse ; on montre la
+-- dernière faite avant le combat, et la fiche se met à jour à la sortie du combat (fenêtre vide le 05/11/2026).
 function ns.Refresh()
   if not ui or not ui:IsShown() then return end
   local inInstance = IsInInstance()
   local ctx = inInstance and ns.Context() or (state.ctx or ns.db.context)
-  local res = ns.Analyze(ctx)
+  if InCombatLockdown and InCombatLockdown() then
+    ns.pendingAfterCombat = true
+    if ui.current then
+      state.stale = true
+      Render(ui.current)
+    else
+      Render({ context = ctx, level = UnitLevel("player"), class = select(2, UnitClass("player")), sections = {}, shopping = {},
+               worst = "info", message = L.combatEmpty })
+    end
+    return
+  end
+  local ok, res = pcall(ns.Analyze, ctx)
+  if not ok or type(res) ~= "table" then
+    Render({ context = ctx, level = UnitLevel("player"), class = select(2, UnitClass("player")), sections = {}, shopping = {},
+             worst = "warn", message = string.format(L.analyzeError, tostring(res)) })
+    return
+  end
+  state.stale = nil
   ui.current = res
   Render(res)
+end
+
+-- Sortie du combat : fiche ouverte mise à jour (appelé par Core.lua)
+function ns.AfterCombat()
+  if ns.pendingAfterCombat then ns.pendingAfterCombat = nil; ns.Refresh() end
 end
 
 -- Ouverture automatique (Core.lua)
@@ -394,6 +436,7 @@ function ns.ShowOptions(standalone)
   if standalone and not ui:IsShown() then ui:Show() end
   if not opt then
     opt = CreateFrame("Frame", "ForeverPrepOptionsFrame", ui, "BasicFrameTemplateWithInset")
+    ns.SafeClose(opt)
     opt:SetSize(500, 300)
     opt:SetPoint("CENTER", ui, "CENTER", 0, 0)
     opt:SetFrameStrata("DIALOG")
@@ -498,6 +541,7 @@ function ns.OnMerchant()
   if not MerchantFrame then return end
   if not mp then
     mp = CreateFrame("Frame", "ForeverPrepMerchantFrame", MerchantFrame, "BasicFrameTemplateWithInset")
+    ns.SafeClose(mp)
     mp:SetSize(300, 120)
     mp:SetPoint("TOPLEFT", MerchantFrame, "TOPRIGHT", 4, 0)
     mp.title = mp:CreateFontString(nil, "OVERLAY", "GameFontHighlight")

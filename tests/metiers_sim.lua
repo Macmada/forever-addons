@@ -276,6 +276,17 @@ _G.GetSpellInfo = nil
 _G.C_Spell = { GetSpellName = function(id) return ({ [13262] = "Désenchanter", [1248459] = "Enchantement de brassards (Pouvoir de guérison mineur)" })[id] end }
 check(ns.SpellName(13262) == "Désenchanter" and ns.DEMacro({ bag = 1, slot = 2 }):find("/cast Désenchanter", 1, true), "client moderne : nom du sort par C_Spell.GetSpellName")
 
+-- 8d. bouton sécurisé « Désenchanter » : hors de la fenêtre, jamais montré / caché en combat (sinon action bloquée)
+ns.ShowTab("de")
+local de = ns.ui.deBtn
+check(de:IsShown(), "bouton Désenchanter affiché dans l'onglet")
+W.combat = true
+ns.ui:Hide()
+check(de:IsShown() and ns.deHidePending, "fenêtre fermée en combat : le bouton sécurisé n'est pas touché")
+W.combat = false
+W.fire("PLAYER_REGEN_ENABLED")
+check(not de:IsShown(), "sortie du combat : bouton caché")
+
 -- 9. diagnostic, icône commune, commandes
 local diag = ns.DiagText()
 check(diag:find("API craft", 1, true) and diag:find("1248459 = Enchantement de brassards", 1, true) and diag:find("Auctionator : présent", 1, true)

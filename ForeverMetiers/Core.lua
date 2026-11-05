@@ -653,7 +653,11 @@ handlers.BAG_UPDATE = function()
   C_Timer.After(1, function() bagPending = nil; if ns.OnBags then ns.OnBags() end end)
 end
 handlers.PLAYER_EQUIPMENT_CHANGED = function() if ns.Refresh then ns.Refresh() end end
-handlers.PLAYER_REGEN_ENABLED = function() if ns.OnBags then ns.OnBags() end end
+handlers.PLAYER_REGEN_ENABLED = function()
+  if ns.deHidePending and ns.ui and not ns.ui:IsShown() and ns.ui.deBtn then ns.ui.deBtn:Hide() end
+  ns.deHidePending = nil
+  if ns.OnBags then ns.OnBags() end
+end
 handlers.PLAYER_LOGIN = function()
   ns.ReadSkills()
   if ns.OnLogin then ns.OnLogin() end

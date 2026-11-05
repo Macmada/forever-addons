@@ -346,6 +346,26 @@ ns.ui.tabRaid.scripts.OnClick(ns.ui.tabRaid)
 check(ns.ui.tabRaid.active and ns.ui.title:GetText() == ns.L.titleRaid, "onglet Raid : fiche du raid")
 ns.ui.tabDungeon.scripts.OnClick(ns.ui.tabDungeon)
 
+-- en combat (05/11/2026 : fenêtre vide) : pas d'analyse, la dernière est montrée, mise à jour à la sortie du combat
+local analysesBefore = 0
+local realAn = ns.Analyze
+ns.Analyze = function(...) analysesBefore = analysesBefore + 1; return realAn(...) end
+combat = true
+if not ns.ui:IsShown() then ns.Toggle() end
+ns.Refresh()
+check(analysesBefore == 0 and ns.ui.bannerSub:GetText():find(ns.L.combatStale, 1, true), "en combat : pas d'analyse, dernière fiche montrée (« " .. ns.L.combatStale .. " »)")
+combat = false
+Fire("PLAYER_REGEN_ENABLED")
+check(analysesBefore >= 1 and not ns.ui.bannerSub:GetText():find(ns.L.combatStale, 1, true), "sortie du combat : fiche mise à jour")
+ns.Analyze = realAn
+-- croix de fermeture : cache la fenêtre sans passer par HideUIPanel (réservé en combat)
+local fake = CreateFrame("Frame", "ForeverPrepFakeFrame", UIParent, "BasicFrameTemplateWithInset")
+fake.CloseButton = CreateFrame("Button")
+fake:Show()
+ns.SafeClose(fake)
+fake.CloseButton.scripts.OnClick(fake.CloseButton)
+check(not fake:IsShown(), "croix : la fenêtre se cache directement")
+
 -- client moderne de Forever : pas de GetItemCooldown global (diagnostic du 05/11/2026 : Core.lua:366)
 _G.GetItemCooldown = nil
 _G.C_Container = _G.C_Container or {}

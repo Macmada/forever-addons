@@ -301,7 +301,7 @@ function ns.Refresh()
     local lines = (tab == "foryou" and ns.ForYouLines()) or (tab == "de" and ns.DELines()) or (tab == "recipes" and ns.RecipeLines()) or ns.LevelLines()
     ui.list.Render(lines)
     for _, t in ipairs(TABS) do ui.tabs[t[1]]:SetEnabled(tab ~= t[1]) end
-    ui.deBtn:SetShown(tab == "de")
+    if not InCombatLockdown() then ui.deBtn:SetShown(tab == "de") end
     if tab == "de" then ns.UpdateDEButton() end
   end
   if side and side:IsShown() and ns.lastScan and ns.lastScan.prof then ns.RenderSide(ns.lastScan) end
@@ -310,6 +310,7 @@ end
 local function CreateUI()
   if ui then return ui end
   ui = CreateFrame("Frame", "ForeverMetiersFrame", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(ui)
   ns.ui = ui
   ui:SetSize(W, H)
   ui:SetPoint("CENTER", -40, 20)
@@ -337,9 +338,13 @@ local function CreateUI()
   ui.list = MakeList(ui, W - 52)
   ui.list.scroll:SetPoint("TOPLEFT", 12, -58)
   ui.list.scroll:SetPoint("BOTTOMRIGHT", -32, 100)
-  local de = CreateFrame("Button", "ForeverMetiersDEButton", ui, "SecureActionButtonTemplate,UIPanelButtonTemplate")
+  -- bouton sécurisé rattaché à UIParent, pas à la fenêtre : un enfant sécurisé rendrait la fenêtre impossible à fermer en
+  -- combat ; on ne le montre / cache / règle que hors combat
+  local de = CreateFrame("Button", "ForeverMetiersDEButton", UIParent, "SecureActionButtonTemplate,UIPanelButtonTemplate")
+  de:SetFrameStrata("DIALOG")
+  de:Hide()
   de:SetSize(200, 24)
-  de:SetPoint("BOTTOMRIGHT", -16, 70)
+  de:SetPoint("BOTTOMRIGHT", ui, "BOTTOMRIGHT", -16, 70)
   de:SetText(L.deButton)
   de:RegisterForClicks("AnyUp", "AnyDown")
   de:SetScript("OnEnter", function(self)
@@ -350,6 +355,7 @@ local function CreateUI()
   de:SetScript("OnLeave", function() GameTooltip:Hide() end)
   de:HookScript("PostClick", function() C_Timer.After(2, function() if ns.OnBags then ns.OnBags() end end) end)
   ui.deBtn = de
+  ui:HookScript("OnHide", function() if not InCombatLockdown() then de:Hide() else ns.deHidePending = true end end)
   local y = 92
   local function C(text, key)
     local cb = CreateFrame("CheckButton", nil, ui, "UICheckButtonTemplate")
@@ -381,6 +387,7 @@ function ns.ShowTab(t) CreateUI(); tab = t; if ui:IsShown() then ns.Refresh() el
 local function CreateSide()
   if side then return side end
   side = CreateFrame("Frame", "ForeverMetiersSide", UIParent, "BasicFrameTemplateWithInset")
+  ns.SafeClose(side)
   ns.side = side
   side:SetSize(340, 430)
   side:SetFrameStrata("HIGH")

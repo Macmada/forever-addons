@@ -3,7 +3,7 @@
 ## Notes: Couture et enchantement : meilleur craft pour monter, liste de courses, enchantements et pièces utiles à ton prêtre, désenchantement, recettes et temps de recharge.
 ## Notes-enUS: Tailoring and enchanting: best craft to level, shopping list, enchants and pieces useful to your priest, disenchanting, recipes and cooldowns.
 ## Author: ForeverGFX
-## Version: 1.4
+## Version: 1.5
 ## SavedVariablesPerCharacter: ForeverMetiersDB
 ## SavedVariables: ForeverMetiersGlobalDB
 ## IconTexture: Interface\Icons\Trade_Tailoring
