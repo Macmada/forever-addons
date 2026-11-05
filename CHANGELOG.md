@@ -1,6 +1,6 @@
 # Journal des versions
 
-## ForeverLoot 2.3.2 (non publiée)
+## ForeverGFX 2.4.10 / ForeverLoot 2.3.2
 - **Bouton « Équiper » de l'alerte sans effet** : le client de WoW Forever n'a plus `EquipItemByName` en global. Le bouton passe par `C_Item.EquipItemByName`, sinon prend l'objet dans le sac et l'équipe ; si l'objet est introuvable, un message le dit (l'alerte reste affichée) au lieu de se fermer sans rien faire.
 
 ## ForeverGFX 2.4.9 / ForeverGazette 1.6.2
