@@ -1,5 +1,8 @@
 # Journal des versions
 
+## ForeverLoot 2.3.2 (non publiée)
+- **Bouton « Équiper » de l'alerte sans effet** : le client de WoW Forever n'a plus `EquipItemByName` en global. Le bouton passe par `C_Item.EquipItemByName`, sinon prend l'objet dans le sac et l'équipe ; si l'objet est introuvable, un message le dit (l'alerte reste affichée) au lieu de se fermer sans rien faire.
+
 ## ForeverGFX 2.4.9 / ForeverGazette 1.6.2
 - **Lieux en double** (gazette du 05/11/2026 : « Vue pour la première fois à Forgefer » puis « Aperçu à Forgefer ») : le client de WoW Forever présente Forgefer et la salle des Thanes comme des « scénarios », que la gazette prenait pour des donjons. Seuls donjons et raids comptent maintenant comme « première fois à… », et chaque lieu n'apparaît qu'une fois par édition (y compris les éditions déjà enregistrées).
 - Compagnon PDF : plus de nom de fichier (« WoWScrnShot_….jpg ») sous la photo de une.

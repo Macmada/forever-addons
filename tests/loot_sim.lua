@@ -212,6 +212,29 @@ check(ns.lastLootAlert and ns.lastLootAlert.link == Link(101) and not ns.lastLoo
       "récompense de quête qui t'améliore : alerte à l'écran")
 ForeverLootUpgradeAlert.equip.scripts.OnClick(ForeverLootUpgradeAlert.equip)
 check(equipped == Link(101) and not ForeverLootUpgradeAlert:IsShown(), "bouton Équiper : l'objet est équipé")
+-- client de Forever : pas d'EquipItemByName global, seulement C_Item.EquipItemByName
+local rAlert = ns.lastLootAlert.eval
+local saveE = _G.EquipItemByName
+_G.EquipItemByName, equipped = nil, nil
+_G.C_Item = _G.C_Item or {}
+_G.C_Item.EquipItemByName = function(l) equipped = l end
+ns.ShowLootAlert(Link(101), rAlert, false)
+ForeverLootUpgradeAlert.equip.scripts.OnClick(ForeverLootUpgradeAlert.equip)
+check(equipped == Link(101) and not ForeverLootUpgradeAlert:IsShown(), "client moderne : Équiper passe par C_Item.EquipItemByName")
+-- ni l'un ni l'autre : on prend l'objet dans le sac puis AutoEquipCursorItem
+_G.C_Item.EquipItemByName, equipped = nil, nil
+local picked
+_G.C_Container = _G.C_Container or {}
+local saveCC = { n = _G.C_Container.GetContainerNumSlots, i = _G.C_Container.GetContainerItemID, p = _G.C_Container.PickupContainerItem }
+_G.C_Container.GetContainerNumSlots = function(b) return b == 2 and 4 or 0 end
+_G.C_Container.GetContainerItemID = function(b, sl) return (b == 2 and sl == 3) and 101 or nil end
+_G.C_Container.PickupContainerItem = function(b, sl) picked = b .. ":" .. sl end
+_G.AutoEquipCursorItem = function() equipped = picked end
+ns.ShowLootAlert(Link(101), rAlert, false)
+ForeverLootUpgradeAlert.equip.scripts.OnClick(ForeverLootUpgradeAlert.equip)
+check(equipped == "2:3" and not ForeverLootUpgradeAlert:IsShown(), "sans EquipItemByName : objet pris dans le sac et équipé")
+_G.C_Container.GetContainerNumSlots, _G.C_Container.GetContainerItemID, _G.C_Container.PickupContainerItem = saveCC.n, saveCC.i, saveCC.p
+_G.EquipItemByName = saveE
 ns.lastLootAlert = nil
 W.fire("CHAT_MSG_LOOT", "Vous recevez le butin : " .. Link(106) .. ".")
 W.run(1)

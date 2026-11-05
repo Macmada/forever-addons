@@ -446,6 +446,41 @@ end
 ----------------------------------------------------------------------
 -- Alerte « amélioration ramassée » : en haut de l'écran, icône, gain, bouton Équiper (hors combat)
 ----------------------------------------------------------------------
+-- Équiper : le client de WoW Forever n'a plus EquipItemByName en global (bouton sans effet, 05/11/2026) :
+-- C_Item.EquipItemByName, sinon l'ancienne, sinon on prend l'objet dans le sac et on l'équipe depuis le curseur
+local function FindInBags(id)
+  local CC = C_Container or {}
+  local num = CC.GetContainerNumSlots or GetContainerNumSlots
+  local getId = CC.GetContainerItemID or GetContainerItemID
+  if not (num and getId) then return end
+  for bag = 0, 4 do
+    for s = 1, (num(bag) or 0) do
+      if getId(bag, s) == id then return bag, s end
+    end
+  end
+end
+
+function ns.EquipLink(link)
+  if not link then return false end
+  if InCombatLockdown() then Print(L.alertCombat); return false end
+  local id = Instant(link)
+  local byName = (C_Item and C_Item.EquipItemByName) or EquipItemByName
+  if byName then
+    local ok = pcall(byName, link)
+    if ok then return true end
+  end
+  local bag, slot = FindInBags(id)
+  local pick = (C_Container and C_Container.PickupContainerItem) or PickupContainerItem
+  if bag and pick and AutoEquipCursorItem then
+    if CursorHasItem and CursorHasItem() and ClearCursor then ClearCursor() end
+    pick(bag, slot)
+    AutoEquipCursorItem()
+    return true
+  end
+  Print(L.alertNoEquip)
+  return false
+end
+
 local alert
 function ns.ShowLootAlert(link, r, later)
   if not alert then
@@ -478,9 +513,7 @@ function ns.ShowLootAlert(link, r, later)
     alert.equip:SetPoint("RIGHT", -10, 0)
     alert.equip:SetText(L.alertEquip)
     alert.equip:SetScript("OnClick", function()
-      if InCombatLockdown() then return Print(L.alertCombat) end
-      if alert.link and EquipItemByName then EquipItemByName(alert.link) end
-      alert:Hide()
+      if ns.EquipLink(alert.link) then alert:Hide() end
     end)
     alert:EnableMouse(true)
     alert:SetScript("OnMouseUp", function(_, button) if button == "RightButton" then alert:Hide() end end)
