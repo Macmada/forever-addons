@@ -315,9 +315,39 @@ for _, bad in ipairs({ "Brassards (Pouvoir de guérison)", "Arme 2M (Puissance d
 end
 ns.db.skills, W.level = saveSkills, saveLevel
 
+-- 8f. client moderne de Forever : pas de GetTradeSkillLine (erreur Core.lua:143 le 05/11/2026), lecture par C_TradeSkillUI
+local saveT = { GetTradeSkillLine, GetNumTradeSkills }
+_G.GetTradeSkillLine, _G.GetNumTradeSkills = nil, nil
+local RECS = {
+  [101] = { name = "Rouleau de tisse-mage", relativeDifficulty = 0, numAvailable = 2, learned = true, out = 4339, reag = { { 4338, 5 } } },
+  [102] = { name = "Gants de méditation", relativeDifficulty = 2, numAvailable = 1, learned = true, out = 4318, reag = { { 4305, 3 } } },
+  [103] = { name = "Recette pas apprise", relativeDifficulty = 0, numAvailable = 0, learned = false, out = 2576, reag = {} },
+}
+_G.C_TradeSkillUI = {
+  GetChildProfessionInfo = function() return { professionName = "Couture", skillLevel = 150, maxSkillLevel = 225 } end,
+  GetAllRecipeIDs = function() return { 101, 102, 103 } end,
+  GetRecipeInfo = function(id) local r = RECS[id]; return r and { name = r.name, relativeDifficulty = r.relativeDifficulty, numAvailable = r.numAvailable, learned = r.learned } end,
+  GetRecipeOutputItemData = function(id) return { itemID = RECS[id].out, hyperlink = Link(RECS[id].out) } end,
+  GetRecipeSchematic = function(id) local t = {}; for _, g in ipairs(RECS[id].reag) do t[#t + 1] = { reagents = { { itemID = g[1] } }, quantityRequired = g[2] } end
+    return { reagentSlotSchematics = t } end,
+  GetRecipeCooldown = function() return nil end,
+  OpenRecipe = function(id) _G.openedRecipe = id; return true end,
+}
+_G.ProfessionsFrame = W.Obj("ProfessionsFrame")
+W.fire("TRADE_SKILL_SHOW")
+W.run(1)
+check(not ns.lastScanError and ns.lastScan and ns.lastScan.kind == "modern" and ns.lastScan.prof == "tailoring" and #ns.lastScan.recipes == 2,
+      "client moderne : couture lue par C_TradeSkillUI (2 recettes apprises, la non apprise ignorée)")
+local adv2 = ns.Advise(ns.lastScan, 5)
+check(adv2[1] and adv2[1].r.name == "Rouleau de tisse-mage" and adv2[1].r.type == "optimal", "difficulté lue (orange) et meilleur craft")
+ns.API.modern.select(adv2[1].r.index)
+check(_G.openedRecipe == 101, "clic : la recette est ouverte dans la fenêtre des métiers")
+_G.GetTradeSkillLine, _G.GetNumTradeSkills = saveT[1], saveT[2]
+_G.C_TradeSkillUI = nil
+
 -- 9. diagnostic, icône commune, commandes
 local diag = ns.DiagText()
-check(diag:find("API craft", 1, true) and diag:find("1248459 = Enchantement de brassards", 1, true) and diag:find("Auctionator : présent", 1, true)
+check((diag:find("API craft", 1, true) or diag:find("API modern", 1, true)) and diag:find("méthode de lecture", 1, true) and diag:find("1248459 = Enchantement de brassards", 1, true) and diag:find("Auctionator : présent", 1, true)
       and not diag:find("Erreur", 1, true), "diagnostic complet")
 check(ForeverHub and ForeverHub.entries.ForeverMetiers, "inscrit dans l'icône commune")
 SlashCmdList.FOREVERMETIERS("recettes")

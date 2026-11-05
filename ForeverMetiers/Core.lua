@@ -179,6 +179,84 @@ ns.API = {
   },
 }
 
+-- Client moderne de Forever : plus de GetTradeSkillLine ni de Craft (erreur à l'ouverture du métier, 05/11/2026).
+-- Lecture par C_TradeSkillUI : recettes apprises (numérotées 1..n ici), difficulté, composants, recharge, sélection.
+local function T() return C_TradeSkillUI end
+local DIFF = { [0] = "optimal", [1] = "medium", [2] = "easy", [3] = "trivial" }
+local modern = { kind = "modern", ids = {} }
+local function Call(name, ...)
+  local f = T() and T()[name]
+  if not f then return nil end
+  local ok, a, b, c = pcall(f, ...)
+  if ok then return a, b, c end
+end
+function modern.line()
+  local info = Call("GetChildProfessionInfo")
+  if type(info) ~= "table" or not info.professionName then info = Call("GetBaseProfessionInfo") end
+  -- liste des recettes apprises, refaite à chaque lecture
+  wipe(modern.ids)
+  for _, id in ipairs(Call("GetAllRecipeIDs") or {}) do
+    local ri = Call("GetRecipeInfo", id)
+    if type(ri) == "table" and ri.learned ~= false then modern.ids[#modern.ids + 1] = id end
+  end
+  if type(info) ~= "table" then return nil end
+  return info.parentProfessionName or info.professionName, info.skillLevel, info.maxSkillLevel
+end
+function modern.num() return #modern.ids end
+function modern.info(i)
+  local ri = Call("GetRecipeInfo", modern.ids[i])
+  if type(ri) ~= "table" then return nil end
+  local d = DIFF[ri.relativeDifficulty or -1] or (ri.difficulty) or "easy"
+  return ri.name, d, ri.numAvailable or 0
+end
+function modern.link(i)
+  local id = modern.ids[i]
+  local out = Call("GetRecipeOutputItemData", id)
+  if type(out) == "table" and out.hyperlink then return out.hyperlink end
+  if type(out) == "table" and out.itemID then return select(2, ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(out.itemID)) end
+  return Call("GetRecipeItemLink", id)
+end
+function modern.recipe(i) return Call("GetRecipeLink", modern.ids[i]) or ("|Hspell:" .. tostring(modern.ids[i]) .. "|h|h") end
+local function Slots(i)
+  local sch = Call("GetRecipeSchematic", modern.ids[i], false)
+  return type(sch) == "table" and sch.reagentSlotSchematics or {}
+end
+function modern.nreag(i) return #Slots(i) end
+function modern.reag(i, j)
+  local slot = Slots(i)[j]
+  local item = slot and slot.reagents and slot.reagents[1] and slot.reagents[1].itemID
+  if not item then return nil end
+  local name = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(item)
+  local have = ((C_Item and C_Item.GetItemCount) or GetItemCount)(item) or 0
+  return name or ("#" .. item), nil, slot.quantityRequired or 1, have
+end
+function modern.reaglink(i, j)
+  local slot = Slots(i)[j]
+  local item = slot and slot.reagents and slot.reagents[1] and slot.reagents[1].itemID
+  return item and ("item:" .. item)
+end
+function modern.cd(i) return Call("GetRecipeCooldown", modern.ids[i]) end
+function modern.desc(i) return Call("GetRecipeDescription", modern.ids[i]) end
+function modern.select(i)
+  local id = modern.ids[i]
+  if not Call("OpenRecipe", id) and Call("SetRecipeSelected", id) == nil then
+    local pf = _G.ProfessionsFrame
+    if pf and pf.CraftingPage and pf.CraftingPage.SelectRecipe then
+      local ri = Call("GetRecipeInfo", id)
+      if ri then pcall(pf.CraftingPage.SelectRecipe, pf.CraftingPage, ri) end
+    end
+  end
+end
+function modern.frame() return _G.ProfessionsFrame or _G.TradeSkillFrame end
+ns.API.modern = modern
+
+-- Méthode de lecture : l'ancienne si le client l'a, sinon la moderne
+function ns.TradeAPI()
+  if GetTradeSkillLine and GetNumTradeSkills then return ns.API.trade end
+  if C_TradeSkillUI and C_TradeSkillUI.GetAllRecipeIDs then return modern end
+  return ns.API.trade
+end
+
 -- Gain de caractéristiques lu dans la description d'un enchantement (« +16 aux soins », « l'Esprit de 5 »…)
 local STATPATS = {
   heal = { "jusqu'à %+?(%d+) aux soins", "%+(%d+) aux soins", "(%d+) aux dégâts et aux soins", "healing[^%d]-(%d+)", "(%d+) healing" },
@@ -700,9 +778,11 @@ local function Soon(kind)
   C_Timer.After(0.3, function()
     pending[kind] = nil
     -- protégé : si une fonction de métier manque sur ce client, l'erreur va dans le diagnostic au lieu de se répéter
-    local ok, sc = pcall(ns.Scan, ns.API[kind])
+    local api = (kind == "trade") and ns.TradeAPI() or ns.API[kind]
+    local ok, sc = pcall(ns.Scan, api)
     if not ok then ns.lastScanError = tostring(sc); return end
-    if ns.OnScan then ns.OnScan(sc, ns.API[kind]) end
+    ns.lastScanError = nil
+    if ns.OnScan then ns.OnScan(sc, api) end
   end)
 end
 ns.Soon = Soon
