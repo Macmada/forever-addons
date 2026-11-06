@@ -702,6 +702,10 @@ function ns.DiagCollect(add)
   if ns.lastScanError then add("  ERREUR de lecture : " .. ns.lastScanError) end
   add("  méthode de lecture : " .. tostring(ns.TradeAPI().kind) .. " (C_TradeSkillUI " .. ((C_TradeSkillUI and C_TradeSkillUI.GetAllRecipeIDs) and "oui" or "NON") .. ")")
   if sc then add("  le jeu dit : « " .. tostring(sc.name) .. " » (n° " .. tostring(sc.skillLine) .. ") ; reconnu : " .. tostring(sc.prof)) end
+  if C_TradeSkillUI and ns.TradeDump then
+    add("  client moderne (fenêtre de métier ouverte au moment du Diag) :")
+    for _, l in ipairs(ns.TradeDump()) do add("    " .. l) end
+  end
   if not sc then add("  aucune ouverte depuis le chargement")
   else
     add(string.format("  %s (API %s), %s recettes, %s/%s", tostring(sc.name or sc.prof), tostring(sc.kind), tostring(sc.recipes and #sc.recipes or 0),

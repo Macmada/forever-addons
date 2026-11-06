@@ -354,6 +354,17 @@ _G.C_TradeSkillUI.GetProfessionInfoByRecipeID = function() return { professionNa
 ns.lastScan = nil
 W.fire("TRADE_SKILL_SHOW"); W.run(1)
 check(ns.lastScan and ns.lastScan.prof == "tailoring" and #ns.lastScan.recipes == 2 and ns.lastScan.rank, "rien sur le métier ouvert : déduit de sa première recette, niveau de GetProfessions")
+-- en jeu (06/11/2026, 3.3.1) : métier vide (« », n° 0) et liste complète vide ; la liste filtrée a les recettes
+_G.C_TradeSkillUI.GetChildProfessionInfo = function() return { professionName = "", professionID = 0 } end
+_G.C_TradeSkillUI.GetBaseProfessionInfo = function() return { professionName = "", professionID = 0 } end
+local realAll = _G.C_TradeSkillUI.GetAllRecipeIDs
+_G.C_TradeSkillUI.GetAllRecipeIDs = function() return {} end
+_G.C_TradeSkillUI.GetFilteredRecipeIDs = realAll
+ns.lastScan = nil
+W.fire("TRADE_SKILL_SHOW"); W.run(1)
+check(ns.lastScan and ns.lastScan.prof == "tailoring" and #ns.lastScan.recipes == 2, "métier vide et liste complète vide : liste filtrée + première recette, couture reconnue")
+local dump = table.concat(ns.TradeDump(), "\n")
+check(dump:find("recettes : toutes 0, filtrées 3", 1, true) and dump:find("GetChildProfessionInfo", 1, true), "relevé du client moderne pour le diagnostic")
 _G.GetTradeSkillLine, _G.GetNumTradeSkills = saveT[1], saveT[2]
 _G.C_TradeSkillUI = nil
 

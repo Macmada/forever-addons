@@ -134,8 +134,11 @@ root.Test("Métiers", "fenêtre de métier lue", function()
   local n = 0
   for _ in pairs(sc and sc.recipes or {}) do n = n + 1 end
   local ls = ns.lastScan or {}
-  return sc ~= nil and sc.prof ~= nil, "méthode " .. tostring(api.kind) .. ", métier " .. tostring(sc and sc.prof)
+  local ok2 = sc ~= nil and sc.prof ~= nil
+  local detail = "méthode " .. tostring(api.kind) .. ", métier " .. tostring(sc and sc.prof)
          .. ", " .. n .. " recettes ; le jeu dit : « " .. tostring(ls.name) .. " » (n° " .. tostring(ls.skillLine) .. ")"
+  if not ok2 and ns.TradeDump then detail = detail .. "\n      " .. table.concat(ns.TradeDump(), "\n      ") end
+  return ok2, detail
 end)
 root.Test("Maintenant", "écran Maintenant", function()
   local lines = root.NowLines()

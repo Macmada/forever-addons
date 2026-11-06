@@ -505,7 +505,7 @@ local alert
 local function Alert()
   if not alert then
     alert = CreateFrame("Frame", "ForeverHealManaAlert", UIParent)
-    alert:SetSize(360, 64)
+    alert:SetSize(440, 64)
     local p = ns.db.alertPos
     if p then alert:SetPoint("CENTER", UIParent, "BOTTOMLEFT", p[1], p[2]) else alert:SetPoint("CENTER", 0, -190) end
     alert:SetFrameStrata("HIGH")
@@ -546,7 +546,8 @@ local function Alert()
     alert.text:SetJustifyH("LEFT")
     local fo = _G.GameFontNormalHuge
     local font = fo and fo.GetFont and select(1, fo:GetFont())
-    if font then pcall(alert.text.SetFont, alert.text, font, 22, "OUTLINE") end
+    if font then pcall(alert.text.SetFont, alert.text, font, 20, "OUTLINE") end
+    if alert.text.SetWordWrap then alert.text:SetWordWrap(false) end           -- une seule ligne, au-dessus de la barre
     alert.bar = CreateFrame("StatusBar", nil, alert)
     alert.bar:SetPoint("BOTTOMLEFT", alert.icon, "BOTTOMRIGHT", 10, 0)
     alert.bar:SetPoint("RIGHT", -10, 0)

@@ -207,14 +207,16 @@ end
 function modern.line()
   local info = Call("GetChildProfessionInfo")
   if type(info) ~= "table" or not info.professionName then info = Call("GetBaseProfessionInfo") end
-  -- liste des recettes apprises, refaite à chaque lecture
+  -- liste des recettes apprises, refaite à chaque lecture (liste filtrée de la fenêtre si la liste complète est vide)
   wipe(modern.ids)
-  for _, id in ipairs(Call("GetAllRecipeIDs") or {}) do
+  local all = Call("GetAllRecipeIDs")
+  if type(all) ~= "table" or #all == 0 then all = Call("GetFilteredRecipeIDs") end
+  for _, id in ipairs(all or {}) do
     local ri = Call("GetRecipeInfo", id)
     if type(ri) == "table" and ri.learned ~= false then modern.ids[#modern.ids + 1] = id end
   end
   -- sans information sur le métier ouvert : celle de sa première recette
-  if (type(info) ~= "table" or not info.professionName) and modern.ids[1] then
+  if (type(info) ~= "table" or not info.professionName or info.professionName == "") and modern.ids[1] then
     local byRecipe = Call("GetProfessionInfoByRecipeID", modern.ids[1])
     if type(byRecipe) == "table" then info = byRecipe end
     if type(info) ~= "table" then
@@ -226,6 +228,16 @@ function modern.line()
   -- nom (« Couture » ou une variante du client) et numéro du métier (197…) : le numéro sert à le reconnaître
   local rank, max = info.skillLevel, info.maxSkillLevel
   local id = info.parentProfessionID or info.professionID
+  if id == 0 then id = nil end
+  if info.professionName == "" then info.professionName = nil end
+  if not (id or info.professionName or info.parentProfessionName) then
+    local child = Call("GetProfessionChildSkillLineID")
+    local byLine = child and child > 0 and Call("GetProfessionInfoBySkillLineID", child)
+    if type(byLine) == "table" then
+      id = byLine.parentProfessionID or byLine.professionID
+      info = byLine
+    end
+  end
   return info.parentProfessionName or info.professionName, rank, max, id
 end
 function modern.num() return #modern.ids end
@@ -275,6 +287,32 @@ function modern.select(i)
 end
 function modern.frame() return _G.ProfessionsFrame or _G.TradeSkillFrame end
 ns.API.modern = modern
+
+-- Ce que le client moderne dit de la fenêtre de métier ouverte (diagnostic : « métier nil, 0 recettes » en jeu le 06/11)
+function ns.TradeDump()
+  local out = {}
+  local function info(label, t)
+    if type(t) ~= "table" then out[#out + 1] = label .. " = " .. tostring(t); return end
+    out[#out + 1] = string.format("%s = { nom « %s », parent « %s », n° %s, parent n° %s, niveau %s/%s }", label, tostring(t.professionName),
+      tostring(t.parentProfessionName), tostring(t.professionID), tostring(t.parentProfessionID), tostring(t.skillLevel), tostring(t.maxSkillLevel))
+  end
+  out[#out + 1] = "prêt : " .. tostring(Call("IsTradeSkillReady")) .. " ; source qui change : " .. tostring(Call("IsDataSourceChanging"))
+  info("GetBaseProfessionInfo", Call("GetBaseProfessionInfo"))
+  info("GetChildProfessionInfo", Call("GetChildProfessionInfo"))
+  local all, flt = Call("GetAllRecipeIDs"), Call("GetFilteredRecipeIDs")
+  out[#out + 1] = "recettes : toutes " .. tostring(type(all) == "table" and #all or all) .. ", filtrées " .. tostring(type(flt) == "table" and #flt or flt)
+  out[#out + 1] = "GetProfessionChildSkillLineID = " .. tostring(Call("GetProfessionChildSkillLineID"))
+    .. " ; nom affiché : " .. tostring(Call("GetTradeSkillDisplayName", Call("GetProfessionChildSkillLineID") or 0))
+  local frames = {}
+  for _, n in ipairs({ "ProfessionsFrame", "TradeSkillFrame", "CraftFrame", "ClassicProfessionsFrame" }) do
+    local f = _G[n]
+    if f then frames[#frames + 1] = n .. (f:IsShown() and " (ouverte)" or " (fermée)") end
+  end
+  out[#out + 1] = "fenêtres : " .. (#frames > 0 and table.concat(frames, ", ") or "aucune connue")
+  local first = (type(all) == "table" and all[1]) or (type(flt) == "table" and flt[1])
+  if first then info("GetProfessionInfoByRecipeID(" .. first .. ")", Call("GetProfessionInfoByRecipeID", first)) end
+  return out
+end
 
 -- Méthode de lecture : l'ancienne si le client l'a, sinon la moderne
 function ns.TradeAPI()
@@ -834,6 +872,7 @@ ns.Soon = Soon
 handlers.TRADE_SKILL_SHOW = function() Soon("trade") end
 handlers.TRADE_SKILL_UPDATE = function() Soon("trade") end
 handlers.TRADE_SKILL_LIST_UPDATE = function() Soon("trade") end
+handlers.TRADE_SKILL_DATA_SOURCE_CHANGED = function() Soon("trade") end          -- client moderne : données prêtes
 handlers.CRAFT_SHOW = function() Soon("craft") end
 handlers.CRAFT_UPDATE = function() Soon("craft") end
 handlers.TRADE_SKILL_CLOSE = function() if ns.OnClose then ns.OnClose("trade") end end
