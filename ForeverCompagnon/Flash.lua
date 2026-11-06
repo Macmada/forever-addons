@@ -81,7 +81,7 @@ end
 local function Create()
   if frame then return frame end
   frame = CreateFrame("Button", "ForeverCompagnonFlash", UIParent)
-  frame:SetSize(320, 120)
+  frame:SetSize(340, 120)
   frame:SetFrameStrata("HIGH")
   frame:SetClampedToScreen(true)
   frame:SetMovable(true)
@@ -204,17 +204,28 @@ function F.Show(data)
     local key, text = r[1], r[2]
     local big, small = text:match("^(.-)%s*»%s*(.+)$")
     big, small = big or text, small or ""
+    -- une seule couleur par ligne : couleurs déjà incluses par la partie Soins retirées (« -6 » rouge, « Endurance » vert)
+    big = big:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    local neg = big:find("^%s*%-") or big:find("^%s*\226\136\146")         -- « - » ou « − »
     row.icon:SetTexture(ICON[key] or ICON.result)
+    -- résultat (long) : plus petit, sur deux lignes si besoin ; jamais plus large que le cadre
+    row.value:SetFontObject(key == "result" and "GameFontHighlight" or "GameFontNormalLarge")
+    row.value:SetWidth(f:GetWidth() - 60)
+    if row.value.SetWordWrap then row.value:SetWordWrap(key == "result") end
     row.value:SetText(big)
-    local neg = big:find("^%s*%-") or big:find("^|c%x+%-")
     if key == "result" then row.value:SetTextColor(0.4, 0.85, 1)
     elseif neg then row.value:SetTextColor(1, 0.35, 0.3) else row.value:SetTextColor(0.35, 1, 0.4) end
+    row.detail:SetWidth(f:GetWidth() - 60)
     row.detail:SetText(small)
+    local vh = row.value:GetStringHeight()
+    vh = (type(vh) == "number" and vh > 0) and vh or 16
+    local rh = math.max(ROW_H, vh + (small ~= "" and 16 or 6))
+    row:SetHeight(rh)
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", 0, y)
     row:SetAlpha(0)
     row:Show()
-    y = y - ROW_H - (small ~= "" and 6 or 0)
+    y = y - rh - 2
     C_Timer.After(0.15 + i * 0.12, function() row:SetAlpha(1); row.inA:Play(); row.inT:Play() end)
     -- chiffre qui monte au-dessus du personnage (seulement la valeur, pas le résultat)
     if key ~= "result" and i <= 4 then

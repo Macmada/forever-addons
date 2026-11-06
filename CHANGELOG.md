@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v3.3.3 (ForeverCompagnon 3.3.3)
+- **Cadre des changements (soigneur)** : une seule couleur par ligne (« −6 Endurance » entièrement en rouge, plus de « −6 » rouge et « Endurance » vert) ; la ligne de résultat (« Soin moyen +1 · +0,4 soins/s · autonomie… ») passe en plus petit sur deux lignes au lieu de déborder du cadre.
+
 ## v3.3.2 (ForeverCompagnon 3.3.2), d'après tes tests
 - **Fenêtre de métier toujours pas lue** (le jeu disait : métier « », n° 0, aucune recette) : relecture quand le jeu signale que les données sont prêtes (`TRADE_SKILL_DATA_SOURCE_CHANGED`), liste filtrée de la fenêtre si la liste complète est vide, métier déduit de la première recette ou de `GetProfessionChildSkillLineID`. Si ça échoue encore, l'auto-test et `/metiers diag` donnent tout ce que le jeu dit de la fenêtre ouverte.
 - **Alerte Mana basse** : le texte tient sur une ligne au-dessus de la barre (« (185 / 821) » passait dessous).

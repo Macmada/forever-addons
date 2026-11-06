@@ -398,6 +398,9 @@ check(ForeverCompagnonFlash:IsShown() and fl and fl.rows[1][1] == "sta" and fl.r
 check(fl.item and fl.item:find("Robe de l'essai", 1, true), "soigneur : objet équipé affiché dans le cadre")
 check(ForeverCompagnonFlash.rows[1].value:GetText():find("+10", 1, true) and ForeverCompagnonFlash.rows[1].detail:GetText() ~= "",
       "ligne : valeur en grand, effet en petit dessous")
+root.Flash.Show({ rows = { { "sta", "|cffff6a5a-6|r Endurance » |cffff6a5a-60|r PV" } }, result = string.rep("Soin moyen +1 · +0,4 soins/s ", 4) })
+check(not ForeverCompagnonFlash.rows[1].value:GetText():find("|c", 1, true), "Flash : une seule couleur par ligne (couleurs incluses retirées)")
+check(ForeverCompagnonFlash.rows[2].value:GetText():find("Soin moyen", 1, true), "Flash : ligne de résultat affichée (sur deux lignes si longue)")
 SlashCmdList.FOREVERCOMPAGNON("flash")
 check(root.db.flash == false, "/fp flash : cadre désactivé")
 ForeverCompagnonFlash:Hide()
