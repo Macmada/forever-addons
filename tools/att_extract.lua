@@ -96,6 +96,7 @@ local function Walk(node, ctx)
   if f.lvl then c.lvl = type(f.lvl) == "table" and f.lvl[1] or f.lvl end
   if f.requireSkill then c.skill = f.requireSkill end
   local k = node.kind
+  if k == "header" and node.id == -58 then c.vendors = true end      -- en-tête « Vendeurs » d'ATT
   if k == "map" then c.map, c.inst = node.id, nil
   elseif k == "inst" then
     c.inst = node.id; c.map = (type(f.maps) == "table" and f.maps[1]) or c.map
@@ -124,7 +125,7 @@ local function Walk(node, ctx)
     -- source : un objet sous un PNJ avec un coût = vendeur ; sous un PNJ ou un boss sans coût = butin ; sous une quête = récompense
     local cost = Cost(f.cost)
     local kind = c.kind or (c.prof and "craft") or "zone"
-    if kind == "npc" then kind = cost and "vendor" or "drop" end
+    if kind == "npc" then kind = (cost or c.vendors) and "vendor" or "drop" end
     local src = { kind, c.npc or c.obj or c.quest or 0, c.cmap or c.map or 0, c.x and math.floor(c.x * 10 + 0.5) / 10 or 0,
                   c.y and math.floor(c.y * 10 + 0.5) / 10 or 0 }
     local extra = {}
@@ -154,6 +155,23 @@ local function Walk(node, ctx)
       if not seen then
         recipes[skill][node.id] = { itemID or 0, f.learnedAt or f.rank or 0, c.npc or 0, c.cmap or c.map or 0, c.kind or "trainer",
                                     Cost(f.cost), c.r, c.rep }
+      end
+    end
+  end
+  -- marchand qui liste ses articles par renvoi (sym = { { "select", "itemID", id, id… } })
+  if k == "npc" and node.id and node.id > 0 and type(f.sym) == "table" then
+    for _, sy in ipairs(f.sym) do
+      if type(sy) == "table" and sy[1] == "select" and sy[2] == "itemID" then
+        for j = 3, #sy do
+          if type(sy[j]) == "number" then
+            Walk({ kind = "item", id = sy[j], fields = {}, children = {} }, (function()
+              local cc = {}
+              for kk, vv in pairs(c) do cc[kk] = vv end
+              cc.vendors = true
+              return cc
+            end)())
+          end
+        end
       end
     end
   end

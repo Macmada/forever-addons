@@ -94,6 +94,44 @@ function S.Owned(id)
 end
 
 ----------------------------------------------------------------------
+-- Marchands visités : position (la tienne quand tu lui parles) et articles, pour « Guide-moi » (la base intégrée ne
+-- connaît surtout que les marchands des capitales)
+----------------------------------------------------------------------
+function S.RecordMerchant()
+  local db = DB()
+  if not db then return end
+  local guid = UnitGUID and UnitGUID("npc")
+  local npcID = guid and tonumber(guid:match("^%a+%-%d+%-%d+%-%d+%-%d+%-(%d+)"))
+  if not npcID then return end
+  local map = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+  local pos = map and C_Map.GetPlayerMapPosition and C_Map.GetPlayerMapPosition(map, "player")
+  local x, y
+  if pos then x, y = pos:GetXY() end
+  if not (map and x and not (issecretvalue and issecretvalue(x))) then return end
+  local items = {}
+  local idf = (C_MerchantFrame and C_MerchantFrame.GetItemID) or GetMerchantItemID
+  for i = 1, G.MerchantCount() do
+    local id = idf and idf(i)
+    if id then items[id] = true end
+  end
+  db.vendors = db.vendors or {}
+  db.vendors[npcID] = { name = UnitName("npc"), map = map, x = math.floor(x * 1000 + 0.5) / 10, y = math.floor(y * 1000 + 0.5) / 10,
+                        items = items, t = time(), r = UnitFactionGroup("player") == "Horde" and 1 or 2 }
+end
+
+-- Marchands retenus qui vendent un objet : { { name, mapID, x, y, kind = "vendor" } } (ta faction)
+function S.Vendors(itemID)
+  local out = {}
+  local myR = UnitFactionGroup("player") == "Horde" and 1 or 2
+  for _, v in pairs(DB() and DB().vendors or {}) do
+    if v.items and v.items[itemID] and (not v.r or v.r == myR) then
+      out[#out + 1] = { name = v.name or "?", mapID = v.map, x = v.x, y = v.y, kind = "vendor" }
+    end
+  end
+  return out
+end
+
+----------------------------------------------------------------------
 -- Prix de l'hôtel des ventes
 ----------------------------------------------------------------------
 function S.Price(id)
@@ -180,7 +218,7 @@ end
 ----------------------------------------------------------------------
 local ev = CreateFrame("Frame")
 local bankOpen = false
-for _, e in ipairs({ "BAG_UPDATE_DELAYED", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYERBANKSLOTS_CHANGED",
+for _, e in ipairs({ "BAG_UPDATE_DELAYED", "BANKFRAME_OPENED", "BANKFRAME_CLOSED", "PLAYERBANKSLOTS_CHANGED", "MERCHANT_SHOW",
                      "AUCTION_HOUSE_SHOW", "REPLICATE_ITEM_LIST_UPDATE" }) do
   pcall(ev.RegisterEvent, ev, e)
 end
@@ -196,6 +234,7 @@ ev:SetScript("OnEvent", function(_, event)
     end)
   elseif event == "BANKFRAME_OPENED" then bankOpen = true; S.RecordBank()
   elseif event == "BANKFRAME_CLOSED" then bankOpen = false
+  elseif event == "MERCHANT_SHOW" then C_Timer.After(0.5, S.RecordMerchant)
   elseif event == "AUCTION_HOUSE_SHOW" then ScanButton()
   elseif event == "REPLICATE_ITEM_LIST_UPDATE" then
     if scan.running and not scan.reading then

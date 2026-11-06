@@ -298,7 +298,36 @@ check(not cardGo or (cardGo.source:find(root.mods.ForeverLoot.L.goTag, 1, true) 
       "« clic droit : y aller » sur la ligne de la source, plus dans les étiquettes (chevauchement du gain)")
 check(root.mods.ForeverLoot.HasPlace(272406) and root.mods.ForeverLoot.GoTo(272406) and nav.target.mapID == 1434,
       "Équipement : clic droit sur l'anneau de canaliste, flèche vers son vendeur")
+-- clic droit dans la fenêtre Équipement (elle dessine ses propres cartes : le clic droit n'arrivait pas, 06/11/2026)
 nav.Clear()
+local lootNs = root.mods.ForeverLoot
+local realNear = lootNs.NearLines
+lootNs.NearLines = function() return { { kind = "card", name = "Anneau d'essai", source = "Vendeur — Vallée", onRight = function() lootNs.GoTo(272406) end } } end
+lootNs.ShowTab("near")
+lootNs.Refresh()
+lootNs.NearLines = realNear
+local rc
+for _, c in ipairs(lootNs._view.cards) do if c:IsShown() and c.onRight then rc = c end end
+check(rc ~= nil, "fenêtre Équipement : une carte avec « y aller »")
+rc.scripts.OnClick(rc, "RightButton")
+check(nav.target ~= nil, "fenêtre Équipement : clic droit sur la carte, la flèche est posée")
+nav.Clear()
+ForeverLootFrame:Hide()
+-- marchands visités retenus (position, articles) et proposés par Guide-moi
+_G.UnitGUID = function(u) return u == "npc" and "Creature-0-1-2-3-4-5611-0000" or "Player-1" end
+_G.UnitName = function(u) return u == "npc" and "Aubergiste de la Colline" or "Machin" end
+_G.GetMerchantNumItems = function() return 2 end
+_G.GetMerchantItemID = function(i) return ({ 1205, 159 })[i] end
+_G.GetMerchantItemLink = function() return nil end
+PX, PY = 52, 31
+W.fire("MERCHANT_SHOW")
+W.run(1)
+local vs = root.mods.ForeverPrep.ATT.Vendors(1205)
+local mine
+for _, v in ipairs(vs) do if v.name == "Aubergiste de la Colline" then mine = v end end
+check(mine and mine.mapID == 1434 and math.abs(mine.x - 52) < 0.1, "marchand visité retenu : il vend du jus de melon, à ta position")
+_G.UnitGUID = function() return "Player-1" end
+_G.UnitName = function() return "Machin" end
 
 -- sans DungeonJournal : butin des donjons tiré des sources intégrées
 local djl = root.mods.ForeverLoot.DJItems()

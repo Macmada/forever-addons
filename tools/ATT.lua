@@ -203,7 +203,12 @@ function A.Places(itemID, kinds)
   end
   return out
 end
-function A.Vendors(itemID) return A.Places(itemID, { vendor = true }) end
+function A.Vendors(itemID)
+  local out = A.Places(itemID, { vendor = true })
+  local store = ns.root and ns.root.Store
+  if store and store.Vendors then for _, v in ipairs(store.Vendors(itemID)) do out[#out + 1] = v end end   -- marchands visités
+  return out
+end
 
 -- Où apprendre une recette (numéro du sort) : son PNJ placé, sinon les lieux de son patron
 function A.RecipePlaces(spell)

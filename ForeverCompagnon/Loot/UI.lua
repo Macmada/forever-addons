@@ -58,7 +58,7 @@ local function Card()
   if not c then
     c = CreateFrame("Button", nil, ui.content)
     c:SetHeight(46)
-    c:RegisterForClicks("LeftButtonUp")
+    c:RegisterForClicks("LeftButtonUp", "RightButtonUp")
     c.bg = c:CreateTexture(nil, "BACKGROUND")
     c.bg:SetAllPoints()
     local hl = c:CreateTexture(nil, "HIGHLIGHT")
@@ -101,8 +101,9 @@ local function Card()
       end
     end)
     c:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    c:SetScript("OnClick", function(self)
-      if self.link and IsShiftKeyDown() and ChatEdit_InsertLink then ChatEdit_InsertLink(self.link) end
+    c:SetScript("OnClick", function(self, button)
+      if self.link and IsShiftKeyDown() and ChatEdit_InsertLink then ChatEdit_InsertLink(self.link); return end
+      if button == "RightButton" and self.onRight then self.onRight() end          -- clic droit : y aller (flèche)
     end)
     cards[cu] = c
   end
@@ -183,7 +184,7 @@ local function Render(lines)
       local c = Card()
       stripe = stripe + 1
       c.bg:SetColorTexture(1, 1, 1, stripe % 2 == 0 and 0.035 or 0.0)
-      c.link = l.link
+      c.link, c.onRight = l.link, l.onRight
       local q = QUALITY[l.quality or 1] or QUALITY[1]
       for _, t in ipairs(c.qborder) do t:SetColorTexture(q[1], q[2], q[3], 1) end
       c.icon:SetTexture(l.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
@@ -194,6 +195,17 @@ local function Render(lines)
       c.src:SetWidth(width - 230)
       c.gain:SetText(l.gain or "")
       c.sub:SetText(l.gainSub or "")
+      -- nom et étiquettes sans chevaucher le gain : coupés s'ils sont trop longs
+      local gw = c.gain:GetStringWidth()
+      gw = (type(gw) == "number" and gw) or 0
+      local room = width - 70 - (gw > 0 and gw + 24 or 0)
+      local nw = c.name:GetStringWidth()
+      nw = (type(nw) == "number" and nw) or 0
+      if nw > room then c.name:SetWidth(math.max(60, room)); nw = room else c.name:SetWidth(0) end
+      if c.name.SetWordWrap then c.name:SetWordWrap(false) end
+      if c.tags.SetWordWrap then c.tags:SetWordWrap(false) end
+      c.tags:SetWidth(math.max(1, room - nw - 8))
+      c.tags:SetShown(room - nw - 8 > 30)
       c.star:SetShown(l.ref and true or false)
       c:ClearAllPoints()
       c:SetPoint("TOPLEFT", 6, y)
