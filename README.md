@@ -168,6 +168,7 @@ Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule 
 
 - `luacheck ForeverGFX ForeverMacros ForeverGazette ForeverPretre` vérifie le code (lancé automatiquement à chaque push).
 - `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `tests/prep_sim.lua`, `tests/heal_sim.lua`, `tests/loot_sim.lua`, `tests/metiers_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` font de même pour les autres addons (chaque partie de ForeverPrêtre seule, par `tests/pretre_load.lua`) ; `tests/pretre_sim.lua` charge ForeverPrêtre comme dans le jeu, sur le profil du client Forever (`tests/forever_client.lua`, issu de `/fp sonde`). `tests/wowmock.lua` : API WoW imitée commune. Lancés aussi à chaque push.
+- `python3 tools/forever_api_check.py` : appels à des fonctions absentes du client de WoW Forever (sans repli) ou interdites aux addons, d'après la liste de l'API du client relevée par Thunderz ([forever-addon-kit](https://github.com/Thunderz96/forever-addon-kit), MIT) dans `tests/data/forever_api.json`. Lancé aussi à chaque push.
 - Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les archives à la release (ForeverMacros, ForeverGazette et ForeverPrêtre gardent le numéro de leur TOC).
 
 ---

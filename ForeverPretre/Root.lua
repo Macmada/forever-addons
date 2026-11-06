@@ -87,6 +87,10 @@ ev:SetScript("OnEvent", function(_, event, arg)
   if event == "ADDON_LOADED" and arg == ADDON then
     ForeverPretreDB = ForeverPretreDB or {}
     root.db = ForeverPretreDB
+    -- compteur de chargements : s'il reste à 1, le client ne relit pas les sauvegardes (bug de la bêta de Forever,
+    -- relevé par forever-addon-kit : « SavedVariables are never loaded ») et tous les réglages repartent de zéro
+    root.db.loads = (root.db.loads or 0) + 1
+    root.loadsAtStart = root.db.loads
     root.db.hub = root.db.hub or {}
     for _, f in ipairs(root.onLoaded or {}) do pcall(f) end
   elseif event == "PLAYER_LOGIN" then

@@ -52,6 +52,11 @@ root.Test("Jeu", "mana comparée par le jeu (alerte Mana basse)", function()
   local text = G.ManaText()
   return ok, tostring(G.used.manaPercent) .. (text and " ; affichage possible" or " ; affichage du chiffre impossible")
 end)
+root.Test("Jeu", "sauvegardes relues d'une connexion à l'autre", function()
+  local n = root.db and root.db.loads or 0
+  if n <= 1 then return nil, "premier chargement : refais /fp test après un /reload (si ça reste à 1, le client ne relit pas les sauvegardes)" end
+  return true, n .. " chargements comptés : les réglages sont bien relus"
+end)
 root.Test("Jeu", "addons de données", function()
   local loaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
   local list = {}

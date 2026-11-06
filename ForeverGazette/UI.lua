@@ -652,7 +652,7 @@ function ns.CreateUI()
   ui.helpBtn:SetPoint("TOPRIGHT", -18, -30)
   ui.optBtn = MakeAction(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.options, L.tipOptions, function() ns.ShowOptions() end)
   ui.optBtn:SetPoint("RIGHT", ui.helpBtn, "LEFT", -22, 0)
-  ui.pdfBtn = MakeAction(ui, "Interface\\Icons\\INV_Scroll_05", L.pdf, L.tipPdf, function() StaticPopup_Show("FOREVERGAZETTE_PDF") end)
+  ui.pdfBtn = MakeAction(ui, "Interface\\Icons\\INV_Scroll_05", L.pdf, L.tipPdf, function() ns.AskPDF() end)
   ui.pdfBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -22, 0)
   ui.shareBtn = MakeAction(ui, "Interface\\Icons\\INV_Letter_03", L.share, L.tipShare, function() ns.ShowShare() end)
   ui.shareBtn:SetPoint("RIGHT", ui.pdfBtn, "LEFT", -22, 0)
@@ -849,9 +849,18 @@ ns.OnLogin = function() SetupBroker() end
 
 -- « PDF » : enregistre la gazette (le jeu n'écrit la sauvegarde qu'au rechargement ou à la déconnexion) ;
 -- le compagnon (tools/gazette-discord, sur le PC) en fait un PDF et un PNG avec les captures d'écran.
+-- Recharger l'interface est interdit aux addons sur WoW Forever et le retail récent (client moderne : « ReloadUI() is
+-- protected », forever-addon-kit de Thunderz) : là, la gazette est préparée et c'est le joueur qui tape /reload.
+function ns.CanReload()
+  local iface = select(4, GetBuildInfo()) or 0
+  return iface < 100000 and not (iface >= 16000 and iface < 20000)
+end
 function ns.PrintPDF()
   ns.WriteExports()
-  ReloadUI()
+  if ns.CanReload() then ReloadUI() else Print(L.pdfTypeReload) end      -- ReloadUI seulement si ns.CanReload()
+end
+function ns.AskPDF()
+  if ns.CanReload() then StaticPopup_Show("FOREVERGAZETTE_PDF") else ns.PrintPDF() end
 end
 
 local ALIASES = {
@@ -899,7 +908,7 @@ SlashCmdList.FOREVERGAZETTE = function(msg)
   elseif action == "diag" then
     ns.ShowDiag()
   elseif action == "pdf" then
-    StaticPopup_Show("FOREVERGAZETTE_PDF")
+    ns.AskPDF()
   elseif action == "demo" then
     ns.ShowDemo()
   elseif action == "minimap" then

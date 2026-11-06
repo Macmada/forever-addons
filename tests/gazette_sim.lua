@@ -276,9 +276,23 @@ end
 check(#exb > 10 and withShot and epicQ, "blocs exportés pour le PDF (photo du boss sur sa ligne, qualité épique)")
 local reloaded = false
 _G.ReloadUI = function() reloaded = true end
+-- WoW Forever : ReloadUI est interdit aux addons ; la gazette est préparée et le joueur tape /reload
+local saveBI = _G.GetBuildInfo
+_G.GetBuildInfo = function() return "1.60.1", "70790", "Nov 3 2026", 16001 end
+local said
+local savePrint = _G.print
+_G.print = function(...) said = table.concat({ ... }, " "); savePrint(...) end
+ns.db.exports = nil
+SlashCmdList.FOREVERGAZETTE("pdf")
+_G.print = savePrint
+check(not reloaded and ns.db.exports and said and said:find("/reload", 1, true),
+      "WoW Forever : PDF préparé, « tape /reload » (jamais ReloadUI, interdit)")
+-- TBC Anniversary : rechargement après confirmation, comme avant
+_G.GetBuildInfo = function() return "2.5.5", "60000", "Nov 1 2026", 20505 end
 SlashCmdList.FOREVERGAZETTE("pdf")
 StaticPopupDialogs.FOREVERGAZETTE_PDF.OnAccept()
-check(reloaded, "bouton PDF : export puis rechargement de l'interface")
+check(reloaded, "TBC : bouton PDF, export puis rechargement de l'interface")
+_G.GetBuildInfo = saveBI
 -- démo et interface (imitée)
 SlashCmdList.FOREVERGAZETTE("demo")
 SlashCmdList.FOREVERGAZETTE("")

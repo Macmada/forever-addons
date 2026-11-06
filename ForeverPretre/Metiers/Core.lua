@@ -137,6 +137,7 @@ end
 ----------------------------------------------------------------------
 -- Fenêtre du métier : couture (TradeSkill) et enchantement (Craft dans le client classique, TradeSkill sinon)
 ----------------------------------------------------------------------
+-- forever-api: off (adaptateurs des anciens clients : choisis par ns.TradeAPI seulement si GetTradeSkillLine existe)
 ns.API = {
   trade = {
     kind = "trade",
@@ -178,6 +179,7 @@ ns.API = {
     frame = function() return _G.CraftFrame end,
   },
 }
+-- forever-api: on
 
 -- Client moderne de Forever : plus de GetTradeSkillLine ni de Craft (erreur à l'ouverture du métier, 05/11/2026).
 -- Lecture par C_TradeSkillUI : recettes apprises (numérotées 1..n ici), difficulté, composants, recharge, sélection.

@@ -666,7 +666,7 @@ function ns.DiagCollect(add)
     local s = ns.db.skills[k]
     add(string.format("  %s : %s", k, s and string.format("%d/%d", s.rank, s.max) or "absent"))
   end
-  if GetNumSkillLines then
+  if GetNumSkillLines and GetSkillLineInfo then
     local names = {}
     for i = 1, GetNumSkillLines() do
       local n, header = GetSkillLineInfo(i)

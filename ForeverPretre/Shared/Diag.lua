@@ -152,7 +152,7 @@ end
 -- Petits outils pour les sections
 function ns.DiagSpell(id)
   local name
-  if C_Spell and C_Spell.GetSpellName then name = C_Spell.GetSpellName(id) else name = GetSpellInfo(id) end
+  if C_Spell and C_Spell.GetSpellName then name = C_Spell.GetSpellName(id) elseif GetSpellInfo then name = GetSpellInfo(id) end
   local known = (IsPlayerSpell and IsPlayerSpell(id)) or (IsSpellKnown and IsSpellKnown(id)) or false
   return name, known
 end
