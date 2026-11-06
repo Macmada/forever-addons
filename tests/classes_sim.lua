@@ -36,7 +36,11 @@ for _, faction in ipairs({ "Alliance", "Horde" }) do
     _G.C_Item = { GetItemInfo = function(x) local id = tonumber(tostring(x):match("(%d+)")); if id then return "Objet " .. id, "|Hitem:" .. id .. "|h", 1, 5, 1, "Armor", "Cloth", 1, "", "icone", 10 end end,
                   GetItemInfoInstant = function(x) local id = tonumber(tostring(x):match("(%d+)")); return id, "Armor", "Cloth", "", "icone", 4, 1 end,
                   GetItemCount = function() return 1 end, EquipItemByName = function() end }
-    _G.C_Spell = { GetSpellName = function(id) return "Sort " .. id end, GetSpellInfo = function(id) return { name = "Sort " .. id, castTime = 1500 } end }
+    _G.C_Spell = { GetSpellName = function(id) return "Sort " .. id end, GetSpellInfo = function(id) return { name = "Sort " .. id, castTime = 2500 } end,
+                   GetSpellDescription = function() return "Soigne la cible de 100 à 120 points de vie." end,
+                   GetSpellPowerCost = function() return { { cost = 50, type = 0 } } end }
+    _G.IsSpellKnown = function() return true end
+    _G.IsPlayerSpell = function() return true end
     _G.GetProfessions = function() return nil end
     _G.GetInventoryItemLink = function() return nil end
     _G.GetInventoryItemTexture = function() return nil end
@@ -49,7 +53,19 @@ for _, faction in ipairs({ "Alliance", "Horde" }) do
     W.fire("PLAYER_ENTERING_WORLD")
     W.run(5)
     for _, name in ipairs(root.order) do check(root.mods[name].db, name .. " initialisé") end
-    check((class == "PRIEST") == not root.mods.ForeverHeal.inactive, "Soins actif seulement pour le prêtre")
+    local HEALERS = { PRIEST = true, DRUID = true, PALADIN = true, SHAMAN = true }
+    check((HEALERS[class] == true) == not root.mods.ForeverHeal.inactive, "Soins actif seulement pour les soigneurs")
+    if HEALERS[class] then
+      local heal = root.mods.ForeverHeal
+      local spells = heal.KnownSpells()
+      check(next(spells) ~= nil, "Soins : sorts de la classe reconnus")
+      local M = heal.Metrics(heal.Snapshot(), heal.Mix())
+      check((M.hps or 0) > 0, "Soins : soins par seconde calculés (" .. tostring(M.hps) .. ")")
+      root.SetRole("heal")
+      local nowHeads = {}
+      for _, l in ipairs(root.NowLines()) do if l.kind == "head" then nowHeads[l.title] = true end end
+      check(nowHeads[root.L.secPriest], "Maintenant : section des soins pour un soigneur")
+    end
     SlashCmdList.FOREVERCOMPAGNON("")
     check(ForeverCompagnonNowFrame:IsShown(), "écran Maintenant")
     local lines = root.NowLines()

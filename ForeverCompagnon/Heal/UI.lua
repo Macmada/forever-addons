@@ -43,7 +43,8 @@ local function DurationDelta(a, b)
   return Signed(d, 0) .. " s"
 end
 
-local function IsPriest() return select(2, UnitClass("player")) == "PRIEST" end
+-- Soigneur pris en charge (prêtre, druide, paladin, chaman : sorts dans Data.lua)
+local function IsPriest() return ns.Data.classes[select(2, UnitClass("player"))] ~= nil end
 
 ----------------------------------------------------------------------
 -- Lignes « +45 Endurance » +450 PV » pour un écart de caractéristiques
@@ -510,7 +511,7 @@ local function SecretManaAlert()
 end
 
 function ns.UpdateManaAlert()
-  if not ns.db.manaAlert or select(2, UnitClass("player")) ~= "PRIEST" then if alert then alert:Hide() end return end
+  if not ns.db.manaAlert or not ns.Data.classes[select(2, UnitClass("player"))] then if alert then alert:Hide() end return end
   local cur, max = ns.Plain(UnitPower("player", 0)), ns.Plain(UnitPowerMax("player", 0))
   if not (cur and max) then return SecretManaAlert() end
   local left = InCombatLockdown() and ns.ManaTimeLeft()

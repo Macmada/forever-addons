@@ -30,7 +30,7 @@ local SECTIONS = {}
 SECTIONS[#SECTIONS + 1] = function(lines)
   local ns = root.mods.ForeverHeal
   if not (ns and ns.Snapshot and ns.Metrics) then return end
-  if select(2, UnitClass("player")) ~= "PRIEST" or (root.Role() and root.Role() ~= "heal") then return end
+  if ns.inactive or (root.Role() and root.Role() ~= "heal") then return end
   Head(lines, "Interface\\Icons\\Spell_Holy_GreaterHeal", L.secPriest)
   local S = ns.Snapshot()
   local M = ns.Metrics(S, ns.Mix and ns.Mix() or nil)

@@ -7,7 +7,7 @@ Des addons World of Warcraft pour **WoW Forever** (et seulement WoW Forever depu
 | **ForeverGFX** | `/gfx` | Réglages graphiques en un clic, réglage automatique selon tes FPS, mode expert pour toutes les variables |
 | **ForeverMacros** | `/fmac` | macros prêtes par classe, constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
 | **ForeverGazette** | `/gazette` | la gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal |
-| **ForeverCompagnon** | `/fp` | (WoW Forever, prêtre) tout en une fenêtre : **Maintenant** (le plus utile à ton niveau), **Soins** (`/fheal`), **Équipement** (`/floot`), **Préparation** (`/prep`), **Métiers** (`/metiers`) ; auto-test et sonde du client |
+| **ForeverCompagnon** | `/fp` | toutes classes, races et factions, en une fenêtre : **Maintenant** (le plus utile à ton niveau, avec ton rôle), **Équipement** (`/floot`), **Préparation** (`/prep`), **Métiers** (`/metiers`, tous les métiers), **Soins** (`/fheal`, prêtre, druide, paladin, chaman), **Addons** utiles ; auto-test et sonde du client |
 
 ## Installation
 
@@ -15,7 +15,7 @@ Des addons World of Warcraft pour **WoW Forever** (et seulement WoW Forever depu
 
 Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : tous les addons arrivent ensemble (ForeverCompagnon ne se charge que sur WoW Forever) et WowUp propose chaque nouvelle version.
 
-**Depuis la v3.0.0**, ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers sont réunis dans **ForeverCompagnon** (dossier `ForeverCompagnon`). Leurs anciens dossiers sont remplacés par une coquille vide qui se désactive toute seule : tu peux les supprimer. Les réglages repartent de zéro.
+**Depuis la v3.0.0**, ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers sont réunis dans un seul addon, appelé **ForeverCompagnon** depuis la v3.1.0 (ForeverPrêtre avant). Les anciens dossiers (ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers, ForeverPretre) sont remplacés par une coquille vide qui se désactive toute seule : tu peux les supprimer. Les réglages repartent de zéro.
 
 ### À la main
 
@@ -62,17 +62,18 @@ Un addon ne peut ni écrire de fichier ni lire tes captures d'écran : le compag
 
 ## ForeverCompagnon (WoW Forever)
 
-Une seule fenêtre pour ton prêtre, ouverte par `/fp` ou l'icône Forever. À gauche, une barre d'onglets :
+Une seule fenêtre pour ton personnage, **quelle que soit sa classe, sa race ou sa faction**, ouverte par `/fp` (ou `/compagnon`) ou l'icône Forever. À gauche, une barre d'onglets (Soins seulement pour les soigneurs) :
 
-- **Maintenant** : la question « que faire maintenant ? » à ton niveau : ton prêtre (soins/s, autonomie, régénération), les 4 meilleures améliorations d'équipement à portée (jusqu'à 5 niveaux au-dessus) et où les obtenir, ce qu'il manque avant un donjon avec le bouton **Guide-moi vers le vendeur**, et la prochaine étape de tes métiers. Un clic sur une ligne ouvre le détail. En combat, l'écran garde le dernier état (rien n'est recalculé).
+- **Maintenant** : la question « que faire maintenant ? » à ton niveau, avec ton **rôle** à choisir (tank, soins, dégâts en mêlée ou en sorts : le client de Forever ne donne pas les talents aux addons ; il règle l'équipement et la préparation) : tes soins si tu soignes (soins/s, autonomie, régénération), les 4 meilleures améliorations d'équipement à portée (jusqu'à 5 niveaux au-dessus) et où les obtenir, ce qu'il manque avant un donjon avec le bouton **Guide-moi vers le vendeur**, et la prochaine étape de tes métiers. Un clic sur une ligne ouvre le détail. En combat, l'écran garde le dernier état (rien n'est recalculé).
 - **Soins**, **Équipement**, **Préparation**, **Métiers** : les anciens addons, décrits ci-dessous (mêmes commandes).
+- **Addons** (`/fp addons`) : les addons qui complètent celui-ci sur Forever (All The Things, DungeonJournal, Auctionator, Syndicator, TomTom, HealBot, Questie, Full Mana Forever, Forever Cooldown Manager) : actif, désactivé ou absent, ce qu'il apporte, son adresse à copier, bouton « Activer » (au prochain `/reload`).
 - **Auto-test** (`/fp test`) : essaie pour de vrai chaque fonction importante sur ton client (sacs, équiper, marchand, sorts, mana, métiers, chaque partie) et donne un rapport à copier.
 - **Sonde** (`/fp sonde`) : la liste des fonctions de WoW présentes ou absentes sur ton client, à coller telle quelle : elle devient le profil du client dans les tests hors jeu (`tests/forever_client.lua`).
 - **Diag** (`/fp diag`) : le diagnostic de toutes les parties en un seul texte.
 
 Le **lien avec le jeu** (`ForeverCompagnon/Compat.lua`) est le seul endroit qui appelle les fonctions du jeu qui diffèrent entre clients (équiper, marchand, sacs, sorts, mana secrète en combat) ; la sonde et l'auto-test disent quelle méthode a été retenue.
 
-### Soins (ex-ForeverHeal)
+### Soins (ex-ForeverHeal) : prêtre, druide, paladin, chaman
 
 Pour jouer soigneur en sachant ce que vaut chaque point : l'addon traduit les caractéristiques en effets concrets.
 
@@ -88,7 +89,7 @@ Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`,
 
 ### Équipement (ex-ForeverLoot)
 
-Équipement et butin, évalués **pour ton personnage** (avec le modèle de ForeverHeal pour le prêtre, un modèle simplifié par caractéristiques pour les autres classes) :
+Équipement et butin, évalués **pour ton personnage** : modèle de soins pour un soigneur, sinon poids des caractéristiques selon ta **classe et ton rôle** (tank : endurance, armure, défense ; mêlée : force ou agilité et DPS de l'arme ; sorts : puissance des sorts, toucher…) :
 
 - **BiS calculé** : chaque objet croisé (infobulles, butin, jets, récompenses de quête, marchands, butin des autres) est mémorisé et évalué ; l'onglet BiS montre, emplacement par emplacement, les meilleurs objets connus et où ils ont été vus, avec la **liste de référence de WoW Forever** (prêtre soigneur niveau 60 avant les raids, liste de kami-labs.fr calculée avec le simulateur wowsims/forever) et l'enchantement conseillé pour chaque pièce.
 - **Jets de butin** : conseil « BESOIN » ou « Cupidité » au-dessus de la fenêtre de jet, avec le gain (« +3,5 soins/s ») ou la raison (ta classe ne peut pas le porter, niveau trop élevé, pas mieux).
@@ -101,7 +102,7 @@ Commandes : `/floot` (ou `/bis`), `/floot donjons`, `/floot diag`, `/floot lang 
 
 ### Métiers (ex-ForeverMetiers)
 
-Couture et enchantement, pensés pour un prêtre soigneur qui monte les deux métiers ensemble :
+**Tous les métiers** : compétence et rang, rappel du maître quand le plafond approche, meilleurs crafts d'après les couleurs de la fenêtre du métier (coût par point avec Auctionator), recettes à apprendre maintenant (All The Things), métiers conseillés pour ta classe tant que tu n'as pas tes deux métiers principaux. En plus, pour la couture et l'enchantement, un guide pas à pas pensé pour un soigneur :
 
 - **Montée** : à l'ouverture de la fenêtre du métier, un panneau à côté donne les **meilleurs crafts** d'après les couleurs réelles du jeu (faisables d'abord, orange, étape du guide, coût par point avec les prix d'Auctionator) ; un clic sélectionne la recette. L'**étape du guide** (parcours 1-300 de mamytwink.com) et la **liste de courses** : ce qu'il faut pour la finir, ce que tu as dans tes sacs, ta banque et sur tes rerolls (Syndicator), ce qui manque et son coût. **Rappel du maître** (Compagnon, Expert, Artisan) quand tu approches du plafond, avec où le trouver et le niveau requis.
 - **Pour toi** : pour chaque pièce portée, enchantée ou non, le meilleur enchantement de soigneur que tu sais faire, celui à apprendre dès maintenant et le meilleur à viser, **chiffrés en soins/s par ForeverHeal** (description du jeu lue quand tu connais la formule) ; les pièces de couture (recettes connues et patrons du guide) qui t'améliorent.
@@ -133,7 +134,7 @@ Commandes : `/prep`, `/prep raid`, `/prep donjon`, `/prep role auto|tank|soigneu
 
 ## Icône commune « Forever »
 
-Une seule icône autour de la minicarte pour tous les addons : un clic ouvre un menu (Gazette, Prêtre, Macros, Graphismes). À la première connexion, elle remplace les icônes séparées. `/forever separees` remet une icône par addon, `/forever commune` revient à l'icône commune, `/forever minimap` la masque. La commande `minimap` de chaque addon réaffiche aussi son icône séparée.
+Une seule icône autour de la minicarte pour tous les addons : un clic ouvre un menu (Gazette, Compagnon, Macros, Graphismes). À la première connexion, elle remplace les icônes séparées. `/forever separees` remet une icône par addon, `/forever commune` revient à l'icône commune, `/forever minimap` la masque. La commande `minimap` de chaque addon réaffiche aussi son icône séparée.
 
 ## Diagnostic (pour adapter les addons à WoW Forever)
 
@@ -159,7 +160,7 @@ Les addons ne visent que **WoW Forever** : chaque `.toc` déclare `## Interface:
 ## Développement
 
 - `luacheck ForeverGFX ForeverMacros ForeverGazette ForeverCompagnon` vérifie le code (lancé automatiquement à chaque push).
-- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `tests/prep_sim.lua`, `tests/heal_sim.lua`, `tests/loot_sim.lua`, `tests/metiers_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` font de même pour les autres addons (chaque partie de ForeverCompagnon seule, par `tests/compagnon_load.lua`) ; `tests/compagnon_sim.lua` charge ForeverCompagnon comme dans le jeu, sur le profil du client Forever (`tests/forever_client.lua`, issu de `/fp sonde`). `tests/wowmock.lua` : API WoW imitée commune. Lancés aussi à chaque push.
+- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `tests/prep_sim.lua`, `tests/heal_sim.lua`, `tests/loot_sim.lua`, `tests/metiers_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` font de même pour les autres addons (chaque partie de ForeverCompagnon seule, par `tests/compagnon_load.lua`) ; `tests/compagnon_sim.lua` charge ForeverCompagnon comme dans le jeu, sur le profil du client Forever (`tests/forever_client.lua`, issu de `/fp sonde`) ; `tests/classes_sim.lua` le charge pour les 9 classes, côté Alliance et Horde. `tests/wowmock.lua` : API WoW imitée commune. Lancés aussi à chaque push.
 - `python3 tools/forever_api_check.py` : appels à des fonctions absentes du client de WoW Forever (sans repli) ou interdites aux addons, d'après la liste de l'API du client relevée par Thunderz ([forever-addon-kit](https://github.com/Thunderz96/forever-addon-kit), MIT) dans `tests/data/forever_api.json`. Lancé aussi à chaque push.
 - Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les archives à la release (ForeverMacros, ForeverGazette et ForeverCompagnon gardent le numéro de leur TOC).
 

@@ -80,7 +80,8 @@ function ns.Evaluate(link)
     r = { wearable = wear, why = why, minLevel = MinLevel(link) }
     local api = _G.ForeverHealAPI
     local role = ns.Role()
-    if class == "PRIEST" and (role == nil or role == "heal") and api and api.Evaluate then
+    local healer = class == "PRIEST" or class == "DRUID" or class == "PALADIN" or class == "SHAMAN"
+    if healer and (role == nil and class == "PRIEST" or role == "heal") and api and api.Evaluate then
       local e = api.Evaluate(link)
       if e then
         r.method, r.slot, r.score, r.hps, r.healed, r.hp = "heal", e.slot, e.score, e.hps, e.healed, e.hp

@@ -133,8 +133,9 @@ function ns.SpellModel(family, rankIndex)
   if not avg then return nil end
   local baseCast = rank[3] or fam.base
   local coef
-  if fam.hot then coef = fam.hot / 15 else coef = math.min(baseCast, 3.5) / 3.5 end
-  if fam.targets then coef = coef / 3 end
+  if fam.coef then coef = fam.coef
+  elseif fam.hot then coef = fam.hot / 15 else coef = math.min(baseCast, 3.5) / 3.5 end
+  if fam.targets and not fam.chain then coef = coef / 3 end
   if rank[2] < 20 then coef = coef * (1 - (20 - rank[2]) * 0.0375) end      -- pénalité des sorts de bas niveau
   local mult = (db and db.mult and db.mult[family]) or 1
   return {
@@ -162,8 +163,10 @@ end
 
 -- Famille d'un numéro de sort
 local familyOf = {}
-for family, fam in pairs(D.families) do
-  for i, r in ipairs(fam.ranks) do familyOf[r[1]] = { family = family, rank = i } end
+for _, c in pairs(D.classes) do
+  for family, fam in pairs(c.families) do
+    for i, r in ipairs(fam.ranks) do familyOf[r[1]] = { family = family, rank = i } end
+  end
 end
 ns.familyOf = familyOf
 
@@ -184,13 +187,15 @@ function ns.Mix(spells)
     end
     mix.observed = math.floor(n + 0.5)
   else
-    -- pas encore assez de lancers observés : soin principal 70 %, Soins rapides 30 %
-    local main = spells.greater or spells.heal or spells.lesser
-    if main and spells.flash then
+    -- pas encore assez de lancers observés : soin principal 70 %, soin rapide 30 % (familles de la classe, Data.lua)
+    local main
+    for _, f in ipairs(D.mixMain or { "greater", "heal", "lesser" }) do main = main or spells[f] end
+    local fast = spells[D.mixFast or "flash"]
+    if main and fast then
       mix[1] = { spell = main, share = 0.7 }
-      mix[2] = { spell = spells.flash, share = 0.3 }
-    elseif main or spells.flash then
-      mix[1] = { spell = main or spells.flash, share = 1 }
+      mix[2] = { spell = fast, share = 0.3 }
+    elseif main or fast then
+      mix[1] = { spell = main or fast, share = 1 }
     end
     mix.observed = math.floor(n + 0.5)
   end
@@ -633,7 +638,7 @@ ev:SetScript("OnEvent", function(_, event, ...)
     if ... ~= ADDON and ... ~= ns.ROOT then return end
     InitDB()
     -- partie Soins : modèle du prêtre seulement (pas d'infobulles, d'annonces ni de panneau pour les autres classes)
-    if select(2, UnitClass("player")) ~= "PRIEST" then ns.inactive = true; return end
+    if not ns.ApplyClass(select(2, UnitClass("player"))) then ns.inactive = true; return end
     for e in pairs(handlers) do
       -- Journal de combat : sur le client de Forever, s'y abonner est interdit aux addons (« ForeverHeal a été bloqué… »
       -- à chaque connexion, 05/11/2026) ; seulement si le client permet de le lire

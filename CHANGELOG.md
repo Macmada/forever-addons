@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v3.1.0 : ForeverCompagnon, toutes classes, races et factions (ForeverCompagnon 3.1.0)
+- **ForeverPrêtre devient ForeverCompagnon** (`/fp`, `/compagnon`) : pour **toutes les classes, races et factions**. L'ancien dossier ForeverPretre devient une coquille vide (supprimable) ; réglages remis à zéro.
+- **Rôle** à choisir sur l'écran Maintenant (tank, soins, dégâts mêlée, dégâts sorts) : le client de Forever ne donne pas les arbres de talents aux addons. Il règle l'Équipement et la Préparation.
+- **Équipement** : poids des caractéristiques par classe **et par rôle** (défense et armure pour un tank, force/agilité et DPS de l'arme en mêlée, puissance des sorts et toucher pour les lanceurs, soins pour les soigneurs).
+- **Métiers : tous les métiers** (alchimie, forge, travail du cuir, ingénierie, cuisine, secourisme, herboristerie, minage, dépeçage, pêche, en plus de couture et enchantement) : compétence et rang, rappel du maître, meilleurs crafts d'après la fenêtre du métier, recettes à apprendre (All The Things), métiers conseillés selon la classe (forge + minage pour un guerrier…). Guides pas à pas : couture et enchantement.
+- **Soins : druide, paladin et chaman** en plus du prêtre (Toucher guérisseur, Rétablissement, Récupération ; Lumière sacrée, Éclair lumineux ; Vague de soins, Vague de soins inférieurs, Salve de guérison), mêmes calculs (soins/s, autonomie, conseils de rang, infobulles). L'onglet Soins n'apparaît que pour les soigneurs.
+- **Onglet Addons** (`/fp addons`) : les addons utiles sur Forever, actifs, désactivés ou absents, ce qu'ils apportent, leur adresse à copier et « Activer ». Corrige l'auto-test qui disait DungeonJournal absent (autre nom de dossier).
+- Test des 9 classes, Alliance et Horde, à chaque push (`tests/classes_sim.lua`).
+
 ## v3.0.3 (ForeverPretre 3.0.3 / ForeverGazette 1.7.1 / ForeverMacros 1.9.0) : WoW Forever seulement, relevé de forever-addon-kit
 - **WoW Forever seulement** : TBC Anniversary et le retail ne sont plus pris en charge. Tous les `.toc` en `## Interface: 16000, 16001`, WowUp ne propose plus les addons que pour Forever, macros prêtes du retail (`LibraryRetail.lua`) et branches propres à TBC/retail retirées (ForeverMacros, ForeverGazette).
 - **Contrôle automatique de l'API** (`tools/forever_api_check.py`, à chaque push) : tout appel à une fonction absente du client de WoW Forever sans solution de repli, ou à une fonction interdite aux addons (`ReloadUI`), est refusé. Référence : la liste complète de l'API du client (6 045 fonctions, 269 espaces de noms) relevée par Thunderz dans [forever-addon-kit](https://github.com/Thunderz96/forever-addon-kit) (MIT), copiée dans `tests/data/forever_api.json`. Premier passage : aucun appel dangereux, quelques protections rendues explicites.

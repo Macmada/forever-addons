@@ -13,7 +13,7 @@ root.TABS = {
   { key = "now", label = L.now, icon = "Interface\\Icons\\Spell_Holy_PowerWordShield", frame = "ForeverCompagnonNowFrame",
     open = function() root.ShowNow() end },
   { key = "heal", label = L.heal, icon = "Interface\\Icons\\Spell_Holy_GreaterHeal", frame = "ForeverHealPanel",
-    mod = "ForeverHeal", toggle = "TogglePanel", class = "PRIEST" },
+    mod = "ForeverHeal", toggle = "TogglePanel", classes = { PRIEST = true, DRUID = true, PALADIN = true, SHAMAN = true } },
   { key = "loot", label = L.loot, icon = "Interface\\Icons\\INV_Chest_Cloth_17", frame = "ForeverLootFrame",
     mod = "ForeverLoot", toggle = "Toggle" },
   { key = "prep", label = L.prep, icon = "Interface\\Icons\\INV_Potion_51", frame = "ForeverPrepFrame",
@@ -39,7 +39,7 @@ local function Rail()
   rail = CreateFrame("Frame", "ForeverCompagnonRail", UIParent)
   local _, myClass = UnitClass("player")
   local tabs = {}
-  for _, t in ipairs(root.TABS) do if not t.class or t.class == myClass then tabs[#tabs + 1] = t end end
+  for _, t in ipairs(root.TABS) do if not t.classes or t.classes[myClass] then tabs[#tabs + 1] = t end end
   rail:SetSize(50, 16 + #tabs * 46)
   rail:SetFrameStrata("HIGH")
   K.Panel(rail, 0.92)
