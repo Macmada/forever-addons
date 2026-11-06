@@ -5,6 +5,7 @@
 - **Clic droit « y aller » sans effet dans la fenêtre Équipement** : elle dessine ses propres cartes, qui n'écoutaient que le clic gauche. Corrigé.
 - **Guide-moi ne trouvait pas de vendeur** pour la nourriture et la boisson : l'extraction d'All The Things classait les vendeurs sans prix affiché comme « butin ». Les vendeurs sont maintenant reconnus par l'en-tête « Vendeurs » d'ATT et ses listes d'articles (2 061 sources « vendeur » au lieu de 468).
 - **Marchands visités retenus** (position et articles) : Guide-moi choisit le plus proche, y compris ceux que la base ne connaît pas (aubergistes hors des capitales).
+- Prix affichés sans « 0 pc » inutile (« 10 pa » au lieu de « 10 pa 0 pc »).
 - **Écran Maintenant / Équipement** : « clic droit : y aller » passe sur la ligne de la source ; le nom et les étiquettes trop longs sont coupés au lieu de chevaucher le gain (« Kaléidoscope d'œil de serpent »).
 
 ## v3.3.0 : cadre des changements de caractéristiques (ForeverCompagnon 3.3.0)

@@ -34,8 +34,8 @@ function ns.FormatMoney(copper)
   copper = math.floor(copper or 0)
   local g, s, c = math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100
   local fr = ns.lang ~= "en"
-  if g > 0 then return string.format(fr and "%d po %d pa" or "%dg %ds", g, s) end
-  if s > 0 then return string.format(fr and "%d pa %d pc" or "%ds %dc", s, c) end
+  if g > 0 then return s > 0 and string.format(fr and "%d po %d pa" or "%dg %ds", g, s) or string.format(fr and "%d po" or "%dg", g) end
+  if s > 0 then return c > 0 and string.format(fr and "%d pa %d pc" or "%ds %dc", s, c) or string.format(fr and "%d pa" or "%ds", s) end
   return string.format(fr and "%d pc" or "%dc", c)
 end
 
