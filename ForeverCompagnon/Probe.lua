@@ -92,7 +92,7 @@ function root.HealthProbe()
   r.setFormatted = Try(function(v) fs:SetFormattedText("-%d", v) end)
   r.format = Try(function(v) fs:SetText(string.format("-%d", v)) end)
   r.concat = Try(function(v) fs:SetText("-" .. v) end)
-  r.abbrev = Try(function(v) fs:SetText(AbbreviateNumbers(v)) end)
+  r.abbrev = Try(function(v) fs:SetText(_G.AbbreviateNumbers(v)) end)
   return r
 end
 
