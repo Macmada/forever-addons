@@ -256,6 +256,46 @@ for _, l in ipairs(nl2) do if l.kind == "head" and l.title == root.L.secPriest t
 check(not hasPriest, "prêtre ombre : pas de section soins sur Maintenant")
 root.SetRole("auto")
 
+-- flèche intégrée (à la TomTom) : direction, distance, arrivée, /fp way, « y aller » depuis la base intégrée
+local nav = root.Nav
+local PX, PY, FACE = 50, 50, 0                  -- joueur au centre de la carte 1434, regard vers le nord
+_G.CreateVector2D = function(x, y) return { GetXY = function() return x, y end } end
+_G.C_Map = _G.C_Map or {}
+_G.C_Map.GetBestMapForUnit = function() return 1434 end
+_G.C_Map.GetPlayerMapPosition = function() return CreateVector2D(PX / 100, PY / 100) end
+-- carte 1434 : 1 % = 10 yards ; le haut de la carte (y petit) est le nord, la gauche (x petit) l'ouest
+_G.C_Map.GetWorldPosFromMapPos = function(map, v) local x, y = v:GetXY(); return map == 9999 and 2 or 1, CreateVector2D((0.5 - y) * 1000, (0.5 - x) * 1000) end
+_G.C_Map.GetMapInfo = function(id) return { name = "Vallée de Strangleronce" } end
+_G.GetPlayerFacing = function() return FACE end
+nav.Set(1434, 50, 40, "Au nord")
+local d, a = nav.Bearing()
+check(math.abs(d - 100) < 0.1 and math.abs(a) < 0.01, "flèche : but 100 m droit devant (nord)")
+FACE = math.pi / 2                                -- le joueur regarde à l'ouest : le but est à sa droite
+d, a = nav.Bearing()
+check(math.abs(a + math.pi / 2) < 0.01, "flèche : le joueur tourne à l'ouest, la flèche pointe à droite")
+nav.Set(1434, 60, 50, "À l'est")
+FACE = 0
+d, a = nav.Bearing()
+check(math.abs(a + math.pi / 2) < 0.01 and math.abs(d - 100) < 0.1, "flèche : but à l'est = à droite")
+ForeverCompagnonArrow.scripts.OnUpdate(ForeverCompagnonArrow, 1)
+check(ForeverCompagnonArrow:IsShown() and ForeverCompagnonArrow.dist:GetText():find("100", 1, true), "flèche affichée avec la distance")
+PX = 60
+ForeverCompagnonArrow.scripts.OnUpdate(ForeverCompagnonArrow, 1)
+check(ForeverCompagnonArrow.dist:GetText() == root.L.navArrived, "arrivé au but")
+nav.Set(9999, 10, 10, "Ailleurs")
+ForeverCompagnonArrow.scripts.OnUpdate(ForeverCompagnonArrow, 1)
+check(ForeverCompagnonArrow.dist:GetText():find("Vallée", 1, true), "but sur un autre continent : dit la zone")
+SlashCmdList.FOREVERCOMPAGNON("way 42.5 63 Coffre")
+check(nav.target and nav.target.x == 42.5 and nav.target.y == 63 and nav.target.title == "Coffre", "/fp way 42.5 63 Coffre")
+SlashCmdList.FOREVERCOMPAGNONWAY("12 34")
+check(nav.target and nav.target.x == 12 and nav.target.y == 34, "/way sans TomTom : même commande")
+SlashCmdList.FOREVERCOMPAGNON("way")
+check(not nav.target and not ForeverCompagnonArrow:IsShown(), "/fp way : flèche effacée")
+-- « y aller » : Anneau de canaliste (272406), vendu dans la Vallée de Strangleronce (base intégrée)
+check(root.mods.ForeverLoot.HasPlace(272406) and root.mods.ForeverLoot.GoTo(272406) and nav.target.mapID == 1434,
+      "Équipement : clic droit sur l'anneau de canaliste, flèche vers son vendeur")
+nav.Clear()
+
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 

@@ -1,79 +1,79 @@
 local _, ns = ...
 
--- All The Things (facultatif), commun à ForeverMetiers et ForeverLoot (copié tel quel par tools/sync-shared.sh).
--- ATT a une base propre à WoW Forever (livrée sous le nom « Camelot », tirée des données du jeu) : pour chaque objet et
--- recette, le PNJ, la quête, la zone, le coût, la réputation et le niveau d'apprentissage. ATT n'a pas d'API publique :
--- on lit ses structures internes (_G.ATTC : SearchForField, parent, text…) sous pcall, et on se tait si elles changent.
+-- Où obtenir les objets et les recettes, commun aux parties de ForeverCompagnon (copié par tools/sync-shared.sh).
+-- Données intégrées : extrait de la base WoW Forever d'All The Things (licence MIT), Data/Sources.lua, régénéré à chaque
+-- version par tools/att_extract.lua : plus besoin d'installer ATT. Les noms (PNJ, zones, donjons, quêtes, monnaies)
+-- sont demandés au jeu, dans sa langue, et les noms de PNJ sont gardés une fois connus.
 local A = {}
 ns.ATT = A
 
 local FR = GetLocale() == "frFR"
 local STANDING = { { 42000, FR and "Exalté" or "Exalted" }, { 21000, FR and "Révéré" or "Revered" },
                    { 9000, FR and "Honoré" or "Honored" }, { 3000, FR and "Amical" or "Friendly" }, { 0, FR and "Neutre" or "Neutral" } }
-A.SKILL = { tailoring = 197, enchanting = 333 }
+A.SKILL = { tailoring = 197, enchanting = 333, alchemy = 171, blacksmithing = 164, leatherworking = 165, engineering = 202,
+            cooking = 185, firstaid = 129, herbalism = 182, mining = 186, skinning = 393, fishing = 356 }
+local T = FR and { quest = "quête", object = "objet", npc = "PNJ", crafted = "fabriqué", dungeon = "donjon", raid = "raid",
+                   currency = "monnaie #", with = " avec ", gold = "%d po", silver = "%d pa" }
+              or { quest = "quest", object = "object", npc = "NPC", crafted = "crafted", dungeon = "dungeon", raid = "raid",
+                   currency = "currency #", with = " with ", gold = "%dg", silver = "%ds" }
 
-local function App()
-  local a = _G.ATTC
-  if type(a) == "table" and type(a.SearchForField) == "function" then return a end
-end
-function A.Available() return App() ~= nil end
-
-local function Get(g, k)
-  local ok, v = pcall(function() return g[k] end)
-  if ok then return v end
-end
-
-local function Clean(s)
-  if type(s) ~= "string" then return nil end
-  s = s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("|T.-|t", "")
-  s = s:match("^%s*(.-)%s*$")
-  if s == "" or s:find("^%[?Retrieving") or s:find("^%[?Récupération") then return nil end
-  if s:find("^Quest #%d+") or s:find("^Quête #%d+") then return nil end     -- quête pas encore chargée par le jeu
-  return s
-end
-
--- Groupes d'ATT pour un champ (itemID, recipeID…)
-function A.Search(field, id)
-  local a = App()
-  if not a or not id then return {} end
-  local ok, list = pcall(a.SearchForField, field, id)
-  if (not ok or type(list) ~= "table" or #list == 0) and type(a.SearchForFieldInAllCaches) == "function" then
-    ok, list = pcall(a.SearchForFieldInAllCaches, field, id)
-  end
-  return (ok and type(list) == "table") and list or {}
-end
+local function DB() local r = ns.root or ns; return r.Sources end
+function A.Available() return DB() ~= nil end
 
 -- Faction du joueur au sens d'ATT (champ r : 1 Horde, 2 Alliance)
 local function MyR() return UnitFactionGroup("player") == "Horde" and 1 or 2 end
+local function Mine(src) local e = src[6]; return not (e and e.r and e.r ~= MyR()) end
 
--- Chemin lisible : PNJ ou quête, boss, puis zone ou donjon (catégories générales ignorées). good = vraie source ;
--- nil si la source est réservée à l'autre faction.
-local function Path(g)
-  local parts, p, n, good = {}, Get(g, "parent"), 0, false
-  local gr = Get(g, "r")
-  if gr and gr ~= MyR() then return nil, false end
-  while p and n < 10 do
-    n = n + 1
-    local pr = Get(p, "r")
-    if pr and pr ~= MyR() then return nil, false end
-    if not Get(p, "parent") and not (Get(p, "mapID") or Get(p, "instanceID")) then break end   -- racine d'ATT (« ALL THE THINGS »)
-    local t = Clean(Get(p, "text") or Get(p, "name"))
-    if not t and Get(p, "questID") then t = FR and "quête" or "quest" end
-    local isPlace = Get(p, "mapID") or Get(p, "instanceID")
-    if Get(p, "npcID") or Get(p, "creatureID") or Get(p, "questID") or Get(p, "encounterID") or Get(p, "objectID") then good = true end
-    if t and not Get(p, "headerID") and (#parts < 2 or isPlace) then parts[#parts + 1] = t end
-    if isPlace then good = good or #parts > 0; break end
-    p = Get(p, "parent")
-  end
-  return #parts > 0 and table.concat(parts, " — ") or nil, good
+----------------------------------------------------------------------
+-- Noms, demandés au jeu
+----------------------------------------------------------------------
+local npcCache = {}
+local function NpcCache()
+  local r = ns.root or ns
+  if r.db then r.db.npcNames = r.db.npcNames or {}; return r.db.npcNames end
+  return npcCache
 end
-
+function A.NpcName(id)
+  if not id or id <= 0 then return nil end
+  local cache = NpcCache()
+  if cache[id] then return cache[id] end
+  local TI = C_TooltipInfo
+  if TI and TI.GetHyperlink then
+    local ok, data = pcall(TI.GetHyperlink, "unit:Creature-0-0-0-0-" .. id .. "-0000000000")
+    local line = ok and type(data) == "table" and data.lines and data.lines[1]
+    local name = line and line.leftText
+    if type(name) == "string" and name ~= "" and not (issecretvalue and issecretvalue(name)) then
+      cache[id] = name
+      return name
+    end
+  end
+end
+function A.MapName(id)
+  if not id or id <= 0 or not (C_Map and C_Map.GetMapInfo) then return nil end
+  local ok, info = pcall(C_Map.GetMapInfo, id)
+  return ok and type(info) == "table" and info.name or nil
+end
+function A.InstanceName(id)
+  if EJ_GetInstanceInfo then
+    local ok, name = pcall(EJ_GetInstanceInfo, id)
+    if ok and type(name) == "string" and name ~= "" then return name end
+  end
+  local inst = DB() and DB().instances[id]
+  local zone = inst and A.MapName(inst[1])
+  return zone and (zone .. " (" .. (inst[5] == 1 and T.raid or T.dungeon) .. ")") or nil
+end
+function A.QuestName(id)
+  local Q = C_QuestLog
+  if not (Q and Q.GetTitleForQuestID) then return nil end
+  local ok, t = pcall(Q.GetTitleForQuestID, id)
+  if ok and type(t) == "string" and t ~= "" then return t end
+  if Q.RequestLoadQuestByID then pcall(Q.RequestLoadQuestByID, id) end
+end
 local function ItemName(id)
   local n = ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(id)
   if not n and C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(id) end
   return n or ("#" .. id)
 end
-
 local function FactionName(id)
   if C_Reputation and C_Reputation.GetFactionDataByID then
     local ok, d = pcall(C_Reputation.GetFactionDataByID, id)
@@ -81,128 +81,158 @@ local function FactionName(id)
   end
   if GetFactionInfoByID then return (GetFactionInfoByID(id)) end
 end
-
 local function Money(c)
   local g, s = math.floor(c / 10000), math.floor(c / 100) % 100
-  if g > 0 then return string.format(FR and "%d po" or "%dg", g) end
-  return string.format(FR and "%d pa" or "%ds", s)
+  if g > 0 then return string.format(T.gold, g) end
+  return string.format(T.silver, s)
 end
 
 -- Coût et réputation lisibles : « 120 Faveur marchande, Amical avec Administration commerciale d'Azeroth »
-local function Extra(g)
+local function Extra(e)
+  if not e then return nil end
   local out = {}
-  local cost = Get(g, "cost")
-  if type(cost) == "table" then
-    for _, c in ipairs(cost) do
-      if type(c) == "table" then
-        if c[1] == "c" then
-          local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(c[2])
-          out[#out + 1] = (c[3] or 1) .. " " .. ((info and info.name) or ((FR and "monnaie #" or "currency #") .. tostring(c[2])))
-        elseif c[1] == "i" then
-          out[#out + 1] = (c[3] or 1) .. " " .. ItemName(c[2])
-        elseif c[1] == "g" and type(c[2]) == "number" then
-          out[#out + 1] = Money(c[2])
-        end
-      end
-    end
-  elseif type(cost) == "number" and cost > 0 then
-    out[#out + 1] = Money(cost)
+  for _, c in ipairs(e.cost or {}) do
+    if c[1] == "c" then
+      local info = C_CurrencyInfo and C_CurrencyInfo.GetCurrencyInfo and C_CurrencyInfo.GetCurrencyInfo(c[2])
+      out[#out + 1] = (c[3] or 1) .. " " .. ((info and info.name) or (T.currency .. tostring(c[2])))
+    elseif c[1] == "i" then out[#out + 1] = (c[3] or 1) .. " " .. ItemName(c[2])
+    elseif c[1] == "g" and type(c[2]) == "number" then out[#out + 1] = Money(c[2]) end
   end
-  local rep = Get(g, "minReputation")
+  local rep = e.rep
   if type(rep) == "table" and rep[1] then
-    local fname = FactionName(rep[1])
     local st = STANDING[#STANDING][2]
     for _, s in ipairs(STANDING) do if (rep[2] or 0) >= s[1] then st = s[2]; break end end
-    out[#out + 1] = st .. (FR and " avec " or " with ") .. (fname or ("#" .. rep[1]))
+    out[#out + 1] = st .. T.with .. (FactionName(rep[1]) or ("#" .. rep[1]))
   end
   return #out > 0 and table.concat(out, ", ") or nil
 end
 
--- Sources d'un objet ou d'une recette : texte « PNJ — zone (coût) ; … », niveau d'apprentissage (recettes), connu (ATT)
+-- Lieu d'une source : donjon, sinon zone (carte des coordonnées)
+local function Place(src)
+  local e = src[6]
+  if e and e.inst then return A.InstanceName(e.inst) end
+  return A.MapName(src[3])
+end
+
+-- Texte d'une source ; good = source précise (PNJ, boss, quête, objet, fabrication)
+local function SourceText(src)
+  local kind, id = src[1], src[2]
+  local e = src[6] or {}
+  local who, partial
+  if kind == "boss" or kind == "drop" or kind == "vendor" then who = A.NpcName(id); partial = not who; who = who or T.npc
+  elseif kind == "quest" then local q = A.QuestName(e.q or id); partial = not q; who = T.quest .. " " .. (q or "")
+  elseif kind == "obj" then who = T.object
+  elseif kind == "craft" then return T.crafted, true
+  else return Place(src), false end
+  local place = Place(src)
+  local txt = who:gsub("%s+$", "") .. (place and (" — " .. place) or "")
+  local extra = Extra(e)
+  return txt .. (extra and (" (" .. extra .. ")") or ""), true, partial or not place
+end
+
+-- Sources d'un objet (field « itemID ») ou d'une recette (« recipeID », numéro du sort) : texte « … ; … », weak (zone
+-- seulement), learnedAt (recettes)
 function A.Source(field, id, max)
-  local paths, seen, learnedAt, collected = {}, {}, nil, nil
-  local fallback
-  for _, g in ipairs(A.Search(field, id)) do
-    learnedAt = learnedAt or Get(g, "learnedAt")
-    if collected == nil then collected = Get(g, "collected") end
-    local path, good = Path(g)
-    if path then
-      local extra = Extra(g)
-      local txt = path .. (extra and (" (" .. extra .. ")") or "")
-      if good and not seen[txt] then
-        seen[txt] = true
-        paths[#paths + 1] = txt
-      elseif not fallback then
-        fallback = txt
+  local db = DB()
+  if not (db and id) then return nil end
+  local learnedAt, list
+  if field == "recipeID" then
+    for _, recs in pairs(db.recipes) do
+      local r = recs[id]
+      if r then
+        learnedAt = r[2]
+        if r[3] and r[3] > 0 then list = { { r[5] == "vendor" and "vendor" or "drop", r[3], r[4], 0, 0, { cost = r[6], r = r[7], rep = r[8] } } } end
+        if r[1] and r[1] > 0 and db.items[r[1]] then list = db.items[r[1]] end
+        break
       end
+    end
+  else
+    list = db.items[id]
+  end
+  local paths, seen, weak, partial = {}, {}, nil, false
+  for _, src in ipairs(list or {}) do
+    if Mine(src) then
+      local txt, good, part = SourceText(src)
+      partial = partial or (good and part)
+      if txt and good and not seen[txt] then seen[txt] = true; paths[#paths + 1] = txt
+      elseif txt and not weak then weak = txt end
     end
   end
   while #paths > (max or 2) do table.remove(paths) end
-  if #paths == 0 and not learnedAt and not fallback then return nil end
-  -- text : vraie source (PNJ, quête, boss, zone) ; weak : catégorie générale d'ATT, quand il n'a rien de plus précis
-  return { text = #paths > 0 and table.concat(paths, " ; ") or nil, weak = (#paths == 0) and fallback or nil,
-           learnedAt = tonumber(learnedAt), collected = collected and true or false }
+  if #paths == 0 and not learnedAt and not weak then return nil end
+  return { text = #paths > 0 and table.concat(paths, " ; ") or nil, weak = (#paths == 0) and weak or nil,
+           learnedAt = tonumber(learnedAt), collected = false, partial = partial }
 end
 
--- Toutes les recettes d'un métier connues d'ATT (skillID : 197 couture, 333 enchantement) : { spell, item, name, learnedAt }
+-- Toutes les recettes d'un métier (skillID : 197 couture, 333 enchantement…) : { spell, item, name, learnedAt }
 local recipeCache = {}
 function A.Recipes(skillID)
-  local a = App()
-  if not (a and type(a.SearchForFieldContainer) == "function") then return {} end
+  local db = DB()
+  if not (db and skillID and db.recipes[skillID]) then return {} end
   if recipeCache[skillID] then return recipeCache[skillID] end
-  local ok, cont = pcall(a.SearchForFieldContainer, "recipeID")
-  if not ok or type(cont) ~= "table" then return {} end
   local list = {}
-  for spell, groups in pairs(cont) do
-    if type(spell) == "number" and type(groups) == "table" then
-      local g = groups[1]
-      if g and Get(g, "requireSkill") == skillID then
-        list[#list + 1] = { spell = spell, item = Get(g, "itemID"), name = Clean(Get(g, "name") or Get(g, "text")), learnedAt = tonumber(Get(g, "learnedAt")) or 0 }
-      end
+  for spell, r in pairs(db.recipes[skillID]) do
+    if not (r[7] and r[7] ~= MyR()) then
+      local name = (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spell)) or (r[1] > 0 and ItemName(r[1])) or nil
+      list[#list + 1] = { spell = spell, item = r[1] > 0 and r[1] or nil, name = name, learnedAt = tonumber(r[2]) or 0 }
     end
   end
   table.sort(list, function(x, y) return x.learnedAt < y.learnedAt end)
-  if #list > 0 then recipeCache[skillID] = list end
+  recipeCache[skillID] = list
   return list
 end
 
--- Marchands qui vendent un objet, avec leurs positions : { { name, mapID, x, y } } (coordonnées 0-100, carte d'ATT = uiMapID).
--- Seulement ta faction ; vide si ATT ne le connaît pas (beaucoup de consommables ne sont pas suivis par ATT).
-function A.Vendors(itemID)
+-- Lieux où obtenir un objet, pour y aller (flèche) : { { name, mapID, x, y, kind } }, ta faction seulement ;
+-- un objet de donjon renvoie l'entrée du donjon
+function A.Places(itemID, kinds)
+  local db = DB()
   local out = {}
-  for _, g in ipairs(A.Search("itemID", itemID)) do
-    local p, n = Get(g, "parent"), 0
-    while p and n < 4 do
-      n = n + 1
-      if Get(p, "npcID") or Get(p, "creatureID") then
-        local r = Get(p, "r")
-        if not (r and r ~= MyR()) then
-          local name = Clean(Get(p, "text") or Get(p, "name")) or "?"
-          local coords = Get(p, "coords")
-          if type(coords) == "table" then
-            for mapID, list in pairs(coords) do
-              if type(mapID) == "number" and type(list) == "table" then
-                for _, c in ipairs(list) do
-                  if type(c) == "table" and c[1] and c[2] then out[#out + 1] = { name = name, mapID = mapID, x = c[1], y = c[2] } end
-                end
-              elseif type(list) == "table" and list[1] and list[2] and list[3] then      -- autre forme : { x, y, mapID }
-                out[#out + 1] = { name = name, mapID = list[3], x = list[1], y = list[2] }
-              end
-            end
-          end
-        end
-        break
+  for _, src in ipairs(db and db.items[itemID] or {}) do
+    if Mine(src) and (not kinds or kinds[src[1]]) then
+      local e = src[6] or {}
+      local inst = e.inst and db.instances[e.inst]
+      if src[3] > 0 and src[4] > 0 then
+        out[#out + 1] = { name = A.NpcName(src[2]) or SourceText(src), mapID = src[3], x = src[4], y = src[5], kind = src[1] }
+      elseif inst and inst[1] > 0 then
+        out[#out + 1] = { name = A.InstanceName(e.inst) or T.dungeon, mapID = inst[1], x = inst[2], y = inst[3], kind = src[1] }
+      elseif src[2] > 0 and db.npcs[src[2]] then
+        local p = db.npcs[src[2]]
+        out[#out + 1] = { name = A.NpcName(src[2]) or T.npc, mapID = p[1], x = p[2], y = p[3], kind = src[1] }
       end
-      p = Get(p, "parent")
     end
   end
   return out
 end
+function A.Vendors(itemID) return A.Places(itemID, { vendor = true }) end
+
+-- Où apprendre une recette (numéro du sort) : son PNJ placé, sinon les lieux de son patron
+function A.RecipePlaces(spell)
+  local db = DB()
+  if not db then return {} end
+  for _, recs in pairs(db.recipes) do
+    local r = recs[spell]
+    if r then
+      if not (r[7] and r[7] ~= MyR()) and r[3] and db.npcs[r[3]] then
+        local p = db.npcs[r[3]]
+        return { { name = A.NpcName(r[3]) or T.npc, mapID = p[1], x = p[2], y = p[3], kind = r[5] } }
+      end
+      if r[1] and r[1] > 0 then return A.Places(r[1]) end
+      return {}
+    end
+  end
+  return {}
+end
 
 function A.Diag(add)
-  local a = _G.ATTC
-  if not a then add("All The Things : absent"); return end
+  local db = DB()
+  if not db then add("Sources (All The Things intégré) : absentes"); return end
+  local n = 0
+  for _ in pairs(db.items) do n = n + 1 end
   local t = {}
-  for k, id in pairs(A.SKILL) do t[#t + 1] = k .. " " .. #A.Recipes(id) end
-  add("All The Things : présent (SearchForField " .. tostring(type(a.SearchForField)) .. ", recettes lues : " .. table.concat(t, ", ") .. ")")
+  for k, id in pairs(A.SKILL) do local c = #A.Recipes(id); if c > 0 then t[#t + 1] = k .. " " .. c end end
+  table.sort(t)
+  local cached = 0
+  for _ in pairs(NpcCache()) do cached = cached + 1 end
+  add("Sources intégrées (All The Things " .. tostring(db.rev) .. ", MIT) : " .. n .. " objets ; recettes : " .. table.concat(t, ", ")
+      .. " ; noms de PNJ connus : " .. cached .. (_G.ATTC and " ; addon All The Things aussi installé" or ""))
 end

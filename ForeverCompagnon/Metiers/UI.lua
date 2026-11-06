@@ -386,7 +386,12 @@ function ns.RecipeLines()
           return { kind = "card", link = link, icon = icon or SpellIcon(r.spell), quality = q or 1, name = r.name or name or "?",
                    nameColor = later and { 0.6, 0.6, 0.6 } or { 1, 0.82, 0 },
                    tags = later and Gray(string.format(L.skillTag, r.learnedAt)) or Colored("|cffffd100", string.format(L.skillTag, r.learnedAt)),
-                   source = src and src.text or "?", text = string.format(L.attLine, r.learnedAt, r.name, src and src.text or "?") }
+                   source = src and src.text or "?", text = string.format(L.attLine, r.learnedAt, r.name, src and src.text or "?"),
+                   onRight = function()
+                     local nav = ns.root and ns.root.Nav
+                     local best = nav and nav.Closest(ns.ATT.RecipePlaces(r.spell))
+                     if best then nav.Set(best.mapID, best.x, best.y, best.name) end
+                   end }
         end
         for i, r in ipairs(now) do
           if i > 15 then lines[#lines + 1] = { kind = "info", text = Gray(string.format(L.attMore, #now - 15)) }; break end

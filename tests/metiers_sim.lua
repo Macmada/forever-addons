@@ -115,6 +115,7 @@ _G.GetCraftDescription = function(i) return CRAFT[i][6] end
 
 W.class, W.level = "PRIEST", 30
 local ns = W.load("ForeverMetiers")
+ns.root.Sources = nil      -- guides seuls ici ; les sources intégrées sont testées plus bas (8b) et dans compagnon_sim
 W.fire("ADDON_LOADED", "ForeverMetiers")
 W.fire("PLAYER_LOGIN")
 W.run(3)
@@ -232,52 +233,49 @@ GameTooltip.link, GameTooltip.lines = Link(4305), {}
 ns.OnTooltipItem(GameTooltip)
 check(GameTooltip.lines[1] and GameTooltip.lines[1]:find("145", 1, true), "infobulle : soie utile à l'étape 145-150")
 
--- 8b. All The Things (structure réelle : recettes r(sort, { itemID, learnedAt, requireSkill, cost, minReputation }) sous un PNJ, une catégorie, une zone)
+-- 8b. Sources intégrées (base WoW Forever d'All The Things, Data/Sources.lua) : ici une base d'essai, même format ;
+-- noms demandés au jeu (PNJ par infobulle, zones par la carte, monnaies, réputations)
 _G.C_CurrencyInfo = { GetCurrencyInfo = function(id) return id == 3402 and { name = "Faveur marchande" } or nil end }
 _G.C_Reputation = { GetFactionDataByID = function(id) return id == 2586 and { name = "Administration commerciale d'Azeroth" } or nil end }
-local zone = { mapID = 1453, text = "Hurlevent" }
-local header = { headerID = -2, text = "Marchands", parent = zone }
-local npc = { npcID = 250001, text = "|cffffffffAlynsia|r", parent = header }
-local trainer = { npcID = 1346, text = "Georgio Bolero", parent = { mapID = 1453, text = "Hurlevent" } }
-local craftables = { headerID = -100, text = "Fabrications", parent = { headerID = -5, text = "Métiers" } }
-local RECIPES = {
-  [1249058] = { { recipeID = 1249058, itemID = 249503, learnedAt = 225, requireSkill = 333, name = "Enchantement de collier (Pouvoir de guérison)",
-                  cost = { { "c", 3402, 120 } }, minReputation = { 2586, 3000 }, parent = npc },
-                { recipeID = 1249058, itemID = 249503, learnedAt = 225, requireSkill = 333, cost = { { "c", 3402, 120 } }, minReputation = { 2587, 3000 },
-                  parent = { npcID = 250002, r = 1, text = "Bénéris", parent = { mapID = 1454, text = "Orgrimmar" } } } },
-  [3851] = { { recipeID = 3851, learnedAt = 140, requireSkill = 197, name = "Ceinture azur en soie", parent = trainer } },
-  [3863] = { { recipeID = 3863, learnedAt = 165, requireSkill = 197, name = "Cape glaciale", itemID = 4355, parent = npc } },
-  [8784] = { { recipeID = 8784, learnedAt = 105, requireSkill = 197, name = "Gants de méditation", parent = trainer } },
-  [99999] = { { recipeID = 99999, learnedAt = 50, requireSkill = 333, name = "Autre métier ?", parent = craftables } },
-}
-_G.ATTC = {
-  SearchForField = function(field, id)
-    if field == "recipeID" then return RECIPES[id] end
-    if field == "itemID" and id == 4318 then return { { itemID = 4318, parent = craftables } } end
-    return nil
-  end,
-  SearchForFieldContainer = function(field) if field == "recipeID" then return RECIPES end end,
-}
-check(ns.ATT.Available(), "All The Things détecté")
+local NPCN = { [250001] = "Alynsia", [250002] = "Bénéris", [1346] = "Georgio Bolero" }
+_G.C_TooltipInfo = { GetHyperlink = function(link)
+  local id = tonumber(link:match("Creature%-0%-0%-0%-0%-(%d+)"))
+  return NPCN[id] and { lines = { { leftText = NPCN[id] } } } or nil
+end }
+_G.C_Map = { GetMapInfo = function(id) return ({ [1453] = { name = "Hurlevent" }, [1454] = { name = "Orgrimmar" } })[id] end }
+local realSources = ns.root.Sources
+ns.root.Sources = { rev = "essai", instances = {}, npcs = {},
+  items = { [249503] = { { "vendor", 250001, 1453, 50, 50, { cost = { { "c", 3402, 120 } }, rep = { 2586, 3000 }, r = 2 } },
+                         { "vendor", 250002, 1454, 40, 40, { cost = { { "c", 3402, 120 } }, rep = { 2587, 3000 }, r = 1 } } } },
+  recipes = { [333] = { [1249058] = { 249503, 225, 250001, 1453, "vendor" }, [99999] = { 0, 50, 0, 0, "craft" } },
+              [197] = { [3851] = { 0, 140, 1346, 1453, "trainer" }, [3863] = { 4355, 165, 250001, 1453, "vendor" },
+                        [8784] = { 0, 105, 1346, 1453, "trainer" } } } }
+_G.C_Spell = _G.C_Spell or {}
+local saveSN = _G.C_Spell.GetSpellName
+local SPN = { [3851] = "Ceinture azur en soie", [3863] = "Cape glaciale", [8784] = "Gants de méditation" }
+_G.C_Spell.GetSpellName = function(id) return SPN[id] or (saveSN and saveSN(id)) end
+check(ns.ATT.Available(), "sources intégrées présentes")
 local src = ns.ATT.Source("recipeID", 1249058)
 check(src and src.text:find("^Alynsia — Hurlevent %(120 Faveur marchande, ") and src.text:find("Administration commerciale d'Azeroth)", 1, true) and src.learnedAt == 225,
-      "ATT : collier de soins chez Alynsia (Hurlevent), 120 faveurs, Amical — « " .. tostring(src and src.text) .. " »")
+      "collier de soins chez Alynsia (Hurlevent), 120 faveurs, Amical — « " .. tostring(src and src.text) .. " »")
 local collier
 for _, e in ipairs(ns.Data.healEnchants) do if e.spell == 1249058 then collier = e end end
-check(not src.text:find("Bénéris", 1, true), "ATT : le marchand de la Horde (Bénéris, Orgrimmar) n'est pas montré à un Alliance")
-check(ns.EntrySkill(collier) == 225 and collier.skill == 210, "compétence d'ATT (225) préférée à celle du guide (210)")
+check(not src.text:find("Bénéris", 1, true), "le marchand de la Horde (Bénéris, Orgrimmar) n'est pas montré à un Alliance")
+check(ns.EntrySkill(collier) == 225 and collier.skill == 210, "compétence de la base (225) préférée à celle du guide (210)")
 local now, soon = ns.ATTLearnable("tailoring")
 check(#now == 1 and now[1].name == "Ceinture azur en soie" and #soon == 1 and soon[1].name == "Cape glaciale",
-      "ATT : à apprendre maintenant en couture 148 : Ceinture azur (140) ; bientôt : Cape glaciale (165) ; Gants de méditation déjà connus")
+      "à apprendre maintenant en couture 148 : Ceinture azur (140) ; bientôt : Cape glaciale (165) ; Gants de méditation déjà connus")
 ns.showAll = true            -- le collier (compétence 225) est hors de portée d'un enchanteur à 95 : catalogue complet
 local rc2 = Txt(ns.RecipeLines())
 ns.showAll = false
-check(rc2:find("Georgio Bolero", 1, true) and rc2:find("ATT", 1, true) and rc2:find("Alynsia", 1, true), "onglet Recettes : sources d'ATT")
-check(ns.DiagText():find("All The Things : présent", 1, true), "diagnostic : ATT détecté")
-_G.ATTC = { SearchForField = function() error("structure changée") end, SearchForFieldContainer = function() error("x") end }
-check(ns.ATT.Source("recipeID", 1) == nil and #ns.ATT.Search("itemID", 1) == 0, "ATT qui change de structure : aucune erreur, rien affiché")
-check(Txt(ns.RecipeLines()) ~= nil, "onglet Recettes sans planter si ATT change")
-_G.ATTC = nil
+check(rc2:find("Georgio Bolero", 1, true) and rc2:find("Alynsia", 1, true), "onglet Recettes : sources intégrées")
+check(ns.DiagText():find("Sources intégrées", 1, true), "diagnostic : sources intégrées")
+ns.root.Sources = nil
+check(ns.ATT.Source("recipeID", 1) == nil, "sans base : rien affiché, aucune erreur")
+check(Txt(ns.RecipeLines()) ~= nil, "onglet Recettes sans planter sans base")
+ns.root.Sources = realSources
+_G.C_Spell.GetSpellName = saveSN
+_G.C_TooltipInfo, _G.C_Map = nil, nil
 
 -- 8c. client moderne de Forever : pas de GetNumSkillLines, métiers par GetProfessions / GetProfessionInfo
 _G.GetNumSkillLines, _G.GetSkillLineInfo = nil, nil

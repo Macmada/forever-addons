@@ -144,25 +144,21 @@ check(dl:find("La Salle des thanes", 1, true) and dl:find("Faldrim Anvilmar", 1,
       and not dl:find("Gantelets de plaques", 1, true), "onglet Donjons : butin de DungeonJournal pour toi, boss par boss")
 check(ns.DiagText():find("DungeonJournal : présent", 1, true), "diagnostic : DungeonJournal détecté")
 
--- 5c. All The Things : où obtenir chaque objet de la liste de référence
-_G.ATTC = { SearchForField = function(field, id)
-  if field == "itemID" and id == 13345 then
-    return { { itemID = 13345, parent = { encounterID = 456, text = "Baron Rivendare", parent = { instanceID = 236, text = "Stratholme", parent = { headerID = -1, text = "Donjons" } } } } }
-  end
+-- 5c. Sources intégrées (base WoW Forever d'All The Things, Data/Sources.lua) : où obtenir chaque objet de la référence ;
+-- noms demandés au jeu (infobulle du PNJ, donjon)
+_G.C_TooltipInfo = { GetHyperlink = function(link)
+  if link:find("%-10440%-") then return { lines = { { leftText = "Baron Rivendare" } } } end
 end }
-check(ns.ATTWhere(13345) == "Baron Rivendare — Stratholme", "ATT : Sceau de Rivendare sur le Baron Rivendare (Stratholme)")
--- racine d'ATT et quête pas encore chargée (diagnostic du 05/11/2026 : « ALL THE THINGS », « Quest #6502* »)
-local root = { text = "ALL THE THINGS" }
-_G.ATTC.SearchForField = function(field, id)
-  if id == 22149 then return { { itemID = 22149, parent = { questID = 7, text = "Quest #6502*", parent = { headerID = -1, text = "Quêtes", parent = root } } } } end
-  if id == 13345 then return { { itemID = 13345, parent = { encounterID = 456, text = "Baron Rivendare", parent = { instanceID = 236, text = "Stratholme", parent = { headerID = -1, text = "Donjons", parent = root } } } } } end
-end
+_G.EJ_GetInstanceInfo = function(id) if id == 236 then return "Stratholme" end end
+_G.C_QuestLog = { GetTitleForQuestID = function() return nil end, RequestLoadQuestByID = function() end }
+_G.C_Map = { GetMapInfo = function(id) return { name = "Carte " .. id } end }
+check(ns.ATTWhere(13345) == "Baron Rivendare — Stratholme", "sources intégrées : Sceau de Rivendare sur le Baron Rivendare (Stratholme)")
 local w = ns.ATTWhere(22149)
-check(w == nil or (not w:find("ALL THE THINGS", 1, true) and not w:find("Quest #", 1, true)), "ATT : ni « ALL THE THINGS » ni « Quest #… » (« " .. tostring(w) .. " »)")
+check(w and (w:find("quête", 1, true) or w:find("quest", 1, true)) and not w:find("Quest #", 1, true), "quête pas encore chargée : « quête » sans numéro (« " .. tostring(w) .. " »)")
 local al = {}
 for _, l in ipairs(ns.BisLines()) do al[#al + 1] = l.text end
-check(table.concat(al, "\n"):find("ATT[^|]*Baron Rivendare — Stratholme"), "onglet BiS : source d'ATT")
-_G.ATTC = nil
+check(table.concat(al, "\n"):find("Baron Rivendare — Stratholme", 1, true), "onglet BiS : source intégrée")
+_G.C_TooltipInfo, _G.EJ_GetInstanceInfo, _G.C_QuestLog, _G.C_Map = nil, nil, nil, nil
 
 -- 5d. « À mon niveau » (05/11/2026) : meilleurs objets portables jusqu'à ton niveau + N, et où les avoir
 local function NT(lines) local t = {}; for _, l in ipairs(lines) do t[#t + 1] = l.text end; return table.concat(t, "\n") end

@@ -15,13 +15,13 @@ globals = {
   "ForeverHub", "SLASH_FOREVERHUB1", "ForeverHealAPI", "ForeverLootDB", "ForeverLootGlobalDB", "ForeverDungeonJournal_NS", "Syndicator",
   "SLASH_FOREVERLOOT1", "SLASH_FOREVERLOOT2", "ForeverLoot_OnCompartmentClick",
   "ForeverMetiersDB", "ForeverMetiersGlobalDB", "SLASH_FOREVERMETIERS1", "SLASH_FOREVERMETIERS2", "ForeverMetiers_OnCompartmentClick", "Auctionator", "ATTC", "ForeverBlockedActions", "TomTom",
-  "ForeverCompagnonDB", "ForeverCompagnon_OnCompartmentClick", "SLASH_FOREVERCOMPAGNON1", "SLASH_FOREVERCOMPAGNON2", "SLASH_FOREVERCOMPAGNON3",
+  "ForeverCompagnonDB", "ForeverCompagnon_OnCompartmentClick", "SLASH_FOREVERCOMPAGNON1", "SLASH_FOREVERCOMPAGNON2", "SLASH_FOREVERCOMPAGNON3", "SLASH_FOREVERCOMPAGNONWAY1",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 
 -- API WoW lue (présente sur Forever, TBC Anniversary et retail, ou testée avant usage)
 read_globals = {
-  "UnitPowerPercent", "C_CurveUtil", "CreateColor", "CurveConstants",
+  "UnitPowerPercent", "C_CurveUtil", "CreateColor", "CurveConstants", "CreateVector2D", "UiMapPoint", "C_SuperTrack", "GetPlayerFacing", "C_TooltipInfo", "EJ_GetInstanceInfo", "C_QuestLog",
   "DisableAddOn", "GetContainerItemID", "PickupContainerItem", "AutoEquipCursorItem", "CursorHasItem",
   "C_AddOns", "C_CVar", "C_Console", "C_Item", "C_Spell", "C_Timer", "ChatFontNormal",
   "ClearCursor", "ConsoleExec", "ConsoleGetAllCommands", "CopyTable", "CreateFrame",

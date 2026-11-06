@@ -374,6 +374,9 @@ local function PlayerPos()
 end
 
 local function Waypoint(v)
+  -- flèche intégrée de ForeverCompagnon (Nav.lua), sinon TomTom, sinon le repère du jeu
+  local nav = ns.root and ns.root.Nav
+  if nav and nav.Set(v.mapID, v.x, v.y, v.name) then return "arrow" end
   local TT = _G.TomTom
   if TT and TT.AddWaypoint then
     local ok = pcall(TT.AddWaypoint, TT, v.mapID, v.x / 100, v.y / 100, { title = v.name, persistent = false })
@@ -395,15 +398,23 @@ function ns.GuideToVendor()
   local kinds = {}
   for _, it in ipairs(res.shopping) do if it.vendor then kinds[it.vendor] = true end end
   local on = ns.EnableTracking(kinds)
-  -- marchand le plus proche sur ta carte (All The Things)
+  -- marchand le plus proche (sources intégrées) : par distance réelle si la flèche sait où tu es, sinon sur ta carte
   local map, px, py = PlayerPos()
   local best, bestD
   if ns.ATT and ns.ATT.Available() then
+    local all = {}
     for _, it in ipairs(res.shopping) do
-      for _, v in ipairs(ns.ATT.Vendors(it.id)) do
+      for _, v in ipairs(ns.ATT.Vendors(it.id)) do all[#all + 1] = v end
+    end
+    local nav = ns.root and ns.root.Nav
+    local c, d
+    if nav then c, d = nav.Closest(all) end
+    if c and d and d < math.huge then best = c
+    else
+      for _, v in ipairs(all) do
         if v.mapID == map and px then
-          local d = (v.x - px) ^ 2 + (v.y - py) ^ 2
-          if not bestD or d < bestD then best, bestD = v, d end
+          local dd = (v.x - px) ^ 2 + (v.y - py) ^ 2
+          if not bestD or dd < bestD then best, bestD = v, dd end
         end
       end
     end
@@ -411,7 +422,7 @@ function ns.GuideToVendor()
   ns.lastGuide = { tracking = on, vendor = best }
   if best then
     local how = Waypoint(best)
-    Print(L.guideVendor, best.name, best.x, best.y, how == "TomTom" and L.guideTomTom or (how and L.guideMap or ""))
+    Print(L.guideVendor, best.name, best.x, best.y, (how == "arrow" and L.guideArrow) or (how == "TomTom" and L.guideTomTom) or (how and L.guideMap or ""))
   end
   if #on > 0 then Print(L.guideTracking, table.concat(on, ", "))
   elseif not best then Print(L.guideNone) end

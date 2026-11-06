@@ -206,11 +206,14 @@ SLASH_FOREVERCOMPAGNON1 = "/fp"
 SLASH_FOREVERCOMPAGNON2 = "/compagnon"
 SLASH_FOREVERCOMPAGNON3 = "/foreverpretre"
 SlashCmdList.FOREVERCOMPAGNON = function(msg)
-  msg = ((msg or ""):match("^%s*(.-)%s*$")):lower()
+  local raw = (msg or ""):match("^%s*(.-)%s*$")
+  msg = raw:lower()
   local map = { [""] = "now", maintenant = "now", now = "now", soins = "heal", heal = "heal", equipement = "loot", ["équipement"] = "loot",
                 gear = "loot", loot = "loot", prepa = "prep", ["prépa"] = "prep", prep = "prep", metiers = "metiers", ["métiers"] = "metiers",
                 prof = "metiers", addons = "addons", addon = "addons" }
-  if map[msg] then root.Open(map[msg])
+  local way = raw:match("^[Ww][Aa][Yy]%s*(.*)$")
+  if way then root.Nav.Command(way)
+  elseif map[msg] then root.Open(map[msg])
   elseif msg == "test" then root.RunTests()
   elseif msg == "sonde" or msg == "probe" then root.ShowProbe()
   elseif msg == "diag" then root.ShowDiag()

@@ -431,10 +431,25 @@ end
 
 -- All The Things : où obtenir un objet (base Forever d'ATT), mémorisé ; nil si ATT est absent ou ne sait pas
 local attCache = {}
+-- Lieux où obtenir un objet (sources intégrées) et flèche vers le plus proche
+local placeCache = {}
+function ns.HasPlace(id)
+  if placeCache[id] == nil then placeCache[id] = (ns.ATT and ns.ATT.Available() and #ns.ATT.Places(id) > 0) or false end
+  return placeCache[id]
+end
+function ns.GoTo(id)
+  local nav = ns.root and ns.root.Nav
+  if not (nav and ns.ATT) then return false end
+  local best = nav.Closest(ns.ATT.Places(id))
+  if not best then return false end
+  return nav.Set(best.mapID, best.x, best.y, best.name)
+end
+
 function ns.ATTWhere(id)
   if not (id and ns.ATT.Available()) then return nil end
   if attCache[id] == nil then
     local s = ns.ATT.Source("itemID", id, 1)
+    if s and s.partial then return s.text end          -- noms pas encore donnés par le jeu : redemandés plus tard
     attCache[id] = (s and s.text) or false
   end
   return attCache[id] or nil

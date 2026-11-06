@@ -240,8 +240,12 @@ local function CardFrom(c, ref, extraTags)
   if ref and ref.ench then source = source .. "  ·  |cffd8c8a0" .. string.format(L.enchTag, ref.ench) .. "|r" end
   local gain, sub = GainParts(c.eval)
   if c.src == "equipped" then gain, sub = "|cff40d860" .. L.refWear:gsub("^ — ", "") .. "|r", "" end
+  -- clic droit : la flèche vers le lieu le plus proche où l'obtenir (sources intégrées)
+  local go = ns.GoTo and c.src ~= "equipped" and ns.HasPlace(c.id)
+  if go then tags[#tags + 1] = "|cff66ccff" .. L.goTag .. "|r" end
   return { kind = "card", link = c.link, ref = ref, name = name or (c.link and c.link:match("%[(.-)%]")) or "?",
-           quality = quality or 1, icon = icon or iconI, tags = table.concat(tags, "  "), source = source, gain = gain, gainSub = sub }
+           quality = quality or 1, icon = icon or iconI, tags = table.concat(tags, "  "), source = source, gain = gain, gainSub = sub,
+           onRight = go and function() ns.GoTo(c.id) end or nil }
 end
 
 -- Bandeau des sources : ForeverHeal, DungeonJournal, Syndicator, All The Things (vert = actif)

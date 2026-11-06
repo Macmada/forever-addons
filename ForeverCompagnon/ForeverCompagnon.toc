@@ -10,12 +10,14 @@
 ## AddonCompartmentFunc: ForeverCompagnon_OnCompartmentClick
 
 Root.lua
+Data\Sources.lua
 Shared\Diag.lua
 Shared\Widgets.lua
 Shared\ATT.lua
 Shared\Tour.lua
 Shared\Hub.lua
 Compat.lua
+Nav.lua
 Heal\Locale.lua
 Heal\Diag.lua
 Heal\Data.lua

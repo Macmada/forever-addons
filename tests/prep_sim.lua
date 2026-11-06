@@ -269,19 +269,26 @@ _G.C_Minimap = { GetNumTrackingTypes = function() return 3 end,
   SetTracking = function(i, on) tracked[i] = on end }
 _G.C_Map = { GetBestMapForUnit = function() return 1426 end,
   GetPlayerMapPosition = function() return { GetXY = function() return 0.40, 0.50 end } end }
-local wp
-_G.TomTom = { AddWaypoint = function(_, m, x, y, o) wp = { m, x, y, o.title } end }
-_G.ATTC = { SearchForField = function(field, id)
-  if field == "itemID" and id == 1179 then
-    return { { itemID = 1179, parent = { npcID = 1, text = "Marchand lointain", coords = { [1426] = { { 90, 90 } } } } },
-             { itemID = 1179, parent = { npcID = 2, text = "Aubergiste proche", coords = { [1426] = { { 42, 51 } } } } },
-             { itemID = 1179, parent = { npcID = 3, text = "Marchand de la Horde", r = 1, coords = { [1426] = { { 40, 50 } } } } } }
-  end
-end }
+-- sources intégrées (base d'essai) : trois vendeurs de lait glacé, dont un de la Horde ; noms demandés au jeu
+local realSources = ns.root.Sources
+ns.root.Sources = { rev = "essai", instances = {}, npcs = {}, recipes = {},
+  items = { [1179] = { { "vendor", 1, 1426, 90, 90 }, { "vendor", 2, 1426, 42, 51 }, { "vendor", 3, 1426, 40, 50, { r = 1 } } } } }
+local NPCN = { [1] = "Marchand lointain", [2] = "Aubergiste proche", [3] = "Marchand de la Horde" }
+_G.C_TooltipInfo = { GetHyperlink = function(link) local id = tonumber(link:match("Creature%-0%-0%-0%-0%-(%d+)")); return NPCN[id] and { lines = { { leftText = NPCN[id] } } } end }
+_G.C_Map.GetMapInfo = function() return { name = "Dun Morogh" } end
+_G.C_Map.GetWorldPosFromMapPos = function(_, v) local x, y = v:GetXY(); return 0, { GetXY = function() return x * 1000, y * 1000 end } end
+_G.CreateVector2D = function(x, y) return { GetXY = function() return x, y end } end
+_G.GetPlayerFacing = function() return 0 end
 ns.GuideToVendor()
 check(tracked[2] == true and tracked[3] == true and not tracked[1], "Guide-moi : suivi « Nourriture et boissons » et « Aubergiste » activé sur la minicarte")
-check(wp and wp[1] == 1426 and wp[4] == "Aubergiste proche", "Guide-moi : repère TomTom vers le marchand le plus proche de ta faction")
-_G.ATTC, _G.TomTom, _G.C_Minimap, _G.C_Map = nil, nil, nil, nil
+local t = ns.root.Nav.target
+check(t and t.mapID == 1426 and t.title == "Aubergiste proche", "Guide-moi : flèche intégrée vers le marchand le plus proche de ta faction")
+local dist, angle = ns.root.Nav.Bearing()
+check(dist and math.abs(dist - math.sqrt(20 * 20 + 10 * 10)) < 0.5 and angle, "flèche : distance et direction calculées")
+ns.root.Sources = realSources
+_G.C_TooltipInfo, _G.CreateVector2D, _G.GetPlayerFacing = nil, nil, nil
+ns.root.Nav.Clear()
+_G.C_Minimap, _G.C_Map = nil, nil
 
 -- 6c. client moderne de Forever : pas de GetMerchantItemInfo (erreur chez le marchand le 05/11/2026), C_MerchantFrame.GetItemInfo
 local oldInfo = _G.GetMerchantItemInfo
