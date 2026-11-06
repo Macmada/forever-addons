@@ -510,14 +510,14 @@ do
   -- skins
   local g, r = loaded["Forever Groupe"], loaded["Forever Raid"]
   check(g and r, "skins « Forever Groupe » et « Forever Raid » importés par HealBot")
-  check(g and g:find("HLTHTYPE=2", 1, true) and g:find("NUMFORMAT1=1,", 1, true) and g:find("AHEIGHT=10", 1, true)
-        and g:find("HEIGHT=13", 1, true) and g:find("SHOWROLE=\"true\"", 1, true) and g:find("IGNOREONFULL=\"true\"", 1, true),
-        "skin : vie manquante, rôles, autres réglages intacts (AHEIGHT, HEIGHT)")
+  check(g and g:find("HLTHTYPE=3", 1, true) and g:find("HLTHONBAR=\"true\"", 1, true) and g:find("AHEIGHT=10", 1, true)
+        and g:find(",HEIGHT=12", 1, true) and g:find("SHOWROLE=\"true\"", 1, true) and g:find("IGNOREONFULL=\"true\"", 1, true),
+        "skin : vie en % affichée, rôles, autres réglages intacts (AHEIGHT)")
   check(g and g:find('Icons~f~1!{RCEN="true",SHOWCLASS="true",SHOWROLE="true"}', 1, true)
         and g:find('General~t!{OFREQ=0.07,HIDEPARTYF="false",HIDERAIDF="false"}', 1, true), "skin : icône de rôle, cadres de Blizzard gardés en secours")
   check(blizz == 1, "HealBot relit les cadres de Blizzard à afficher")
-  check(g and g:find("HealBar~f~1!{HEIGHT=36,GRPCOLS=\"false\",WIDTH=120}", 1, true) and g:find("HealBar~d!2~3~", 1, true), "skin groupe : barres 120×36")
-  check(r and r:find("WIDTH=85", 1, true) and r:find("GRPCOLS=\"true\"", 1, true) and r:find("NAME=\"Pets\"", 1, true)
+  check(g and g:find('HealBar~f~1!{HEIGHT=38,GRPCOLS="false",WIDTH=130,CMARGIN=3,RMARGIN=3,TEXTURE="Smooth v2"}', 1, true) and g:find("HealBar~d!2~3~", 1, true), "skin groupe : barres lisses 130×38")
+  check(r and r:find("WIDTH=90", 1, true) and r:find("GRPCOLS=\"true\"", 1, true) and r:find("NAME=\"Pets\"", 1, true)
         and r:find("STATE=\"false\"", 1, true) and r:find("SUBORDER=5", 1, true), "skin raid : colonnes par groupe, sans familiers, tri par rôle")
   local sd = HealBot_Config.SkinDefault
   check(sd["Forever Groupe"].Party and sd["Forever Groupe"].Solo and sd["Forever Raid"].Raid10 and sd["Forever Raid"]["Raid 40"]

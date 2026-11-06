@@ -1,7 +1,10 @@
 # Journal des versions
 
-## v3.4.3 (ForeverCompagnon 3.4.3)
-- **Cadres de groupe et de raid de Blizzard gardés** à côté d'HealBot, en secours si HealBot a un souci (à ta demande). Reclique sur « Configurer HealBot » pour les faire revenir.
+## v3.4.3 (ForeverCompagnon 3.4.3), d'après tes essais
+- **Vie affichée sur les barres HealBot** : le texte de vie était coupé dans les skins d'origine d'HealBot. Sur Forever, la vie des alliés est une valeur secrète : HealBot ne peut pas calculer la vie manquante, il affiche donc le **pourcentage** (« 85% »).
+- **Habillage plus soigné** : barres lisses (« Smooth v2 »), noms et vie en police grasse contourée, fond sombre, liseré doré et bandeau de titre doré au-dessus du cadre (comme les fenêtres de ForeverCompagnon), barres un peu plus grandes (130×38 en groupe, 90×32 en raid) et espacées.
+- **Cadres de groupe et de raid de Blizzard gardés** à côté d'HealBot, en secours si HealBot a un souci (à ta demande).
+- Reclique sur « Configurer HealBot » après la mise à jour pour appliquer tout ça (tes clics ne bougent pas).
 
 ## v3.4.2 (ForeverCompagnon 3.4.2), d'après ta capture
 - **Skins HealBot : icône de rôle** (soigneur, tank, dégâts) sur chaque barre : HealBot ne la montre qu'à la place de l'icône de classe, qui était coupée dans ses skins d'origine.

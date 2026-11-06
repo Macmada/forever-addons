@@ -205,12 +205,22 @@ local function Patch(text, newName, edits)
 end
 HB.Patch = Patch
 
+-- Réglages communs aux deux skins. Sur Forever, la vie des alliés est secrète : HealBot n'affiche que la vie actuelle ou
+-- le pourcentage (pas la vie manquante), et le texte de vie était coupé dans ses skins d'origine (HLTHONBAR).
+local GOLD = { R = 1, G = 0.82, B = 0.35 }
 local COMMON = {
-  ["BarText~f~1"] = { HLTHTYPE = 2, NUMFORMAT1 = 1, IGNOREONFULL = "true", SHOWROLE = "true" },   -- vie manquante, « -432 »
+  ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "true", SHOWROLE = "true",          -- vie en %
+                      FONT = "Roboto Bold", HEIGHT = 12, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 11, HOUTLINE = 2 },
   ["BarSort~f~1"] = { RAIDORDER = 3, SUBORDER = 5, SUBPF = "true" },                              -- par groupe, puis rôle
   ["BarVisibility~f~1"] = { ALERTIC = 0.9, ALERTOC = 0.8 },                                       -- alerte sous 90 % en combat
   ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true" },        -- icône de rôle (HealBot la met à la place de celle de classe)
   ["General~t"] = { HIDEPARTYF = "false", HIDERAIDF = "false" },     -- cadres de Blizzard gardés (secours si HealBot plante)
+  -- habillage : barres lisses, fond sombre, liseré doré et titre du cadre, comme les fenêtres de ForeverCompagnon
+  ["BarCol~f~1"] = { HA = 0.95, BA = 0.85, BR = 0.06, BG = 0.06, BB = 0.08 },
+  ["Frame~f~1"] = { BACKR = 0.03, BACKG = 0.03, BACKB = 0.05, BACKA = 0.75, BORDERR = GOLD.R, BORDERG = GOLD.G, BORDERB = GOLD.B,
+                    BORDERA = 0.7, PADDING = 3 },
+  ["HeadBar~f~1"] = { SHOW = "true", TEXTURE = "Smooth v2", HEIGHT = 18, WIDTH = 1, R = 0.18, G = 0.13, B = 0.05, A = 0.9 },
+  ["HeadText~f~1"] = { FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, R = GOLD.R, G = GOLD.G, B = GOLD.B, A = 1 },
 }
 local function With(extra)
   local t = {}
@@ -219,9 +229,9 @@ local function With(extra)
   return t
 end
 HB.SKINS = {
-  { name = HB.SKIN_GROUP, from = "Group", edits = With({ ["HealBar~f~1"] = { WIDTH = 120, HEIGHT = 36 } }),
+  { name = HB.SKIN_GROUP, from = "Group", edits = With({ ["HealBar~f~1"] = { WIDTH = 130, HEIGHT = 38, TEXTURE = "Smooth v2", CMARGIN = 3, RMARGIN = 3 } }),
     flags = { "HEALBOT_WORD_SOLO", "HEALBOT_WORD_PARTY" } },
-  { name = HB.SKIN_RAID, from = "Raid 40", edits = With({ ["HealBar~f~1"] = { WIDTH = 85, HEIGHT = 32, GRPCOLS = "true" },
+  { name = HB.SKIN_RAID, from = "Raid 40", edits = With({ ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 32, GRPCOLS = "true", TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2 },
                                                                           ["HealGroups~f~8"] = { STATE = "false" } }),
     flags = { "HEALBOT_OPTIONS_RAID10", "HEALBOT_OPTIONS_RAID15", "HEALBOT_OPTIONS_RAID20", "HEALBOT_OPTIONS_RAID25", "HEALBOT_OPTIONS_RAID40" } },
 }
