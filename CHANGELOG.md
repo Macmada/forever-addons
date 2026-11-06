@@ -3,6 +3,7 @@
 ## v3.4.4 (ForeverCompagnon 3.4.4), d'après ta sonde
 - **Vie manquante sur les barres d'HealBot**, en rouge à droite de chaque barre (« 432 »), même en combat. Ta sonde l'a montré : la vie des alliés est secrète (impossible à lire ou à calculer, d'où le seul pourcentage d'HealBot), mais le jeu donne la vie manquante toute prête et accepte de l'afficher. ForeverCompagnon la passe telle quelle au texte, sans jamais la lire ; rien ne s'affiche si la personne est pleine ou hors ligne.
 - `/fp healbot chiffres` : masquer ou réafficher ces chiffres.
+- **Cadres de groupe et de raid de WoW toujours gardés en secours**, aussi quand HealBot utilise son réglage global de cadres au lieu de celui du skin.
 
 ## v3.4.3 (ForeverCompagnon 3.4.3), d'après tes essais
 - **Vie affichée sur les barres HealBot** : le texte de vie était coupé dans les skins d'origine d'HealBot. Sur Forever, la vie des alliés est une valeur secrète : HealBot ne peut pas calculer la vie manquante, il affiche donc le **pourcentage** (« 85% »).

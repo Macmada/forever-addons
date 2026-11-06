@@ -498,6 +498,7 @@ do
   _G.HealBot_Share_SkinLoad = function(text, internal) assert(internal == false); loaded[text:match("^[^\n]+\n([^\n]+)")] = text end
   _G.HealBot_Config = { SkinDefault = { Group = { Party = true, Solo = true }, ["Raid 40"] = { ["Raid 40"] = true } } }
   _G.Healbot_Config_Skins = { Current_Skin = "Standard" }
+  _G.HealBot_Globals = { OverrideFrames = { USE = 2, HIDEPARTYF = true, HIDERAIDF = true } }
   local current, blizz = nil, 0
   _G.HealBot_Timers_ToggleBlizzardFrames = function() blizz = blizz + 1 end
   _G.HealBot_Options_Set_Current_Skin = function(n) current = n end
@@ -526,7 +527,8 @@ do
         "skin : vie en % affichée, rôles, autres réglages intacts (AHEIGHT)")
   check(g and g:find('Icons~f~1!{RCEN="true",SHOWCLASS="true",SHOWROLE="true"}', 1, true)
         and g:find('General~t!{OFREQ=0.07,HIDEPARTYF="false",HIDERAIDF="false"}', 1, true), "skin : icône de rôle, cadres de Blizzard gardés en secours")
-  check(blizz == 1, "HealBot relit les cadres de Blizzard à afficher")
+  check(blizz == 1 and HealBot_Globals.OverrideFrames.HIDEPARTYF == false and HealBot_Globals.OverrideFrames.HIDERAIDF == false,
+        "cadres de WoW gardés en secours (skin et réglage global d'HealBot), relus tout de suite")
   check(g and g:find('HealBar~f~1!{HEIGHT=38,GRPCOLS="false",WIDTH=130,CMARGIN=3,RMARGIN=3,TEXTURE="Smooth v2"}', 1, true) and g:find("HealBar~d!2~3~", 1, true), "skin groupe : barres lisses 130×38")
   check(r and r:find("WIDTH=90", 1, true) and r:find("GRPCOLS=\"true\"", 1, true) and r:find("NAME=\"Pets\"", 1, true)
         and r:find("STATE=\"false\"", 1, true) and r:find("SUBORDER=5", 1, true), "skin raid : colonnes par groupe, sans familiers, tri par rôle")

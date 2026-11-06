@@ -279,6 +279,9 @@ local function ApplySkins()
   end
   local want = (IsInRaid and IsInRaid()) and HB.SKIN_RAID or HB.SKIN_GROUP
   if type(_G.HealBot_Options_Set_Current_Skin) == "function" then pcall(_G.HealBot_Options_Set_Current_Skin, want) end
+  -- cadres de groupe et de raid de WoW gardés en secours, aussi dans le réglage global d'HealBot (s'il prend le pas sur le skin)
+  local o = type(_G.HealBot_Globals) == "table" and _G.HealBot_Globals.OverrideFrames
+  if type(o) == "table" then o.HIDEPARTYF, o.HIDERAIDF = false, false end
   -- HealBot relit quels cadres de Blizzard masquer (sinon seulement au prochain changement de groupe)
   if type(_G.HealBot_Options_SetFrames) == "function" then pcall(_G.HealBot_Options_SetFrames) end
   if type(_G.HealBot_Timers_ToggleBlizzardFrames) == "function" then pcall(_G.HealBot_Timers_ToggleBlizzardFrames) end
