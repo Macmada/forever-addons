@@ -15,7 +15,7 @@ globals = {
   "ForeverHub", "SLASH_FOREVERHUB1", "ForeverHealAPI", "ForeverLootDB", "ForeverLootGlobalDB", "ForeverDungeonJournal_NS", "Syndicator",
   "SLASH_FOREVERLOOT1", "SLASH_FOREVERLOOT2", "ForeverLoot_OnCompartmentClick",
   "ForeverMetiersDB", "ForeverMetiersGlobalDB", "SLASH_FOREVERMETIERS1", "SLASH_FOREVERMETIERS2", "ForeverMetiers_OnCompartmentClick", "Auctionator", "ATTC", "ForeverBlockedActions", "TomTom",
-  "ForeverPretreDB", "ForeverPretre_OnCompartmentClick", "SLASH_FOREVERPRETRE1", "SLASH_FOREVERPRETRE2",
+  "ForeverCompagnonDB", "ForeverCompagnon_OnCompartmentClick", "SLASH_FOREVERCOMPAGNON1", "SLASH_FOREVERCOMPAGNON2", "SLASH_FOREVERCOMPAGNON3",
   "SlashCmdList", "StaticPopupDialogs", "UISpecialFrames",
 }
 

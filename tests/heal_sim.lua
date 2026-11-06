@@ -120,7 +120,7 @@ _G.GetBuildInfo = _G.GetBuildInfo or function() return "1.16.0", "60000", "Nov 1
 _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
 _G.IsAddOnLoaded = function() return true end
 _G.ChatFontNormal = _G.ChatFontNormal or {}
-local ns = dofile("tests/pretre_load.lua")("ForeverHeal")
+local ns = dofile("tests/compagnon_load.lua")("ForeverHeal")
 -- infobulle de lecture : relie SetHyperlink / SetInventoryItem à nos objets
 local realCF = _G.CreateFrame
 _G.CreateFrame = function(kind, name, ...)

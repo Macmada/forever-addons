@@ -7,7 +7,7 @@ local ADDON, ns = ...
 local FR = GetLocale() == "frFR"
 local ENTRIES = {
   ForeverGazette = { order = 1, label = FR and "Gazette" or "Gazette", icon = "Interface\\Icons\\INV_Misc_Book_09", open = "Toggle" },
-  ForeverPretre = { order = 2, label = FR and "Prêtre (soins, équipement, prépa, métiers)" or "Priest (healing, gear, prep, professions)",
+  ForeverCompagnon = { order = 2, label = FR and "Compagnon (équipement, prépa, métiers, soins, addons)" or "Companion (gear, prep, professions, healing, addons)",
                    icon = "Interface\\Icons\\Spell_Holy_PowerWordShield", open = "Toggle" },
   ForeverMacros = { order = 4, label = FR and "Macros" or "Macros", icon = "Interface\\Icons\\INV_Misc_Note_01", open = "Toggle" },
   ForeverGFX = { order = 5, label = FR and "Graphismes" or "Graphics", icon = "Interface\\Icons\\INV_Misc_Spyglass_03", open = "ToggleUI" },

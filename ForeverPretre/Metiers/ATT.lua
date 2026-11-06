@@ -1,3 +1,0 @@
--- Module commun ATT (ForeverPretre/Shared), à cette place dans l'ordre de chargement du module.
-local _, root = ...
-if root.UseShared then root.UseShared("ForeverMetiers", "ATT") end

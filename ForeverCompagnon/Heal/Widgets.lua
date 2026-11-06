@@ -1,0 +1,3 @@
+-- Module commun Widgets (ForeverCompagnon/Shared), à cette place dans l'ordre de chargement du module.
+local _, root = ...
+if root.UseShared then root.UseShared("ForeverHeal", "Widgets") end

@@ -2,8 +2,8 @@
 # Copie les modules communs (tools/*.lua) dans les addons. --check : échoue si une copie diffère.
 #   Diag.lua : diagnostic ; Hub.lua : icône commune « Forever » ; Tour.lua : tutoriel ; ATT.lua : sources d'All The Things ;
 #   Widgets.lua : composants d'interface.
-# ForeverPretre (Soins, Équipement, Préparation, Métiers en un seul addon) : une seule copie de chaque module, enveloppée
-# dans une fonction (ForeverPretre/Shared/*.lua) que chaque module appelle avec son propre espace de noms.
+# ForeverCompagnon (Soins, Équipement, Préparation, Métiers en un seul addon) : une seule copie de chaque module, enveloppée
+# dans une fonction (ForeverCompagnon/Shared/*.lua) que chaque module appelle avec son propre espace de noms.
 set -e
 cd "$(dirname "$0")/.."
 SEP="ForeverGFX ForeverMacros ForeverGazette"
@@ -17,8 +17,8 @@ sync() { # fichier addons...
     fi
   done
 }
-wrap() { # fichier : ForeverPretre/Shared/<fichier>, même code dans une fonction
-  f="$1"; n="${f%.lua}"; out="ForeverPretre/Shared/$f"
+wrap() { # fichier : ForeverCompagnon/Shared/<fichier>, même code dans une fonction
+  f="$1"; n="${f%.lua}"; out="ForeverCompagnon/Shared/$f"
   tmp="$(mktemp)"
   { printf -- '-- Généré par tools/sync-shared.sh depuis tools/%s : ne pas modifier ici.\n' "$f"
     printf 'local _, root = ...\nroot.Shared.%s = function(...)\n' "$n"
@@ -28,7 +28,7 @@ wrap() { # fichier : ForeverPretre/Shared/<fichier>, même code dans une fonctio
     cmp -s "$tmp" "$out" || { rm -f "$tmp"; echo "$out n'est pas à jour (lance tools/sync-shared.sh)"; exit 1; }
     rm -f "$tmp"
   else
-    mkdir -p ForeverPretre/Shared
+    mkdir -p ForeverCompagnon/Shared
     mv "$tmp" "$out"
   fi
 }

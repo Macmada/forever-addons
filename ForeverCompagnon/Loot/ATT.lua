@@ -1,0 +1,3 @@
+-- Module commun ATT (ForeverCompagnon/Shared), à cette place dans l'ordre de chargement du module.
+local _, root = ...
+if root.UseShared then root.UseShared("ForeverLoot", "ATT") end

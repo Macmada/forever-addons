@@ -1,3 +1,0 @@
--- Module commun Tour (ForeverPretre/Shared), à cette place dans l'ordre de chargement du module.
-local _, root = ...
-if root.UseShared then root.UseShared("ForeverPrep", "Tour") end

@@ -1,4 +1,4 @@
--- ForeverPretre, sonde du client 1.60.1 (70790), interface 16001, 2026-11-06 07:44 (rapport de /fp sonde,
+-- ForeverCompagnon, sonde du client 1.60.1 (70790), interface 16001, 2026-11-06 07:44 (rapport de /fp sonde,
 -- prêtre gnome niveau 15). secretPowerOutOfCombat ajouté d'après l'auto-test : « mana lisible hors combat : nil / 821 ».
 return {
   client = "1.60.1 (70790), interface 16001",

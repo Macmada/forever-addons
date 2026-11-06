@@ -153,11 +153,11 @@ return function(LANG)
     return files
   end
   local function run(addon, file, ns) assert(loadfile(addon .. "/" .. file:gsub("\\", "/")))(addon, ns) end
-  -- Une partie de ForeverPretre seule (ancien addon), comme avant la fusion : voir tests/pretre_load.lua
+  -- Une partie de ForeverCompagnon seule (ancien addon), comme avant la fusion : voir tests/compagnon_load.lua
   local MODDIR = { ForeverHeal = true, ForeverLoot = true, ForeverPrep = true, ForeverMetiers = true }
   function W.loadModule(name)
-    local ns, root = dofile("tests/pretre_load.lua")(name, W.pretreRoot)
-    W.pretreRoot = root
+    local ns, root = dofile("tests/compagnon_load.lua")(name, W.compagnonRoot)
+    W.compagnonRoot = root
     W.addons[name] = ns
     return ns
   end

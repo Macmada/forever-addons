@@ -1,7 +1,7 @@
 ## Interface: 16000, 16001
-## Title: ForeverLoot (obsolète : voir ForeverPrêtre)
-## Notes: Fait maintenant partie de ForeverPrêtre. Ce dossier peut être supprimé.
-## Notes-enUS: Now part of ForeverPriest. This folder can be deleted.
+## Title: ForeverLoot (obsolète : voir ForeverCompagnon)
+## Notes: Fait maintenant partie de ForeverCompagnon. Ce dossier peut être supprimé.
+## Notes-enUS: Now part of ForeverCompanion. This folder can be deleted.
 ## Author: ForeverGFX
 ## Version: 3.0.0
 
