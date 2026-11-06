@@ -231,7 +231,9 @@ local function With(extra)
   return t
 end
 HB.SKINS = {
-  { name = HB.SKIN_GROUP, from = "Group", edits = With({ ["HealBar~f~1"] = { WIDTH = 130, HEIGHT = 38, TEXTURE = "Smooth v2", CMARGIN = 3, RMARGIN = 3 } }),
+  { name = HB.SKIN_GROUP, from = "Group", edits = With({ ["HealBar~f~1"] = { WIDTH = 130, HEIGHT = 38, TEXTURE = "Smooth v2", CMARGIN = 3, RMARGIN = 3 },
+                     -- pas de familiers : HealBot Tooltips plante sur eux (un familier n'a pas de classe sur Forever)
+                     ["HealGroups~f~8"] = { STATE = "false" } }),
     flags = { "HEALBOT_WORD_SOLO", "HEALBOT_WORD_PARTY" } },
   { name = HB.SKIN_RAID, from = "Raid 40", edits = With({ ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 32, GRPCOLS = "true", TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2 },
                                                                           ["HealGroups~f~8"] = { STATE = "false" } }),

@@ -529,6 +529,7 @@ do
         and g:find('General~t!{OFREQ=0.07,HIDEPARTYF="false",HIDERAIDF="false"}', 1, true), "skin : icône de rôle, cadres de Blizzard gardés en secours")
   check(blizz == 1 and HealBot_Globals.OverrideFrames.HIDEPARTYF == false and HealBot_Globals.OverrideFrames.HIDERAIDF == false,
         "cadres de WoW gardés en secours (skin et réglage global d'HealBot), relus tout de suite")
+  check(g and g:find('HealGroups~f~8!{FRAME=7,STATE="false",NAME="Pets"}', 1, true), "skin groupe : sans familiers (infobulle d'HealBot qui plante)")
   check(g and g:find('HealBar~f~1!{HEIGHT=38,GRPCOLS="false",WIDTH=130,CMARGIN=3,RMARGIN=3,TEXTURE="Smooth v2"}', 1, true) and g:find("HealBar~d!2~3~", 1, true), "skin groupe : barres lisses 130×38")
   check(r and r:find("WIDTH=90", 1, true) and r:find("GRPCOLS=\"true\"", 1, true) and r:find("NAME=\"Pets\"", 1, true)
         and r:find("STATE=\"false\"", 1, true) and r:find("SUBORDER=5", 1, true), "skin raid : colonnes par groupe, sans familiers, tri par rôle")

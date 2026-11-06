@@ -3,6 +3,7 @@
 ## v3.4.4 (ForeverCompagnon 3.4.4), d'après ta sonde
 - **Vie manquante sur les barres d'HealBot**, en rouge à droite de chaque barre (« 432 »), même en combat. Ta sonde l'a montré : la vie des alliés est secrète (impossible à lire ou à calculer, d'où le seul pourcentage d'HealBot), mais le jeu donne la vie manquante toute prête et accepte de l'afficher. ForeverCompagnon la passe telle quelle au texte, sans jamais la lire ; rien ne s'affiche si la personne est pleine ou hors ligne.
 - `/fp healbot chiffres` : masquer ou réafficher ces chiffres.
+- **Plus de familiers dans « Forever Groupe »** (comme en raid) : HealBot Tooltips plantait au survol d'un familier (« attempt to concatenate local 'uClass' », un familier n'a pas de classe sur Forever). Un familier se soigne toujours en le ciblant.
 - **Cadres de groupe et de raid de WoW toujours gardés en secours**, aussi quand HealBot utilise son réglage global de cadres au lieu de celui du skin.
 
 ## v3.4.3 (ForeverCompagnon 3.4.3), d'après tes essais
