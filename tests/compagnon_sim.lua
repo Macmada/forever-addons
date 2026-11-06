@@ -175,6 +175,14 @@ heal.db.manaAlert = true
 SlashCmdList.FOREVERHEAL("alerte 25")
 check(heal.db.manaLowPct == 0.25 and heal.db.manaAlert, "/fheal alerte 25 : seuil à 25 %")
 check(heal.DiagText():find("disponible, UnitPowerPercent", 1, true), "diagnostic : alerte par le jeu disponible")
+heal.db.manaAlert = true
+SlashCmdList.FOREVERHEAL("alerte test")
+check(ForeverHealManaAlert:IsShown() and ForeverHealManaAlert.text:GetText():find("23", 1, true) and rawget(ForeverHealManaAlert, "bar"),
+      "/fheal alerte test : aperçu avec texte et barre de mana")
+ForeverHealManaAlert.GetCenter = function() return 640, 300 end
+ForeverHealManaAlert.scripts.OnDragStop(ForeverHealManaAlert)
+check(heal.db.alertPos and heal.db.alertPos[1] == 640, "alerte déplacée : position retenue")
+ForeverHealManaAlert:Hide()
 check(root.TestReport():find("[OK] Jeu — mana comparée par le jeu", 1, true), "auto-test : comparaison par le jeu testée")
 
 check(root.ProbeText():find("secretPowerOutOfCombat = true", 1, true), "sonde : mana secrète hors combat relevée")

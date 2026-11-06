@@ -499,15 +499,73 @@ function ns.MakeMacros()
 end
 
 local alert
+-- Alerte bien visible (06/11/2026 : noyée dans le texte de combat) : cadre sombre à bordure orange qui pulse, icône de
+-- potion, texte gros et contouré, barre de mana remplie par le jeu (valeur secrète passée telle quelle), sous le centre
+-- de l'écran pour ne pas se mêler aux chiffres de combat. Glisser pour la déplacer (position retenue).
 local function Alert()
   if not alert then
     alert = CreateFrame("Frame", "ForeverHealManaAlert", UIParent)
-    alert:SetSize(400, 40)
-    alert:SetPoint("CENTER", 0, -120)
+    alert:SetSize(360, 64)
+    local p = ns.db.alertPos
+    if p then alert:SetPoint("CENTER", UIParent, "BOTTOMLEFT", p[1], p[2]) else alert:SetPoint("CENTER", 0, -190) end
+    alert:SetFrameStrata("HIGH")
+    alert:SetMovable(true)
+    alert:EnableMouse(true)
+    alert:RegisterForDrag("LeftButton")
+    alert:SetScript("OnDragStart", alert.StartMoving)
+    alert:SetScript("OnDragStop", function(self)
+      self:StopMovingOrSizing()
+      local x, y = self:GetCenter()
+      if type(x) == "number" then ns.db.alertPos = { x, y } end
+    end)
+    alert.bg = alert:CreateTexture(nil, "BACKGROUND")
+    alert.bg:SetAllPoints()
+    alert.bg:SetColorTexture(0.08, 0.02, 0.0, 0.85)
+    alert.border = K and K.Border(alert, 1, 0.45, 0.1, 1, "BORDER") or {}
+    -- lueur qui pulse autour du cadre
+    alert.glow = alert:CreateTexture(nil, "BACKGROUND", nil, -1)
+    alert.glow:SetPoint("TOPLEFT", -10, 10)
+    alert.glow:SetPoint("BOTTOMRIGHT", 10, -10)
+    alert.glow:SetColorTexture(1, 0.35, 0.05, 0.35)
+    alert.glow:SetBlendMode("ADD")
+    local g = alert.glow.CreateAnimationGroup and alert.glow:CreateAnimationGroup()
+    local a = g and g:CreateAnimation("Alpha")
+    if a then
+      g:SetLooping("BOUNCE")
+      a:SetFromAlpha(0.15); a:SetToAlpha(1); a:SetDuration(0.6)
+      alert.pulse = g
+    end
+    alert.icon = alert:CreateTexture(nil, "ARTWORK")
+    alert.icon:SetSize(44, 44)
+    alert.icon:SetPoint("LEFT", 10, 0)
+    alert.icon:SetTexture("Interface\\Icons\\INV_Potion_76")
+    alert.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     alert.text = alert:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
-    alert.text:SetPoint("CENTER")
+    alert.text:SetPoint("TOPLEFT", alert.icon, "TOPRIGHT", 10, 0)
+    alert.text:SetPoint("RIGHT", -10, 0)
+    alert.text:SetJustifyH("LEFT")
+    local fo = _G.GameFontNormalHuge
+    local font = fo and fo.GetFont and select(1, fo:GetFont())
+    if font then pcall(alert.text.SetFont, alert.text, font, 22, "OUTLINE") end
+    alert.bar = CreateFrame("StatusBar", nil, alert)
+    alert.bar:SetPoint("BOTTOMLEFT", alert.icon, "BOTTOMRIGHT", 10, 0)
+    alert.bar:SetPoint("RIGHT", -10, 0)
+    alert.bar:SetHeight(10)
+    alert.bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    alert.bar:SetStatusBarColor(0.2, 0.45, 1)
+    alert.bar.bg = alert.bar:CreateTexture(nil, "BACKGROUND")
+    alert.bar.bg:SetAllPoints()
+    alert.bar.bg:SetColorTexture(0, 0, 0, 0.6)
   end
   return alert
+end
+
+-- Barre de mana : valeurs passées telles quelles au jeu (secrètes sur Forever, l'addon ne les lit pas)
+local function FillBar(a)
+  if type(rawget(a, "bar")) ~= "table" then return end
+  local max = UnitPowerMax("player", 0)
+  if not (pcall(a.bar.SetMinMaxValues, a.bar, 0, max) and pcall(a.bar.SetValue, a.bar, UnitPower("player", 0))) then a.bar:Hide()
+  else a.bar:Show() end
 end
 
 -- Mana secrète (WoW Forever) : pas de compte à rebours possible ; c'est le jeu qui décide si la mana est sous le seuil
@@ -520,8 +578,10 @@ local function SecretManaAlert()
   local a = Alert()
   local text = G.ManaText(L.manaLowFmt) or L.manaLow
   a.text:SetText(text)
-  a.text:SetTextColor(1, 0.45, 0.1)
+  a.text:SetTextColor(1, 0.6, 0.15)
+  FillBar(a)
   a:Show()
+  if type(rawget(a, "pulse")) == "table" and not a.pulse:IsPlaying() then a.pulse:Play() end
   ns.alertShown = G.ApplyAlpha(a, color, 0)
 end
 
@@ -539,7 +599,9 @@ function ns.UpdateManaAlert()
   alert:SetAlpha(1)
   alert.text:SetText(string.format(L.manaAlert, math.floor(left + 0.5)))
   if left <= 8 then alert.text:SetTextColor(1, 0.25, 0.25) else alert.text:SetTextColor(1, 0.65, 0.1) end
+  FillBar(alert)
   alert:Show()
+  if type(rawget(alert, "pulse")) == "table" and not alert.pulse:IsPlaying() then alert.pulse:Play() end
   ns.alertShown = true
 end
 
@@ -588,6 +650,16 @@ SlashCmdList.FOREVERHEAL = function(msg)
     ns.db.announce = not ns.db.announce; Print(L.optAnnounce .. " : " .. (ns.db.announce and L.on or L.off))
   elseif cmd == "ecran" or cmd == "écran" or cmd == "screen" then ns.db.announceWhere = "screen"; Print(string.format(L.optWhere, L.where_screen))
   elseif cmd == "diag" then ns.ShowDiag()
+  elseif (cmd == "alerte" or cmd == "alert") and arg == "test" then
+    -- aperçu de 8 s, hors combat, pour la voir et la placer (glisser)
+    local a = Alert()
+    a.text:SetText(string.format(L.manaLowFmt, 23, 190, 821))
+    a.text:SetTextColor(1, 0.6, 0.15)
+    a:SetAlpha(1)
+    FillBar(a)
+    a:Show()
+    if type(rawget(a, "pulse")) == "table" then a.pulse:Play() end
+    C_Timer.After(8, function() if not InCombatLockdown() then a:Hide() end end)
   elseif cmd == "alerte" or cmd == "alert" then
     local pct = tonumber(arg)
     if pct and pct > 0 and pct < 100 then ns.db.manaLowPct = pct / 100; ns.db.manaAlert = true

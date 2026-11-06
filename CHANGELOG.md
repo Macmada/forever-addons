@@ -6,6 +6,7 @@
 - **Guide-moi ne trouvait pas de vendeur** pour la nourriture et la boisson : l'extraction d'All The Things classait les vendeurs sans prix affiché comme « butin ». Les vendeurs sont maintenant reconnus par l'en-tête « Vendeurs » d'ATT et ses listes d'articles (2 061 sources « vendeur » au lieu de 468).
 - **Marchands visités retenus** (position et articles) : Guide-moi choisit le plus proche, y compris ceux que la base ne connaît pas (aubergistes hors des capitales).
 - **Fenêtre de métier non reconnue** (« métier nil, 0 recettes ») : le métier ouvert est maintenant reconnu par son numéro (couture 197…), par un nom qui contient le sien (« Couture classique »), ou, si le jeu ne dit rien, par sa première recette. L'auto-test et le Diag des Métiers affichent le nom exact donné par le jeu.
+- **Alerte « Mana basse » bien plus visible** : cadre sombre à bordure orange qui pulse, icône de potion, texte gros et contouré, **barre de mana** (remplie par le jeu), placée sous le centre de l'écran pour ne pas se mêler au texte de combat ; glisser pour la déplacer (position retenue) ; `/fheal alerte test` pour la voir hors combat.
 - Prix affichés sans « 0 pc » inutile (« 10 pa » au lieu de « 10 pa 0 pc »).
 - **Écran Maintenant / Équipement** : « clic droit : y aller » passe sur la ligne de la source ; le nom et les étiquettes trop longs sont coupés au lieu de chevaucher le gain (« Kaléidoscope d'œil de serpent »).
 
