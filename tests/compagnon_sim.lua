@@ -417,6 +417,32 @@ SlashCmdList.FOREVERCOMPAGNON("flash place")
 check(root.db.flashPos == nil, "/fp flash place : retour à la place automatique")
 ForeverCompagnonFlash:Hide()
 
+-- en donjon, la cible est secrète (nom, classement, niveau) : butin noté sans jamais prendre un secret comme clé
+-- (erreur en jeu le 06/11/2026 : « attempted to index a table that cannot be indexed with secret keys », Les Mortemines)
+local lootMod = root.mods.ForeverLoot
+local saveII2, saveZT2, saveInfo = _G.IsInInstance, _G.GetRealZoneText, _G.C_Item.GetItemInfo
+_G.IsInInstance = function() return true, "party" end
+_G.GetRealZoneText = function() return "Les Mortemines" end
+_G.UnitExists = function() return true end
+_G.UnitIsDead = function() return true end
+_G.UnitIsPlayer = function() return false end
+_G.UnitName = function(u) if u == "target" then return SECRET end return "Machin" end
+_G.UnitClassification = function() return SECRET end
+_G.UnitLevel = function(u) if u == "target" then return SECRET end return 12 end
+_G.GetNumLootItems = function() return 1 end
+_G.GetLootSlotLink = function() return "|cff1eff00|Hitem:9775|h[Cordelière de bandit du tigre]|h|r" end
+_G.C_Item.GetItemInfo = function(x) local r = { saveInfo(x) }; r[3] = 2; return unpack(r) end
+W.fire("ENCOUNTER_END", 1, "Rhahk'Zor", 1, 5, 1)
+local okLoot, errLoot = pcall(W.fire, "LOOT_OPENED")
+check(okLoot, "butin en donjon avec cible secrète : aucune erreur (" .. tostring(errLoot) .. ")")
+local z = lootMod.gdb.dungeons["Les Mortemines"]
+local secretKey = false
+for k in pairs(z or {}) do if k == SECRET then secretKey = true end end
+check(z and not secretKey and z["Rhahk'Zor"] and z["Rhahk'Zor"][9775], "butin rangé sous le boss de la rencontre (Rhahk'Zor), jamais sous un nom secret")
+_G.IsInInstance, _G.GetRealZoneText, _G.C_Item.GetItemInfo = saveII2, saveZT2, saveInfo
+_G.UnitName = function(u) return u == "npc" and "?" or "Machin" end
+_G.UnitLevel = function() return 12 end
+
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 

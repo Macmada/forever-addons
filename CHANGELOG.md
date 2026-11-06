@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.3.4 (ForeverCompagnon 3.3.4 / ForeverGazette 1.7.2) : noms secrets en donjon
+- **Erreur au butin en donjon** (« Loot/Core.lua:174: attempted to index a table that cannot be indexed with secret keys », Les Mortemines) : en donjon, le jeu rend la cible secrète (nom, classement, niveau). Le butin est maintenant rangé sous le boss de la rencontre terminée, et aucune valeur secrète n'est jamais prise comme clé ni comparée.
+- Même protection, par précaution, dans la Gazette (ennemis notables, fin de rencontre, compagnons de groupe), la Préparation (membres du groupe sans un buff) et la mémoire des marchands. Nouvelle fonction commune `ns.Clear` (valeur utilisable ou rien).
+
 ## v3.3.3 (ForeverCompagnon 3.3.3)
 - **Cadre des changements (soigneur)** : une seule couleur par ligne (« −6 Endurance » entièrement en rouge, plus de « −6 » rouge et « Endurance » vert) ; la ligne de résultat (« Soin moyen +1 · +0,4 soins/s · autonomie… ») passe en plus petit sur deux lignes au lieu de déborder du cadre.
 

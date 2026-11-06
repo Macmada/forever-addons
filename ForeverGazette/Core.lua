@@ -307,11 +307,11 @@ local lastHit
 
 local function NoteUnit(unit)
   if not unit or not UnitExists(unit) or UnitIsPlayer(unit) then return end
-  local guid = UnitGUID(unit)
+  local guid = ns.Clear(UnitGUID(unit))                     -- secret en donjon : jamais pris comme clé
   if not guid or unitInfo[guid] then return end
   if infoCount > 400 then wipe(unitInfo); infoCount = 0 end
   infoCount = infoCount + 1
-  unitInfo[guid] = { c = UnitClassification(unit), lvl = UnitLevel(unit), name = UnitName(unit),
+  unitInfo[guid] = { c = ns.Clear(UnitClassification(unit)), lvl = ns.Plain(UnitLevel(unit)), name = ns.Clear(UnitName(unit)),
                      boss = unit:find("^boss") ~= nil }
 end
 ns.NoteUnit = NoteUnit
@@ -498,7 +498,7 @@ local function ScanGroup()
   for i = 1, count do
     local unit = prefix .. i
     if UnitExists(unit) and UnitIsPlayer(unit) then
-      local name = UnitName(unit)
+      local name = ns.Clear(UnitName(unit))
       if name and name ~= me and name ~= UNKNOWNOBJECT then
         local found = false
         for _, c in ipairs(comp) do if c == name then found = true break end end
@@ -568,6 +568,7 @@ handlers.UPDATE_MOUSEOVER_UNIT = function() NoteUnit("mouseover") end
 handlers.NAME_PLATE_UNIT_ADDED = function(unit) NoteUnit(unit) end
 handlers.INSTANCE_ENCOUNTER_ENGAGE_UNIT = function() for i = 1, 5 do NoteUnit("boss" .. i) end end
 handlers.ENCOUNTER_END = function(_, name, _, _, success)
+  name, success = ns.Clear(name), ns.Clear(success)           -- secrets possibles en donjon : jamais pris comme clé
   ns.diag.encounterEnd = ns.diag.encounterEnd + 1
   ns.diag.lastEncounter = tostring(name) .. " (réussite : " .. tostring(success) .. ")"
   if success == 1 and name then

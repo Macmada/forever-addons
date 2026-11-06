@@ -53,6 +53,18 @@ function ns.Plain(v)
   return ok and v or nil
 end
 
+-- Valeur utilisable (texte, nombre…), ou nil si le jeu la rend secrète : en donjon, le nom et l'identifiant d'un monstre
+-- (UnitName, UnitGUID, UnitClassification…) sont secrets ; les prendre comme clé de table ou les comparer provoque une
+-- erreur (« attempted to index a table that cannot be indexed with secret keys », 06/11/2026)
+function ns.Clear(v)
+  if v == nil then return nil end
+  if issecretvalue then
+    local ok, secret = pcall(issecretvalue, v)
+    if ok and secret then return nil end
+  end
+  return v
+end
+
 -- Croix de fermeture sûre : celle du modèle BasicFrameTemplate passe par HideUIPanel, réservé à Blizzard en combat
 -- (« Échec d'une action d'interface », 05/11/2026) ; on cache simplement la fenêtre
 function ns.SafeClose(f)

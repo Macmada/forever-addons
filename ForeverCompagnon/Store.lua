@@ -101,6 +101,7 @@ function S.RecordMerchant()
   local db = DB()
   if not db then return end
   local guid = UnitGUID and UnitGUID("npc")
+  guid = root.Clear(guid)
   local npcID = guid and tonumber(guid:match("^%a+%-%d+%-%d+%-%d+%-%d+%-(%d+)"))
   if not npcID then return end
   local map = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
@@ -115,7 +116,7 @@ function S.RecordMerchant()
     if id then items[id] = true end
   end
   db.vendors = db.vendors or {}
-  db.vendors[npcID] = { name = UnitName("npc"), map = map, x = math.floor(x * 1000 + 0.5) / 10, y = math.floor(y * 1000 + 0.5) / 10,
+  db.vendors[npcID] = { name = root.Clear(UnitName("npc")) or "?", map = map, x = math.floor(x * 1000 + 0.5) / 10, y = math.floor(y * 1000 + 0.5) / 10,
                         items = items, t = time(), r = UnitFactionGroup("player") == "Horde" and 1 or 2 }
 end
 

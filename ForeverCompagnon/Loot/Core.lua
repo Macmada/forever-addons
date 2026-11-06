@@ -168,6 +168,8 @@ function ns.RecordDungeonLoot(zone, boss, link)
   if not (zone and id and gdb) then return end
   local quality = select(3, Info(link))
   if quality and quality < 2 then return end
+  zone, boss = ns.Clear(zone), ns.Clear(boss)                 -- noms secrets en donjon : jamais pris comme clé
+  if not zone then return end
   gdb.dungeons[zone] = gdb.dungeons[zone] or {}
   local z = gdb.dungeons[zone]
   boss = boss or "?"
@@ -237,14 +239,17 @@ local function Bump() ns.version = ns.version + 1 end
 handlers.PLAYER_EQUIPMENT_CHANGED = function() Bump(); if ns.Refresh then ns.Refresh() end end
 handlers.PLAYER_LEVEL_UP = Bump
 handlers.CHARACTER_POINTS_CHANGED = Bump
-handlers.ENCOUNTER_END = function(_, name, _, _, success) if success == 1 then lastBoss = name end end
+handlers.ENCOUNTER_END = function(_, name, _, _, success) if ns.Clear(success) == 1 then lastBoss = ns.Clear(name) end end
 handlers.LOOT_OPENED = function()
   local zone = Where()
   local boss
   if UnitExists("target") and UnitIsDead("target") and not UnitIsPlayer("target") then
-    boss = UnitName("target")
-    local c = UnitClassification("target")
-    if not (c == "worldboss" or c == "elite" or c == "rareelite" or UnitLevel("target") == -1) and boss ~= lastBoss then boss = nil end
+    -- en donjon, le jeu rend la cible secrète (nom, classement, niveau) : on prend alors le boss de la rencontre finie
+    boss = ns.Clear(UnitName("target"))
+    local c = ns.Clear(UnitClassification("target"))
+    local lvl = ns.Plain(UnitLevel("target"))
+    if boss and not (c == "worldboss" or c == "elite" or c == "rareelite" or lvl == -1) and boss ~= lastBoss then boss = nil end
+    if not boss and not c then boss = lastBoss end
   end
   for i = 1, (GetNumLootItems and GetNumLootItems() or 0) do
     local link = GetLootSlotLink(i)

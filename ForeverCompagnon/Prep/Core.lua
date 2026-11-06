@@ -309,7 +309,7 @@ function ns.Analyze(ctx, roleOverride)
         elseif b.group then
           local missing = {}
           for _, u in ipairs(ns.GroupUnits()) do
-            if not HasAny(ns.Buffs(u), b.spells) then missing[#missing + 1] = UnitName(u) end
+            if not HasAny(ns.Buffs(u), b.spells) then missing[#missing + 1] = ns.Clear(UnitName(u)) or "?" end
           end
           if #missing == 0 then
             buffs.rows[#buffs.rows + 1] = { status = "ok", icon = icon, text = string.format(L.groupBuffOk, name) }
