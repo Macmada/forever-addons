@@ -30,6 +30,7 @@ local SECTIONS = {}
 SECTIONS[#SECTIONS + 1] = function(lines)
   local ns = root.mods.ForeverHeal
   if not (ns and ns.Snapshot and ns.Metrics) then return end
+  if select(2, UnitClass("player")) ~= "PRIEST" or (root.Role() and root.Role() ~= "heal") then return end
   Head(lines, "Interface\\Icons\\Spell_Holy_GreaterHeal", L.secPriest)
   local S = ns.Snapshot()
   local M = ns.Metrics(S, ns.Mix and ns.Mix() or nil)
@@ -115,6 +116,8 @@ function root.RefreshNow()
   if not (ui and ui:IsShown()) then return end
   local lines, stale = root.NowLines()
   ui.status:SetText(stale and ("|cffffc860" .. L.combat .. "|r") or "")
+  local role = root.Role()
+  for _, b in ipairs(ui.roleBtns) do if b.SetActive then b:SetActive(b.role == role) else b.active = (b.role == role) end end
   ui.list.Render(lines)
 end
 
@@ -147,10 +150,25 @@ local function Create()
     b:SetPoint("TOPRIGHT", x, -30)
     x = x - 52
   end
+  -- rôle (le client ne donne pas les talents) : boutons des rôles possibles pour la classe
+  ui.roleLabel = ui:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  ui.roleLabel:SetPoint("TOPLEFT", 18, -66)
+  ui.roleLabel:SetText(L.role)
+  ui.roleBtns = {}
+  local prev
+  for _, r in ipairs(root.ClassRoles()) do
+    local b = K.Tab(ui, L["role_" .. r], function() root.SetRole(r) end)
+    b:SetHeight(22)
+    if prev then b:SetPoint("LEFT", prev, "RIGHT", 4, 0) else b:SetPoint("LEFT", ui.roleLabel, "RIGHT", 8, 0) end
+    K.Tooltip(b, L["role_" .. r], L.roleTip)
+    b.role = r
+    ui.roleBtns[#ui.roleBtns + 1] = b
+    prev = b
+  end
   ui.status = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  ui.status:SetPoint("TOPLEFT", 18, -62)
+  ui.status:SetPoint("TOPLEFT", 18, -88)
   ui.list = K.CardList(ui, W - 60)
-  ui.list.scroll:SetPoint("TOPLEFT", 16, -80)
+  ui.list.scroll:SetPoint("TOPLEFT", 16, -104)
   ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 16)
   K.Backdrop(ui, ui.list.scroll, 0.6, 6)
   ui:SetScript("OnShow", function() root.RefreshNow() end)

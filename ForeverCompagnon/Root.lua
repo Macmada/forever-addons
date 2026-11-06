@@ -16,6 +16,8 @@ root.L = FR and {
   title = "ForeverCompagnon",
   now = "Maintenant", heal = "Soins", loot = "Équipement", prep = "Préparation", metiers = "Métiers",
   nowTitle = "Que faire maintenant ?",
+  role = "Rôle :", role_tank = "Tank", role_heal = "Soins", role_melee = "Dégâts (mêlée)", role_caster = "Dégâts (sorts)",
+  roleTip = "Ton rôle règle les conseils d'équipement et de préparation (le jeu ne donne pas tes talents aux addons).",
   nowIntro = "Le plus utile à ton niveau (%d), en un coup d'œil. Clique sur une ligne pour le détail.",
   secPriest = "Ton prêtre", secGear = "Équipement à ta portée", secBuy = "À acheter avant le donjon", secProf = "Métiers",
   hps = "%s soins/s", oom = "panne de mana en %s", noOom = "sans panne de mana", regen = "régén. %s mana/s hors combat",
@@ -45,6 +47,8 @@ root.L = FR and {
   title = "ForeverCompanion",
   now = "Now", heal = "Healing", loot = "Gear", prep = "Preparation", metiers = "Professions",
   nowTitle = "What to do now?",
+  role = "Role:", role_tank = "Tank", role_heal = "Healer", role_melee = "Damage (melee)", role_caster = "Damage (spells)",
+  roleTip = "Your role drives gear and preparation advice (the game does not give your talents to addons).",
   nowIntro = "The most useful things at your level (%d), at a glance. Click a line for details.",
   secPriest = "Your priest", secGear = "Gear within reach", secBuy = "To buy before the dungeon", secProf = "Professions",
   hps = "%s healing/s", oom = "out of mana in %s", noOom = "never out of mana", regen = "regen %s mana/s out of combat",
@@ -113,5 +117,31 @@ ev:SetScript("OnEvent", function(_, event, arg)
     for _, f in ipairs(root.onLogin or {}) do pcall(f) end
   end
 end)
+-- Rôle du personnage : celui de Préparation (choisi sur l'écran Maintenant, /prep role, ou deviné) ; partagé par
+-- Équipement (poids des caractéristiques) et l'écran Maintenant
+function root.Role()
+  local prep = root.mods.ForeverPrep
+  if prep and prep.Role then
+    local ok, r = pcall(prep.Role)
+    if ok then return r end
+  end
+end
+function root.SetRole(role)
+  local prep = root.mods.ForeverPrep
+  if prep and prep.db then prep.db.role = role end
+  local loot = root.mods.ForeverLoot
+  if loot then loot.version = (loot.version or 0) + 1 end
+  if root.RefreshNow then root.RefreshNow() end
+end
+-- Rôles possibles pour la classe (d'après les poids d'Équipement)
+function root.ClassRoles()
+  local _, class = UnitClass("player")
+  local loot = root.mods.ForeverLoot
+  local byRole = loot and loot.Data and loot.Data.roleWeights and loot.Data.roleWeights[class]
+  local out = {}
+  for _, r in ipairs({ "tank", "heal", "melee", "caster" }) do if byRole and byRole[r] then out[#out + 1] = r end end
+  return out
+end
+
 function root.OnLoaded(f) root.onLoaded = root.onLoaded or {}; table.insert(root.onLoaded, f) end
 function root.OnLogin(f) root.onLogin = root.onLogin or {}; table.insert(root.onLogin, f) end

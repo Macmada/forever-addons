@@ -71,7 +71,33 @@ D.weapons = {
   WARRIOR = set({ 0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 13, 15, 16, 18 }), PALADIN = set({ 0, 1, 4, 5, 6, 7, 8 }),
 }
 
--- Poids simplifiés par classe (quand le modèle de ForeverHeal ne s'applique pas) : valeur d'un point de chaque caractéristique
+-- Poids par classe et par rôle (tank, heal, melee, caster), choisi sur l'écran Maintenant ou dans Préparation
+-- (le client de Forever ne donne pas les arbres de talents aux addons). Puissance des sorts : compte aussi pour les soins.
+local SP, HEAL, DMG = "ITEM_MOD_SPELL_POWER_SHORT", "ITEM_MOD_SPELL_HEALING_DONE_SHORT", "ITEM_MOD_SPELL_DAMAGE_DONE_SHORT"
+local STR, AGI, STA, INT, SPI = "ITEM_MOD_STRENGTH_SHORT", "ITEM_MOD_AGILITY_SHORT", "ITEM_MOD_STAMINA_SHORT", "ITEM_MOD_INTELLECT_SHORT", "ITEM_MOD_SPIRIT_SHORT"
+local AP, RAP, MP5, ARM, DPS = "ITEM_MOD_ATTACK_POWER_SHORT", "ITEM_MOD_RANGED_ATTACK_POWER_SHORT", "ITEM_MOD_MANA_REGENERATION_SHORT", "RESISTANCE0_NAME", "ITEM_MOD_DAMAGE_PER_SECOND_SHORT"
+local DEF, DODGE, PARRY, BLOCK = "ITEM_MOD_DEFENSE_SKILL_RATING_SHORT", "ITEM_MOD_DODGE_RATING_SHORT", "ITEM_MOD_PARRY_RATING_SHORT", "ITEM_MOD_BLOCK_RATING_SHORT"
+local CRIT, HIT = "ITEM_MOD_CRIT_RATING_SHORT", "ITEM_MOD_HIT_RATING_SHORT"
+local function W(t) return t end
+local HEALER = W({ [INT] = 1, [HEAL] = 1.8, [SP] = 1.8, [MP5] = 2, [SPI] = 0.5, [STA] = 0.3 })
+local CASTER = W({ [INT] = 0.7, [SP] = 1.2, [DMG] = 1.2, [SPI] = 0.25, [STA] = 0.4, [CRIT] = 0.8, [HIT] = 0.9 })
+D.roleWeights = {
+  WARRIOR = { melee = W({ [STR] = 1, [AGI] = 0.8, [AP] = 0.5, [STA] = 0.5, [CRIT] = 1, [HIT] = 1, [DPS] = 4 }),
+              tank = W({ [STA] = 1, [ARM] = 0.06, [DEF] = 1.2, [DODGE] = 1, [PARRY] = 1, [BLOCK] = 0.6, [AGI] = 0.6, [STR] = 0.5, [DPS] = 1.5 }) },
+  PALADIN = { heal = HEALER,
+              tank = W({ [STA] = 1, [ARM] = 0.06, [DEF] = 1.2, [DODGE] = 0.9, [PARRY] = 0.8, [BLOCK] = 0.7, [STR] = 0.5, [INT] = 0.3, [SP] = 0.6 }),
+              melee = W({ [STR] = 1, [AGI] = 0.6, [AP] = 0.5, [INT] = 0.3, [STA] = 0.4, [CRIT] = 0.9, [HIT] = 0.9, [DPS] = 4 }) },
+  SHAMAN = { heal = HEALER, caster = CASTER,
+             melee = W({ [AGI] = 0.8, [STR] = 0.8, [AP] = 0.5, [INT] = 0.3, [STA] = 0.4, [CRIT] = 0.9, [HIT] = 0.9, [DPS] = 4 }) },
+  DRUID = { heal = HEALER, caster = CASTER,
+            tank = W({ [STA] = 1, [AGI] = 0.9, [ARM] = 0.05, [STR] = 0.5, [DEF] = 1, [DODGE] = 1 }),
+            melee = W({ [AGI] = 1, [STR] = 0.9, [AP] = 0.5, [STA] = 0.3, [CRIT] = 1, [HIT] = 0.9 }) },
+  PRIEST = { heal = HEALER, caster = W({ [INT] = 0.6, [SP] = 1.2, [DMG] = 1.2, [SPI] = 0.35, [STA] = 0.4, [HIT] = 0.9 }) },
+  MAGE = { caster = CASTER }, WARLOCK = { caster = W({ [INT] = 0.5, [SP] = 1.2, [DMG] = 1.2, [STA] = 0.6, [SPI] = 0.1, [HIT] = 0.9 }) },
+  ROGUE = { melee = W({ [AGI] = 1, [STR] = 0.5, [AP] = 0.5, [STA] = 0.3, [CRIT] = 1, [HIT] = 1, [DPS] = 4 }) },
+  HUNTER = { melee = W({ [AGI] = 1, [RAP] = 0.5, [AP] = 0.45, [INT] = 0.3, [STA] = 0.3, [CRIT] = 1, [HIT] = 1, [DPS] = 1.5 }) },
+}
+-- Poids simplifiés par classe (sans rôle connu) : valeur d'un point de chaque caractéristique
 D.weights = {
   WARRIOR = { ITEM_MOD_STRENGTH_SHORT = 1, ITEM_MOD_AGILITY_SHORT = 0.8, ITEM_MOD_STAMINA_SHORT = 0.6, ITEM_MOD_ATTACK_POWER_SHORT = 0.5, RESISTANCE0_NAME = 0.02 },
   ROGUE = { ITEM_MOD_AGILITY_SHORT = 1, ITEM_MOD_STRENGTH_SHORT = 0.5, ITEM_MOD_ATTACK_POWER_SHORT = 0.5, ITEM_MOD_STAMINA_SHORT = 0.3 },

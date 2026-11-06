@@ -13,7 +13,7 @@ root.TABS = {
   { key = "now", label = L.now, icon = "Interface\\Icons\\Spell_Holy_PowerWordShield", frame = "ForeverCompagnonNowFrame",
     open = function() root.ShowNow() end },
   { key = "heal", label = L.heal, icon = "Interface\\Icons\\Spell_Holy_GreaterHeal", frame = "ForeverHealPanel",
-    mod = "ForeverHeal", toggle = "TogglePanel" },
+    mod = "ForeverHeal", toggle = "TogglePanel", class = "PRIEST" },
   { key = "loot", label = L.loot, icon = "Interface\\Icons\\INV_Chest_Cloth_17", frame = "ForeverLootFrame",
     mod = "ForeverLoot", toggle = "Toggle" },
   { key = "prep", label = L.prep, icon = "Interface\\Icons\\INV_Potion_51", frame = "ForeverPrepFrame",
@@ -37,11 +37,14 @@ end
 local function Rail()
   if rail then return rail end
   rail = CreateFrame("Frame", "ForeverCompagnonRail", UIParent)
-  rail:SetSize(50, 16 + #root.TABS * 46)
+  local _, myClass = UnitClass("player")
+  local tabs = {}
+  for _, t in ipairs(root.TABS) do if not t.class or t.class == myClass then tabs[#tabs + 1] = t end end
+  rail:SetSize(50, 16 + #tabs * 46)
   rail:SetFrameStrata("HIGH")
   K.Panel(rail, 0.92)
   rail.buttons = {}
-  for i, t in ipairs(root.TABS) do
+  for i, t in ipairs(tabs) do
     local b = CreateFrame("Button", nil, rail)
     b:SetSize(38, 38)
     b:SetPoint("TOP", 0, -8 - (i - 1) * 46)

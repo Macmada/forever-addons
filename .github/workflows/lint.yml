@@ -47,5 +47,7 @@ jobs:
           lua5.1 tests/forbidden_sim.lua en
           lua5.1 tests/compagnon_sim.lua fr
           lua5.1 tests/compagnon_sim.lua en
+          lua5.1 tests/classes_sim.lua fr
+          lua5.1 tests/classes_sim.lua en
       - name: Compagnon Discord (syntaxe)
         run: python3 -m py_compile tools/gazette-discord/gazette_discord.py tools/gazette-discord/gazette_render.py

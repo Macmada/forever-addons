@@ -237,6 +237,25 @@ W.class = "PRIEST"
 local pl = Txt(met.LevelLines())
 check(pl:find(PN("tailoring"), 1, true) and pl:find(PN("enchanting"), 1, true), "prêtre sans métier : couture et enchantement conseillés")
 
+-- rôle choisi (le client ne donne pas les talents) : poids d'Équipement selon classe et rôle
+local loot = root.mods.ForeverLoot
+W.class = "WARRIOR"
+check(table.concat(root.ClassRoles(), ",") == "tank,melee", "guerrier : rôles tank et mêlée")
+root.SetRole("tank")
+local w, role = loot.Weights()
+check(role == "tank" and w.ITEM_MOD_DEFENSE_SKILL_RATING_SHORT and (w.ITEM_MOD_STAMINA_SHORT or 0) >= 1, "guerrier tank : défense et endurance comptent")
+root.SetRole("melee")
+w = loot.Weights()
+check((w.ITEM_MOD_STRENGTH_SHORT or 0) == 1 and not w.ITEM_MOD_DEFENSE_SKILL_RATING_SHORT, "guerrier mêlée : force d'abord")
+W.class = "PRIEST"
+check(table.concat(root.ClassRoles(), ",") == "heal,caster", "prêtre : soins ou ombre")
+root.SetRole("caster")
+local nl2 = root.NowLines()
+local hasPriest = false
+for _, l in ipairs(nl2) do if l.kind == "head" and l.title == root.L.secPriest then hasPriest = true end end
+check(not hasPriest, "prêtre ombre : pas de section soins sur Maintenant")
+root.SetRole("auto")
+
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 

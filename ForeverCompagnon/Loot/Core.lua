@@ -58,9 +58,18 @@ end
 local cache, cacheN = {}, 0
 ns.version = 0
 
+-- Rôle du personnage (choisi sur l'écran Maintenant ou dans Préparation) ; nil hors de ForeverCompagnon
+function ns.Role() return ns.root and ns.root.Role and ns.root.Role() or nil end
+function ns.Weights()
+  local _, class = UnitClass("player")
+  local byRole = D.roleWeights and D.roleWeights[class]
+  local role = ns.Role()
+  return (byRole and role and byRole[role]) or D.weights[class] or D.weights.WARRIOR, role
+end
+
 function ns.Evaluate(link)
   if not link then return nil end
-  local key = link .. "#" .. ns.version
+  local key = link .. "#" .. ns.version .. "#" .. tostring(ns.Role())
   if cache[key] ~= nil then return cache[key] or nil end
   local r
   local wear, why = ns.Wearable(link)
@@ -70,7 +79,8 @@ function ns.Evaluate(link)
   if slots then
     r = { wearable = wear, why = why, minLevel = MinLevel(link) }
     local api = _G.ForeverHealAPI
-    if class == "PRIEST" and api and api.Evaluate then
+    local role = ns.Role()
+    if class == "PRIEST" and (role == nil or role == "heal") and api and api.Evaluate then
       local e = api.Evaluate(link)
       if e then
         r.method, r.slot, r.score, r.hps, r.healed, r.hp = "heal", e.slot, e.score, e.hps, e.healed, e.hp
@@ -78,7 +88,7 @@ function ns.Evaluate(link)
       end
     end
     if not r.method then
-      local w = D.weights[class] or D.weights.WARRIOR
+      local w = ns.Weights()
       local new = WeightScore(Stats(link), w)
       local best
       for _, slot in ipairs(slots) do

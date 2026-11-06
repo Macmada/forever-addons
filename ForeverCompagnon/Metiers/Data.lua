@@ -36,18 +36,18 @@ D.profs = {
 }
 -- Tous les métiers : ceux sans guide pas à pas (pas de « trainers » ni de « routes ») ont la partie générique :
 -- compétence et rang, rappel du maître, meilleurs crafts d'après les couleurs de la fenêtre, recettes à apprendre (ATT)
-local function P(fr, en, icon, skill, gather) return { names = { fr, en }, icon = "Interface\\Icons\\" .. icon, skill = skill, gather = gather } end
+local function Prof(fr, en, icon, skill, gather) return { names = { fr, en }, icon = "Interface\\Icons\\" .. icon, skill = skill, gather = gather } end
 D.profs.tailoring.skill, D.profs.enchanting.skill = 197, 333
-D.profs.alchemy = P("Alchimie", "Alchemy", "Trade_Alchemy", 171)
-D.profs.blacksmithing = P("Forge", "Blacksmithing", "Trade_BlackSmithing", 164)
-D.profs.leatherworking = P("Travail du cuir", "Leatherworking", "Trade_LeatherWorking", 165)
-D.profs.engineering = P("Ingénierie", "Engineering", "Trade_Engineering", 202)
-D.profs.cooking = P("Cuisine", "Cooking", "INV_Misc_Food_15", 185)
-D.profs.firstaid = P("Secourisme", "First Aid", "Spell_Holy_SealOfSacrifice", 129)
-D.profs.herbalism = P("Herboristerie", "Herbalism", "Trade_Herbalism", 182, true)
-D.profs.mining = P("Minage", "Mining", "Trade_Mining", 186, true)
-D.profs.skinning = P("Dépeçage", "Skinning", "INV_Misc_Pelt_Wolf_01", 393, true)
-D.profs.fishing = P("Pêche", "Fishing", "Trade_Fishing", 356, true)
+D.profs.alchemy = Prof("Alchimie", "Alchemy", "Trade_Alchemy", 171)
+D.profs.blacksmithing = Prof("Forge", "Blacksmithing", "Trade_BlackSmithing", 164)
+D.profs.leatherworking = Prof("Travail du cuir", "Leatherworking", "Trade_LeatherWorking", 165)
+D.profs.engineering = Prof("Ingénierie", "Engineering", "Trade_Engineering", 202)
+D.profs.cooking = Prof("Cuisine", "Cooking", "INV_Misc_Food_15", 185)
+D.profs.firstaid = Prof("Secourisme", "First Aid", "Spell_Holy_SealOfSacrifice", 129)
+D.profs.herbalism = Prof("Herboristerie", "Herbalism", "Trade_Herbalism", 182, true)
+D.profs.mining = Prof("Minage", "Mining", "Trade_Mining", 186, true)
+D.profs.skinning = Prof("Dépeçage", "Skinning", "INV_Misc_Pelt_Wolf_01", 393, true)
+D.profs.fishing = Prof("Pêche", "Fishing", "Trade_Fishing", 356, true)
 -- métiers avec guide pas à pas (couture, enchantement) ; D.allProfOrder : tous, dans l'ordre d'affichage
 D.profOrder = { "tailoring", "enchanting" }
 D.allProfOrder = { "tailoring", "enchanting", "alchemy", "blacksmithing", "leatherworking", "engineering",
