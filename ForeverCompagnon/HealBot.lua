@@ -279,6 +279,9 @@ local function ApplySkins()
       end
     end
   end
+  -- familiers retirés par leur nom, après l'import : HealBot renumérote les groupes de barres d'un ancien skin (les
+  -- familiers passent de la ligne 8 à la ligne 10), donc un réglage par numéro de ligne vise le mauvais groupe
+  HB.NoPets()
   local want = (IsInRaid and IsInRaid()) and HB.SKIN_RAID or HB.SKIN_GROUP
   if type(_G.HealBot_Options_Set_Current_Skin) == "function" then pcall(_G.HealBot_Options_Set_Current_Skin, want) end
   -- cadres de groupe et de raid de WoW gardés en secours, aussi dans le réglage global d'HealBot (s'il prend le pas sur le skin)
@@ -288,6 +291,47 @@ local function ApplySkins()
   if type(_G.HealBot_Options_SetFrames) == "function" then pcall(_G.HealBot_Options_SetFrames) end
   if type(_G.HealBot_Timers_ToggleBlizzardFrames) == "function" then pcall(_G.HealBot_Timers_ToggleBlizzardFrames) end
   return true
+end
+
+local PETS = { Pets = true, Vehicle = true }
+function HB.NoPets()
+  local skins = _G.Healbot_Config_Skins
+  if type(skins) ~= "table" then return 0 end
+  local n = 0
+  for _, name in ipairs({ HB.SKIN_GROUP, HB.SKIN_RAID }) do
+    local groups = type(skins.HealGroups) == "table" and skins.HealGroups[name]
+    if type(groups) == "table" then
+      local petName = _G.HEALBOT_OPTIONS_PETHEALS_en
+      for _, g in pairs(groups) do
+        if type(g) == "table" and (PETS[g.NAME] or (petName and g.NAME == petName)) and g.STATE ~= false then g.STATE = false; n = n + 1 end
+      end
+    end
+    if type(skins.Healing) == "table" then
+      skins.Healing[name] = skins.Healing[name] or {}
+      skins.Healing[name].GROUPPETS = false
+      skins.Healing[name].SELFPET = false
+    end
+  end
+  if type(_G.HealBot_SetResetFlag) == "function" then pcall(_G.HealBot_SetResetFlag, "SOFT") end
+  return n
+end
+
+-- Ce qu'HealBot a retenu pour le skin actif (groupes de barres, familiers), à copier pour Claude
+function HB.Diag()
+  local skins = _G.Healbot_Config_Skins
+  if type(skins) ~= "table" then root.Print(T.notLoaded); return end
+  local cur = skins.Current_Skin
+  root.Print("HealBot : skin actif « %s »", tostring(cur))
+  local groups = type(skins.HealGroups) == "table" and skins.HealGroups[cur] or {}
+  local ids = {}
+  for k in pairs(groups) do ids[#ids + 1] = k end
+  table.sort(ids, function(a, b) return tostring(a) < tostring(b) end)
+  for _, k in ipairs(ids) do
+    local g = groups[k]
+    if type(g) == "table" then root.Print("  %s : %s, cadre %s, %s", tostring(k), tostring(g.NAME), tostring(g.FRAME), g.STATE and "affiché" or "masqué") end
+  end
+  local h = type(skins.Healing) == "table" and skins.Healing[cur] or {}
+  root.Print("  familiers avec leur maître : %s", tostring(h.GROUPPETS))
 end
 
 local pending
@@ -346,6 +390,7 @@ function HB.Command(arg)
   if arg == "annuler" or arg == "undo" or arg == "restore" then HB.Restore()
   elseif arg == "voir" or arg == "plan" or arg == "show" then HB.ShowPlan()
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
+  elseif arg == "diag" then HB.Diag()
   else HB.Setup() end
 end
 

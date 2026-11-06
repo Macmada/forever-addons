@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.4.5 (ForeverCompagnon 3.4.5)
+- **Familiers vraiment retirés des cadres HealBot** (HealBot Tooltips plantait encore sur eux) : à l'import d'un ancien skin, HealBot renumérote ses groupes de barres, et le réglage visait la mauvaise ligne. Les familiers (et véhicules) sont maintenant coupés par leur nom après l'import, ainsi que le réglage « familiers avec leur maître », dans les deux skins.
+- `/fp healbot diag` : ce qu'HealBot a retenu pour le skin actif (groupes de barres, cadre, affiché ou non).
+
 ## v3.4.4 (ForeverCompagnon 3.4.4), d'après ta sonde
 - **Vie manquante sur les barres d'HealBot**, en rouge à droite de chaque barre (« 432 »), même en combat. Ta sonde l'a montré : la vie des alliés est secrète (impossible à lire ou à calculer, d'où le seul pourcentage d'HealBot), mais le jeu donne la vie manquante toute prête et accepte de l'afficher. ForeverCompagnon la passe telle quelle au texte, sans jamais la lire ; rien ne s'affiche si la personne est pleine ou hors ligne.
 - `/fp healbot chiffres` : masquer ou réafficher ces chiffres.

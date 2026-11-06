@@ -495,9 +495,16 @@ do
     if s == "PACKSTD" then return "Skin\nStandard\n" end
     return s end
   local loaded = {}
-  _G.HealBot_Share_SkinLoad = function(text, internal) assert(internal == false); loaded[text:match("^[^\n]+\n([^\n]+)")] = text end
+  _G.HealBot_Share_SkinLoad = function(text, internal)
+    assert(internal == false)
+    local name = text:match("^[^\n]+\n([^\n]+)")
+    loaded[name] = text
+    -- comme HealBot : ancien skin renuméroté, les familiers passent de la ligne 8 à la 10, avec l'état de l'ancienne ligne 10
+    Healbot_Config_Skins.HealGroups[name] = { [3] = { NAME = "Raid", FRAME = 1, STATE = true }, [10] = { NAME = "Pets", FRAME = 1, STATE = true } }
+    Healbot_Config_Skins.Healing[name] = { GROUPPETS = true }
+  end
   _G.HealBot_Config = { SkinDefault = { Group = { Party = true, Solo = true }, ["Raid 40"] = { ["Raid 40"] = true } } }
-  _G.Healbot_Config_Skins = { Current_Skin = "Standard" }
+  _G.Healbot_Config_Skins = { Current_Skin = "Standard", HealGroups = {}, Healing = {} }
   _G.HealBot_Globals = { OverrideFrames = { USE = 2, HIDEPARTYF = true, HIDERAIDF = true } }
   local current, blizz = nil, 0
   _G.HealBot_Timers_ToggleBlizzardFrames = function() blizz = blizz + 1 end
@@ -537,6 +544,12 @@ do
   check(sd["Forever Groupe"].Party and sd["Forever Groupe"].Solo and sd["Forever Raid"].Raid10 and sd["Forever Raid"]["Raid 40"]
         and not sd.Group.Party and not sd["Raid 40"]["Raid 40"], "HealBot passe seul sur Forever Groupe / Forever Raid")
   check(current == "Forever Groupe", "skin actif : Forever Groupe (hors raid)")
+  local hg = Healbot_Config_Skins.HealGroups["Forever Groupe"]
+  check(hg[10].STATE == false and hg[3].STATE == true and Healbot_Config_Skins.Healing["Forever Groupe"].GROUPPETS == false
+        and Healbot_Config_Skins.HealGroups["Forever Raid"][10].STATE == false, "familiers retirés par leur nom après l'import (HealBot renumérote)")
+  Healbot_Config_Skins.Current_Skin = "Forever Groupe"
+  SlashCmdList.FOREVERCOMPAGNON("healbot diag")
+  Healbot_Config_Skins.Current_Skin = "Standard"
 
   -- niveau 16 : Soins appris -> clic gauche mis à jour ; un clic changé à la main n'est pas touché
   c.Right = "S:7^Mon choix"
