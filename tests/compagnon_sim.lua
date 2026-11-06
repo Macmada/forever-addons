@@ -552,6 +552,22 @@ do
         and HealBot_Config.SkinDefault["Forever Raid"] == nil
         and current == "Standard", "annuler : clics et skins d'avant remis")
   check(not HB.Restore(), "annuler deux fois : rien à remettre")
+  -- vie manquante sur les barres : valeur secrète passée telle quelle au texte, jamais lue
+  local secretStr = setmetatable({}, { __concat = function() error("secret") end, __eq = function() error("secret") end })
+  _G.UnitHealthMissing = function() return SECRET end
+  _G.C_StringUtil = { TruncateWhenZero = function(v) assert(v == SECRET); return secretStr end }
+  _G.UnitIsConnected = function(u) return u ~= "party2" end
+  local function Btn(unit) return { unit = unit, gref = { Top = CreateFrame("Frame"), Bar = CreateFrame("StatusBar") } } end
+  _G.HealBot_Unit_Button = { a = Btn("party1"), b = Btn("party2") }
+  HB.UpdateDeficits()
+  check(HealBot_Unit_Button.a.fcDeficit and HealBot_Unit_Button.a.fcDeficit:GetText() == secretStr, "vie manquante : texte du jeu posé sur la barre (sans être lu)")
+  check(HealBot_Unit_Button.b.fcDeficit:GetText() == "", "membre hors ligne : rien")
+  SlashCmdList.FOREVERCOMPAGNON("healbot chiffres")
+  check(HealBot_Unit_Button.a.fcDeficit:GetText() == "" and root.db.healbotDeficit == false, "/fp healbot chiffres : masqué")
+  SlashCmdList.FOREVERCOMPAGNON("healbot chiffres")
+  check(HealBot_Unit_Button.a.fcDeficit:GetText() == secretStr, "/fp healbot chiffres : réaffiché")
+  W.run(1)
+  _G.HealBot_Unit_Button, _G.UnitHealthMissing, _G.C_StringUtil, _G.UnitIsConnected = nil, nil, nil, nil
   -- autre classe
   W.class = "MAGE"
   check(not HB.Setup(), "autre classe : pas de configuration automatique")

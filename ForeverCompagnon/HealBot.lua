@@ -27,6 +27,7 @@ local T = FR and {
   noBackup = "HealBot : aucune sauvegarde à remettre.",
   planTitle = "Clics HealBot prévus à ton niveau :",
   kept = "%s : laissé tel quel (changé par toi)",
+  deficitOn = "HealBot : vie manquante affichée en rouge sur les barres.", deficitOff = "HealBot : vie manquante masquée.",
   button = "Configurer HealBot", buttonTip = "Règle les clics de soins et les cadres de groupe/raid d'HealBot pour ton prêtre (sauvegarde avant, /fp healbot annuler).",
   Left = "Clic gauche", Right = "Clic droit", Middle = "Clic milieu", Shift = "Maj+", Ctrl = "Ctrl+", Alt = "Alt+",
 } or {
@@ -41,6 +42,7 @@ local T = FR and {
   noBackup = "HealBot: no backup to restore.",
   planTitle = "HealBot clicks planned at your level:",
   kept = "%s: left as is (changed by you)",
+  deficitOn = "HealBot: missing health shown in red on the bars.", deficitOff = "HealBot: missing health hidden.",
   button = "Set up HealBot", buttonTip = "Sets HealBot's healing clicks and party/raid frames for your priest (backup first, /fp healbot annuler).",
   Left = "Left click", Right = "Right click", Middle = "Middle click", Shift = "Shift+", Ctrl = "Ctrl+", Alt = "Alt+",
 }
@@ -338,7 +340,76 @@ function HB.Command(arg)
   arg = (arg or ""):lower()
   if arg == "annuler" or arg == "undo" or arg == "restore" then HB.Restore()
   elseif arg == "voir" or arg == "plan" or arg == "show" then HB.ShowPlan()
+  elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   else HB.Setup() end
+end
+
+----------------------------------------------------------------------
+-- Vie manquante sur les barres d'HealBot. Sur Forever, la vie des alliés est secrète : HealBot (et nous) ne peut ni la
+-- lire ni calculer avec, donc HealBot n'affiche que le pourcentage. Mais le jeu donne la vie manquante toute prête
+-- (UnitHealthMissing) et accepte de l'afficher telle quelle (sonde du 06/11/2026, en combat) : on la pose en rouge à
+-- droite de chaque barre, sans jamais la lire. TruncateWhenZero (fonction du jeu) rend un texte vide si personne n'a
+-- perdu de vie, puisqu'on ne peut pas comparer la valeur à 0 nous-mêmes.
+----------------------------------------------------------------------
+local function DeficitText(unit)
+  local missing = _G.UnitHealthMissing and _G.UnitHealthMissing(unit)
+  if missing == nil then return "" end
+  local su = _G.C_StringUtil
+  if su and su.TruncateWhenZero then
+    local ok, t = pcall(su.TruncateWhenZero, missing)
+    if ok and t ~= nil then return t end
+  end
+  if _G.AbbreviateNumbers then
+    local ok, t = pcall(_G.AbbreviateNumbers, missing)
+    if ok and t ~= nil then return t end
+  end
+  return missing
+end
+HB.DeficitText = DeficitText
+
+local function DeficitOn() return HB.Available and type(_G.UnitHealthMissing) == "function" and not (root.db and root.db.healbotDeficit == false) end
+
+local function DeficitButton(button)
+  local top = button.gref and (button.gref.Top or button.gref.Bar)
+  if not (top and top.CreateFontString) then return end
+  local fs = button.fcDeficit
+  if not fs then
+    fs = top:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local font = _G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
+    fs:SetFont(font, 12, "OUTLINE")
+    fs:SetPoint("RIGHT", button.gref.Bar or top, "RIGHT", -4, 0)
+    fs:SetJustifyH("RIGHT")
+    fs:SetTextColor(1, 0.38, 0.38)
+    button.fcDeficit = fs
+  end
+  local unit = button.unit
+  if not unit or not DeficitOn() then fs:SetText(""); return end
+  local ok = pcall(function()
+    local connected = _G.UnitIsConnected and _G.UnitIsConnected(unit)
+    if connected == false then fs:SetText(""); return end
+    fs:SetText(DeficitText(unit))
+  end)
+  if not ok then pcall(fs.SetText, fs, DeficitText(unit)) end
+end
+
+function HB.UpdateDeficits()
+  for _, list in ipairs({ _G.HealBot_Unit_Button, _G.HealBot_Private_Button }) do
+    if type(list) == "table" then
+      for _, button in pairs(list) do
+        if type(button) == "table" then pcall(DeficitButton, button) end
+      end
+    end
+  end
+end
+
+function HB.ToggleDeficit()
+  root.db.healbotDeficit = (root.db.healbotDeficit == false)
+  root.Print(root.db.healbotDeficit and T.deficitOn or T.deficitOff)
+  HB.UpdateDeficits()
+end
+
+if C_Timer and C_Timer.NewTicker then
+  C_Timer.NewTicker(0.25, function() if _G.HealBot_Unit_Button then HB.UpdateDeficits() end end)
 end
 
 local ev = CreateFrame("Frame")
