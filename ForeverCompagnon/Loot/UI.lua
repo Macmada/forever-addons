@@ -331,7 +331,7 @@ function ns.NearLines(span)
   local maxLevel = math.min(60, level + span)
   local lines = {}
   lines[#lines + 1] = { kind = "info", display = "|cffd8c8a0" .. string.format(L.nearIntro, maxLevel) .. "|r", text = string.format(L.nearIntro, maxLevel) }
-  if not ns.DJ() then lines[#lines + 1] = { kind = "info", display = "|cffa0a0a0" .. L.djOff .. "|r", text = L.djOff } end
+  if not ns.DJ() and not (ns.ATT and ns.ATT.Available()) then lines[#lines + 1] = { kind = "info", display = "|cffa0a0a0" .. L.djOff .. "|r", text = L.djOff } end
   local bis = ns.BiS(2, maxLevel)
   local empty = {}
   for _, slot in ipairs(D.slotOrder) do
@@ -713,7 +713,7 @@ function ns.DiagCollect(add)
     for _ in pairs(fdj.DB) do nd = nd + 1 end
     add(string.format("DungeonJournal : présent, %d donjons, %d objets (butin + récompenses de quête)", nd, #ns.DJItems()))
   else
-    add("DungeonJournal : absent (ou format inconnu : ForeverDungeonJournal_NS.DB introuvable)")
+    add("DungeonJournal : absent ; butin des donjons tiré des sources intégrées : " .. #ns.DJItems() .. " objets")
   end
   local S = _G.Syndicator
   add("Syndicator : " .. ((S and S.API) and ("présent, prêt : " .. tostring(S.API.IsReady and S.API.IsReady())) or "absent"))

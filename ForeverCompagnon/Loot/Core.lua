@@ -374,9 +374,44 @@ local function FirstNum(v) return tonumber(v) or (type(v) == "string" and tonumb
 -- Liste à plat du butin de DungeonJournal : { id, dungeon, boss (ou quête), quest, level (niveau du donjon ou de la quête),
 -- faction (« Alliance » / « Horde » si réservé à un camp) }
 local djCache
+
+-- Même liste tirée des sources intégrées (base WoW Forever d'All The Things), quand DungeonJournal n'est pas installé :
+-- butin des boss et des PNJ des donjons, récompenses des quêtes de donjon. Noms demandés au jeu ; liste refaite tant que
+-- des noms manquent (le jeu les donne peu à peu).
+local srcCache
+local function SourceItems()
+  local db = ns.root and ns.root.Sources
+  if not (db and ns.ATT) then return {} end
+  if srcCache and not (srcCache.partial and GetTime() - srcCache.t > 30) then return srcCache.list end
+  local list, partial = {}, false
+  local dnames, bnames = {}, {}
+  for id, srcs in pairs(db.items) do
+    for _, s in ipairs(srcs) do
+      local e = s[6]
+      if e and e.inst and (s[1] == "boss" or s[1] == "drop" or s[1] == "quest") then
+        if dnames[e.inst] == nil then dnames[e.inst] = ns.ATT.InstanceName(e.inst) or false end
+        local who
+        if s[1] == "quest" then who = ns.ATT.QuestName(e.q or s[2]) or (ns.lang == "en" and "quest" or "quête")
+        else
+          if bnames[s[2]] == nil then bnames[s[2]] = ns.ATT.NpcName(s[2]) or false end
+          who = bnames[s[2]] or nil
+          if not who then partial = true; who = "?" end
+        end
+        local inst = db.instances[e.inst]
+        list[#list + 1] = { id = id, dungeon = dnames[e.inst] or "?", boss = who, quest = s[1] == "quest" or nil,
+                            level = e.lvl or (inst and inst[4] ~= 0 and inst[4]) or nil,
+                            faction = (e.r == 1 and "Horde") or (e.r == 2 and "Alliance") or nil, inst = e.inst }
+      end
+    end
+  end
+  srcCache = { list = list, partial = partial, t = GetTime() }
+  return list
+end
+ns.SourceItems = SourceItems
+
 function ns.DJItems()
   local fdj = ns.DJ()
-  if not fdj then return {} end
+  if not fdj then return SourceItems() end
   if djCache and djCache.src == fdj.DB then return djCache.list end
   local list = {}
   for key, d in pairs(fdj.DB) do

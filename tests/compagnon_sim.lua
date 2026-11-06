@@ -296,6 +296,12 @@ check(root.mods.ForeverLoot.HasPlace(272406) and root.mods.ForeverLoot.GoTo(2724
       "Équipement : clic droit sur l'anneau de canaliste, flèche vers son vendeur")
 nav.Clear()
 
+-- sans DungeonJournal : butin des donjons tiré des sources intégrées
+local djl = root.mods.ForeverLoot.DJItems()
+local scholo
+for _, it in ipairs(djl) do if it.id == 16693 then scholo = it end end
+check(#djl > 500 and scholo and scholo.inst == 246 and scholo.level, "butin des donjons sans DungeonJournal : " .. #djl .. " objets (Collerette de dévot : Scholomance)")
+
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 
