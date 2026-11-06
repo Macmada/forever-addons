@@ -210,7 +210,7 @@ local COMMON = {
   ["BarSort~f~1"] = { RAIDORDER = 3, SUBORDER = 5, SUBPF = "true" },                              -- par groupe, puis rôle
   ["BarVisibility~f~1"] = { ALERTIC = 0.9, ALERTOC = 0.8 },                                       -- alerte sous 90 % en combat
   ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true" },        -- icône de rôle (HealBot la met à la place de celle de classe)
-  ["General~t"] = { HIDEPARTYF = "true", HIDERAIDF = "true" },       -- cadres de groupe et de raid de Blizzard masqués
+  ["General~t"] = { HIDEPARTYF = "false", HIDERAIDF = "false" },     -- cadres de Blizzard gardés (secours si HealBot plante)
 }
 local function With(extra)
   local t = {}

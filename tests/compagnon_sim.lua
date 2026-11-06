@@ -514,8 +514,8 @@ do
         and g:find("HEIGHT=13", 1, true) and g:find("SHOWROLE=\"true\"", 1, true) and g:find("IGNOREONFULL=\"true\"", 1, true),
         "skin : vie manquante, rôles, autres réglages intacts (AHEIGHT, HEIGHT)")
   check(g and g:find('Icons~f~1!{RCEN="true",SHOWCLASS="true",SHOWROLE="true"}', 1, true)
-        and g:find('General~t!{OFREQ=0.07,HIDEPARTYF="true",HIDERAIDF="true"}', 1, true), "skin : icône de rôle, cadres de Blizzard masqués")
-  check(blizz == 1, "HealBot relit les cadres de Blizzard à masquer")
+        and g:find('General~t!{OFREQ=0.07,HIDEPARTYF="false",HIDERAIDF="false"}', 1, true), "skin : icône de rôle, cadres de Blizzard gardés en secours")
+  check(blizz == 1, "HealBot relit les cadres de Blizzard à afficher")
   check(g and g:find("HealBar~f~1!{HEIGHT=36,GRPCOLS=\"false\",WIDTH=120}", 1, true) and g:find("HealBar~d!2~3~", 1, true), "skin groupe : barres 120×36")
   check(r and r:find("WIDTH=85", 1, true) and r:find("GRPCOLS=\"true\"", 1, true) and r:find("NAME=\"Pets\"", 1, true)
         and r:find("STATE=\"false\"", 1, true) and r:find("SUBORDER=5", 1, true), "skin raid : colonnes par groupe, sans familiers, tri par rôle")

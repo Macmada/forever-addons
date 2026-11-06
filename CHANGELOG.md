@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v3.4.3 (ForeverCompagnon 3.4.3)
+- **Cadres de groupe et de raid de Blizzard gardés** à côté d'HealBot, en secours si HealBot a un souci (à ta demande). Reclique sur « Configurer HealBot » pour les faire revenir.
+
 ## v3.4.2 (ForeverCompagnon 3.4.2), d'après ta capture
 - **Skins HealBot : icône de rôle** (soigneur, tank, dégâts) sur chaque barre : HealBot ne la montre qu'à la place de l'icône de classe, qui était coupée dans ses skins d'origine.
 - **Cadre de groupe de Blizzard masqué** dès la configuration (HealBot ne relisait ce réglage qu'au changement de groupe).
