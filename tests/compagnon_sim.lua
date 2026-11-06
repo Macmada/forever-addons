@@ -343,6 +343,30 @@ check(root.mods.ForeverMetiers.Price(2589) == 15, "Métiers : prix relevé par F
 check(root.mods.ForeverPrep.Price(2589, true) == 15, "Préparation : prix de l'hôtel des ventes relevé")
 _G.C_AuctionHouse, _G.AuctionHouseFrame = nil, nil
 
+-- cadre « Flash » pour un soigneur : lignes de la partie Soins, avec leur icône et le résultat sur les soins
+local heal2 = root.mods.ForeverHeal
+heal2.db.announce, heal2.db.announceWhere = true, "screen"
+local A = heal2.Snapshot()
+local B = {}
+for k, v in pairs(A) do B[k] = v end
+B.sta, B.int, B.res = A.sta + 10, A.int + 6, A.res
+root.Flash.lastItem = "|cff0070dd|Hitem:6948|h[Robe de l'essai]|h|r"
+heal2.Announce(A, B)
+local fl = root.Flash.last
+check(ForeverCompagnonFlash:IsShown() and fl and fl.rows[1][1] == "sta" and fl.rows[2][1] == "int", "soigneur : cadre Flash avec Endurance et Intelligence")
+check(fl.item and fl.item:find("Robe de l'essai", 1, true), "soigneur : objet équipé affiché dans le cadre")
+check(ForeverCompagnonFlash.rows[1].value:GetText():find("+10", 1, true) and ForeverCompagnonFlash.rows[1].detail:GetText() ~= "",
+      "ligne : valeur en grand, effet en petit dessous")
+SlashCmdList.FOREVERCOMPAGNON("flash")
+check(root.db.flash == false, "/fp flash : cadre désactivé")
+ForeverCompagnonFlash:Hide()
+root.Flash.Show({ rows = { { "sta", "+1 Endurance" } } })
+check(not ForeverCompagnonFlash:IsShown(), "désactivé : rien ne s'affiche")
+SlashCmdList.FOREVERCOMPAGNON("flash")
+SlashCmdList.FOREVERCOMPAGNON("flash test")
+check(ForeverCompagnonFlash:IsShown(), "/fp flash test : aperçu du cadre")
+ForeverCompagnonFlash:Hide()
+
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 

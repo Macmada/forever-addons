@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.3.0 : cadre des changements de caractéristiques (ForeverCompagnon 3.3.0)
+- **Nouveau cadre « Flash »**, pour toutes les classes : quand tu équipes un objet hors combat, un cadre doré apparaît **à côté de ton personnage** (contre ta fiche personnage si elle est ouverte) : l'objet équipé (icône à la couleur de sa qualité), une ligne par caractéristique avec son icône, la valeur en vert ou en rouge en grand et ce qu'elle change dessous, le résultat sur tes soins pour un soigneur. Effets : éclat d'étoile, lignes qui glissent l'une après l'autre, valeurs qui montent au-dessus de ta tête comme du texte de combat, son de butin. Remplace l'ancien texte en haut de l'écran (le choix « dans la discussion » de `/fheal chat` reste).
+- `/fp flash` : active ou coupe ; `/fp flash test` : aperçu. Survol pour le garder, clic pour le fermer, Maj+glisser pour le déplacer.
+- Classes sans partie Soins : relevé générique (Force, Agilité, Endurance, Intelligence, Esprit, puissance d'attaque et des sorts, soins, critique, armure, PV et mana max).
+
 ## v3.2.0 : ForeverCompagnon autonome (ForeverCompagnon 3.2.0)
 - **Plus besoin d'autres addons.** La base WoW Forever d'**All The Things** (licence MIT, texte de la licence joint) est **incluse** : où obtenir ~13 000 objets (boss et donjon, PNJ, vendeur et prix, quête, zone et coordonnées, faction, réputation) et les recettes de tous les métiers. Régénérée avant chaque version (`tools/update-att-data.sh`, extracteur `tools/att_extract.lua` qui lit la base d'ATT dans un bac à sable). Noms demandés au jeu, dans ta langue, et retenus.
 - **Butin des donjons** sans DungeonJournal : tiré de la même base (1 634 objets).

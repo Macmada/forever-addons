@@ -50,35 +50,40 @@ local function IsPriest() return ns.Data.classes[select(2, UnitClass("player"))]
 -- Lignes « +45 Endurance » +450 PV » pour un écart de caractéristiques
 ----------------------------------------------------------------------
 function ns.ConversionLines(d, S, rates, mix)
-  local lines = {}
+  local lines, keys = {}, {}
+  lines.keys = keys                       -- caractéristique de chaque ligne (icônes du cadre « Flash »)
   local priest = IsPriest()
   local main = mix and mix[1] and mix[1].spell
-  if (d.sta or 0) ~= 0 then lines[#lines + 1] = string.format(L.conv_sta, Signed(d.sta), Signed(d.sta * rates.hpPerSta)) end
+  if (d.sta or 0) ~= 0 then lines[#lines + 1] = string.format(L.conv_sta, Signed(d.sta), Signed(d.sta * rates.hpPerSta)); keys[#lines] = "sta" end
   if (d.int or 0) ~= 0 and priest then
     lines[#lines + 1] = string.format(L.conv_int, Signed(d.int), Signed(d.int * rates.manaPerInt), Signed(d.int / rates.intPerCrit, 2))
+    keys[#lines] = "int"
   end
   if (d.spi or 0) ~= 0 and priest then
     local out = d.spi * rates.regenPerSpi
     local inC = out * rates.castFrac
     lines[#lines + 1] = string.format(L.conv_spi, Signed(d.spi), Signed(out, 2),
       math.abs(inC) >= 0.005 and string.format(L.conv_spiIn, Signed(inC, 2)) or "")
+    keys[#lines] = "spi"
   end
   if (d.heal or 0) ~= 0 and priest and main then
     lines[#lines + 1] = string.format(L.conv_heal, Signed(d.heal), Signed(d.heal * main.coef * main.mult * main.targets), main.name)
+    keys[#lines] = "heal"
   end
-  if (d.mp5 or 0) ~= 0 and priest then lines[#lines + 1] = string.format(L.conv_mp5, Signed(d.mp5), Signed(d.mp5 / 5, 2)) end
-  if (d.crit or 0) ~= 0 and priest then lines[#lines + 1] = string.format(L.conv_crit, Signed(d.crit, 1)) end
-  if (d.hp or 0) ~= 0 then lines[#lines + 1] = string.format(L.conv_hp, Signed(d.hp)) end
-  if (d.mana or 0) ~= 0 then lines[#lines + 1] = string.format(L.conv_mana, Signed(d.mana)) end
+  if (d.mp5 or 0) ~= 0 and priest then lines[#lines + 1] = string.format(L.conv_mp5, Signed(d.mp5), Signed(d.mp5 / 5, 2)); keys[#lines] = "mp5" end
+  if (d.crit or 0) ~= 0 and priest then lines[#lines + 1] = string.format(L.conv_crit, Signed(d.crit, 1)); keys[#lines] = "crit" end
+  if (d.hp or 0) ~= 0 then lines[#lines + 1] = string.format(L.conv_hp, Signed(d.hp)); keys[#lines] = "hp" end
+  if (d.mana or 0) ~= 0 then lines[#lines + 1] = string.format(L.conv_mana, Signed(d.mana)); keys[#lines] = "mana" end
   if (d.armor or 0) ~= 0 then
     local lvl = S.level or 60
     local before = S.armor / (S.armor + 400 + 85 * lvl)
     local after = (S.armor + d.armor) / (S.armor + d.armor + 400 + 85 * lvl)
     lines[#lines + 1] = string.format(L.conv_armor, Signed(d.armor), Signed(-(after - before) * 100, 1, true))
+    keys[#lines] = "armor"
   end
   for s = 2, 6 do
     local v = d.res and d.res[s] or 0
-    if v ~= 0 then lines[#lines + 1] = string.format(L.conv_res, Signed(v), L["res" .. s]) end
+    if v ~= 0 then lines[#lines + 1] = string.format(L.conv_res, Signed(v), L["res" .. s]); keys[#lines] = "res" end
   end
   return lines
 end
@@ -199,6 +204,16 @@ function ns.Announce(a, b)
   local mix = ns.Mix()
   local lines = ns.ConversionLines(d, a, rates, mix)
   local res = ns.ResultLine(ns.Metrics(a, mix), ns.Metrics(b, mix))
+  local flash = ns.root and ns.root.Flash
+  if ns.db.announceWhere ~= "chat" and flash and #lines > 0 then
+    -- cadre « Flash » de ForeverCompagnon : à côté du personnage, une ligne par caractéristique, résultat sur tes soins
+    local rows = {}
+    for i, l in ipairs(lines) do rows[#rows + 1] = { lines.keys[i] or "result", l } end
+    flash.Show({ item = flash.lastItem, rows = rows, result = res })
+    ns.lastAnnounce = lines
+    if res then lines[#lines + 1] = res end
+    return
+  end
   if res then lines[#lines + 1] = res end
   if #lines == 0 then return end
   if ns.db.announceWhere == "chat" then

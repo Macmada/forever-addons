@@ -213,6 +213,12 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
                 prof = "metiers", addons = "addons", addon = "addons" }
   local way = raw:match("^[Ww][Aa][Yy]%s*(.*)$")
   if way then root.Nav.Command(way)
+  elseif msg == "flash" or msg == "annonce" then
+    root.db.flash = (root.db.flash == false)
+    root.Print(root.db.flash and L.flash_on or L.flash_off)
+  elseif msg == "flash test" or msg == "annonce test" then
+    root.Flash.Show({ item = GetInventoryItemLink("player", 5), rows = { { "sta", "+12 " .. L.flash_sta .. " » " .. string.format(L.flash_staHp, "+120") },
+      { "int", "+8 " .. L.flash_int .. " » " .. string.format(L.flash_intMana, "+120") }, { "armor", "-15 " .. L.flash_armor } } })
   elseif map[msg] then root.Open(map[msg])
   elseif msg == "test" then root.RunTests()
   elseif msg == "sonde" or msg == "probe" then root.ShowProbe()

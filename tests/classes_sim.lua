@@ -80,6 +80,21 @@ for _, faction in ipairs({ "Alliance", "Horde" }) do
     for _, key in ipairs({ "loot", "prep", "metiers", "addons" }) do root.Open(key) end
     if class == "PRIEST" then root.Open("heal") end
     check(#root.mods.ForeverMetiers.LevelLines() > 1, "Métiers : métiers conseillés pour la classe")
+    -- cadre « Flash » : un objet équipé change les caractéristiques (relevé générique, ou partie Soins pour un soigneur)
+    local bonus = 0
+    _G.UnitStat = function(_, i) return 20, 20 + i + (i == 3 and bonus or 0) end
+    _G.GetInventoryItemLink = function(_, slot) return slot == 5 and "|cff1eff00|Hitem:6948|h[Robe]|h|r" or nil end
+    W.run(3)
+    bonus = 12
+    W.fire("PLAYER_EQUIPMENT_CHANGED", 5)
+    W.fire("UNIT_INVENTORY_CHANGED", "player")
+    W.run(3)
+    if not HEALERS[class] then
+      check(ForeverCompagnonFlash and ForeverCompagnonFlash:IsShown(), "cadre Flash affiché après un changement d'équipement")
+      local rows = root.Flash.last and root.Flash.last.rows or {}
+      check(rows[1] and rows[1][1] == "sta" and rows[1][2]:find("+12", 1, true), "Flash : +12 Endurance (" .. tostring(rows[1] and rows[1][2]) .. ")")
+      check(root.Flash.last.item and root.Flash.last.item:find("Robe", 1, true), "Flash : objet équipé affiché")
+    end
     local report = root.TestReport()
     check(not report:find("erreur :", 1, true), "auto-test sans erreur Lua :\n" .. report)
     n = n + 1
