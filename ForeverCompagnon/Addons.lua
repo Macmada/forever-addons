@@ -31,8 +31,8 @@ root.ADDONS = {
               or "An arrow to the vendor when you click \"Guide me\" (Preparation)." },
   { key = "healbot", name = "HealBot Continued", match = { "healbot" }, used = true, healer = true,
     icon = "Interface\\Icons\\Spell_Holy_FlashHeal", url = "https://www.curseforge.com/wow/addons/heal-bot-continued",
-    what = FR and "Cadres de soins au clic ; l'onglet Soins dit quel rang de sort y mettre."
-              or "Click-to-heal frames; the Healing tab tells you which spell rank to put in it." },
+    what = FR and "Cadres de soins au clic. Clique sur la ligne puis « Configurer HealBot » : clics du prêtre et cadres de groupe/raid réglés pour toi."
+              or "Click-to-heal frames. Click the line, then \"Set up HealBot\": priest clicks and party/raid frames set for you." },
   { key = "questie", name = "Questie", match = { "questie" }, global = "Questie",
     icon = "Interface\\Icons\\INV_Misc_Note_02", url = "https://www.curseforge.com/wow/addons/questie",
     what = FR and "Quêtes sur la carte et la minicarte (version WoW Forever)."
@@ -104,6 +104,8 @@ function root.SelectAddon(e, st, folder)
   ui.url:HighlightText()
   ui.urlLabel:SetText(string.format(L.addonUrlFor, e.name))
   ui.enable:SetShown(st == "off" and folder ~= nil and A.EnableAddOn ~= nil)
+  local _, class = UnitClass("player")
+  ui.healbot:SetShown(e.key == "healbot" and st == "on" and class == "PRIEST")
 end
 
 function root.RefreshAddons()
@@ -155,6 +157,18 @@ local function Create()
     root.Print(L.addonEnabled, s.e.name)
     ui.enable:Hide()
   end)
+  ui.healbot = CreateFrame("Button", nil, ui, "UIPanelButtonTemplate")
+  ui.healbot:SetSize(140, 22)
+  ui.healbot:SetPoint("BOTTOMRIGHT", -20, 20)
+  ui.healbot:SetText(root.HealBot and root.HealBot.T.button or "HealBot")
+  ui.healbot:Hide()
+  ui.healbot:SetScript("OnClick", function() root.HealBot.Setup() end)
+  ui.healbot:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText(root.HealBot.T.buttonTip, 1, 1, 1, 1, true)
+    GameTooltip:Show()
+  end)
+  ui.healbot:SetScript("OnLeave", function() GameTooltip:Hide() end)
   ui:SetScript("OnShow", function() root.RefreshAddons() end)
   return ui
 end

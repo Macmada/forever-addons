@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v3.4.0 (ForeverCompagnon 3.4.0) : HealBot réglé pour le prêtre
+- **Configurer HealBot** (onglet Addons, ligne HealBot, ou `/fp healbot`) : ForeverCompagnon règle HealBot Continued avec les fonctions d'HealBot lui-même.
+  - **Clics** d'après tes sorts : gauche = gros soin efficace (Soins inférieurs, puis Soins dès le niveau 16, Soins supérieurs au 40) ; Maj+gauche = soin rapide (Soins inférieurs rang 2 avant le niveau 16, Soins inférieurs ensuite, Soins rapides dès le 20) ; droit = Rénovation ; Maj+droit = Bouclier ; Ctrl+droit = Prière de soins ; milieu = Guérison des maladies (Abolir la maladie) ; Maj+milieu = Dissipation de la magie ; Ctrl+gauche = Résurrection ; Alt+gauche = Robustesse. Sans rang, HealBot lance toujours le rang le plus haut.
+  - **Nouveau sort appris** : les clics posés par ForeverCompagnon sont mis à jour tout seuls (jamais en combat) ; un clic que tu as changé toi-même n'est plus touché.
+  - **Cadres** : deux skins importés par la fonction d'import d'HealBot, tirés de ses skins « Groupe » et « Raid 40 » : « Forever Groupe » (seul et en groupe, barres 120×36) et « Forever Raid » (raid de 10 à 40, une colonne par groupe, sans familiers). Vie **manquante** affichée (« -432 »), rôles, tri par groupe puis rôle, alerte sous 90 % en combat. HealBot passe tout seul de l'un à l'autre.
+  - **Sauvegarde** : tes clics et ton choix de skins d'avant sont gardés ; `/fp healbot annuler` les remet. `/fp healbot voir` liste les clics prévus.
+
 ## v3.3.4 (ForeverCompagnon 3.3.4 / ForeverGazette 1.7.2) : noms secrets en donjon
 - **Erreur au butin en donjon** (« Loot/Core.lua:174: attempted to index a table that cannot be indexed with secret keys », Les Mortemines) : en donjon, le jeu rend la cible secrète (nom, classement, niveau). Le butin est maintenant rangé sous le boss de la rencontre terminée, et aucune valeur secrète n'est jamais prise comme clé ni comparée.
 - Même protection, par précaution, dans la Gazette (ennemis notables, fin de rencontre, compagnons de groupe), la Préparation (membres du groupe sans un buff) et la mémoire des marchands. Nouvelle fonction commune `ns.Clear` (valeur utilisable ou rien).

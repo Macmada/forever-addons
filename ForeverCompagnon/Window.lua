@@ -212,7 +212,9 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
                 gear = "loot", loot = "loot", prepa = "prep", ["prépa"] = "prep", prep = "prep", metiers = "metiers", ["métiers"] = "metiers",
                 prof = "metiers", addons = "addons", addon = "addons" }
   local way = raw:match("^[Ww][Aa][Yy]%s*(.*)$")
+  local hb = msg:match("^healbot%s*(.*)$")
   if way then root.Nav.Command(way)
+  elseif hb then root.HealBot.Command(hb)
   elseif msg == "flash" or msg == "annonce" then
     root.db.flash = (root.db.flash == false)
     root.Print(root.db.flash and L.flash_on or L.flash_off)
