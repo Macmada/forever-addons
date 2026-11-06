@@ -51,6 +51,14 @@ function G.ItemID(link)
   return id or tonumber(tostring(link):match("item:(%d+)"))
 end
 
+-- Nombre d'exemplaires (sacs, ou sacs + banque) : C_Item.GetItemCount sur Forever (GetItemCount absent)
+function G.ItemCount(id, includeBank)
+  local f = Pick("itemCount", "C_Item.GetItemCount", "GetItemCount")
+  if not f then return 0 end
+  local ok, n = pcall(f, id, includeBank)
+  return ok and n or 0
+end
+
 function G.SpellName(id)
   local f = Pick("spellName", "C_Spell.GetSpellName", "GetSpellInfo")
   if f then return (f(id)) end

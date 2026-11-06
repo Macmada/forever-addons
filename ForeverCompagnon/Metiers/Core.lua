@@ -411,10 +411,15 @@ end
 -- Comptes et prix (Syndicator, Auctionator : facultatifs)
 ----------------------------------------------------------------------
 function ns.Count(id)
-  local bags = GetItemCount and GetItemCount(id) or 0
-  local all = GetItemCount and GetItemCount(id, true) or bags
+  local G = ns.Game
+  local bags = G and G.ItemCount(id) or (GetItemCount and GetItemCount(id)) or 0
+  local all = G and G.ItemCount(id, true) or (GetItemCount and GetItemCount(id, true)) or bags
   local alts = 0
   local S = _G.Syndicator
+  if not (S and S.API) and ns.root and ns.root.Store then          -- sans Syndicator : inventaire retenu par ForeverCompagnon
+    local b, bank, a = ns.root.Store.Count(id)
+    return b, bank, a
+  end
   if S and S.API and S.API.GetInventoryInfoByItemID and (not S.API.IsReady or S.API.IsReady()) then
     local ok, info = pcall(S.API.GetInventoryInfoByItemID, id, true, false)
     if ok and type(info) == "table" then
@@ -431,7 +436,9 @@ end
 function ns.Price(id)
   local A = _G.Auctionator
   local api = A and A.API and A.API.v1
-  if not api then return nil end
+  if not api then                                                    -- sans Auctionator : prix relevés par ForeverCompagnon
+    return ns.root and ns.root.Store and ns.root.Store.Price(id) or nil
+  end
   if D.vendorMats[id] and api.GetVendorPriceByItemID then
     local ok, p = pcall(api.GetVendorPriceByItemID, ADDON, id)
     if ok and p then return p end

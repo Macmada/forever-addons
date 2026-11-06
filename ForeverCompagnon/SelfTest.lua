@@ -57,6 +57,30 @@ root.Test("Jeu", "sauvegardes relues d'une connexion à l'autre", function()
   if n <= 1 then return nil, "premier chargement : refais /fp test après un /reload (si ça reste à 1, le client ne relit pas les sauvegardes)" end
   return true, n .. " chargements comptés : les réglages sont bien relus"
 end)
+root.Test("Intégré", "sources (base All The Things incluse)", function()
+  local db = root.Sources
+  if not db then return false, "Data/Sources.lua absent" end
+  local n = 0
+  for _ in pairs(db.items) do n = n + 1 end
+  local npc = root.mods.ForeverLoot and root.mods.ForeverLoot.ATT and root.mods.ForeverLoot.ATT.NpcName(1853)
+  return n > 1000, n .. " objets (révision " .. tostring(db.rev) .. ") ; nom d'un PNJ demandé au jeu : " .. tostring(npc or "pas encore connu")
+end)
+root.Test("Intégré", "flèche de navigation", function()
+  local pc = root.Nav.Player()
+  local facing = GetPlayerFacing and GetPlayerFacing()
+  if IsInInstance() then return nil, "en donjon, le jeu cache la position : refais le test dehors" end
+  if not pc then return false, "position du joueur illisible (C_Map)" end
+  if not facing or (issecretvalue and issecretvalue(facing)) then return false, "orientation illisible (GetPlayerFacing)" end
+  return true, "position et orientation lues"
+end)
+root.Test("Intégré", "inventaire et prix retenus", function()
+  local db = root.db or {}
+  local chars, prices = 0, 0
+  for _ in pairs(db.inv or {}) do chars = chars + 1 end
+  for _, p in pairs(db.prices or {}) do for _ in pairs(p) do prices = prices + 1 end end
+  return chars > 0, chars .. " personnage(s) retenu(s) ; " .. prices .. " prix relevés"
+      .. (db.lastScan and (" (relevé du " .. date("%d/%m %H:%M", db.lastScan) .. ")") or " (clique « Relever les prix » à l'hôtel des ventes)")
+end)
 root.Test("Jeu", "addons de données", function()
   -- par dossier, titre ou variable globale (le dossier de DungeonJournal ne s'appelle pas ainsi : « non » à tort en 3.0.0)
   local list = {}

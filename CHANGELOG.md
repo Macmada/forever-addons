@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v3.2.0 : ForeverCompagnon autonome (ForeverCompagnon 3.2.0)
+- **Plus besoin d'autres addons.** La base WoW Forever d'**All The Things** (licence MIT, texte de la licence joint) est **incluse** : où obtenir ~13 000 objets (boss et donjon, PNJ, vendeur et prix, quête, zone et coordonnées, faction, réputation) et les recettes de tous les métiers. Régénérée avant chaque version (`tools/update-att-data.sh`, extracteur `tools/att_extract.lua` qui lit la base d'ATT dans un bac à sable). Noms demandés au jeu, dans ta langue, et retenus.
+- **Butin des donjons** sans DungeonJournal : tiré de la même base (1 634 objets).
+- **Flèche de navigation intégrée** (à la TomTom) : « Guide-moi » (Préparation) pointe la flèche vers le vendeur le plus proche ; **clic droit** sur un objet (Équipement) ou une recette (Métiers) : flèche vers le lieu le plus proche où l'obtenir ; `/fp way x y [nom]` et `/way` (si TomTom n'est pas là). Distance, temps à pied, arrivée ; repère du jeu sur la carte.
+- **Prix** : bouton « Relever les prix » sur l'hôtel des ventes (relevé complet du jeu, une fois toutes les 15 minutes) ; utilisés par la Préparation et les Métiers sans Auctionator.
+- **Banque et rerolls** retenus par l'addon (sans Syndicator) : composants comptés partout, objet « chez Machin » signalé.
+- **Corrigé** : les Métiers comptaient 0 composant en sac sur Forever (`GetItemCount` n'existe pas sur ce client).
+- Onglet Addons : All The Things, DungeonJournal, Auctionator, Syndicator et TomTom rangés dans « Intégrés (plus nécessaires) ». Auto-test : sources, flèche, inventaire et prix.
+
 ## v3.1.0 : ForeverCompagnon, toutes classes, races et factions (ForeverCompagnon 3.1.0)
 - **ForeverPrêtre devient ForeverCompagnon** (`/fp`, `/compagnon`) : pour **toutes les classes, races et factions**. L'ancien dossier ForeverPretre devient une coquille vide (supprimable) ; réglages remis à zéro.
 - **Rôle** à choisir sur l'écran Maintenant (tank, soins, dégâts mêlée, dégâts sorts) : le client de Forever ne donne pas les arbres de talents aux addons. Il règle l'Équipement et la Préparation.

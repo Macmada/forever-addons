@@ -380,12 +380,12 @@ local djCache
 -- des noms manquent (le jeu les donne peu à peu).
 local srcCache
 local function SourceItems()
-  local db = ns.root and ns.root.Sources
-  if not (db and ns.ATT) then return {} end
+  local src = ns.root and ns.root.Sources
+  if not (src and ns.ATT) then return {} end
   if srcCache and not (srcCache.partial and GetTime() - srcCache.t > 30) then return srcCache.list end
   local list, partial = {}, false
   local dnames, bnames = {}, {}
-  for id, srcs in pairs(db.items) do
+  for id, srcs in pairs(src.items) do
     for _, s in ipairs(srcs) do
       local e = s[6]
       if e and e.inst and (s[1] == "boss" or s[1] == "drop" or s[1] == "quest") then
@@ -397,7 +397,7 @@ local function SourceItems()
           who = bnames[s[2]] or nil
           if not who then partial = true; who = "?" end
         end
-        local inst = db.instances[e.inst]
+        local inst = src.instances[e.inst]
         list[#list + 1] = { id = id, dungeon = dnames[e.inst] or "?", boss = who, quest = s[1] == "quest" or nil,
                             level = e.lvl or (inst and inst[4] ~= 0 and inst[4]) or nil,
                             faction = (e.r == 1 and "Horde") or (e.r == 2 and "Alliance") or nil, inst = e.inst }
@@ -441,7 +441,9 @@ end
 -- Syndicator : où se trouve un objet (ta banque, ton courrier, tes autres personnages) ; nil si absent
 function ns.Owned(id)
   local S = _G.Syndicator
-  if not (S and S.API and S.API.GetInventoryInfoByItemID) then return nil end
+  if not (S and S.API and S.API.GetInventoryInfoByItemID) then
+    return ns.root and ns.root.Store and ns.root.Store.Owned(id) or nil      -- inventaire retenu par ForeverCompagnon
+  end
   if S.API.IsReady and not S.API.IsReady() then return nil end
   local ok, info = pcall(S.API.GetInventoryInfoByItemID, id, true, false)
   if not ok or type(info) ~= "table" then return nil end

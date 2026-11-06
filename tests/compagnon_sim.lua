@@ -302,6 +302,47 @@ local scholo
 for _, it in ipairs(djl) do if it.id == 16693 then scholo = it end end
 check(#djl > 500 and scholo and scholo.inst == 246 and scholo.level, "butin des donjons sans DungeonJournal : " .. #djl .. " objets (Collerette de dévot : Scholomance)")
 
+-- sans Syndicator ni Auctionator : inventaire (sacs, banque, rerolls) et prix relevés par ForeverCompagnon
+local store = root.Store
+_G.C_Item.GetItemCount = function(id, bank) if id == 2589 then return bank and 25 or 5 end return 0 end
+local BANK = { [-1] = { 2589, 2589 } }
+local realCC = _G.C_Container
+_G.C_Container = setmetatable({
+  GetContainerNumSlots = function(b) if BANK[b] then return #BANK[b] end return realCC.GetContainerNumSlots(b) end,
+  GetContainerItemID = function(b, sl) if BANK[b] then return BANK[b][sl] end return realCC.GetContainerItemID(b, sl) end,
+  GetContainerItemInfo = function(b, sl) if BANK[b] then return { itemID = BANK[b][sl], stackCount = 10 } end
+    local id = realCC.GetContainerItemID(b, sl); return id and { itemID = id, stackCount = 1 } end,
+}, { __index = realCC })
+W.fire("BANKFRAME_OPENED")
+local b, bk, alts = store.Count(2589)
+check(b == 5 and bk == 20 and alts == 0, "banque relevée à l'ouverture : 5 en sacs, 20 en banque")
+root.db.inv["Reroll - Forever"] = { bags = { [2589] = 7 }, bank = { [14047] = 3 } }
+b, bk, alts = store.Count(2589)
+check(alts == 7 and store.Owned(2589):find("Reroll", 1, true), "reroll : 7 étoffes de lin chez Reroll")
+local mb, mbank, malts = root.mods.ForeverMetiers.Count(2589)
+check(mb == 5 and mbank == 20 and malts == 7, "Métiers : composants comptés sans Syndicator (sacs, banque, rerolls)")
+check(root.mods.ForeverLoot.Owned(14047):find("Reroll", 1, true), "Équipement : objet chez un reroll, sans Syndicator")
+_G.C_Container = realCC
+-- hôtel des ventes : bouton, relevé complet, prix unitaire le plus bas
+_G.AuctionHouseFrame = CreateFrame("Frame", "AuctionHouseFrame")
+local replicated = 0
+local AUC = { { 2589, 20, 400 }, { 2589, 10, 150 }, { 14047, 5, 5000 } }      -- objet, quantité, prix d'achat immédiat
+_G.C_AuctionHouse = { ReplicateItems = function() replicated = replicated + 1 end,
+  GetNumReplicateItems = function() return #AUC end,
+  GetReplicateItemInfo = function(i) local a = AUC[i + 1]; return "x", "t", a[2], 1, true, 1, "", 0, 0, a[3], 0, false, nil, "", "", 0, a[1], true end }
+W.fire("AUCTION_HOUSE_SHOW")
+check(ForeverCompagnonScanButton, "hôtel des ventes : bouton « Relever les prix »")
+ForeverCompagnonScanButton.scripts.OnClick()
+check(replicated == 1 and store.scan.running, "relevé demandé au jeu")
+W.fire("REPLICATE_ITEM_LIST_UPDATE")
+W.run(1)
+check(store.Price(2589) == 15 and store.Price(14047) == 1000, "prix unitaire le plus bas : lin 15 pc, étoffe runique 1000 pc")
+ForeverCompagnonScanButton.scripts.OnClick()
+check(replicated == 1, "deuxième relevé refusé avant 15 minutes (limite du jeu)")
+check(root.mods.ForeverMetiers.Price(2589) == 15, "Métiers : prix relevé par ForeverCompagnon sans Auctionator")
+check(root.mods.ForeverPrep.Price(2589, true) == 15, "Préparation : prix de l'hôtel des ventes relevé")
+_G.C_AuctionHouse, _G.AuctionHouseFrame = nil, nil
+
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 

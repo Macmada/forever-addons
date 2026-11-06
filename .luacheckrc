@@ -21,7 +21,7 @@ globals = {
 
 -- API WoW lue (présente sur Forever, TBC Anniversary et retail, ou testée avant usage)
 read_globals = {
-  "UnitPowerPercent", "C_CurveUtil", "CreateColor", "CurveConstants", "CreateVector2D", "UiMapPoint", "C_SuperTrack", "GetPlayerFacing", "C_TooltipInfo", "EJ_GetInstanceInfo", "C_QuestLog",
+  "C_AuctionHouse", "UnitPowerPercent", "C_CurveUtil", "CreateColor", "CurveConstants", "CreateVector2D", "UiMapPoint", "C_SuperTrack", "GetPlayerFacing", "C_TooltipInfo", "EJ_GetInstanceInfo", "C_QuestLog",
   "DisableAddOn", "GetContainerItemID", "PickupContainerItem", "AutoEquipCursorItem", "CursorHasItem",
   "C_AddOns", "C_CVar", "C_Console", "C_Item", "C_Spell", "C_Timer", "ChatFontNormal",
   "ClearCursor", "ConsoleExec", "ConsoleGetAllCommands", "CopyTable", "CreateFrame",

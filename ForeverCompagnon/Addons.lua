@@ -9,23 +9,23 @@ local K = root.Kit
 
 local FR = root.FR
 root.ADDONS = {
-  { key = "att", name = "All The Things", match = { "allthethings" }, global = "ATTC", used = true,
+  { key = "att", builtin = true, name = "All The Things", match = { "allthethings" }, global = "ATTC", used = true,
     icon = "Interface\\Icons\\INV_Misc_Book_11", url = "https://www.curseforge.com/wow/addons/all-the-things",
     what = FR and "Où obtenir chaque objet et chaque recette (PNJ, quête, zone, réputation) : Équipement et Métiers."
               or "Where to get every item and recipe (NPC, quest, zone, reputation): Gear and Professions." },
-  { key = "dj", name = "DungeonJournal", match = { "dungeonjournal", "dungeon journal" }, global = "ForeverDungeonJournal_NS", used = true,
+  { key = "dj", builtin = true, name = "DungeonJournal", match = { "dungeonjournal", "dungeon journal" }, global = "ForeverDungeonJournal_NS", used = true,
     icon = "Interface\\Icons\\INV_Misc_Book_09", url = nil,
     what = FR and "Butin de chaque boss et récompenses de quête des donjons de Forever : l'onglet Équipement s'en sert pour tes améliorations à ton niveau."
               or "Every boss's loot and dungeon quest rewards on Forever: the Gear tab uses it for upgrades at your level." },
-  { key = "auctionator", name = "Auctionator", match = { "auctionator" }, global = "Auctionator", used = true,
+  { key = "auctionator", builtin = true, name = "Auctionator", match = { "auctionator" }, global = "Auctionator", used = true,
     icon = "Interface\\Icons\\INV_Misc_Coin_01", url = "https://www.curseforge.com/wow/addons/auctionator",
     what = FR and "Prix de l'hôtel des ventes : coût des achats (Préparation) et des crafts (Métiers)."
               or "Auction house prices: cost of purchases (Preparation) and crafts (Professions)." },
-  { key = "syndicator", name = "Syndicator", match = { "syndicator" }, global = "Syndicator", used = true,
+  { key = "syndicator", builtin = true, name = "Syndicator", match = { "syndicator" }, global = "Syndicator", used = true,
     icon = "Interface\\Icons\\INV_Misc_Bag_10", url = "https://www.curseforge.com/wow/addons/syndicator",
     what = FR and "Ta banque, ton courrier et tes autres personnages : un objet déjà possédé est signalé, les composants comptés."
               or "Your bank, mail and other characters: items you already own are flagged, reagents counted." },
-  { key = "tomtom", name = "TomTom", match = { "tomtom" }, global = "TomTom", used = true,
+  { key = "tomtom", builtin = true, name = "TomTom", match = { "tomtom" }, global = "TomTom", used = true,
     icon = "Interface\\Icons\\INV_Misc_Map_01", url = "https://www.curseforge.com/wow/addons/tomtom",
     what = FR and "Une flèche vers le vendeur quand tu cliques « Guide-moi » (Préparation)."
               or "An arrow to the vendor when you click \"Guide me\" (Preparation)." },
@@ -76,17 +76,18 @@ end
 
 function root.AddonLines()
   local lines = { { kind = "info", text = "|cffd8c8a0" .. L.addonsIntro .. "|r" } }
-  local groups = { { title = L.addonsUsed, used = true }, { title = L.addonsMore, used = false } }
+  -- remplacés par ForeverCompagnon (facultatifs : utilisés en plus s'ils sont là), puis utiles en complément
+  local groups = { { title = L.addonsBuiltin, builtin = true }, { title = L.addonsMore, builtin = false } }
   for _, g in ipairs(groups) do
-    lines[#lines + 1] = { kind = "head", icon = g.used and "Interface\\Icons\\Spell_Holy_PowerWordShield" or "Interface\\Icons\\INV_Misc_Gift_01",
+    lines[#lines + 1] = { kind = "head", icon = g.builtin and "Interface\\Icons\\INV_Misc_Book_09" or "Interface\\Icons\\INV_Misc_Gift_01",
                           title = g.title, text = g.title }
     for _, e in ipairs(root.ADDONS) do
-      if (e.used and true or false) == g.used and Recommended(e) then
+      if (e.builtin and true or false) == g.builtin and Recommended(e) then
         local st, folder = root.AddonStatus(e)
         local tag = (st == "on" and ("|cff40d860" .. L.addonOn .. "|r")) or (st == "off" and ("|cffffc860" .. L.addonOff .. "|r"))
                     or ("|cffa0a0a0" .. L.addonAbsent .. "|r")
         lines[#lines + 1] = { kind = "card", icon = e.icon, quality = st == "on" and 2 or (st == "off" and 1 or 0), name = e.name,
-                              source = e.what, gain = tag, gainSub = st == "absent" and L.addonClick or (st == "off" and L.addonEnable or nil),
+                              source = e.builtin and (e.what .. "\n|cff40d860" .. L["builtin_" .. e.key] .. "|r") or e.what, gain = tag, gainSub = st == "absent" and L.addonClick or (st == "off" and L.addonEnable or nil),
                               onClick = function() root.SelectAddon(e, st, folder) end }
       end
     end

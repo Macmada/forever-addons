@@ -14,7 +14,7 @@ return function(name, root)
     root = {}
     for _, f in ipairs(tocFiles()) do
       local dir = f:match("^(%w+)\\")
-      if not dir and f ~= "Root.lua" and f ~= "Compat.lua" and f ~= "Nav.lua" then break end
+      if not dir and f ~= "Root.lua" and f ~= "Compat.lua" and f ~= "Nav.lua" and f ~= "Store.lua" then break end
       if dir == nil or dir == "Shared" or dir == "Data" then run(f, root) end
     end
   end

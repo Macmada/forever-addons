@@ -184,6 +184,8 @@ function ns.Price(id, ah)
       if ok and p and p > 0 then return p end
     end
   end
+  local own = ns.root and ns.root.Store and ns.root.Store.Price(id)      -- relevé de ForeverCompagnon à l'hôtel des ventes
+  if own and ah then return own end
   if not ah then
     local sell = select(11, ((C_Item and C_Item.GetItemInfo) or GetItemInfo)(id))
     if sell and sell > 0 then return sell * 4, true end
