@@ -88,8 +88,6 @@ ns.KnownCommands = Set({
   "/startattack", "/swapactionbar", "/changeactionbar", "/stopspelltarget", "/cancelqueuedspell",
 })
 
-ns.ChatCommands = Set({ "/say", "/s", "/yell", "/y", "/guild", "/g", "/officer", "/o" })
-ns.MarkerCommands = Set({ "/targetmarker", "/tm" })
 
 ns.KnownConditions = Set({
   "target", "mod", "modifier", "harm", "help", "exists", "dead", "combat", "mounted", "flying",

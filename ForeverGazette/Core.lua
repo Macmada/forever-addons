@@ -95,9 +95,7 @@ function ns.MaxLevel()
     local ok, v = pcall(GetMaxPlayerLevel)
     if ok and v and v > 0 then return v end
   end
-  local iface = select(4, GetBuildInfo())
-  if iface < 20000 then return 60 elseif iface < 30000 then return 70 end
-  return 80
+  return 60                                   -- WoW Forever
 end
 
 local function Group(flags) return flags and bband(flags, AFFIL_GROUP) ~= 0 end

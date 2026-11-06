@@ -1,6 +1,7 @@
 # Journal des versions
 
-## v3.0.3 (ForeverPretre 3.0.3 / ForeverGazette 1.7.1) : relevé de forever-addon-kit
+## v3.0.3 (ForeverPretre 3.0.3 / ForeverGazette 1.7.1 / ForeverMacros 1.9.0) : WoW Forever seulement, relevé de forever-addon-kit
+- **WoW Forever seulement** : TBC Anniversary et le retail ne sont plus pris en charge. Tous les `.toc` en `## Interface: 16000, 16001`, WowUp ne propose plus les addons que pour Forever, macros prêtes du retail (`LibraryRetail.lua`) et branches propres à TBC/retail retirées (ForeverMacros, ForeverGazette).
 - **Contrôle automatique de l'API** (`tools/forever_api_check.py`, à chaque push) : tout appel à une fonction absente du client de WoW Forever sans solution de repli, ou à une fonction interdite aux addons (`ReloadUI`), est refusé. Référence : la liste complète de l'API du client (6 045 fonctions, 269 espaces de noms) relevée par Thunderz dans [forever-addon-kit](https://github.com/Thunderz96/forever-addon-kit) (MIT), copiée dans `tests/data/forever_api.json`. Premier passage : aucun appel dangereux, quelques protections rendues explicites.
 - **Gazette : bouton PDF** : `ReloadUI()` est interdit aux addons sur Forever (le bouton déclenchait « action bloquée »). Sur Forever, la gazette est préparée et un message dit de taper `/reload` ; sur TBC, rien ne change.
 - **Auto-test : sauvegardes relues ?** Le kit a montré qu'en bêta le client ne relisait jamais les sauvegardes des addons ; une nouvelle ligne de `/fp test` le vérifie sur ton client (à refaire après un `/reload`).

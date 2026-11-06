@@ -6,13 +6,6 @@ local MAX_CHAR = MAX_CHARACTER_MACROS or 18
 local QUESTION_ICON = 134400 -- point d'interrogation : icône dynamique avec #showtooltip
 
 local db, ui
-local interface = select(4, GetBuildInfo()) or 0
-ns.isTBC = interface >= 20000 and interface < 30000
--- Retail (Dragonflight et après) : interface >= 100000. Forever (1.x) et TBC Anniversary (2.x) sont des clients classiques.
-ns.isRetail = interface >= 100000
-if ns.isRetail then
-  ns.Library, ns.LibraryOrder = ns.LibraryRetail, ns.LibraryRetailOrder
-end
 local st = { editIndex = nil, perChar = false }
 
 ----------------------------------------------------------------------
@@ -262,11 +255,6 @@ function ns.Validate(body)
             end
           end
         end
-      end
-      -- Limites propres aux clients récents (Midnight) : sans objet sur Forever et TBC Anniversary
-      if ns.isRetail then
-        if ns.MarkerCommands[cmd] then infos[#infos + 1] = string.format(L.infoMarker, n) end
-        if ns.ChatCommands[cmd] then infos[#infos + 1] = string.format(L.infoChat, n) end
       end
     end
   end
@@ -1384,8 +1372,7 @@ end)
 ----------------------------------------------------------------------
 function ns.DiagCollect(add)
   local _, myClass = UnitClass("player")
-  local lib = ns.isRetail and ns.LibraryRetail or ns.Library
-  local order = (lib == ns.LibraryRetail) and ns.LibraryRetailOrder or ns.LibraryOrder
+  local lib, order = ns.Library, ns.LibraryOrder
   add("")
   add("## Sorts utilisés par les macros prêtes")
   for _, cls in ipairs(order or {}) do

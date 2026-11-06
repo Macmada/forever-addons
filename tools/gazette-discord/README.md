@@ -20,7 +20,7 @@ dans sa sauvegarde (`WTF\Account\<compte>\<royaume>\<personnage>\SavedVariables\
 2. Installe Pillow (pour le PDF et l'image) : `python -m pip install pillow`
 3. Mets le dossier `gazette-discord` où tu veux (par ex. `Documents\gazette-discord`).
 4. Copie `gazette_discord.example.ini` en `gazette_discord.ini` et remplis au moins `wow_dirs` : le dossier du client qui
-   contient `WTF` et `Screenshots`, par ex. `C:\Program Files (x86)\World of Warcraft\_anniversary_` (plusieurs dossiers
+   contient `WTF` et `Screenshots`, celui de WoW Forever (plusieurs dossiers
    séparés par `;`).
 5. Facultatif, Discord : **Paramètres du salon → Intégrations → Webhooks → Nouveau webhook → Copier l'URL**, à mettre dans
    `webhook`.

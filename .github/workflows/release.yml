@@ -46,13 +46,12 @@ jobs:
 
       - name: Créer release.json (WowUp)
         run: |
-          # Plus haute version d'interface du TOC par jeu : < 20000 Forever (type « forever » de WowUp), < 30000 TBC Anniversary, sinon retail.
-          IFACES="$(sed -n 's/^## Interface: *//p' ForeverGFX/ForeverGFX.toc | tr -d ' \r' | tr ',' '\n')"
-          top() { echo "$IFACES" | awk -v lo="$1" -v hi="$2" '$1 >= lo && $1 < hi' | sort -n | tail -1; }
+          # WoW Forever seulement (type « forever » de WowUp) : plus haute version d'interface du TOC
+          FOREVER="$(sed -n 's/^## Interface: *//p' ForeverGFX/ForeverGFX.toc | tr -d ' \r' | tr ',' '\n' | sort -n | tail -1)"
           jq -n --arg name "ForeverAddons" --arg version "$GITHUB_REF_NAME" --arg file "ForeverAddons-${GITHUB_REF_NAME}.zip" \
-            --argjson forever "$(top 10000 20000)" --argjson bcc "$(top 20000 30000)" --argjson mainline "$(top 100000 999999)" \
+            --argjson forever "$FOREVER" \
             '{releases: [{name: $name, version: $version, filename: $file, nolib: false, metadata: [
-               {flavor: "mainline", interface: $mainline}, {flavor: "bcc", interface: $bcc}, {flavor: "forever", interface: $forever}]}]}' \
+               {flavor: "forever", interface: $forever}]}]}' \
             > dist/release.json
           cat dist/release.json
 

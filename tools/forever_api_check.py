@@ -82,7 +82,7 @@ def scan(path: str, funcs: set, ns: dict) -> list[tuple[int, str]]:
 
 
 # Fonctions présentes mais interdites aux addons sur Forever (client moderne) : signalées sauf protection explicite
-PROTECTED = {"ReloadUI": "CanReload"}
+PROTECTED = {"ReloadUI": "taper /reload soi-même"}
 
 
 def scan_protected(path: str) -> list[tuple[int, str]]:
@@ -90,8 +90,8 @@ def scan_protected(path: str) -> list[tuple[int, str]]:
         lines = strip(f.read()).split("\n")
     out = []
     for i, line in enumerate(lines, 1):
-        for name, guard in PROTECTED.items():
-            if re.search(rf"(?<![\w.:]){name}\s*\(", line) and guard not in line:
+        for name in PROTECTED:
+            if re.search(rf"(?<![\w.:]){name}\s*\(", line):
                 out.append((i, name))
     return out
 
@@ -110,7 +110,7 @@ def main() -> int:
                     print(f"{os.path.relpath(p, ROOT)}:{line}: {name} absent du client Forever, sans repli")
                     bad += 1
                 for line, name in scan_protected(p):
-                    print(f"{os.path.relpath(p, ROOT)}:{line}: {name} interdit aux addons sur Forever (protéger par {PROTECTED[name]})")
+                    print(f"{os.path.relpath(p, ROOT)}:{line}: {name} interdit aux addons sur Forever ({PROTECTED[name]})")
                     bad += 1
     print(f"{bad} appel(s) non protégé(s) vers une fonction absente du client Forever")
     return 1 if bad else 0

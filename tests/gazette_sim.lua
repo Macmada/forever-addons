@@ -287,11 +287,6 @@ SlashCmdList.FOREVERGAZETTE("pdf")
 _G.print = savePrint
 check(not reloaded and ns.db.exports and said and said:find("/reload", 1, true),
       "WoW Forever : PDF préparé, « tape /reload » (jamais ReloadUI, interdit)")
--- TBC Anniversary : rechargement après confirmation, comme avant
-_G.GetBuildInfo = function() return "2.5.5", "60000", "Nov 1 2026", 20505 end
-SlashCmdList.FOREVERGAZETTE("pdf")
-StaticPopupDialogs.FOREVERGAZETTE_PDF.OnAccept()
-check(reloaded, "TBC : bouton PDF, export puis rechargement de l'interface")
 _G.GetBuildInfo = saveBI
 -- démo et interface (imitée)
 SlashCmdList.FOREVERGAZETTE("demo")

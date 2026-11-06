@@ -1,11 +1,11 @@
 # Forever Addons
 
-Des addons World of Warcraft pour **WoW Forever**, **TBC Anniversary** et **retail**, avec un seul dossier par addon pour les trois clients.
+Des addons World of Warcraft pour **WoW Forever** (et seulement WoW Forever depuis la v3.0.3).
 
 | Addon | Commande | Rôle |
 |---|---|---|
 | **ForeverGFX** | `/gfx` | Réglages graphiques en un clic, réglage automatique selon tes FPS, mode expert pour toutes les variables |
-| **ForeverMacros** | `/fmac` | macros prêtes par classe (TBC/Forever et retail), constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
+| **ForeverMacros** | `/fmac` | macros prêtes par classe, constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
 | **ForeverGazette** | `/gazette` | la gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal |
 | **ForeverPrêtre** | `/fp` | (WoW Forever, prêtre) tout en une fenêtre : **Maintenant** (le plus utile à ton niveau), **Soins** (`/fheal`), **Équipement** (`/floot`), **Préparation** (`/prep`), **Métiers** (`/metiers`) ; auto-test et sonde du client |
 
@@ -21,9 +21,7 @@ Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macma
 
 1. Télécharge les archives de la dernière version dans l'onglet **Releases**.
 2. Dézippe chaque dossier dans le dossier AddOns de ton client :
-   - WoW Forever : dossier `Interface\AddOns` du client Forever
-   - TBC Anniversary : `World of Warcraft\_anniversary_\Interface\AddOns`
-   - Retail : `World of Warcraft\_retail_\Interface\AddOns`
+   - dossier `Interface\AddOns` du client WoW Forever
 3. Lance le jeu : un tutoriel s'ouvre à la première utilisation. Les icônes autour de la minicarte (longue-vue et note) ouvrent les addons.
 
 ## ForeverGFX
@@ -37,7 +35,7 @@ Commandes : `/gfx`, `/gfx tune 60`, `/gfx fps`, `/gfx preset ultra`, `/gfx undo`
 
 ## ForeverMacros
 
-- **Macros prêtes** : 60 macros pour les 9 classes de TBC (utilisées sur Forever et TBC Anniversary) et 77 macros pour les 13 classes du retail actuel (`LibraryRetail.lua`). Les sorts sont référencés par numéro, le nom est donc retrouvé dans la langue du client. Une macro dont un sort n'existe pas dans le jeu lancé est masquée (ex. Intervention sur Forever).
+- **Macros prêtes** : 60 macros pour les 9 classes. Les sorts sont référencés par numéro, le nom est donc retrouvé dans la langue du client. Une macro dont un sort n'existe pas dans le jeu lancé est masquée (ex. Intervention sur Forever).
 - **Créer pas à pas** : sort, cible, touche modificatrice, options, ou mode séquence (totems, rotations sur temps de recharge global).
 - **Éditeur** avec vérification en direct : longueur en octets, crochets, commandes, conditions, cibles, sorts introuvables.
 - **Sauvegarde / restauration** de toutes les macros sous forme de texte.
@@ -48,7 +46,7 @@ Commandes : `/fmac`, `/fmac tuto`, `/fmac minimap`.
 
 Pendant que tu joues, l'addon note les moments forts de ton personnage ; chaque journée de jeu devient une édition de journal, avec une **une** (le plus grand moment du jour, choisi par importance) et des rubriques. Un journal par personnage.
 
-- **Ce qui est noté** : niveaux, boss de donjon et de raid, élites rares, premiers passages dans une zone ou un donjon, objets rares, épiques et légendaires, paliers d'or, morts (avec le coupable : ennemi, chute, noyade…), victoires JcJ et duels, paliers de réputation, paliers de métier et recettes, hauts faits (retail), quêtes rendues, compagnons de groupe.
+- **Ce qui est noté** : niveaux, boss de donjon et de raid, élites rares, premiers passages dans une zone ou un donjon, objets rares, épiques et légendaires, paliers d'or, morts (avec le coupable : ennemi, chute, noyade…), victoires JcJ et duels, paliers de réputation, paliers de métier et recettes, quêtes rendues, compagnons de groupe.
 - **Bilan du jour** : temps de jeu, expérience, quêtes, ennemis vaincus, morts, or gagné et dépensé, zones parcourues.
 - **Photo de une** : capture d'écran automatique au moment fort (niveaux, boss, épiques ; option pour tous les grands moments ; 6 par jour au plus). L'édition donne le nom du fichier du dossier `Screenshots`.
 - **Trois tons** : *sérieux* (chronique d'aventurier), *tabloïd* (presse à scandale), *épique* (récit de barde). Changer de ton réécrit aussi les anciennes éditions.
@@ -156,13 +154,7 @@ Chaque texte commence par la version du client, le numéro d'interface, la langu
 
 ## Compatibilité
 
-Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule ligne `## Interface:`. Le code teste la présence des fonctions récentes (`C_CVar`, `C_Spell`, `Settings`…) et se replie sur les anciennes si besoin. Si une mise à jour du jeu change le numéro d'interface, ajoute-le à cette ligne (`/dump select(4, GetBuildInfo())` en jeu pour l'obtenir).
-
-| Client | Interface |
-|---|---|
-| WoW Forever | 16000, 16001 |
-| TBC Anniversary | 20504, 20505 |
-| Retail (Midnight) | 120100 à 120200 |
+Les addons ne visent que **WoW Forever** : chaque `.toc` déclare `## Interface: 16000, 16001`. Le client de Forever est un client moderne (API du retail habillée en classique) : beaucoup de fonctions classiques n'existent pas (`GetItemInfo`, `GetSpellInfo`…) et certaines valeurs sont secrètes en combat ou tout le temps (mana actuelle). `tools/forever_api_check.py` vérifie le code contre la liste complète de l'API du client. Si une mise à jour du jeu change le numéro d'interface, ajoute-le à la ligne `## Interface:` (`/dump select(4, GetBuildInfo())` en jeu pour l'obtenir).
 
 ## Développement
 
@@ -175,7 +167,7 @@ Chaque `.toc` déclare les numéros d'interface des trois clients sur une seule 
 
 ## English
 
-Three WoW addons for **WoW Forever**, **TBC Anniversary** and **retail** (one folder per addon for all three clients). **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers ready-made class macros (a TBC/Forever set and a retail set) (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. **ForeverPriest** (`/fp`, WoW Forever) gathers healing, gear, dungeon prep and professions in one window with a "Now" screen (what to do at your level), an in-game self-test and a client probe. Its healing part (`/fheal`) turns stats and items into plain effects (HP, mana, healing per second, mana longevity) in item tooltips, a character-sheet panel and change announcements, calibrated on your character and your real spell usage. Its preparation part (`/prep`) checks your dungeon/raid readiness by class, role and level (consumables at the best usable rank, class reagents, buffs, gear, trainer reminder) with a shopping list and one-click vendor purchase. **ForeverGazette** (`/gazette`) turns each play day into a newspaper edition of your character's highlights (levels, bosses, rare kills, epic loot, deaths, duels, reputation, professions, gold), with automatic front-page screenshots, three tones (serious, tabloid, epic), a weekly edition, Markdown export, chat sharing and an optional Discord companion script. All addons are fully translated (French and English) and include a guided tutorial.
+WoW addons for **WoW Forever** only. **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers ready-made class macros (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. **ForeverPriest** (`/fp`, WoW Forever) gathers healing, gear, dungeon prep and professions in one window with a "Now" screen (what to do at your level), an in-game self-test and a client probe. Its healing part (`/fheal`) turns stats and items into plain effects (HP, mana, healing per second, mana longevity) in item tooltips, a character-sheet panel and change announcements, calibrated on your character and your real spell usage. Its preparation part (`/prep`) checks your dungeon/raid readiness by class, role and level (consumables at the best usable rank, class reagents, buffs, gear, trainer reminder) with a shopping list and one-click vendor purchase. **ForeverGazette** (`/gazette`) turns each play day into a newspaper edition of your character's highlights (levels, bosses, rare kills, epic loot, deaths, duels, reputation, professions, gold), with automatic front-page screenshots, three tones (serious, tabloid, epic), a weekly edition, Markdown export, chat sharing and an optional Discord companion script. All addons are fully translated (French and English) and include a guided tutorial.
 
 ## Licence
 

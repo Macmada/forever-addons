@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- Macros prêtes par classe (base TBC / Classic ; le retail utilise LibraryRetail.lua).
+-- Macros prêtes par classe pour WoW Forever (sorts classiques ; une macro dont un sort manque au jeu est masquée).
 -- {12345} = numéro de sort : remplacé en jeu par son nom dans la langue du client.
 -- short = nom de la macro (16 caractères max).
 -- Sources d'inspiration : guides de macros TBC Classic (Icy Veins, Warcraft Tavern, noobtoboss).

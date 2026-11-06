@@ -668,7 +668,7 @@ SlashCmdList.FOREVERGFX = function(msg)
   end
 end
 
--- Compartiment des addons (retail)
+-- Compartiment des addons
 function ForeverGFX_OnCompartmentClick(_, button)
   if button == "RightButton" then ns.BenchToggle() else ns.ToggleUI() end
 end

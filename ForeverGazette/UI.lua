@@ -829,11 +829,6 @@ end
 ----------------------------------------------------------------------
 ns.OnLoaded = function()
   CreateMinimapButton()
-  StaticPopupDialogs["FOREVERGAZETTE_PDF"] = {
-    text = L.pdfConfirm, button1 = L.pdfGo, button2 = CANCEL or NO,
-    OnAccept = function() ns.PrintPDF() end,
-    timeout = 0, whileDead = true, hideOnEscape = true,
-  }
   StaticPopupDialogs["FOREVERGAZETTE_WIPE"] = {
     text = L.wipeConfirm, button1 = YES, button2 = NO,
     OnAccept = function()
@@ -849,19 +844,13 @@ ns.OnLogin = function() SetupBroker() end
 
 -- « PDF » : enregistre la gazette (le jeu n'écrit la sauvegarde qu'au rechargement ou à la déconnexion) ;
 -- le compagnon (tools/gazette-discord, sur le PC) en fait un PDF et un PNG avec les captures d'écran.
--- Recharger l'interface est interdit aux addons sur WoW Forever et le retail récent (client moderne : « ReloadUI() is
--- protected », forever-addon-kit de Thunderz) : là, la gazette est préparée et c'est le joueur qui tape /reload.
-function ns.CanReload()
-  local iface = select(4, GetBuildInfo()) or 0
-  return iface < 100000 and not (iface >= 16000 and iface < 20000)
-end
+-- Recharger l'interface est interdit aux addons sur WoW Forever (« ReloadUI() is protected », forever-addon-kit de
+-- Thunderz) : la gazette est préparée et c'est le joueur qui tape /reload.
 function ns.PrintPDF()
   ns.WriteExports()
-  if ns.CanReload() then ReloadUI() else Print(L.pdfTypeReload) end      -- ReloadUI seulement si ns.CanReload()
+  Print(L.pdfTypeReload)
 end
-function ns.AskPDF()
-  if ns.CanReload() then StaticPopup_Show("FOREVERGAZETTE_PDF") else ns.PrintPDF() end
-end
+ns.AskPDF = ns.PrintPDF
 
 local ALIASES = {
   hebdo = "weekly", weekly = "weekly", semaine = "weekly",

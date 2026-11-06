@@ -1,4 +1,4 @@
-## Interface: 16000, 16001, 20504, 20505, 120100, 120101, 120105, 120107, 120200
+## Interface: 16000, 16001
 ## Title: ForeverGFX
 ## Notes: Réglage avancé des variables graphiques : préréglages, profils, bascule auto, mesure de FPS.
 ## Notes-enUS: Advanced graphics variables tuning: presets, profiles, auto switch, FPS measurement.

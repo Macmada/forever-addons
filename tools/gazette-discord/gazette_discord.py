@@ -301,7 +301,7 @@ def load_config(path: str) -> dict:
         webhook = ""
     dirs = [d.strip() for d in c.get("wow_dirs", "").split(";") if d.strip()]
     if not dirs:
-        sys.exit("Renseigne « wow_dirs » (dossier du client, ex. C:\\Program Files (x86)\\World of Warcraft\\_anniversary_).")
+        sys.exit("Renseigne « wow_dirs » (dossier du client WoW Forever, celui qui contient WTF et Screenshots).")
     chars = [x.strip().lower() for x in c.get("characters", "").split(",") if x.strip()]
     out_dir = os.path.expandvars(os.path.expanduser(c.get("output_dir", "").strip() or os.path.join("~", "Documents", "ForeverGazette")))
     discord = c.get("discord", "image").strip().lower()

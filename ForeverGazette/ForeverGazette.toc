@@ -1,4 +1,4 @@
-## Interface: 16000, 16001, 20504, 20505, 120100, 120101, 120105, 120107, 120200
+## Interface: 16000, 16001
 ## Title: ForeverGazette
 ## Notes: La gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal.
 ## Notes-enUS: Your character's newspaper: each play day's highlights, laid out like a gazette.
