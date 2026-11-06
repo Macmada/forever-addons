@@ -45,6 +45,10 @@ local function Collect()
   end
   local old = root.db and root.db.probe
   if old then p.secretPowerInCombat = old.secretPowerInCombat end
+  if not (InCombatLockdown and InCombatLockdown()) then
+    local v = UnitPower and UnitPower("player", 0)
+    p.secretPowerOutOfCombat = v ~= nil and G.Plain(v) == nil
+  end
   return p
 end
 
@@ -60,6 +64,7 @@ function root.ProbeText()
   local out = { "-- ForeverPretre, sonde du client " .. p.client .. ", " .. p.date,
                 "-- " .. L.testHelp, "return {", "  client = \"" .. p.client .. "\"," }
   out[#out + 1] = "  secretPowerInCombat = " .. tostring(p.secretPowerInCombat) .. ","
+  out[#out + 1] = "  secretPowerOutOfCombat = " .. tostring(p.secretPowerOutOfCombat) .. ","
   out[#out + 1] = "  absent = {"
   for _, a in ipairs(p.absent) do out[#out + 1] = "    \"" .. a .. "\"," end
   out[#out + 1] = "  },"

@@ -41,7 +41,8 @@ end)
 root.Test("Jeu", "mana lisible hors combat", function()
   if InCombatLockdown() then return nil, "en combat" end
   local cur, max = G.Mana()
-  if not max then return false, "valeur secrète ou absente" end
+  if not max then return false, "maximum illisible (valeur secrète ou absente)" end
+  if not cur then return true, "maximum " .. max .. " ; mana actuelle secrète même hors combat (limite du client : alerte de mana impossible)" end
   return true, tostring(cur) .. " / " .. tostring(max)
 end)
 root.Test("Jeu", "addons de données", function()

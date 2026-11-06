@@ -597,6 +597,11 @@ handlers.PLAYER_REGEN_ENABLED = function()        -- après un combat : nouvelle
   if ns.UpdateManaAlert then ns.UpdateManaAlert() end
 end
 handlers.PLAYER_REGEN_DISABLED = function() ns.ManaReset() end
+-- Mana actuelle utilisable ? Sur WoW Forever (sonde du 06/11/2026), UnitPower est secrète même hors combat : seul le
+-- maximum se lit. L'alerte « à sec dans ~N s » est alors impossible (aucun calcul permis sur une valeur secrète).
+function ns.ManaReadable()
+  return ns.Plain(UnitPower("player", 0)) ~= nil
+end
 handlers.UNIT_POWER_FREQUENT = function(unit, kind)
   if unit ~= "player" or (kind and kind ~= "MANA") or not InCombatLockdown() then return end
   local mana = ns.Plain(UnitPower("player", 0))
@@ -644,7 +649,8 @@ local HEALWORDS = { "soin", "heal", "rénov", "renew", "prière", "prayer", "ré
 local STATWORDS = { "soin", "heal", "mana", "critique", "critical", "esprit", "spirit", "intell", "endurance", "stamina", "équipé", "equip", "%+" }
 
 function ns.DiagCollect(add)
-  add("Mana en combat : " .. (ns.manaSecret and "valeur secrète (alerte de mana en veille sur ce client)" or "lisible ou pas encore vue en combat"))
+  add("Mana actuelle : " .. (ns.ManaReadable() and (ns.manaSecret and "lisible hors combat, secrète en combat (alerte en veille)" or "lisible")
+                              or "secrète même hors combat sur ce client : l'alerte de mana ne peut pas fonctionner"))
   -- calcul du panneau (il peut échouer sans que le reste du diagnostic le voie)
   if ns.PanelRaw then
     local okP, errP = pcall(ns.PanelRaw)

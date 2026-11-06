@@ -5,12 +5,16 @@ local LANG = arg and arg[1] or "fr"
 local W = dofile("tests/wowmock.lua")(LANG)
 local check = W.check
 local profile = dofile("tests/forever_client.lua")
-W.client(profile)
 
 -- prêtre de niveau 12 avec quelques objets
 W.class, W.level = "PRIEST", 12
 _G.UnitGUID = function() return "Player-1" end
-_G.UnitPower = function() return 300 end
+-- mana actuelle secrète, même hors combat (sonde du 06/11/2026) : toute opération dessus échoue
+local SECRET = setmetatable({}, { __add = function() error("attempt to perform arithmetic on a secret number value") end,
+                                  __sub = function() error("secret") end, __div = function() error("secret") end,
+                                  __lt = function() error("secret") end, __le = function() error("secret") end })
+_G.issecretvalue = function(v) return v == SECRET end
+_G.UnitPower = function() return profile.secretPowerOutOfCombat and SECRET or 300 end
 _G.UnitPowerMax = function() return 400 end
 _G.UnitHealthMax = function() return 250 end
 _G.UnitStat = function(_, i) return 20, 20 + i end
@@ -36,8 +40,6 @@ end
 _G.C_Item.GetItemInfoInstant = function(x) local id = tonumber(tostring(x):match("(%d+)")); return id, "Armor", "Cloth", "", "Interface\\Icons\\INV_Misc_QuestionMark", 4, 1 end
 _G.C_Item.GetItemCount = function() return 1 end
 _G.C_Item.EquipItemByName = function(l) W.equipped = l end
-_G.GetItemInfo, _G.GetItemInfoInstant = _G.C_Item.GetItemInfo, _G.C_Item.GetItemInfoInstant
-_G.GetItemCount = function() return 1 end
 _G.GetInventoryItemLink = function() return nil end
 _G.UnitExists = function(u) return u == "player" end
 _G.IsInGroup, _G.IsInRaid, _G.GetNumGroupMembers = function() return false end, function() return false end, function() return 0 end
@@ -45,6 +47,10 @@ _G.UnitBuff = function() return nil end
 _G.C_UnitAuras = { GetAuraDataByIndex = function() return nil end, GetBuffDataByIndex = function() return nil end }
 _G.GetInventoryItemDurability = function() return nil end
 _G.C_Spell = { GetSpellName = function(id) return "Sort " .. id end, GetSpellInfo = function(id) return { name = "Sort " .. id, castTime = 1500 } end }
+
+-- fonctions absentes du client de Forever retirées (après les imitations ci-dessus)
+W.client(profile)
+check(_G.GetItemInfo == nil and _G.IsAddOnLoaded == nil and _G.GetItemCount == nil, "profil du client Forever appliqué (" .. #profile.absent .. " fonctions absentes)")
 
 -- anciens dossiers (coquilles) : se désactivent tout seuls
 local disabled = {}
@@ -121,6 +127,13 @@ check(report:find("C_Item.EquipItemByName", 1, true), "auto-test : équiper par 
 -- diagnostic commun : chaque partie
 local d = root.DiagText()
 check(d:find("ForeverHeal", 1, true) and d:find("ForeverMetiers", 1, true) and d:find("Lien avec le jeu", 1, true), "diagnostic commun avec chaque partie")
+
+-- mana secrète même hors combat : dite clairement, rien ne plante
+check(report:find("mana actuelle secrète même hors combat", 1, true), "auto-test : mana secrète hors combat signalée comme limite du client")
+check(root.mods.ForeverHeal.DiagText():find("secrète même hors combat", 1, true), "diagnostic des soins : alerte de mana impossible sur ce client")
+root.mods.ForeverHeal.UpdateManaAlert()
+check(not (ForeverHealManaAlert and ForeverHealManaAlert:IsShown()), "alerte de mana : reste cachée sans planter")
+check(root.ProbeText():find("secretPowerOutOfCombat = true", 1, true), "sonde : mana secrète hors combat relevée")
 
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")

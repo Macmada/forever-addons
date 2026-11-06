@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.0.1 (ForeverPretre 3.0.1), d'après ton premier auto-test et ta sonde
+- Premier auto-test en jeu : 12 OK, 0 échec, aucune action bloquée. La sonde est devenue le profil du client Forever dans les tests (`tests/forever_client.lua`) : 29 fonctions classiques absentes (`GetItemInfo`, `GetItemCount`, `IsAddOnLoaded`, `GetSpellInfo`…). Tous les appels avaient déjà un repli moderne, et le test complet passe maintenant sur ce vrai profil.
+- **Mana actuelle secrète même hors combat** sur WoW Forever (seul le maximum se lit) : l'alerte « à sec dans ~N s » ne peut pas fonctionner sur ce client. C'est maintenant dit clairement (auto-test, Diag des soins, `/fheal alerte`) au lieu d'un silence ; la sonde le relève (`secretPowerOutOfCombat`).
+
 ## v3.0.0 : ForeverPrêtre (ForeverGFX 3.0.0 / ForeverPretre 3.0.0 / ForeverGazette 1.7.0)
 - **ForeverPrêtre** : ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers ne font plus qu'un addon, avec **une seule fenêtre** : une barre d'onglets à gauche (Maintenant, Soins, Équipement, Préparation, Métiers), une seule fenêtre visible à la fois, à la même place. Les commandes restent (`/fheal`, `/floot`, `/prep`, `/metiers`) et passent par la même barre ; nouvelle commande `/fp`. Une seule entrée « Prêtre » dans l'icône Forever.
 - **Écran « Maintenant »** : que faire à ton niveau, en un coup d'œil : ton prêtre (soins/s, autonomie, régénération), les meilleures améliorations d'équipement à portée et où les trouver, ce qu'il manque avant un donjon avec « Guide-moi vers le vendeur », la prochaine étape de tes métiers. En combat : dernier état, aucun calcul.

@@ -553,6 +553,7 @@ SlashCmdList.FOREVERHEAL = function(msg)
   elseif cmd == "diag" then ns.ShowDiag()
   elseif cmd == "alerte" or cmd == "alert" then
     ns.db.manaAlert = not ns.db.manaAlert; Print(L.optManaAlert .. " : " .. (ns.db.manaAlert and L.on or L.off))
+    if ns.db.manaAlert and not InCombatLockdown() and not ns.ManaReadable() then Print(L.manaSecretClient) end
   elseif cmd == "macros" then ns.MakeMacros()
   elseif cmd == "sacs" or cmd == "bags" then
     CreatePanel(); panel.mode = "upgrades"
