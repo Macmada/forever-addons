@@ -48,6 +48,26 @@ _G.C_UnitAuras = { GetAuraDataByIndex = function() return nil end, GetBuffDataBy
 _G.GetInventoryItemDurability = function() return nil end
 _G.C_Spell = { GetSpellName = function(id) return "Sort " .. id end, GetSpellInfo = function(id) return { name = "Sort " .. id, castTime = 1500 } end }
 
+-- comparaison par le jeu (UnitPowerPercent + courbe en escalier), comme sur Forever
+W.manaFrac = 0.2
+_G.Enum = _G.Enum or {}
+_G.Enum.LuaCurveType = { Linear = 0, Step = 1 }
+_G.CreateColor = function(r, g, b, a) return { r = r, g = g, b = b, a = a, GetRGBA = function(self) return self.r, self.g, self.b, self.a end } end
+_G.C_CurveUtil = { CreateColorCurve = function()
+  local c = { pts = {} }
+  function c:SetType(t) self.type = t end
+  function c:AddPoint(x, col) table.insert(self.pts, { x = x, col = col }) end
+  return c
+end }
+_G.CurveConstants = { ScaleTo100 = { scale100 = true } }
+_G.UnitPowerPercent = function(unit, kind, predicted, curve)
+  if type(predicted) == "table" then curve = predicted end          -- l'autre ordre des arguments
+  if curve.scale100 then return SECRET end
+  local col
+  for _, p in ipairs(curve.pts) do if W.manaFrac >= p.x then col = p.col end end
+  return col
+end
+
 -- fonctions absentes du client de Forever retirées (après les imitations ci-dessus)
 W.client(profile)
 check(_G.GetItemInfo == nil and _G.IsAddOnLoaded == nil and _G.GetItemCount == nil, "profil du client Forever appliqué (" .. #profile.absent .. " fonctions absentes)")
@@ -130,9 +150,33 @@ check(d:find("ForeverHeal", 1, true) and d:find("ForeverMetiers", 1, true) and d
 
 -- mana secrète même hors combat : dite clairement, rien ne plante
 check(report:find("mana actuelle secrète même hors combat", 1, true), "auto-test : mana secrète hors combat signalée comme limite du client")
-check(root.mods.ForeverHeal.DiagText():find("secrète même hors combat", 1, true), "diagnostic des soins : alerte de mana impossible sur ce client")
-root.mods.ForeverHeal.UpdateManaAlert()
-check(not (ForeverHealManaAlert and ForeverHealManaAlert:IsShown()), "alerte de mana : reste cachée sans planter")
+check(root.mods.ForeverHeal.DiagText():find("secrète même hors combat", 1, true), "diagnostic des soins : mana secrète hors combat signalée")
+local heal = root.mods.ForeverHeal
+heal.UpdateManaAlert()
+check(not (ForeverHealManaAlert and ForeverHealManaAlert:IsShown()), "hors combat : pas d'alerte de mana")
+W.combat = true
+local alphas = {}
+W.manaFrac = 0.2
+heal.UpdateManaAlert()
+local a = ForeverHealManaAlert
+local setA = a.SetAlpha
+a.SetAlpha = function(self, v) alphas[#alphas + 1] = v; return setA(self, v) end
+heal.UpdateManaAlert()
+check(a:IsShown() and alphas[#alphas] == 1, "en combat, mana à 20 % : le jeu rend l'alerte visible (seuil 30 %)")
+W.manaFrac = 0.8
+heal.UpdateManaAlert()
+check(alphas[#alphas] == 0, "en combat, mana à 80 % : le jeu la rend invisible")
+W.fire("UNIT_POWER_FREQUENT", "player", "MANA")
+check(true, "événement de mana en combat : pas d'erreur")
+W.combat = false
+heal.UpdateManaAlert()
+check(not a:IsShown(), "après le combat : alerte cachée")
+heal.db.manaAlert = true
+SlashCmdList.FOREVERHEAL("alerte 25")
+check(heal.db.manaLowPct == 0.25 and heal.db.manaAlert, "/fheal alerte 25 : seuil à 25 %")
+check(heal.DiagText():find("disponible, UnitPowerPercent", 1, true), "diagnostic : alerte par le jeu disponible")
+check(root.TestReport():find("[OK] Jeu — mana comparée par le jeu", 1, true), "auto-test : comparaison par le jeu testée")
+
 check(root.ProbeText():find("secretPowerOutOfCombat = true", 1, true), "sonde : mana secrète hors combat relevée")
 
 -- équiper depuis l'alerte (lien avec le jeu)

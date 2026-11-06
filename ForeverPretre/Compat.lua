@@ -119,3 +119,58 @@ end
 function G.Mana()
   return G.Plain(UnitPower and UnitPower("player", 0)), G.Plain(UnitPowerMax and UnitPowerMax("player", 0))
 end
+
+-- Mana secrète (WoW Forever : UnitPower secrète même hors combat). Un addon ne peut ni la lire ni la comparer, mais
+-- il peut la confier au jeu (technique de Full Mana Forever, KesaObscura, MIT) :
+--   * afficher : string.format avec la valeur secrète, puis SetText (le jeu affiche, l'addon ne voit rien) ;
+--   * décider : une courbe en escalier donnée à UnitPowerPercent ; le jeu compare la mana au seuil et renvoie une
+--     couleur secrète dont la transparence, appliquée à une fenêtre, la montre ou la cache.
+-- Deux ordres d'arguments existent selon les versions du client : celui qui marche est retenu.
+local powerVariant
+local function PowerPercent(curve)
+  local f = UnitPowerPercent
+  if not f then return nil end
+  for _, v in ipairs(powerVariant and { powerVariant } or { 1, 2 }) do
+    local ok, r
+    if v == 1 then ok, r = pcall(f, "player", 0, false, curve) else ok, r = pcall(f, "player", 0, curve) end
+    if ok and r ~= nil then powerVariant = v; G.used.manaPercent = "UnitPowerPercent (ordre " .. v .. ")"; return r end
+  end
+  powerVariant = nil
+end
+
+-- Pourcentage de mana (0-100), secret ou non : seulement pour l'afficher (string.format), jamais pour calculer
+function G.ManaPercent()
+  local curve = CurveConstants and CurveConstants.ScaleTo100
+  if curve then return PowerPercent(curve) end
+end
+
+-- Couleur secrète : transparence 1 quand la mana est sous « seuil » (0-1), 0 au-dessus ; nil si impossible
+function G.ManaBelowColor(threshold)
+  if not (C_CurveUtil and C_CurveUtil.CreateColorCurve and CreateColor and Enum and Enum.LuaCurveType) then return nil end
+  local c = C_CurveUtil.CreateColorCurve()
+  c:SetType(Enum.LuaCurveType.Step)
+  c:AddPoint(0, CreateColor(1, 1, 1, 1))
+  c:AddPoint(threshold + 0.0001, CreateColor(1, 1, 1, 0))
+  return PowerPercent(c)
+end
+
+-- Applique la transparence décidée par le jeu ; sans réponse utilisable : failAlpha. Renvoie true si le jeu a décidé.
+function G.ApplyAlpha(frame, color, failAlpha)
+  if color then
+    local ok, _, _, _, a = pcall(color.GetRGBA, color)
+    if ok and pcall(frame.SetAlpha, frame, a) then return true end
+  end
+  frame:SetAlpha(failAlpha or 0)
+  return false
+end
+
+-- Texte de mana pour l'écran, formaté avec les valeurs secrètes (le jeu l'affiche tel quel) :
+-- fmt reçoit pourcentage, mana, maximum (« Mana basse : %.0f %% (%d / %d) »)
+function G.ManaText(fmt)
+  local max = UnitPowerMax and UnitPowerMax("player", 0)
+  local pct = G.ManaPercent()
+  local ok, text
+  if pct ~= nil then ok, text = pcall(string.format, fmt or "%.0f %% (%d / %d)", pct, UnitPower("player", 0), max) end
+  if not ok then ok, text = pcall(string.format, "%d / %d", UnitPower("player", 0), max) end
+  return ok and text or nil
+end

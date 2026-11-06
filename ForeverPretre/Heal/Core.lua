@@ -605,7 +605,11 @@ end
 handlers.UNIT_POWER_FREQUENT = function(unit, kind)
   if unit ~= "player" or (kind and kind ~= "MANA") or not InCombatLockdown() then return end
   local mana = ns.Plain(UnitPower("player", 0))
-  if not mana then ns.manaSecret = true; return end            -- mana secrète en combat : alerte en veille
+  if not mana then                                               -- mana secrète : alerte « Mana basse » décidée par le jeu
+    ns.manaSecret = true
+    if ns.UpdateManaAlert then ns.UpdateManaAlert() end
+    return
+  end
   ns.ManaSample(GetTime(), mana)
   if ns.UpdateManaAlert then ns.UpdateManaAlert() end
 end
@@ -649,8 +653,10 @@ local HEALWORDS = { "soin", "heal", "rénov", "renew", "prière", "prayer", "ré
 local STATWORDS = { "soin", "heal", "mana", "critique", "critical", "esprit", "spirit", "intell", "endurance", "stamina", "équipé", "equip", "%+" }
 
 function ns.DiagCollect(add)
-  add("Mana actuelle : " .. (ns.ManaReadable() and (ns.manaSecret and "lisible hors combat, secrète en combat (alerte en veille)" or "lisible")
-                              or "secrète même hors combat sur ce client : l'alerte de mana ne peut pas fonctionner"))
+  local engine = ns.Game and ns.Game.ManaBelowColor and ns.Game.ManaBelowColor(0.3) ~= nil
+  add("Mana actuelle : " .. (ns.ManaReadable() and (ns.manaSecret and "lisible hors combat, secrète en combat" or "lisible")
+                              or "secrète même hors combat sur ce client")
+      .. " ; alerte « Mana basse » par le jeu (UnitPowerPercent + courbe) : " .. (engine and ("disponible, " .. tostring(ns.Game.used.manaPercent)) or "INDISPONIBLE"))
   -- calcul du panneau (il peut échouer sans que le reste du diagnostic le voie)
   if ns.PanelRaw then
     local okP, errP = pcall(ns.PanelRaw)

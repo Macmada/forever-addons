@@ -483,16 +483,7 @@ function ns.MakeMacros()
 end
 
 local alert
-function ns.UpdateManaAlert()
-  if not ns.db.manaAlert or select(2, UnitClass("player")) ~= "PRIEST" then if alert then alert:Hide() end return end
-  local left = InCombatLockdown() and ns.ManaTimeLeft()
-  local cur, max = ns.Plain(UnitPower("player", 0)), ns.Plain(UnitPowerMax("player", 0))
-  if not (cur and max) then if alert then alert:Hide() end return end   -- valeur secrète (combat sur Forever)
-  local pct = cur / math.max(max, 1)
-  if not left or left > ns.db.manaAlertSeconds or pct > 0.6 then
-    if alert then alert:Hide() end
-    return
-  end
+local function Alert()
   if not alert then
     alert = CreateFrame("Frame", "ForeverHealManaAlert", UIParent)
     alert:SetSize(400, 40)
@@ -500,6 +491,36 @@ function ns.UpdateManaAlert()
     alert.text = alert:CreateFontString(nil, "OVERLAY", "GameFontNormalHuge")
     alert.text:SetPoint("CENTER")
   end
+  return alert
+end
+
+-- Mana secrète (WoW Forever) : pas de compte à rebours possible ; c'est le jeu qui décide si la mana est sous le seuil
+-- (courbe donnée à UnitPowerPercent, voir Compat.lua) et l'alerte « Mana basse : 23 % (190 / 821) » apparaît en combat.
+local function SecretManaAlert()
+  local G = ns.Game
+  if not (G and InCombatLockdown()) then if alert then alert:Hide() end return end
+  local color = G.ManaBelowColor(ns.db.manaLowPct or 0.3)
+  if not color then if alert then alert:Hide() end return end
+  local a = Alert()
+  local text = G.ManaText(L.manaLowFmt) or L.manaLow
+  a.text:SetText(text)
+  a.text:SetTextColor(1, 0.45, 0.1)
+  a:Show()
+  ns.alertShown = G.ApplyAlpha(a, color, 0)
+end
+
+function ns.UpdateManaAlert()
+  if not ns.db.manaAlert or select(2, UnitClass("player")) ~= "PRIEST" then if alert then alert:Hide() end return end
+  local cur, max = ns.Plain(UnitPower("player", 0)), ns.Plain(UnitPowerMax("player", 0))
+  if not (cur and max) then return SecretManaAlert() end
+  local left = InCombatLockdown() and ns.ManaTimeLeft()
+  local pct = cur / math.max(max, 1)
+  if not left or left > ns.db.manaAlertSeconds or pct > 0.6 then
+    if alert then alert:Hide() end
+    return
+  end
+  Alert()
+  alert:SetAlpha(1)
   alert.text:SetText(string.format(L.manaAlert, math.floor(left + 0.5)))
   if left <= 8 then alert.text:SetTextColor(1, 0.25, 0.25) else alert.text:SetTextColor(1, 0.65, 0.1) end
   alert:Show()
@@ -552,8 +573,11 @@ SlashCmdList.FOREVERHEAL = function(msg)
   elseif cmd == "ecran" or cmd == "écran" or cmd == "screen" then ns.db.announceWhere = "screen"; Print(string.format(L.optWhere, L.where_screen))
   elseif cmd == "diag" then ns.ShowDiag()
   elseif cmd == "alerte" or cmd == "alert" then
-    ns.db.manaAlert = not ns.db.manaAlert; Print(L.optManaAlert .. " : " .. (ns.db.manaAlert and L.on or L.off))
-    if ns.db.manaAlert and not InCombatLockdown() and not ns.ManaReadable() then Print(L.manaSecretClient) end
+    local pct = tonumber(arg)
+    if pct and pct > 0 and pct < 100 then ns.db.manaLowPct = pct / 100; ns.db.manaAlert = true
+    else ns.db.manaAlert = not ns.db.manaAlert end
+    Print(L.optManaAlert .. " : " .. (ns.db.manaAlert and L.on or L.off))
+    if ns.db.manaAlert and not ns.ManaReadable() then Print(L.manaSecretClient, math.floor((ns.db.manaLowPct or 0.3) * 100 + 0.5)) end
   elseif cmd == "macros" then ns.MakeMacros()
   elseif cmd == "sacs" or cmd == "bags" then
     CreatePanel(); panel.mode = "upgrades"

@@ -27,6 +27,7 @@ root.PROBE_APIS = {
   "C_TradeSkillUI.GetChildProfessionInfo", "C_TradeSkillUI.GetBaseProfessionInfo", "C_TradeSkillUI.OpenRecipe",
   -- combat, valeurs secrètes
   "CombatLogGetCurrentEventInfo", "C_CombatLog.GetCurrentEventInfo", "issecretvalue", "UnitPower", "UnitPowerMax",
+  "UnitPowerPercent", "C_CurveUtil.CreateColorCurve", "CreateColor",
   -- réputation, carte, communauté
   "GetFactionInfoByID", "C_Reputation.GetFactionDataByID", "C_Map.GetBestMapForUnit", "C_Map.SetUserWaypoint",
   "C_SuperTrack.SetSuperTrackedUserWaypoint", "C_Minimap.SetTracking", "SetTracking", "C_Club.GetClubMembers",

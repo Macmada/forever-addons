@@ -42,8 +42,15 @@ root.Test("Jeu", "mana lisible hors combat", function()
   if InCombatLockdown() then return nil, "en combat" end
   local cur, max = G.Mana()
   if not max then return false, "maximum illisible (valeur secrète ou absente)" end
-  if not cur then return true, "maximum " .. max .. " ; mana actuelle secrète même hors combat (limite du client : alerte de mana impossible)" end
+  if not cur then return true, "maximum " .. max .. " ; mana actuelle secrète même hors combat (limite du client : pas de compte à rebours, alerte « Mana basse » décidée par le jeu)" end
   return true, tostring(cur) .. " / " .. tostring(max)
+end)
+root.Test("Jeu", "mana comparée par le jeu (alerte Mana basse)", function()
+  local color = G.ManaBelowColor(0.3)
+  if not color then return false, "UnitPowerPercent + courbe indisponibles : pas d'alerte de mana possible" end
+  local ok = pcall(color.GetRGBA, color)
+  local text = G.ManaText()
+  return ok, tostring(G.used.manaPercent) .. (text and " ; affichage possible" or " ; affichage du chiffre impossible")
 end)
 root.Test("Jeu", "addons de données", function()
   local loaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded

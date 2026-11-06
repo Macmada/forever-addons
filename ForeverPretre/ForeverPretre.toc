@@ -3,7 +3,7 @@
 ## Notes: Tout pour ton prêtre en une fenêtre : que faire maintenant, soins, équipement à ton niveau, préparation de donjon, couture et enchantement.
 ## Notes-enUS: Everything for your priest in one window: what to do now, healing, gear at your level, dungeon preparation, tailoring and enchanting.
 ## Author: ForeverGFX
-## Version: 3.0.1
+## Version: 3.0.2
 ## SavedVariables: ForeverPretreDB, ForeverLootGlobalDB, ForeverMetiersGlobalDB
 ## SavedVariablesPerCharacter: ForeverHealDB, ForeverLootDB, ForeverPrepDB, ForeverMetiersDB
 ## IconTexture: Interface\Icons\Spell_Holy_PowerWordShield

@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.0.2 (ForeverPretre 3.0.2) : alerte « Mana basse » malgré la mana secrète
+- WoW Forever cache la mana actuelle aux addons, même hors combat. Le compte à rebours « à sec dans ~N s » reste impossible (il faut calculer sur la valeur), mais **l'alerte revient sous une autre forme** : en combat, « Mana basse : 23 % (190 / 821) » s'affiche sous 30 %. C'est **le jeu** qui compare (courbe en escalier donnée à `UnitPowerPercent`) et affiche les chiffres ; l'addon ne les lit jamais. Technique reprise de Full Mana Forever (KesaObscura, MIT).
+- `/fheal alerte 25` : change le seuil (en %) ; `/fheal alerte` : active ou coupe.
+- Auto-test : nouvelle ligne « mana comparée par le jeu » ; Diag des soins et sonde : disponibilité de `UnitPowerPercent` et des courbes.
+
 ## v3.0.1 (ForeverPretre 3.0.1), d'après ton premier auto-test et ta sonde
 - Premier auto-test en jeu : 12 OK, 0 échec, aucune action bloquée. La sonde est devenue le profil du client Forever dans les tests (`tests/forever_client.lua`) : 29 fonctions classiques absentes (`GetItemInfo`, `GetItemCount`, `IsAddOnLoaded`, `GetSpellInfo`…). Tous les appels avaient déjà un repli moderne, et le test complet passe maintenant sur ce vrai profil.
 - **Mana actuelle secrète même hors combat** sur WoW Forever (seul le maximum se lit) : l'alerte « à sec dans ~N s » ne peut pas fonctionner sur ce client. C'est maintenant dit clairement (auto-test, Diag des soins, `/fheal alerte`) au lieu d'un silence ; la sonde le relève (`secretPowerOutOfCombat`).
