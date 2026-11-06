@@ -4,6 +4,7 @@
 - **Vie affichée sur les barres HealBot** : le texte de vie était coupé dans les skins d'origine d'HealBot. Sur Forever, la vie des alliés est une valeur secrète : HealBot ne peut pas calculer la vie manquante, il affiche donc le **pourcentage** (« 85% »).
 - **Habillage plus soigné** : barres lisses (« Smooth v2 »), noms et vie en police grasse contourée, fond sombre, liseré doré et bandeau de titre doré au-dessus du cadre (comme les fenêtres de ForeverCompagnon), barres un peu plus grandes (130×38 en groupe, 90×32 en raid) et espacées.
 - **Cadres de groupe et de raid de Blizzard gardés** à côté d'HealBot, en secours si HealBot a un souci (à ta demande).
+- **Sonde (`/fp sonde`) : vie des alliés** : pour le premier membre du groupe (sinon ta cible, sinon toi), dit si la vie, la vie max, la vie manquante et le pourcentage sont secrets, et si le jeu accepte d'afficher la vie manquante (texte direct, « -%d », abrégé). Avant de poser un « -432 » sur les barres d'HealBot.
 - Reclique sur « Configurer HealBot » après la mise à jour pour appliquer tout ça (tes clics ne bougent pas).
 
 ## v3.4.2 (ForeverCompagnon 3.4.2), d'après ta capture

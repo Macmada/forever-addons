@@ -186,6 +186,17 @@ ForeverHealManaAlert:Hide()
 check(root.TestReport():find("[OK] Jeu — mana comparée par le jeu", 1, true), "auto-test : comparaison par le jeu testée")
 
 check(root.ProbeText():find("secretPowerOutOfCombat = true", 1, true), "sonde : mana secrète hors combat relevée")
+-- sonde : vie d'un allié secrète, affichage essayé sans calcul
+do
+  local saveH, saveM, saveMax = _G.UnitHealth, _G.UnitHealthMissing, _G.UnitHealthMax
+  _G.UnitHealth, _G.UnitHealthMax = function() return SECRET end, function() return SECRET end
+  _G.UnitHealthMissing = function() return SECRET end
+  local text = root.ProbeText()
+  check(text:find('missing = "secrète"', 1, true) and text:find('shown = "UnitHealthMissing"', 1, true)
+        and text:find('healthMax = "secrète"', 1, true), "sonde : vie manquante secrète relevée")
+  check(text:find('setText = "OK"', 1, true) and text:find('concat = "refusé', 1, true), "sonde : essais d'affichage notés (texte accepté, calcul refusé)")
+  _G.UnitHealth, _G.UnitHealthMissing, _G.UnitHealthMax = saveH, saveM, saveMax
+end
 
 -- onglet Addons : reconnus par dossier, titre (DungeonJournal) ou variable globale ; activer un addon désactivé
 local installed = { { "AllTheThings", "All The Things" }, { "FDJ", "|cff00ff00Dungeon Journal|r (Forever)" }, { "TomTom", "TomTom" } }
