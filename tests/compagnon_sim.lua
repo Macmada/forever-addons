@@ -470,16 +470,19 @@ do
     HealBot_Config_Spells.EnabledKeyCombo[combo] = id and ("S:" .. id .. "^" .. text) or text
   end
   _G.HealBot_Timers_Set = function(_, t) if t == "PrepSetAllAttribs" then refreshed = refreshed + 1 end end
-  _G.HEALBOT_SORTBY_GROUP, _G.HEALBOT_OPTIONS_RAID40 = "Group", "Raid 40"
+  _G.HEALBOT_SORTBY_GROUP = "Groupe"     -- traduit après le chargement des données (rangées sous « Group »)
   _G.HEALBOT_WORD_SOLO, _G.HEALBOT_WORD_PARTY = "Solo", "Party"
   for _, n in ipairs({ 10, 15, 20, 25, 40 }) do _G["HEALBOT_OPTIONS_RAID" .. n] = "Raid" .. n end
   _G.HEALBOT_OPTIONS_RAID40 = "Raid 40"
   local skinText = "Skin\nGroup\nAuthor~v!Monti\nBarText~f~1!{HLTHONBAR=\"false\",AHEIGHT=10,HLTHTYPE=1,NUMFORMAT1=11,SHOWROLE=\"false\",HEIGHT=13}\n" ..
                    "HealBar~f~1!{HEIGHT=40,GRPCOLS=\"false\",WIDTH=110}\nHealBar~d!2~3~\nHealGroups~f~8!{FRAME=7,STATE=\"true\",NAME=\"Pets\"}\n" ..
                    "BarSort~f~1!{SUBORDER=6,RAIDORDER=3}\nBarVisibility~f~1!{ALERTIC=0.95,ALERTOC=0.9}"
-  _G.HealBot_Config_SkinsData = { Group = "PACK", ["Raid 40"] = "PACK" }
+  _G.HealBot_Config_SkinsData = { Group = "PACK", ["Raid 40"] = "PACK40", Standard = "PACKSTD" }
   local first = true
-  _G.HealBot_Util_Decompress = function(s) if first then first = false; return nil end; return s == "PACK" and skinText or s end
+  _G.HealBot_Util_Decompress = function(s) if first then first = false; return nil end; if s == "PACK" then return skinText end
+    if s == "PACK40" then return (skinText:gsub("\nGroup\n", "\nRaid 40\n", 1)) end
+    if s == "PACKSTD" then return "Skin\nStandard\n" end
+    return s end
   local loaded = {}
   _G.HealBot_Share_SkinLoad = function(text, internal) assert(internal == false); loaded[text:match("^[^\n]+\n([^\n]+)")] = text end
   _G.HealBot_Config = { SkinDefault = { Group = { Party = true, Solo = true }, ["Raid 40"] = { ["Raid 40"] = true } } }

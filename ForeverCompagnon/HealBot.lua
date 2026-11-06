@@ -20,7 +20,8 @@ local T = FR and {
   combat = "En combat : HealBot sera configuré à la fin du combat.",
   notPriest = "La configuration automatique d'HealBot est prévue pour le prêtre.",
   done = "HealBot configuré : %d clic(s) réglé(s), skins « Forever Groupe » et « Forever Raid ». Annuler : /fp healbot annuler",
-  skinFail = "Skins HealBot : import impossible (%s). Les clics sont réglés quand même.",
+  skinFail = "Skins HealBot : import impossible (%s skin introuvable).",
+  doneClicks = "HealBot : %d clic(s) réglé(s). Annuler : /fp healbot annuler",
   updated = "HealBot : %s sur %s (nouveau sort).",
   restored = "HealBot : clics et skins d'avant remis.",
   noBackup = "HealBot : aucune sauvegarde à remettre.",
@@ -33,7 +34,8 @@ local T = FR and {
   combat = "In combat: HealBot will be set up after the fight.",
   notPriest = "The automatic HealBot setup is made for priests.",
   done = "HealBot set up: %d click(s), skins \"Forever Groupe\" and \"Forever Raid\". Undo: /fp healbot annuler",
-  skinFail = "HealBot skins: import failed (%s). Clicks are set anyway.",
+  skinFail = "HealBot skins: import failed (%s skin not found).",
+  doneClicks = "HealBot: %d click(s) set. Undo: /fp healbot annuler",
   updated = "HealBot: %s on %s (new spell).",
   restored = "HealBot: previous clicks and skins restored.",
   noBackup = "HealBot: no backup to restore.",
@@ -215,9 +217,9 @@ local function With(extra)
   return t
 end
 HB.SKINS = {
-  { name = HB.SKIN_GROUP, from = "HEALBOT_SORTBY_GROUP", edits = With({ ["HealBar~f~1"] = { WIDTH = 120, HEIGHT = 36 } }),
+  { name = HB.SKIN_GROUP, from = "Group", edits = With({ ["HealBar~f~1"] = { WIDTH = 120, HEIGHT = 36 } }),
     flags = { "HEALBOT_WORD_SOLO", "HEALBOT_WORD_PARTY" } },
-  { name = HB.SKIN_RAID, from = "HEALBOT_OPTIONS_RAID40", edits = With({ ["HealBar~f~1"] = { WIDTH = 85, HEIGHT = 32, GRPCOLS = "true" },
+  { name = HB.SKIN_RAID, from = "Raid 40", edits = With({ ["HealBar~f~1"] = { WIDTH = 85, HEIGHT = 32, GRPCOLS = "true" },
                                                                           ["HealGroups~f~8"] = { STATE = "false" } }),
     flags = { "HEALBOT_OPTIONS_RAID10", "HEALBOT_OPTIONS_RAID15", "HEALBOT_OPTIONS_RAID20", "HEALBOT_OPTIONS_RAID25", "HEALBOT_OPTIONS_RAID40" } },
 }
@@ -238,10 +240,17 @@ local function ApplySkins()
   cfg.SkinDefault = cfg.SkinDefault or {}
   if not st.skinDefault then st.skinDefault = Copy(cfg.SkinDefault) end
   if not st.skin and _G.Healbot_Config_Skins then st.skin = _G.Healbot_Config_Skins.Current_Skin end
+  -- skins intégrés d'HealBot, retrouvés par le nom écrit dans leurs données (« Group », « Raid 40 ») : HealBot les range
+  -- sous le nom anglais au chargement, puis la traduction renomme ses variables (« Groupe » en français)
+  local byName = {}
+  for _, packed in pairs(data) do
+    local text = type(packed) == "string" and Decompress(packed)
+    local n = text and text:match("^[^\n]+\n([^\n]+)")
+    if n then byName[n] = text end
+  end
   for _, s in ipairs(HB.SKINS) do
-    local key = _G[s.from]
-    local text = key and data[key] and Decompress(data[key])
-    if not (text and text:find("\n")) then return false, s.from end
+    local text = byName[s.from]
+    if not text then return false, s.from end
     local ok, err = pcall(load, Patch(text, s.name, s.edits), false)
     if not ok then return false, tostring(err) end
     -- ce skin devient celui d'HealBot pour ces situations (les autres skins perdent ce choix)
@@ -269,9 +278,8 @@ function HB.Setup()
   if not st.clicks then st.clicks = Copy(_G.HealBot_Config_Spells.EnabledKeyCombo) end   -- sauvegarde, une seule fois
   local n = ApplyClicks(false)
   local ok, err = ApplySkins()
-  if not ok then root.Print(T.skinFail, err) end
   st.auto = true
-  root.Print(T.done, n)
+  if ok then root.Print(T.done, n) else root.Print(T.skinFail, err); root.Print(T.doneClicks, n) end
   return true, n
 end
 

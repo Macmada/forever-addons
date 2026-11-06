@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.4.1 (ForeverCompagnon 3.4.1)
+- **Skins HealBot non importés en français** (« import impossible (HEALBOT_SORTBY_GROUP) ») : HealBot range ses skins intégrés sous leur nom anglais (« Group », « Raid 40 ») au chargement, puis sa traduction renomme ses variables (« Groupe »). Les skins sont maintenant retrouvés par le nom écrit dans leurs données, quelle que soit la langue.
+- Le message final ne parle plus des skins quand leur import a échoué.
+
 ## v3.4.0 (ForeverCompagnon 3.4.0) : HealBot réglé pour le prêtre
 - **Configurer HealBot** (onglet Addons, ligne HealBot, ou `/fp healbot`) : ForeverCompagnon règle HealBot Continued avec les fonctions d'HealBot lui-même.
   - **Clics** d'après tes sorts : gauche = gros soin efficace (Soins inférieurs, puis Soins dès le niveau 16, Soins supérieurs au 40) ; Maj+gauche = soin rapide (Soins inférieurs rang 2 avant le niveau 16, Soins inférieurs ensuite, Soins rapides dès le 20) ; droit = Rénovation ; Maj+droit = Bouclier ; Ctrl+droit = Prière de soins ; milieu = Guérison des maladies (Abolir la maladie) ; Maj+milieu = Dissipation de la magie ; Ctrl+gauche = Résurrection ; Alt+gauche = Robustesse. Sans rang, HealBot lance toujours le rang le plus haut.
