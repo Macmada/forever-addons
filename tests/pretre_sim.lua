@@ -179,6 +179,35 @@ check(root.TestReport():find("[OK] Jeu — mana comparée par le jeu", 1, true),
 
 check(root.ProbeText():find("secretPowerOutOfCombat = true", 1, true), "sonde : mana secrète hors combat relevée")
 
+-- onglet Addons : reconnus par dossier, titre (DungeonJournal) ou variable globale ; activer un addon désactivé
+local installed = { { "AllTheThings", "All The Things" }, { "FDJ", "|cff00ff00Dungeon Journal|r (Forever)" }, { "TomTom", "TomTom" } }
+local enabled = {}
+_G.C_AddOns.GetNumAddOns = function() return #installed end
+_G.C_AddOns.GetAddOnInfo = function(i) return installed[i][1], installed[i][2] end
+_G.C_AddOns.IsAddOnLoaded = function(n) return n == "AllTheThings" or n == "FDJ" end
+_G.C_AddOns.EnableAddOn = function(n) enabled[n] = true end
+local byKey = {}
+for _, e in ipairs(root.ADDONS) do byKey[e.key] = e end
+check(root.AddonStatus(byKey.dj) == "on", "Addons : DungeonJournal reconnu par son titre (dossier « FDJ »)")
+check(root.AddonStatus(byKey.tomtom) == "off" and root.AddonStatus(byKey.questie) == "absent", "Addons : TomTom désactivé, Questie absent")
+root.Open("addons")
+check(ForeverPretreAddonsFrame:IsShown() and ForeverPretreRail:IsShown(), "onglet Addons dans la barre")
+local alines = root.AddonLines()
+local tomCard
+for _, l in ipairs(alines) do if l.kind == "card" and l.name == "TomTom" then tomCard = l end end
+check(tomCard and tomCard.onClick, "Addons : une ligne par addon, cliquable")
+tomCard.onClick()
+check(ForeverPretreAddonsFrame.url:GetText():find("curseforge.com/wow/addons/tomtom", 1, true), "clic : adresse affichée à copier")
+check(ForeverPretreAddonsFrame.enable:IsShown(), "addon désactivé : bouton Activer")
+ForeverPretreAddonsFrame.enable.scripts.OnClick()
+check(enabled.TomTom, "Activer : TomTom activé pour le prochain /reload")
+check(root.TestReport():find("DungeonJournal oui [FDJ]", 1, true), "auto-test : DungeonJournal trouvé même sous un autre nom de dossier")
+W.class = "WARRIOR"
+local warrior = table.concat((function() local t = {} for _, l in ipairs(root.AddonLines()) do t[#t + 1] = l.name or "" end return t end)(), ",")
+check(not warrior:find("HealBot", 1, true) and not warrior:find("Full Mana", 1, true), "guerrier : ni HealBot ni Full Mana proposés")
+W.class = "PRIEST"
+ForeverPretreAddonsFrame:Hide()
+
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 

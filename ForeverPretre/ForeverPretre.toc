@@ -46,5 +46,6 @@ Metiers\Widgets.lua
 Metiers\UI.lua
 Window.lua
 Now.lua
+Addons.lua
 Probe.lua
 SelfTest.lua

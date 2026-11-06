@@ -58,10 +58,11 @@ root.Test("Jeu", "sauvegardes relues d'une connexion à l'autre", function()
   return true, n .. " chargements comptés : les réglages sont bien relus"
 end)
 root.Test("Jeu", "addons de données", function()
-  local loaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
+  -- par dossier, titre ou variable globale (le dossier de DungeonJournal ne s'appelle pas ainsi : « non » à tort en 3.0.0)
   local list = {}
-  for _, a in ipairs({ "AllTheThings", "DungeonJournal", "Auctionator", "TomTom" }) do
-    list[#list + 1] = a .. (loaded and loaded(a) and " oui" or " non")
+  for _, e in ipairs(root.ADDONS) do
+    local st, folder = root.AddonStatus(e)
+    list[#list + 1] = e.name .. " " .. (st == "on" and "oui" or st == "off" and "désactivé" or "non") .. (folder and (" [" .. folder .. "]") or "")
   end
   return true, table.concat(list, ", ")
 end)

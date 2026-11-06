@@ -20,6 +20,8 @@ root.TABS = {
     mod = "ForeverPrep", toggle = "Toggle" },
   { key = "metiers", label = L.metiers, icon = "Interface\\Icons\\Trade_Tailoring", frame = "ForeverMetiersFrame",
     mod = "ForeverMetiers", toggle = "Toggle" },
+  { key = "addons", label = L.addons, icon = "Interface\\Icons\\Trade_Engineering", frame = "ForeverPretreAddonsFrame",
+    open = function() root.ShowAddons() end },
 }
 local byKey = {}
 for _, t in ipairs(root.TABS) do byKey[t.key] = t end
@@ -203,7 +205,7 @@ SlashCmdList.FOREVERPRETRE = function(msg)
   msg = ((msg or ""):match("^%s*(.-)%s*$")):lower()
   local map = { [""] = "now", maintenant = "now", now = "now", soins = "heal", heal = "heal", equipement = "loot", ["équipement"] = "loot",
                 gear = "loot", loot = "loot", prepa = "prep", ["prépa"] = "prep", prep = "prep", metiers = "metiers", ["métiers"] = "metiers",
-                prof = "metiers" }
+                prof = "metiers", addons = "addons", addon = "addons" }
   if map[msg] then root.Open(map[msg])
   elseif msg == "test" then root.RunTests()
   elseif msg == "sonde" or msg == "probe" then root.ShowProbe()
