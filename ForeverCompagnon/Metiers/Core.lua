@@ -48,6 +48,10 @@ function ns.ProfKey(name, skillLine)
   for k, p in pairs(D.profs) do
     for _, x in ipairs(p.names) do if Norm(x) == n then return k end end
   end
+  -- variante du client (« Couture classique », « Classic Tailoring »…) : le nom connu contenu dans celui du jeu
+  for k, p in pairs(D.profs) do
+    for _, x in ipairs(p.names) do if n:find(Norm(x), 1, true) then return k end end
+  end
 end
 function ns.ProfName(k) return ns.LocOpt("prof_" .. k) or (D.profs[k] and D.profs[k].names[ns.lang == "en" and 2 or 1]) or k end
 
@@ -209,8 +213,20 @@ function modern.line()
     local ri = Call("GetRecipeInfo", id)
     if type(ri) == "table" and ri.learned ~= false then modern.ids[#modern.ids + 1] = id end
   end
+  -- sans information sur le métier ouvert : celle de sa première recette
+  if (type(info) ~= "table" or not info.professionName) and modern.ids[1] then
+    local byRecipe = Call("GetProfessionInfoByRecipeID", modern.ids[1])
+    if type(byRecipe) == "table" then info = byRecipe end
+    if type(info) ~= "table" then
+      local line, lname, parent = Call("GetTradeSkillLineForRecipe", modern.ids[1])
+      if line or parent then info = { professionID = parent or line, professionName = lname } end
+    end
+  end
   if type(info) ~= "table" then return nil end
-  return info.parentProfessionName or info.professionName, info.skillLevel, info.maxSkillLevel
+  -- nom (« Couture » ou une variante du client) et numéro du métier (197…) : le numéro sert à le reconnaître
+  local rank, max = info.skillLevel, info.maxSkillLevel
+  local id = info.parentProfessionID or info.professionID
+  return info.parentProfessionName or info.professionName, rank, max, id
 end
 function modern.num() return #modern.ids end
 function modern.info(i)
@@ -292,12 +308,13 @@ function ns.ParseStats(desc)
 end
 
 function ns.Scan(api)
-  local name, rank, max = api.line()
-  local k = ns.ProfKey(name)
+  local name, rank, max, skillLine = api.line()
+  local k = ns.ProfKey(name, skillLine)
   ns.lastApi = api
-  if not k then ns.lastScan = { name = name, kind = api.kind }; return nil end
+  if not k then ns.lastScan = { name = name, skillLine = skillLine, kind = api.kind }; return nil end
   ns.SetSkill(k, rank, max)
-  local sc = { prof = k, kind = api.kind, rank = rank, max = max, recipes = {}, t = time() }
+  if not rank and db.skills[k] then rank, max = db.skills[k].rank, db.skills[k].max end    -- niveau lu par GetProfessions
+  local sc = { prof = k, kind = api.kind, rank = rank, max = max, recipes = {}, t = time(), name = name, skillLine = skillLine }
   local known = {}
   local products = {}
   local me = CharKey()

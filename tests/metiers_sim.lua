@@ -340,6 +340,20 @@ local adv2 = ns.Advise(ns.lastScan, 5)
 check(adv2[1] and adv2[1].r.name == "Rouleau de tisse-mage" and adv2[1].r.type == "optimal", "difficulté lue (orange) et meilleur craft")
 ns.API.modern.select(adv2[1].r.index)
 check(_G.openedRecipe == 101, "clic : la recette est ouverte dans la fenêtre des métiers")
+-- en jeu (06/11/2026, « métier nil, 0 recettes ») : le client donne un autre nom, ou rien sur le métier ouvert
+_G.C_TradeSkillUI.GetChildProfessionInfo = function() return { professionName = "Couture classique", professionID = 2540, parentProfessionID = 197, skillLevel = 60, maxSkillLevel = 75 } end
+ns.lastScan = nil
+W.fire("TRADE_SKILL_SHOW"); W.run(1)
+check(ns.lastScan and ns.lastScan.prof == "tailoring" and #ns.lastScan.recipes == 2, "« Couture classique » (n° 197) : reconnue comme la couture")
+_G.C_TradeSkillUI.GetChildProfessionInfo = function() return { professionName = "Tailleur de la Vallée", professionID = 999, skillLevel = 60, maxSkillLevel = 75 } end
+ns.lastScan = nil
+W.fire("TRADE_SKILL_SHOW"); W.run(1)
+check(ns.lastScan and ns.lastScan.prof == nil and ns.lastScan.name == "Tailleur de la Vallée", "nom inconnu : rien d'inventé, nom gardé pour le diagnostic")
+_G.C_TradeSkillUI.GetChildProfessionInfo = function() return nil end
+_G.C_TradeSkillUI.GetProfessionInfoByRecipeID = function() return { professionName = "Couture", parentProfessionID = 197 } end
+ns.lastScan = nil
+W.fire("TRADE_SKILL_SHOW"); W.run(1)
+check(ns.lastScan and ns.lastScan.prof == "tailoring" and #ns.lastScan.recipes == 2 and ns.lastScan.rank, "rien sur le métier ouvert : déduit de sa première recette, niveau de GetProfessions")
 _G.GetTradeSkillLine, _G.GetNumTradeSkills = saveT[1], saveT[2]
 _G.C_TradeSkillUI = nil
 

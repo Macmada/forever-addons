@@ -133,7 +133,9 @@ root.Test("Métiers", "fenêtre de métier lue", function()
   if not ok then return false, tostring(sc) end
   local n = 0
   for _ in pairs(sc and sc.recipes or {}) do n = n + 1 end
-  return sc ~= nil and sc.prof ~= nil, "méthode " .. tostring(api.kind) .. ", métier " .. tostring(sc and (sc.prof or sc.name)) .. ", " .. n .. " recettes"
+  local ls = ns.lastScan or {}
+  return sc ~= nil and sc.prof ~= nil, "méthode " .. tostring(api.kind) .. ", métier " .. tostring(sc and sc.prof)
+         .. ", " .. n .. " recettes ; le jeu dit : « " .. tostring(ls.name) .. " » (n° " .. tostring(ls.skillLine) .. ")"
 end)
 root.Test("Maintenant", "écran Maintenant", function()
   local lines = root.NowLines()
