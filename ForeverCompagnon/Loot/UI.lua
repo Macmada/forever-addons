@@ -242,7 +242,7 @@ local function CardFrom(c, ref, extraTags)
   if c.src == "equipped" then gain, sub = "|cff40d860" .. L.refWear:gsub("^ — ", "") .. "|r", "" end
   -- clic droit : la flèche vers le lieu le plus proche où l'obtenir (sources intégrées)
   local go = ns.GoTo and c.src ~= "equipped" and ns.HasPlace(c.id)
-  if go then tags[#tags + 1] = "|cff66ccff" .. L.goTag .. "|r" end
+  if go then source = source .. "  ·  |cff66ccff" .. L.goTag .. "|r" end       -- sur la ligne de la source (place)
   return { kind = "card", link = c.link, ref = ref, name = name or (c.link and c.link:match("%[(.-)%]")) or "?",
            quality = quality or 1, icon = icon or iconI, tags = table.concat(tags, "  "), source = source, gain = gain, gainSub = sub,
            onRight = go and function() ns.GoTo(c.id) end or nil }

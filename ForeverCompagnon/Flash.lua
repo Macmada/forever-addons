@@ -7,7 +7,8 @@ local K = root.Kit
 -- (icône, valeur en vert ou en rouge, ce que ça change), et pour un soigneur le résultat sur tes soins. Effets : éclat
 -- d'étoile, lignes qui glissent l'une après l'autre, chiffres qui montent au-dessus de ta tête comme du texte de combat.
 -- Pour toutes les classes : un soigneur passe par la partie Soins (lignes « +35 Endurance » +350 PV »), les autres par
--- le relevé générique ci-dessous. Maj+glisser pour le déplacer, clic pour le fermer.
+-- le relevé générique ci-dessous. Glisser pour le déplacer (position retenue), clic droit pour le fermer,
+-- /fp flash place pour revenir à la place automatique.
 
 local F = {}
 root.Flash = F
@@ -31,10 +32,10 @@ local function Pos()
   local cf = _G.CharacterFrame
   frame:ClearAllPoints()
   local hp = _G.ForeverHealPanel
-  if cf and cf:IsShown() then
-    frame:SetPoint("TOPLEFT", (hp and hp:IsShown()) and hp or cf, "TOPRIGHT", 8, -20)
-  elseif root.db and root.db.flashPos then
+  if root.db and root.db.flashPos then                                  -- position choisie (glissée) : toujours là
     frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", root.db.flashPos[1], root.db.flashPos[2])
+  elseif cf and cf:IsShown() then
+    frame:SetPoint("TOPLEFT", (hp and hp:IsShown()) and hp or cf, "TOPRIGHT", 8, -20)
   else
     frame:SetPoint("LEFT", UIParent, "CENTER", 90, 60)            -- à droite du personnage
   end
@@ -85,13 +86,22 @@ local function Create()
   frame:SetClampedToScreen(true)
   frame:SetMovable(true)
   frame:RegisterForDrag("LeftButton")
-  frame:SetScript("OnDragStart", function(self) if IsShiftKeyDown() then self:StartMoving() end end)
+  frame:SetScript("OnDragStart", function(self) self:StartMoving(); self.dragging = true end)
   frame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
+    self.dragging = false
     local x, y = self:GetCenter()
-    if root.db and type(x) == "number" then root.db.flashPos = { x, y } end
+    if root.db and type(x) == "number" then root.db.flashPos = { x, y } end      -- position retenue (même fiche ouverte)
   end)
-  frame:SetScript("OnClick", function(self) self:Hide() end)
+  frame:RegisterForClicks("RightButtonUp")
+  frame:SetScript("OnClick", function(self) self:Hide() end)                       -- clic droit : fermer
+  frame:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText(L.flashTitle)
+    GameTooltip:AddLine(L.flashTip, 0.8, 0.8, 0.8, true)
+    GameTooltip:Show()
+  end)
+  frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
   -- fond : sombre, filet doré, lueur en haut
   frame.bg = frame:CreateTexture(nil, "BACKGROUND")
   frame.bg:SetAllPoints()
@@ -129,7 +139,7 @@ local function Create()
   frame.inA = Anim(frame, "Alpha", 0, 1, 0.25)
   frame.inT = Anim(frame, "Translation", -30, 0, 0.35)
   frame:SetScript("OnUpdate", function(self, el)
-    if self:IsMouseOver() then return end              -- survol : reste affiché
+    if self:IsMouseOver() or self.dragging then return end   -- survol ou déplacement : reste affiché
     self.t = (self.t or 0) + el
     if self.t > 7 then self:SetAlpha(math.max(0, 1 - (self.t - 7) / 1.2)) end
     if self.t > 8.2 then self:Hide() end

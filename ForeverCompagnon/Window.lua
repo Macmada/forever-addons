@@ -216,6 +216,9 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
   elseif msg == "flash" or msg == "annonce" then
     root.db.flash = (root.db.flash == false)
     root.Print(root.db.flash and L.flash_on or L.flash_off)
+  elseif msg == "flash place" or msg == "flash reset" then
+    root.db.flashPos = nil
+    root.Print(L.flashReset)
   elseif msg == "flash test" or msg == "annonce test" then
     root.Flash.Show({ item = GetInventoryItemLink("player", 5), rows = { { "sta", "+12 " .. L.flash_sta .. " » " .. string.format(L.flash_staHp, "+120") },
       { "int", "+8 " .. L.flash_int .. " » " .. string.format(L.flash_intMana, "+120") }, { "armor", "-15 " .. L.flash_armor } } })

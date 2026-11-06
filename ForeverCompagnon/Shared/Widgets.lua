@@ -343,6 +343,15 @@ function K.CardList(parent, width)
         gw = math.max(gw, (type(sw) == "number" and sw or 0))
         c.src:SetWidth(math.max(120, w - 70 - (gw > 0 and gw + 20 or 0)))
         c.src:SetText(l.source or "")
+        -- nom et étiquettes sur une ligne, sans chevaucher le gain à droite : coupés (« … ») s'ils sont trop longs
+        local room = w - 70 - (gw > 0 and gw + 24 or 0)
+        local nw = c.name:GetStringWidth()
+        nw = (type(nw) == "number" and nw) or 0
+        if nw > room then c.name:SetWidth(math.max(60, room)); nw = room else c.name:SetWidth(0) end
+        if c.name.SetWordWrap then c.name:SetWordWrap(false) end
+        if c.tags.SetWordWrap then c.tags:SetWordWrap(false) end
+        c.tags:SetWidth(math.max(1, room - nw - 8))
+        c.tags:SetShown(room - nw - 8 > 30)
         local sh = c.src:GetStringHeight()
         sh = (type(sh) == "number" and sh > 0) and sh or 12
         local hgt = math.max(44, 22 + ((l.source and l.source ~= "") and sh or 0) + 6)

@@ -292,6 +292,10 @@ check(nav.target and nav.target.x == 12 and nav.target.y == 34, "/way sans TomTo
 SlashCmdList.FOREVERCOMPAGNON("way")
 check(not nav.target and not ForeverCompagnonArrow:IsShown(), "/fp way : flèche effacée")
 -- « y aller » : Anneau de canaliste (272406), vendu dans la Vallée de Strangleronce (base intégrée)
+local cardGo
+for _, l in ipairs(root.mods.ForeverLoot.NearLines(60)) do if l.onRight and l.source then cardGo = l end end
+check(not cardGo or (cardGo.source:find(root.mods.ForeverLoot.L.goTag, 1, true) and not (cardGo.tags or ""):find(root.mods.ForeverLoot.L.goTag, 1, true)),
+      "« clic droit : y aller » sur la ligne de la source, plus dans les étiquettes (chevauchement du gain)")
 check(root.mods.ForeverLoot.HasPlace(272406) and root.mods.ForeverLoot.GoTo(272406) and nav.target.mapID == 1434,
       "Équipement : clic droit sur l'anneau de canaliste, flèche vers son vendeur")
 nav.Clear()
@@ -365,6 +369,12 @@ check(not ForeverCompagnonFlash:IsShown(), "désactivé : rien ne s'affiche")
 SlashCmdList.FOREVERCOMPAGNON("flash")
 SlashCmdList.FOREVERCOMPAGNON("flash test")
 check(ForeverCompagnonFlash:IsShown(), "/fp flash test : aperçu du cadre")
+ForeverCompagnonFlash.GetCenter = function() return 900, 500 end
+ForeverCompagnonFlash.scripts.OnDragStart(ForeverCompagnonFlash)
+ForeverCompagnonFlash.scripts.OnDragStop(ForeverCompagnonFlash)
+check(root.db.flashPos and root.db.flashPos[1] == 900, "cadre glissé : position retenue")
+SlashCmdList.FOREVERCOMPAGNON("flash place")
+check(root.db.flashPos == nil, "/fp flash place : retour à la place automatique")
 ForeverCompagnonFlash:Hide()
 
 -- équiper depuis l'alerte (lien avec le jeu)

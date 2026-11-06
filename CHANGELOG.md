@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.3.1 (ForeverCompagnon 3.3.1), d'après tes captures
+- **Cadre des changements déplaçable** : glisser pour le déplacer (plus besoin de Maj), position retenue même quand la fiche personnage est ouverte ; clic droit pour le fermer ; `/fp flash place` pour revenir à la place automatique.
+- **Écran Maintenant / Équipement** : « clic droit : y aller » passe sur la ligne de la source ; le nom et les étiquettes trop longs sont coupés au lieu de chevaucher le gain (« Kaléidoscope d'œil de serpent »).
+
 ## v3.3.0 : cadre des changements de caractéristiques (ForeverCompagnon 3.3.0)
 - **Nouveau cadre « Flash »**, pour toutes les classes : quand tu équipes un objet hors combat, un cadre doré apparaît **à côté de ton personnage** (contre ta fiche personnage si elle est ouverte) : l'objet équipé (icône à la couleur de sa qualité), une ligne par caractéristique avec son icône, la valeur en vert ou en rouge en grand et ce qu'elle change dessous, le résultat sur tes soins pour un soigneur. Effets : éclat d'étoile, lignes qui glissent l'une après l'autre, valeurs qui montent au-dessus de ta tête comme du texte de combat, son de butin. Remplace l'ancien texte en haut de l'écran (le choix « dans la discussion » de `/fheal chat` reste).
 - `/fp flash` : active ou coupe ; `/fp flash test` : aperçu. Survol pour le garder, clic pour le fermer, Maj+glisser pour le déplacer.
