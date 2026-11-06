@@ -474,7 +474,7 @@ do
   _G.HEALBOT_WORD_SOLO, _G.HEALBOT_WORD_PARTY = "Solo", "Party"
   for _, n in ipairs({ 10, 15, 20, 25, 40 }) do _G["HEALBOT_OPTIONS_RAID" .. n] = "Raid" .. n end
   _G.HEALBOT_OPTIONS_RAID40 = "Raid 40"
-  local skinText = "Skin\nGroup\nAuthor~v!Monti\nBarText~f~1!{HLTHONBAR=\"false\",AHEIGHT=10,HLTHTYPE=1,NUMFORMAT1=11,SHOWROLE=\"false\",HEIGHT=13}\n" ..
+  local skinText = "Skin\nGroup\nAuthor~v!Monti\nGeneral~t!{OFREQ=0.07,HIDEPARTYF=\"false\",HIDERAIDF=\"true\"}\nIcons~f~1!{RCEN=\"true\",SHOWCLASS=\"false\",SHOWROLE=\"true\"}\nBarText~f~1!{HLTHONBAR=\"false\",AHEIGHT=10,HLTHTYPE=1,NUMFORMAT1=11,SHOWROLE=\"false\",HEIGHT=13}\n" ..
                    "HealBar~f~1!{HEIGHT=40,GRPCOLS=\"false\",WIDTH=110}\nHealBar~d!2~3~\nHealGroups~f~8!{FRAME=7,STATE=\"true\",NAME=\"Pets\"}\n" ..
                    "BarSort~f~1!{SUBORDER=6,RAIDORDER=3}\nBarVisibility~f~1!{ALERTIC=0.95,ALERTOC=0.9}"
   _G.HealBot_Config_SkinsData = { Group = "PACK", ["Raid 40"] = "PACK40", Standard = "PACKSTD" }
@@ -487,7 +487,8 @@ do
   _G.HealBot_Share_SkinLoad = function(text, internal) assert(internal == false); loaded[text:match("^[^\n]+\n([^\n]+)")] = text end
   _G.HealBot_Config = { SkinDefault = { Group = { Party = true, Solo = true }, ["Raid 40"] = { ["Raid 40"] = true } } }
   _G.Healbot_Config_Skins = { Current_Skin = "Standard" }
-  local current
+  local current, blizz = nil, 0
+  _G.HealBot_Timers_ToggleBlizzardFrames = function() blizz = blizz + 1 end
   _G.HealBot_Options_Set_Current_Skin = function(n) current = n end
   check(HB.Available(), "HealBot chargé : reconnu")
 
@@ -512,6 +513,9 @@ do
   check(g and g:find("HLTHTYPE=2", 1, true) and g:find("NUMFORMAT1=1,", 1, true) and g:find("AHEIGHT=10", 1, true)
         and g:find("HEIGHT=13", 1, true) and g:find("SHOWROLE=\"true\"", 1, true) and g:find("IGNOREONFULL=\"true\"", 1, true),
         "skin : vie manquante, rôles, autres réglages intacts (AHEIGHT, HEIGHT)")
+  check(g and g:find('Icons~f~1!{RCEN="true",SHOWCLASS="true",SHOWROLE="true"}', 1, true)
+        and g:find('General~t!{OFREQ=0.07,HIDEPARTYF="true",HIDERAIDF="true"}', 1, true), "skin : icône de rôle, cadres de Blizzard masqués")
+  check(blizz == 1, "HealBot relit les cadres de Blizzard à masquer")
   check(g and g:find("HealBar~f~1!{HEIGHT=36,GRPCOLS=\"false\",WIDTH=120}", 1, true) and g:find("HealBar~d!2~3~", 1, true), "skin groupe : barres 120×36")
   check(r and r:find("WIDTH=85", 1, true) and r:find("GRPCOLS=\"true\"", 1, true) and r:find("NAME=\"Pets\"", 1, true)
         and r:find("STATE=\"false\"", 1, true) and r:find("SUBORDER=5", 1, true), "skin raid : colonnes par groupe, sans familiers, tri par rôle")

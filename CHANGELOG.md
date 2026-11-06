@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.4.2 (ForeverCompagnon 3.4.2), d'après ta capture
+- **Skins HealBot : icône de rôle** (soigneur, tank, dégâts) sur chaque barre : HealBot ne la montre qu'à la place de l'icône de classe, qui était coupée dans ses skins d'origine.
+- **Cadre de groupe de Blizzard masqué** dès la configuration (HealBot ne relisait ce réglage qu'au changement de groupe).
+
 ## v3.4.1 (ForeverCompagnon 3.4.1)
 - **Skins HealBot non importés en français** (« import impossible (HEALBOT_SORTBY_GROUP) ») : HealBot range ses skins intégrés sous leur nom anglais (« Group », « Raid 40 ») au chargement, puis sa traduction renomme ses variables (« Groupe »). Les skins sont maintenant retrouvés par le nom écrit dans leurs données, quelle que soit la langue.
 - Le message final ne parle plus des skins quand leur import a échoué.

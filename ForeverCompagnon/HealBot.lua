@@ -209,6 +209,8 @@ local COMMON = {
   ["BarText~f~1"] = { HLTHTYPE = 2, NUMFORMAT1 = 1, IGNOREONFULL = "true", SHOWROLE = "true" },   -- vie manquante, « -432 »
   ["BarSort~f~1"] = { RAIDORDER = 3, SUBORDER = 5, SUBPF = "true" },                              -- par groupe, puis rôle
   ["BarVisibility~f~1"] = { ALERTIC = 0.9, ALERTOC = 0.8 },                                       -- alerte sous 90 % en combat
+  ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true" },        -- icône de rôle (HealBot la met à la place de celle de classe)
+  ["General~t"] = { HIDEPARTYF = "true", HIDERAIDF = "true" },       -- cadres de groupe et de raid de Blizzard masqués
 }
 local function With(extra)
   local t = {}
@@ -265,6 +267,9 @@ local function ApplySkins()
   end
   local want = (IsInRaid and IsInRaid()) and HB.SKIN_RAID or HB.SKIN_GROUP
   if type(_G.HealBot_Options_Set_Current_Skin) == "function" then pcall(_G.HealBot_Options_Set_Current_Skin, want) end
+  -- HealBot relit quels cadres de Blizzard masquer (sinon seulement au prochain changement de groupe)
+  if type(_G.HealBot_Options_SetFrames) == "function" then pcall(_G.HealBot_Options_SetFrames) end
+  if type(_G.HealBot_Timers_ToggleBlizzardFrames) == "function" then pcall(_G.HealBot_Timers_ToggleBlizzardFrames) end
   return true
 end
 
