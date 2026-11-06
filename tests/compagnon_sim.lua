@@ -521,7 +521,8 @@ do
   check(c.Left == "S:2050^Soins inférieurs" and c.ShiftLeft == "S:2052^Soins inférieurs(Rang 2)", "niveau 15 : Soins inférieurs (gauche), rang 2 en Maj+gauche")
   check(c.Right == "S:139^Rénovation" and c.ShiftRight == "S:17^Mot de pouvoir : Bouclier" and c.Middle == "S:528^Guérison des maladies",
         "Rénovation (droit), Bouclier (Maj+droit), Guérison des maladies (milieu)")
-  check(c.CtrlLeft == "S:2006^Résurrection" and c.AltLeft == "S:1243^Mot de pouvoir : Robustesse", "Résurrection (Ctrl+gauche), Robustesse (Alt+gauche)")
+  check(c.CtrlLeft == "S:2006^Résurrection" and c.CtrlMiddle == "S:1243^Mot de pouvoir : Robustesse" and c.AltLeft == nil,
+        "Résurrection (Ctrl+gauche), Robustesse (Ctrl+milieu, jamais Alt : touche « soi-même » de WoW)")
   check(c.Button4 == "S:9^Perso" and c.CtrlRight == "S:8^Mon sort" and c.ShiftMiddle == nil, "clics non prévus laissés tels quels (bouton 4, Ctrl+droit)")
   check(refreshed >= 1, "HealBot relit ses clics")
   local st = HB.Store()
@@ -551,6 +552,13 @@ do
   SlashCmdList.FOREVERCOMPAGNON("healbot diag")
   Healbot_Config_Skins.Current_Skin = "Standard"
 
+  -- ancienne version : Robustesse posée sur Alt+gauche -> libérée et déplacée ; un Alt+clic changé à la main reste
+  c.AltLeft = "S:1243^Mot de pouvoir : Robustesse"; st.set.AltLeft = c.AltLeft
+  c.AltRight = "S:5^Perso"; st.set.AltRight = "S:4^Ancien"
+  HB.Update()
+  check(c.AltLeft == nil and st.set.AltLeft == nil and c.CtrlMiddle == "S:1243^Mot de pouvoir : Robustesse", "ancien Alt+gauche libéré, Robustesse sur Ctrl+milieu")
+  check(c.AltRight == "S:5^Perso", "Alt+clic changé à la main : gardé")
+  c.AltRight = nil
   -- niveau 16 : Soins appris -> clic gauche mis à jour ; un clic changé à la main n'est pas touché
   c.Right = "S:7^Mon choix"
   known[2054] = true

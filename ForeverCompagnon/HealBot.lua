@@ -23,6 +23,7 @@ local T = FR and {
   skinFail = "Skins HealBot : import impossible (%s skin introuvable).",
   doneClicks = "HealBot : %d clic(s) réglé(s). Annuler : /fp healbot annuler",
   updated = "HealBot : %s sur %s (nouveau sort).",
+  removed = "HealBot : %s libéré (Alt lance le sort sur toi : Robustesse passe sur Ctrl+clic milieu).",
   restored = "HealBot : clics et skins d'avant remis.",
   noBackup = "HealBot : aucune sauvegarde à remettre.",
   planTitle = "Clics HealBot prévus à ton niveau :",
@@ -38,6 +39,7 @@ local T = FR and {
   skinFail = "HealBot skins: import failed (%s skin not found).",
   doneClicks = "HealBot: %d click(s) set. Undo: /fp healbot annuler",
   updated = "HealBot: %s on %s (new spell).",
+  removed = "HealBot: %s freed (Alt casts on yourself: Fortitude moves to Ctrl+middle click).",
   restored = "HealBot: previous clicks and skins restored.",
   noBackup = "HealBot: no backup to restore.",
   planTitle = "HealBot clicks planned at your level:",
@@ -92,7 +94,8 @@ function HB.Plan()
     if best and best > 1 then add("ShiftLeft", RankedName(LESSER_RANKS[best - 1]), nil) end
   end
   if Known(S.rez) then add("CtrlLeft", Name(S.rez)) end
-  if Known(S.fort) then add("AltLeft", Name(S.fort)) end
+  -- pas de clic avec Alt : c'est la touche « se cibler soi-même » de WoW, le sort partirait sur toi
+  if Known(S.fort) then add("CtrlMiddle", Name(S.fort)) end
   if Known(S.renew) then add("Right", Name(S.renew)) end
   if Known(S.shield) then add("ShiftRight", Name(S.shield)) end
   if Known(S.prayer) then add("CtrlRight", Name(S.prayer)) end
@@ -171,6 +174,19 @@ local function ApplyClicks(onlyMine)
           combos[p.combo] = current                                -- sort inconnu d'HealBot : on remet l'ancien
         end
       end
+    end
+  end
+  -- clics posés par une ancienne version et plus prévus (Alt+gauche) : retirés s'ils n'ont pas été changés depuis
+  local planned = {}
+  for _, p in ipairs(HB.Plan()) do planned[p.combo] = true end
+  for combo, value in pairs(st.set) do
+    if not planned[combo] then
+      if combos[combo] == value then
+        pcall(_G.HealBot_Action_SetSpell, "ENABLED", combo, "")
+        combos[combo] = nil
+        changes[#changes + 1] = { combo = combo, removed = true }
+      end
+      st.set[combo] = nil
     end
   end
   Refresh()
@@ -355,7 +371,9 @@ function HB.Update()
   if not (st and st.auto and HB.Available()) then return end
   if InCombatLockdown and InCombatLockdown() then pending = "update"; return end
   local _, changes = ApplyClicks(true)
-  for _, c in ipairs(changes) do root.Print(T.updated, c.text, HB.ComboLabel(c.combo)) end
+  for _, c in ipairs(changes) do
+    if c.removed then root.Print(T.removed, HB.ComboLabel(c.combo)) else root.Print(T.updated, c.text, HB.ComboLabel(c.combo)) end
+  end
 end
 
 function HB.Restore()

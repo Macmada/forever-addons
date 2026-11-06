@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v3.4.6 (ForeverCompagnon 3.4.6)
+- **Robustesse lancée sur toi au lieu de la barre cliquée** : Alt est la touche « se cibler soi-même » de WoW, qui passe avant la barre d'HealBot. Robustesse passe sur **Ctrl+clic milieu**, plus aucun clic avec Alt ; l'ancien Alt+clic gauche est libéré tout seul s'il n'a pas été changé à la main.
+
 ## v3.4.5 (ForeverCompagnon 3.4.5)
 - **Familiers vraiment retirés des cadres HealBot** (HealBot Tooltips plantait encore sur eux) : à l'import d'un ancien skin, HealBot renumérote ses groupes de barres, et le réglage visait la mauvaise ligne. Les familiers (et véhicules) sont maintenant coupés par leur nom après l'import, ainsi que le réglage « familiers avec leur maître », dans les deux skins.
 - `/fp healbot diag` : ce qu'HealBot a retenu pour le skin actif (groupes de barres, cadre, affiché ou non).
