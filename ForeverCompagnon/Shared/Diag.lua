@@ -37,7 +37,7 @@ local function Header(add)
   add(string.format("Personnage : niveau %s, %s %s, %s, royaume %s", tostring(UnitLevel("player")), tostring(race), tostring(class),
     tostring(UnitFactionGroup("player")), tostring(GetRealmName and GetRealmName() or "?")))
   local list = {}
-  for _, a in ipairs({ "ForeverGFX", "ForeverMacros", "ForeverGazette", "ForeverPrep", "ForeverHeal", "ForeverLoot", "ForeverMetiers" }) do
+  for _, a in ipairs({ "ForeverGFX", "ForeverMacros", "ForeverPrep", "ForeverHeal", "ForeverLoot", "ForeverMetiers" }) do
     if Loaded(a) then list[#list + 1] = a .. " " .. tostring(Meta(a, "Version") or "?") end
   end
   add("Addons Forever chargés : " .. table.concat(list, ", "))

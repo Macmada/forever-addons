@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.4.7 : ForeverGazette retiré
+- **ForeverGazette n'est plus fourni** (à ta demande) : l'addon, son compagnon PDF/Discord (`tools/gazette-discord`), sa simulation et ses archives de release sont retirés ; l'icône commune « Forever » ne propose plus que Compagnon, Macros et Graphismes. Les versions précédentes restent dans l'historique du dépôt.
+- Déjà installé chez toi : supprime le dossier `Interface\AddOns\ForeverGazette` (WowUp ne le retire pas tout seul) et, pour le compagnon, lance d'abord `retirer-demarrage.bat` dans `Documents\gazette-discord`, puis supprime ce dossier.
+
 ## v3.4.6 (ForeverCompagnon 3.4.6)
 - **Robustesse lancée sur toi au lieu de la barre cliquée** : Alt est la touche « se cibler soi-même » de WoW, qui passe avant la barre d'HealBot. Robustesse passe sur **Ctrl+clic milieu**, plus aucun clic avec Alt ; l'ancien Alt+clic gauche est libéré tout seul s'il n'a pas été changé à la main.
 

@@ -10,7 +10,7 @@ signalé, sauf s'il est protégé dans le même fichier : test de présence (« 
 
 Signale aussi les fonctions présentes mais interdites aux addons (ReloadUI), sauf protection explicite.
 
-Usage : python3 tools/forever_api_check.py [dossiers…]   (par défaut ForeverCompagnon ForeverGazette ForeverGFX ForeverMacros)
+Usage : python3 tools/forever_api_check.py [dossiers…]   (par défaut ForeverCompagnon ForeverGFX ForeverMacros)
 Code de sortie 1 s'il reste un appel non protégé.
 """
 from __future__ import annotations
@@ -98,7 +98,7 @@ def scan_protected(path: str) -> list[tuple[int, str]]:
 
 def main() -> int:
     funcs, ns = load_api()
-    dirs = sys.argv[1:] or ["ForeverCompagnon", "ForeverGazette", "ForeverGFX", "ForeverMacros"]
+    dirs = sys.argv[1:] or ["ForeverCompagnon", "ForeverGFX", "ForeverMacros"]
     bad = 0
     for d in dirs:
         for base, _, files in os.walk(os.path.join(ROOT, d)):

@@ -6,7 +6,7 @@
 # dans une fonction (ForeverCompagnon/Shared/*.lua) que chaque module appelle avec son propre espace de noms.
 set -e
 cd "$(dirname "$0")/.."
-SEP="ForeverGFX ForeverMacros ForeverGazette"
+SEP="ForeverGFX ForeverMacros"
 sync() { # fichier addons...
   f="$1"; shift
   for a in "$@"; do
@@ -35,7 +35,7 @@ wrap() { # fichier : ForeverCompagnon/Shared/<fichier>, même code dans une fonc
 [ "$1" = "--check" ] && CHECK=1
 sync Diag.lua $SEP
 sync Hub.lua $SEP
-sync Tour.lua ForeverGFX ForeverMacros ForeverGazette
+sync Tour.lua ForeverGFX ForeverMacros
 sync Widgets.lua $SEP
 for f in Diag.lua Hub.lua Tour.lua ATT.lua Widgets.lua; do wrap "$f"; done
 echo "modules communs : ok"

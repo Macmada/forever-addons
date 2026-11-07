@@ -6,7 +6,6 @@ Des addons World of Warcraft pour **WoW Forever** (et seulement WoW Forever depu
 |---|---|---|
 | **ForeverGFX** | `/gfx` | Réglages graphiques en un clic, réglage automatique selon tes FPS, mode expert pour toutes les variables |
 | **ForeverMacros** | `/fmac` | macros prêtes par classe, constructeur pas à pas, vérification de syntaxe, sauvegarde des macros |
-| **ForeverGazette** | `/gazette` | la gazette de ton personnage : les moments forts de chaque journée de jeu, mis en page comme un journal |
 | **ForeverCompagnon** | `/fp` | toutes classes, races et factions, en une fenêtre : **Maintenant** (le plus utile à ton niveau, avec ton rôle), **Équipement** (`/floot`), **Préparation** (`/prep`), **Métiers** (`/metiers`, tous les métiers), **Soins** (`/fheal`, prêtre, druide, paladin, chaman), **Addons** utiles ; auto-test et sonde du client |
 
 ## Installation
@@ -41,24 +40,6 @@ Commandes : `/gfx`, `/gfx tune 60`, `/gfx fps`, `/gfx preset ultra`, `/gfx undo`
 - **Sauvegarde / restauration** de toutes les macros sous forme de texte.
 
 Commandes : `/fmac`, `/fmac tuto`, `/fmac minimap`.
-
-## ForeverGazette
-
-Pendant que tu joues, l'addon note les moments forts de ton personnage ; chaque journée de jeu devient une édition de journal, avec une **une** (le plus grand moment du jour, choisi par importance) et des rubriques. Un journal par personnage.
-
-- **Ce qui est noté** : niveaux, boss de donjon et de raid, élites rares, premiers passages dans une zone ou un donjon, objets rares, épiques et légendaires, paliers d'or, morts (avec le coupable : ennemi, chute, noyade…), victoires JcJ et duels, paliers de réputation, paliers de métier et recettes, quêtes rendues, compagnons de groupe.
-- **Bilan du jour** : temps de jeu, expérience, quêtes, ennemis vaincus, morts, or gagné et dépensé, zones parcourues.
-- **Photo de une** : capture d'écran automatique au moment fort (niveaux, boss, épiques ; option pour tous les grands moments ; 6 par jour au plus). L'édition donne le nom du fichier du dossier `Screenshots`.
-- **Trois tons** : *sérieux* (chronique d'aventurier), *tabloïd* (presse à scandale), *épique* (récit de barde). Changer de ton réécrit aussi les anciennes éditions.
-- **Rubrique Donjons** : chaque passage en donjon ou en raid (boss, durée, morts du groupe, tes soins et ton excédent), dans les trois tons.
-- **Sommaire** de toutes les éditions, **L'Hebdo** (les 7 derniers jours), **export** Markdown ou texte, **partage** dans le canal de guilde, de groupe ou en « Dire ».
-- **Démonstration** : `/gazette demo` affiche une édition d'exemple sans rien enregistrer.
-
-Commandes : `/gazette`, `/gazette hebdo`, `/gazette sommaire`, `/gazette export`, `/gazette partager guilde|groupe|dire`, `/gazette ton serieux|tabloid|epique`, `/gazette photo on|off`, `/gazette pdf`, `/gazette demo`, `/gazette minimap`, `/gazette lang fr|en`, `/gazette tuto` (alias `/gaz`).
-
-### PDF et image avec tes captures, Discord (compagnon)
-
-Un addon ne peut ni écrire de fichier ni lire tes captures d'écran : le compagnon `tools/gazette-discord` (Python 3 + Pillow, archive `ForeverGazette-Discord` de chaque version) lit la sauvegarde de l'addon et fait de chaque édition **une page de journal en PDF et en image, avec tes captures** (une, photos des grands moments, rubriques en colonnes, bilan), rangée dans `Documents\ForeverGazette`, et peut la poster sur Discord. Dans le jeu, le bouton **PDF** (`/gazette pdf`) enregistre la gazette pour qu'elle soit prête dans la minute. Mode d'emploi : [tools/gazette-discord/README.md](tools/gazette-discord/README.md). **Depuis la 1.7.0, le compagnon se met à jour tout seul** : WowUp livre sa dernière version dans `Interface\AddOns\ForeverGazette\Companion`, et le compagnon installé s'y compare au lancement (puis toutes les heures) et se remplace par la copie plus récente ; ton `.ini` ne change pas.
 
 ## ForeverCompagnon (WoW Forever)
 
@@ -141,7 +122,7 @@ Commandes : `/prep`, `/prep raid`, `/prep donjon`, `/prep role auto|tank|soigneu
 
 ## Icône commune « Forever »
 
-Une seule icône autour de la minicarte pour tous les addons : un clic ouvre un menu (Gazette, Compagnon, Macros, Graphismes). À la première connexion, elle remplace les icônes séparées. `/forever separees` remet une icône par addon, `/forever commune` revient à l'icône commune, `/forever minimap` la masque. La commande `minimap` de chaque addon réaffiche aussi son icône séparée.
+Une seule icône autour de la minicarte pour tous les addons : un clic ouvre un menu (Compagnon, Macros, Graphismes). À la première connexion, elle remplace les icônes séparées. `/forever separees` remet une icône par addon, `/forever commune` revient à l'icône commune, `/forever minimap` la masque. La commande `minimap` de chaque addon réaffiche aussi son icône séparée.
 
 ## Diagnostic (pour adapter les addons à WoW Forever)
 
@@ -151,7 +132,6 @@ Chaque addon a un **bouton « Diag »** dans la barre de titre de sa fenêtre (e
 |---|---|
 | `/gfx diag` | valeur de chaque variable graphique gérée, celles absentes du client, et les variables graphiques du client pas encore gérées |
 | `/fmac diag` | sorts des macros prêtes trouvés ou absents dans ce client, classe par classe |
-| `/gazette diag` | événements acceptés ou refusés, fonctions disponibles, textes du jeu (butin, métiers, duels), boss détectés et comment, derniers moments notés |
 | `/prep diag` | chaque objet de la base (vrai nom et niveau requis, écarts signalés), objets absents, sorts de classe, consommables de tes sacs inconnus de la base, analyse actuelle |
 | `/floot diag` | numéro de chaque objet de la liste de référence et son nom dans ce client (les numéros non vérifiés sont signalés), nombre d'objets vus, butin noté par donjon |
 | `/fp diag` | toutes les parties de ForeverCompagnon d'un coup, avec les méthodes retenues par le lien avec le jeu |
@@ -166,16 +146,16 @@ Les addons ne visent que **WoW Forever** : chaque `.toc` déclare `## Interface:
 
 ## Développement
 
-- `luacheck ForeverGFX ForeverMacros ForeverGazette ForeverCompagnon` vérifie le code (lancé automatiquement à chaque push).
-- `lua5.1 tests/gazette_sim.lua fr` (et `en`) simule une journée de jeu avec une API WoW imitée et vérifie l'édition produite ; `tests/prep_sim.lua`, `tests/heal_sim.lua`, `tests/loot_sim.lua`, `tests/metiers_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` font de même pour les autres addons (chaque partie de ForeverCompagnon seule, par `tests/compagnon_load.lua`) ; `tests/compagnon_sim.lua` charge ForeverCompagnon comme dans le jeu, sur le profil du client Forever (`tests/forever_client.lua`, issu de `/fp sonde`) ; `tests/classes_sim.lua` le charge pour les 9 classes, côté Alliance et Horde. `tests/wowmock.lua` : API WoW imitée commune. Lancés aussi à chaque push.
+- `luacheck ForeverGFX ForeverMacros ForeverCompagnon` vérifie le code (lancé automatiquement à chaque push).
+- `lua5.1 tests/prep_sim.lua fr` (et `en`), `tests/heal_sim.lua`, `tests/loot_sim.lua`, `tests/metiers_sim.lua`, `tests/gfx_sim.lua` et `tests/macros_sim.lua` simulent chaque addon avec une API WoW imitée (chaque partie de ForeverCompagnon seule, par `tests/compagnon_load.lua`) ; `tests/compagnon_sim.lua` charge ForeverCompagnon comme dans le jeu, sur le profil du client Forever (`tests/forever_client.lua`, issu de `/fp sonde`) ; `tests/classes_sim.lua` le charge pour les 9 classes, côté Alliance et Horde. `tests/wowmock.lua` : API WoW imitée commune. Lancés aussi à chaque push.
 - `python3 tools/forever_api_check.py` : appels à des fonctions absentes du client de WoW Forever (sans repli) ou interdites aux addons, d'après la liste de l'API du client relevée par Thunderz ([forever-addon-kit](https://github.com/Thunderz96/forever-addon-kit), MIT) dans `tests/data/forever_api.json`. Lancé aussi à chaque push.
-- Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les archives à la release (ForeverMacros, ForeverGazette et ForeverCompagnon gardent le numéro de leur TOC).
+- Publier une version : `git tag v2.1.0 && git push --tags`. GitHub Actions inscrit la version dans les TOC et attache les archives à la release (ForeverMacros et ForeverCompagnon gardent le numéro de leur TOC).
 
 ---
 
 ## English
 
-WoW addons for **WoW Forever** only. **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers ready-made class macros (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. **ForeverCompanion** (`/fp`, WoW Forever) gathers healing, gear, dungeon prep and professions in one window with a "Now" screen (what to do at your level), an in-game self-test and a client probe. Its healing part (`/fheal`) turns stats and items into plain effects (HP, mana, healing per second, mana longevity) in item tooltips, a character-sheet panel and change announcements, calibrated on your character and your real spell usage. Its preparation part (`/prep`) checks your dungeon/raid readiness by class, role and level (consumables at the best usable rank, class reagents, buffs, gear, trainer reminder) with a shopping list and one-click vendor purchase. **ForeverGazette** (`/gazette`) turns each play day into a newspaper edition of your character's highlights (levels, bosses, rare kills, epic loot, deaths, duels, reputation, professions, gold), with automatic front-page screenshots, three tones (serious, tabloid, epic), a weekly edition, Markdown export, chat sharing and an optional Discord companion script. All addons are fully translated (French and English) and include a guided tutorial.
+WoW addons for **WoW Forever** only. **ForeverGFX** (`/gfx`) offers one-click graphics presets, automatic tuning toward a target FPS, an FPS counter, context-based switching and an expert view of every graphics variable. **ForeverMacros** (`/fmac`) offers ready-made class macros (localized automatically through spell IDs), a step-by-step builder with a sequence mode, live syntax checking and macro backup/restore. **ForeverCompanion** (`/fp`, WoW Forever) gathers healing, gear, dungeon prep and professions in one window with a "Now" screen (what to do at your level), an in-game self-test and a client probe. Its healing part (`/fheal`) turns stats and items into plain effects (HP, mana, healing per second, mana longevity) in item tooltips, a character-sheet panel and change announcements, calibrated on your character and your real spell usage. Its preparation part (`/prep`) checks your dungeon/raid readiness by class, role and level (consumables at the best usable rank, class reagents, buffs, gear, trainer reminder) with a shopping list and one-click vendor purchase. All addons are fully translated (French and English) and include a guided tutorial.
 
 ## Licence
 

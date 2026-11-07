@@ -17,7 +17,7 @@ _G.GetItemInfo = function() return nil end
 _G.GetItemInfoInstant = function() return nil end
 _G.GetInventoryItemLink = function() return nil end
 _G.UnitGUID = function() return "Player-1" end
-local addons = { "ForeverCompagnon", "ForeverGazette", "ForeverMacros", "ForeverGFX" }
+local addons = { "ForeverCompagnon", "ForeverMacros", "ForeverGFX" }
 local loaded = {}
 for _, a in ipairs(addons) do
   local ok, ns = pcall(W.load, a)
@@ -31,5 +31,5 @@ check(registered.ADDON_ACTION_FORBIDDEN == 1, "actions bloquées suivies une seu
 W.fire("ADDON_ACTION_FORBIDDEN", "ForeverHeal", "UneFonction()")
 local diag = loaded.ForeverCompagnon.mods.ForeverHeal.DiagText()
 check(diag:find("ADDON_ACTION_FORBIDDEN ForeverHeal UneFonction()", 1, true), "diagnostic : action bloquée notée avec la fonction")
-check(loaded.ForeverGazette.DiagText():find("UneFonction()", 1, true), "diagnostic d'un autre addon : même liste")
+check(loaded.ForeverMacros.DiagText():find("UneFonction()", 1, true), "diagnostic d'un autre addon : même liste")
 W.rprint("\nTOUT OK (" .. LANG .. ")")

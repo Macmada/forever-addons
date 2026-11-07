@@ -6,10 +6,9 @@ self = false
 
 -- Variables globales écrites par les addons
 globals = {
-  "ForeverGFXDB", "ForeverMacrosDB", "ForeverGazetteDB", "ForeverPrepDB", "ForeverHealDB",
+  "ForeverGFXDB", "ForeverMacrosDB", "ForeverPrepDB", "ForeverHealDB",
   "SLASH_FOREVERGFX1", "SLASH_FOREVERGFX2", "SLASH_FOREVERMACROS1", "SLASH_FOREVERMACROS2",
   "ForeverGFX_OnCompartmentClick", "ForeverMacros_OnCompartmentClick",
-  "SLASH_FOREVERGAZETTE1", "SLASH_FOREVERGAZETTE2", "ForeverGazette_OnCompartmentClick",
   "SLASH_FOREVERPREP1", "SLASH_FOREVERPREP2", "ForeverPrep_OnCompartmentClick",
   "SLASH_FOREVERHEAL1", "SLASH_FOREVERHEAL2", "ForeverHeal_OnCompartmentClick",
   "ForeverHub", "SLASH_FOREVERHUB1", "ForeverHealAPI", "ForeverLootDB", "ForeverLootGlobalDB", "ForeverDungeonJournal_NS", "Syndicator",
@@ -33,7 +32,7 @@ read_globals = {
   "MAX_ACCOUNT_MACROS", "MAX_CHARACTER_MACROS", "MacroFrame", "Minimap", "NO", "PickupMacro",
   "RestartGx", "SetCVar", "Settings", "SettingsPanel", "StaticPopup_Show", "UIParent",
   "UnitClass", "YES", "date", "time", "tinsert", "wipe",
-  -- ForeverGazette
+  -- divers
   "bit", "C_QuestLog", "C_Reputation", "ChatEdit_InsertLink", "CombatLogGetCurrentEventInfo",
   "DUEL_WINNER_KNOCKOUT", "DUEL_WINNER_RETREAT", "ERR_LEARN_RECIPE_S", "GetAchievementInfo",
   "GetFactionInfo", "GetMaxPlayerLevel", "GetMoney", "GetNumFactions", "GetNumGroupMembers",
