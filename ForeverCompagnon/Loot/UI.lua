@@ -36,14 +36,20 @@ local function GainParts(r)
     if math.abs(r.hp or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHp, ns.Signed(r.hp)) end
     if math.abs(r.armor or 0) >= 1 then sub[#sub + 1] = string.format(L.gainArmor, ns.Signed(r.armor)) end
     if math.abs(r.hps or 0) < 0.05 then
-      -- pas de soins en plus : la régénération hors combat (Esprit) est le gain principal, sinon la survie
-      if math.abs(r.regen or 0) >= 0.01 then return ns.Signed(r.regen, 2) .. " |cffd8c8a0" .. L.cardRegen .. "|r", table.concat(sub, " · ") end
-      return L.cardNoHps, table.concat(sub, " · ")
+      -- pas de soins en plus : le gros chiffre est le premier gain positif (mana hors combat, soins avant d'être à sec,
+      -- PV, armure) ; une perte n'est jamais le titre d'une amélioration, elle passe dans le détail
+      local regen = r.regen or 0
+      if regen >= 0.01 then return ns.Signed(regen, 2) .. " |cffd8c8a0" .. L.cardRegen .. "|r", table.concat(sub, " · ") end
+      if regen <= -0.01 then sub[#sub + 1] = ns.Signed(regen, 2) .. " " .. L.cardRegen end
+      local first = table.remove(sub, 1)
+      if first then return first, table.concat(sub, " · ") end
+      return L.cardNoHps, ""
     end
     return ns.Signed(r.hps, 1) .. " |cffd8c8a0" .. L.cardHps .. "|r", table.concat(sub, " · ")
   end
   return ns.Signed(r.score, 1) .. " |cffd8c8a0" .. L.cardPoints .. "|r", ""
 end
+ns._GainParts = GainParts                          -- pour les simulations
 
 ----------------------------------------------------------------------
 -- Éléments réutilisés : cartes, titres d'emplacement, lignes d'information

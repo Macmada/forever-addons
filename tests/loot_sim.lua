@@ -271,4 +271,14 @@ check(ref, "carte de référence marquée d'une étoile")
 check(torse, "titre d'emplacement « " .. ns.L.slot5 .. " »")
 ns.ui.optBtn.scripts.OnClick(ns.ui.optBtn)
 check(_G.ForeverLootOptionsFrame and _G.ForeverLootOptionsFrame:IsShown(), "bouton Options : options dans une petite fenêtre")
+-- gros chiffre d'une carte : jamais une perte en titre d'une amélioration
+do
+  local G = ns._GainParts
+  local t, sub = G({ method = "heal", hps = 0, regen = -0.5, healed = 43, hp = 10 })
+  check(t:find("43", 1, true) and not t:find("−", 1, true) and sub:find("−0", 1, true), "perte de mana en détail, gain (soignés) en titre : " .. t)
+  t = G({ method = "heal", hps = 0, regen = 0, armor = 35 })
+  check(t:find("35", 1, true), "survie : le vrai gain (armure) en titre : " .. t)
+  t = G({ method = "heal", hps = 0, regen = 0.3, healed = 10 })
+  check((t:find("0.30", 1, true) or t:find("0,30", 1, true)) and true, "mana hors combat en titre s'il est positif : " .. t)
+end
 W.rprint("\nTOUT OK (" .. LANG .. ")")

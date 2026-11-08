@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v3.4.8 (ForeverCompagnon 3.4.8), d'après ta capture de l'écran Maintenant
+- **Tes soins** : « panne de mana en 30 s » devient « à sec après 30 s de soins sans pause » (c'est ton autonomie en soignant sans arrêt, pas une alerte).
+- **Équipement** : le gros chiffre d'une carte est toujours un gain. Une perte (ex. « −0,50 mana/s hors combat » du Kaléidoscope) passe dans le détail, et le vrai gain (« +43 soignés avant d'être à sec ») en titre ; « survie » en gris est remplacé par le gain réel (« +35 armure », « +100 PV »).
+- **À acheter** : la ligne n'est plus coupée (« Potions de soins : 2 / 5 », puis le détail de l'achat dessous).
+- « vu » devient « vu en jeu » (objet vu dans une infobulle).
+
 ## v3.4.7 : ForeverGazette retiré
 - **ForeverGazette n'est plus fourni** (à ta demande) : l'addon, son compagnon PDF/Discord (`tools/gazette-discord`), sa simulation et ses archives de release sont retirés ; l'icône commune « Forever » ne propose plus que Compagnon, Macros et Graphismes. Les versions précédentes restent dans l'historique du dépôt.
 - Déjà installé chez toi : supprime le dossier `Interface\AddOns\ForeverGazette` (WowUp ne le retire pas tout seul) et, pour le compagnon, lance d'abord `retirer-demarrage.bat` dans `Documents\gazette-discord`, puis supprime ce dossier.

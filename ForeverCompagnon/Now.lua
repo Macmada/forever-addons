@@ -69,8 +69,10 @@ SECTIONS[#SECTIONS + 1] = function(lines)
     for _, r in ipairs(s.rows or {}) do
       if (r.status == "warn" or r.status == "bad") and n < 5 then
         n = n + 1
+        -- « Potions de soins : 2 / 5 — 3 × Potion … » : le titre, puis le détail sur sa propre ligne (au lieu d'être coupé)
+        local title, detail = tostring(r.text):match("^(.-)%s+—%s+(.+)$")
         lines[#lines + 1] = { kind = "card", icon = r.icon or "Interface\\Icons\\INV_Misc_QuestionMark", quality = 1,
-                              name = r.text, nameColor = r.status == "bad" and { 1, 0.42, 0.35 } or { 1, 0.78, 0.38 },
+                              name = title or r.text, source = detail, nameColor = r.status == "bad" and { 1, 0.42, 0.35 } or { 1, 0.78, 0.38 },
                               onClick = function() root.Open("prep") end }
       end
     end
