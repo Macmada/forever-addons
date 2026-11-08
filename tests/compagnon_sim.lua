@@ -457,6 +457,14 @@ _G.UnitLevel = function() return 12 end
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
 
+-- noms des donjons : jamais la seule zone de l'entrée (le client de Forever n'a pas le journal des donjons)
+do
+  local A = root.mods.ForeverLoot.ATT
+  local fr = LANG == "fr"
+  check(A.InstanceName(64) == (fr and "Donjon d'Ombrecroc" or "Shadowfang Keep") and A.InstanceName(240) == (fr and "Cavernes des Lamentations" or "Wailing Caverns"),
+        "donjons nommés (Ombrecroc, Cavernes des Lamentations), pas la zone de l'entrée")
+end
+
 -- HealBot : clics du prêtre et skins groupe/raid, par les fonctions d'HealBot (imitées ici)
 do
   local HB = root.HealBot

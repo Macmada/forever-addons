@@ -13,9 +13,11 @@ local STANDING = { { 42000, FR and "Exalté" or "Exalted" }, { 21000, FR and "R�
 A.SKILL = { tailoring = 197, enchanting = 333, alchemy = 171, blacksmithing = 164, leatherworking = 165, engineering = 202,
             cooking = 185, firstaid = 129, herbalism = 182, mining = 186, skinning = 393, fishing = 356 }
 local T = FR and { quest = "quête", object = "objet", npc = "PNJ", crafted = "fabriqué", dungeon = "donjon", raid = "raid",
-                   currency = "monnaie #", with = " avec ", gold = "%d po", silver = "%d pa" }
+                   currency = "monnaie #", with = " avec ", gold = "%d po", silver = "%d pa",
+                   entrance = "%s (entrée : %s)" }
               or { quest = "quest", object = "object", npc = "NPC", crafted = "crafted", dungeon = "dungeon", raid = "raid",
-                   currency = "currency #", with = " with ", gold = "%dg", silver = "%ds" }
+                   currency = "currency #", with = " with ", gold = "%dg", silver = "%ds",
+                   entrance = "%s (entrance: %s)" }
 
 local function DB() local r = ns.root or ns; return r.Sources end
 function A.Available() return DB() ~= nil end
@@ -53,14 +55,33 @@ function A.MapName(id)
   local ok, info = pcall(C_Map.GetMapInfo, id)
   return ok and type(info) == "table" and info.name or nil
 end
+-- Noms des donjons et raids (numéros du journal des donjons, absent du client de Forever) : sans eux, on n'aurait que la
+-- zone de l'entrée (« Forêt des Pins argentés » au lieu du Donjon d'Ombrecroc)
+local INSTANCES = {
+  [63] = { "Les Mortemines", "The Deadmines" }, [64] = { "Donjon d'Ombrecroc", "Shadowfang Keep" },
+  [226] = { "Gouffre de Ragefeu", "Ragefire Chasm" }, [227] = { "Profondeurs de Brassenoire", "Blackfathom Deeps" },
+  [228] = { "Profondeurs de Rochenoire", "Blackrock Depths" }, [229] = { "Pic de Rochenoire", "Blackrock Spire" },
+  [230] = { "Hache-Tripes", "Dire Maul" }, [231] = { "Gnomeregan", "Gnomeregan" }, [232] = { "Maraudon", "Maraudon" },
+  [233] = { "Souilles de Tranchebauge", "Razorfen Downs" }, [234] = { "Kraal de Tranchebauge", "Razorfen Kraul" },
+  [236] = { "Stratholme", "Stratholme" }, [237] = { "Le temple d'Atal'Hakkar", "The Temple of Atal'Hakkar" },
+  [238] = { "La Prison", "The Stockade" }, [239] = { "Uldaman", "Uldaman" },
+  [240] = { "Cavernes des Lamentations", "Wailing Caverns" }, [241] = { "Zul'Farrak", "Zul'Farrak" },
+  [246] = { "Scholomance", "Scholomance" }, [316] = { "Monastère Écarlate", "Scarlet Monastery" },
+  [760] = { "Repaire d'Onyxia", "Onyxia's Lair" },
+}
+A.INSTANCES = INSTANCES
 function A.InstanceName(id)
   if EJ_GetInstanceInfo then
     local ok, name = pcall(EJ_GetInstanceInfo, id)
     if ok and type(name) == "string" and name ~= "" then return name end
   end
+  local known = INSTANCES[id]
+  if known then return known[FR and 1 or 2] end
+  -- donjon propre à Forever, sans nom connu : « donjon (entrée : Les Paluns) », jamais le seul nom de la zone
   local inst = DB() and DB().instances[id]
   local zone = inst and A.MapName(inst[1])
-  return zone and (zone .. " (" .. (inst[5] == 1 and T.raid or T.dungeon) .. ")") or nil
+  local what = inst and inst[5] == 1 and T.raid or T.dungeon
+  return zone and string.format(T.entrance, what, zone) or nil
 end
 function A.QuestName(id)
   local Q = C_QuestLog
@@ -198,6 +219,38 @@ function A.Places(itemID, kinds)
       elseif src[2] > 0 and db.npcs[src[2]] then
         local p = db.npcs[src[2]]
         out[#out + 1] = { name = A.NpcName(src[2]) or T.npc, mapID = p[1], x = p[2], y = p[3], kind = src[1] }
+      end
+    end
+  end
+  return out
+end
+-- Où aller pour obtenir un objet : donjon (boss, butin d'un PNJ du donjon) ou zone (quête, butin d'un PNJ dehors).
+-- Achats et fabrications n'en font pas partie (ce sont d'autres actions). Une quête déjà faite est ignorée.
+-- { key, name, kind = "dungeon"|"zone", level (niveau du donjon ou de la quête), raid, mapID, x, y, quest (numéro) }
+local function QuestDone(q)
+  local Q = C_QuestLog
+  if not (q and Q and Q.IsQuestFlaggedCompleted) then return false end
+  local ok, done = pcall(Q.IsQuestFlaggedCompleted, q)
+  return ok and done == true
+end
+function A.Where(itemID)
+  local db = DB()
+  local out = {}
+  for _, src in ipairs(db and db.items[itemID] or {}) do
+    local kind, e = src[1], src[6] or {}
+    if Mine(src) and kind ~= "vendor" and kind ~= "craft" and kind ~= "obj" then
+      local inst = e.inst and db.instances[e.inst]
+      if inst then
+        out[#out + 1] = { key = "i" .. e.inst, name = A.InstanceName(e.inst) or T.dungeon, kind = "dungeon", level = inst[4],
+                          raid = inst[5] == 1, mapID = inst[1], x = inst[2], y = inst[3] }
+      elseif kind == "quest" and src[3] > 0 then
+        local q = e.q or src[2]
+        if not QuestDone(q) then
+          out[#out + 1] = { key = "m" .. src[3], name = A.MapName(src[3]) or T.quest, kind = "zone", level = e.lvl,
+                            mapID = src[3], x = src[4], y = src[5], quest = q }
+        end
+      elseif (kind == "drop" or kind == "boss") and src[3] > 0 then
+        out[#out + 1] = { key = "m" .. src[3], name = A.MapName(src[3]) or T.npc, kind = "zone", mapID = src[3], x = src[4], y = src[5] }
       end
     end
   end
