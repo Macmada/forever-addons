@@ -383,11 +383,11 @@ function ns.Analyze(ctx, roleOverride)
   if level >= 4 then
     local last = db and db.lastTrainerLevel
     if not last then
-      char.rows[#char.rows + 1] = { status = "info", text = L.trainerUnknown }
+      char.rows[#char.rows + 1] = { status = "info", text = L.trainerUnknown, trainer = true }
     elseif level >= last + 2 then
-      char.rows[#char.rows + 1] = { status = "warn", text = string.format(L.trainerDue, last) }
+      char.rows[#char.rows + 1] = { status = "warn", text = string.format(L.trainerDue, last), trainer = true }
     else
-      char.rows[#char.rows + 1] = { status = "ok", text = string.format(L.trainerOk, last) }
+      char.rows[#char.rows + 1] = { status = "ok", text = string.format(L.trainerOk, last), trainer = true }
     end
   end
   local hs = ns.Count(D.HEARTHSTONE)
@@ -487,10 +487,60 @@ local function LFG() if db.autoLFG then ns.AutoShow("lfg") end end
 handlers.LFG_UPDATE = LFG
 handlers.LFG_PROPOSAL_SHOW = LFG
 handlers.LFG_LIST_ACTIVE_ENTRY_UPDATE = function(created) if created then LFG() end end
-handlers.TRAINER_SHOW = function()
+-- Maître de classe : liste de ses sorts (niveau requis, coût, déjà appris ou non) et sa position, relues à l'ouverture et
+-- à la fermeture (les sorts achetés passent en « appris »). Un maître de métier n'est pas un maître de classe.
+local function IsClassTrainer()
+  local f = _G.IsTradeskillTrainer
+  if f then local ok, v = pcall(f); if ok and v then return false end end
+  return true
+end
+function ns.ReadTrainer()
+  local num = _G.GetNumTrainerServices
+  if not num then return nil end
+  local ok, n = pcall(num)
+  if not ok or not n then return nil end
+  local list = {}
+  for i = 1, n do
+    local name, rank, category = _G.GetTrainerServiceInfo(i)
+    if name and category ~= "header" then
+      local lvl = _G.GetTrainerServiceLevelReq and _G.GetTrainerServiceLevelReq(i) or 0
+      local cost = _G.GetTrainerServiceCost and _G.GetTrainerServiceCost(i) or 0
+      list[#list + 1] = { name = name, rank = rank ~= "" and rank or nil, level = lvl or 0, cost = cost or 0, used = category == "used" }
+    end
+  end
+  return list
+end
+local function SaveTrainer()
+  if not IsClassTrainer() then return end
   db.lastTrainerLevel = UnitLevel("player")
+  local list = ns.ReadTrainer()
+  local t = db.trainer or {}
+  if list and #list > 0 then t.services = list end
+  local map = C_Map and C_Map.GetBestMapForUnit and C_Map.GetBestMapForUnit("player")
+  local pos = map and C_Map.GetPlayerMapPosition and C_Map.GetPlayerMapPosition(map, "player")
+  local x, y
+  if pos and pos.GetXY then x, y = pos:GetXY() end
+  if x and not (issecretvalue and issecretvalue(x)) then t.mapID, t.x, t.y = map, x * 100, y * 100 end
+  t.npc = ns.Clear and ns.Clear(UnitName("npc")) or nil
+  db.trainer = t
+end
+-- Sorts à apprendre maintenant (niveau atteint, pas encore appris) d'après la dernière visite ; nil si jamais visité
+function ns.TrainerDue()
+  local t = db and db.trainer
+  local level = UnitLevel("player")
+  if not (t and t.services) then return nil end
+  local out, cost = {}, 0
+  for _, sv in ipairs(t.services) do
+    if not sv.used and sv.level <= level then out[#out + 1] = sv; cost = cost + (sv.cost or 0) end
+  end
+  return out, cost, t
+end
+handlers.TRAINER_SHOW = function()
+  SaveTrainer()
   if ns.Refresh then ns.Refresh() end
 end
+handlers.TRAINER_UPDATE = function() SaveTrainer() end
+handlers.TRAINER_CLOSED = function() SaveTrainer() end
 handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, SoonRefresh) end
 handlers.UPDATE_INVENTORY_DURABILITY = function() SoonRefresh() end
 handlers.GROUP_ROSTER_UPDATE = function() SoonRefresh() end

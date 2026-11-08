@@ -390,7 +390,7 @@ function ns.RecipeLines()
                    onRight = function()
                      local nav = ns.root and ns.root.Nav
                      local best = nav and nav.Closest(ns.ATT.RecipePlaces(r.spell))
-                     if best then nav.Set(best.mapID, best.x, best.y, best.name) end
+                     if best then nav.Go(best.mapID, best.x, best.y, best.name) end
                    end }
         end
         for i, r in ipairs(now) do

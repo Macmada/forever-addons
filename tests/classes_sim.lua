@@ -62,9 +62,10 @@ for _, faction in ipairs({ "Alliance", "Horde" }) do
       local M = heal.Metrics(heal.Snapshot(), heal.Mix())
       check((M.hps or 0) > 0, "Soins : soins par seconde calculés (" .. tostring(M.hps) .. ")")
       root.SetRole("heal")
-      local nowHeads = {}
-      for _, l in ipairs(root.NowLines()) do if l.kind == "head" then nowHeads[l.title] = true end end
-      check(nowHeads[root.L.secPriest], "Maintenant : section des soins pour un soigneur")
+      local _, _, nowTiles = root.NowLines()
+      local hps = false
+      for _, t in ipairs(nowTiles) do if t.kind == "hps" then hps = true end end
+      check(hps, "Maintenant : tuile des soins pour un soigneur")
     end
     SlashCmdList.FOREVERCOMPAGNON("")
     check(ForeverCompagnonNowFrame:IsShown(), "écran Maintenant")

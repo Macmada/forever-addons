@@ -192,11 +192,20 @@ function K.CardList(parent, width)
   self.scroll, self.content = sf, content
   local cu, hu, iu = 0, 0, 0
 
+  -- infobulle : l'objet (lien), sinon le détail de la ligne (tip = { title, lines = { texte ou { texte, r, g, b } } })
   local function Tip(f)
     f:SetScript("OnEnter", function(o)
       if o.link then
         GameTooltip:SetOwner(o, "ANCHOR_RIGHT")
         pcall(GameTooltip.SetHyperlink, GameTooltip, o.link)
+        GameTooltip:Show()
+      elseif o.tip then
+        GameTooltip:SetOwner(o, "ANCHOR_RIGHT")
+        GameTooltip:SetText(o.tip.title or "", K.GOLD[1], K.GOLD[2], K.GOLD[3])
+        for _, ln in ipairs(o.tip.lines or {}) do
+          if type(ln) == "table" then GameTooltip:AddLine(ln[1], ln[2] or 1, ln[3] or 1, ln[4] or 1, true)
+          else GameTooltip:AddLine(ln, 1, 1, 1, true) end
+        end
         GameTooltip:Show()
       end
     end)
@@ -317,14 +326,14 @@ function K.CardList(parent, width)
         if l.crop ~= false then h.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) else h.icon:SetTexCoord(0, 1, 0, 1) end
         h.title:SetText(l.title or "")
         h.right:SetText(l.right or "")
-        h.link, h.onClick = l.link, l.onClick
+        h.link, h.onClick, h.tip = l.link, l.onClick, l.tip
         y = y - 44
         stripe = 0
       elseif l.kind == "card" then
         local c = Card()
         stripe = stripe + 1
         c.bg:SetColorTexture(1, 1, 1, stripe % 2 == 0 and 0.035 or 0.0)
-        c.link, c.onClick, c.onRight = l.link, l.onClick, l.onRight
+        c.link, c.onClick, c.onRight, c.tip = l.link, l.onClick, l.onRight, l.tip
         local q = K.QUALITY[l.quality or 1] or K.QUALITY[1]
         for _, t in ipairs(c.qborder) do t:SetColorTexture(q[1], q[2], q[3], 1) end
         c.icon:SetTexture(l.icon or "Interface\\Icons\\INV_Misc_QuestionMark")

@@ -32,6 +32,10 @@ root.PROBE_APIS = {
   "UnitHealth", "UnitHealthMax", "UnitHealthMissing", "UnitHealthPercent", "UnitGetIncomingHeals", "UnitGetTotalAbsorbs",
   "CreateUnitHealPredictionCalculator", "AbbreviateNumbers", "AbbreviateLargeNumbers", "C_StringUtil.TruncateWhenZero",
   "C_CurveUtil.CreateCurve",
+  -- maître de classe (sorts à apprendre)
+  "GetNumTrainerServices", "GetTrainerServiceInfo", "GetTrainerServiceLevelReq", "GetTrainerServiceCost", "IsTradeskillTrainer",
+  -- maîtres de vol (itinéraire le plus rapide)
+  "C_TaxiMap.GetAllTaxiNodes", "GetTaxiMapID", "NumTaxiNodes", "TaxiNodeName", "TaxiNodePosition", "TaxiNodeGetType", "UnitOnTaxi",
   -- réputation, carte, communauté
   "GetFactionInfoByID", "C_Reputation.GetFactionDataByID", "C_Map.GetBestMapForUnit", "C_Map.SetUserWaypoint",
   "C_SuperTrack.SetSuperTrackedUserWaypoint", "C_Minimap.SetTracking", "SetTracking", "C_Club.GetClubMembers",

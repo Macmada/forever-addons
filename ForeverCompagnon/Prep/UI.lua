@@ -376,7 +376,7 @@ end
 local function Waypoint(v)
   -- flèche intégrée de ForeverCompagnon (Nav.lua), sinon TomTom, sinon le repère du jeu
   local nav = ns.root and ns.root.Nav
-  if nav and nav.Set(v.mapID, v.x, v.y, v.name) then return "arrow" end
+  if nav and nav.Go(v.mapID, v.x, v.y, v.name) then return "arrow" end
   local TT = _G.TomTom
   if TT and TT.AddWaypoint then
     local ok = pcall(TT.AddWaypoint, TT, v.mapID, v.x / 100, v.y / 100, { title = v.name, persistent = false })

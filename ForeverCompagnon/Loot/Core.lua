@@ -484,7 +484,7 @@ function ns.GoTo(id)
   if not (nav and ns.ATT) then return false end
   local best = nav.Closest(ns.ATT.Places(id))
   if not best then return false end
-  return nav.Set(best.mapID, best.x, best.y, best.name)
+  return (nav.Go(best.mapID, best.x, best.y, best.name))
 end
 
 function ns.ATTWhere(id)
@@ -591,4 +591,48 @@ function ns.BiS(limit, maxLevel)
     while #s.items > (limit or 3) do table.remove(s.items) end
   end
   return out
+end
+
+----------------------------------------------------------------------
+-- Où aller : donjons et zones qui ont le plus d'améliorations pour toi (objets de boss, butin, récompenses de quêtes pas
+-- encore faites), à ta portée (niveau du lieu jusqu'à ton niveau + 3). Achats et fabrications n'en font pas partie.
+-- { key, name, kind = "dungeon"|"zone", level, mapID, x, y, items = { {c, eval} }, quests = { id = true }, nQuests, score }
+----------------------------------------------------------------------
+function ns.WhereToGo(max)
+  local level = UnitLevel("player")
+  local reach = math.min(60, level + 3)
+  local places, order = {}, {}
+  local bis = ns.BiS(2, reach)
+  for _, s in pairs(bis) do
+    for _, c in ipairs(s.items) do
+      if c.src ~= "bags" and c.src ~= "equipped" and not ns.Owned(c.id) then
+        local where = (ns.ATT and ns.ATT.Available() and ns.ATT.Where) and ns.ATT.Where(c.id) or {}
+        if #where == 0 and (c.src == "dj" or c.src == "djquest") and c.where then
+          local dname = c.where:match("^(.-) — ") or c.where
+          where = { { key = "dj:" .. dname, name = dname, kind = "dungeon", level = c.srcLevel } }
+        end
+        local seen = {}
+        for _, w in ipairs(where) do
+          if not seen[w.key] and not w.raid and (w.level or 0) <= reach then
+            seen[w.key] = true
+            local p = places[w.key]
+            if not p then
+              p = { key = w.key, name = w.name, kind = w.kind, level = w.level, mapID = w.mapID, x = w.x, y = w.y,
+                    items = {}, quests = {}, nQuests = 0, score = 0 }
+              places[w.key] = p
+              order[#order + 1] = p
+            end
+            if w.level and (not p.level or w.level < p.level) then p.level = w.level end
+            p.items[#p.items + 1] = { c = c, eval = c.eval, quest = w.quest }
+            if w.quest and not p.quests[w.quest] then p.quests[w.quest] = true; p.nQuests = p.nQuests + 1 end
+            p.score = p.score + (c.eval and c.eval.score or 0)
+          end
+        end
+      end
+    end
+  end
+  table.sort(order, function(a, b) if a.score ~= b.score then return a.score > b.score end return a.name < b.name end)
+  for _, p in ipairs(order) do table.sort(p.items, function(a, b) return (a.eval.score or 0) > (b.eval.score or 0) end) end
+  while #order > (max or 3) do table.remove(order) end
+  return order
 end

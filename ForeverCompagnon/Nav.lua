@@ -13,6 +13,15 @@ local N = { target = nil }
 root.Nav = N
 local frame
 local RUN = 7                       -- vitesse de course (yards par seconde)
+local FLY = 26                      -- vol de maître de vol, détours compris (yards par seconde, estimation)
+local FLY_EXTRA = 20                -- décollage, atterrissage, dialogue avec le maître de vol (secondes)
+local G = root.Game
+
+-- Vitesse de déplacement : course, ou monture (le jeu ne dit pas si tu en as une : à partir du niveau 40)
+function N.Speed()
+  local lvl = UnitLevel and UnitLevel("player") or 1
+  return RUN * ((lvl >= 40) and 1.6 or 1)
+end
 
 local function Vec(x, y)
   if CreateVector2D then return CreateVector2D(x, y) end
@@ -78,7 +87,10 @@ local function Update(self, elapsed)
     self.arrow:SetRotation(0)
     self.arrow:SetVertexColor(0.3, 1, 0.3)
     self.dist:SetText(L.navArrived)
-    if not self.arrivedAt then self.arrivedAt = GetTime() elseif GetTime() - self.arrivedAt > 4 then N.Clear() end
+    if not self.arrivedAt then
+      self.arrivedAt = GetTime()
+      if N.route then N.Arrived() end
+    elseif GetTime() - self.arrivedAt > 4 and N.target and not N.route then N.Clear() end
     return
   end
   self.arrivedAt = nil
@@ -92,8 +104,10 @@ local function Update(self, elapsed)
   else
     self.arrow:Hide()
   end
-  if dist then
-    self.dist:SetText(string.format(L.navDist, math.floor(dist + 0.5), Fmt(dist / RUN)))
+  if N.route and N.route.waitTaxi then
+    self.dist:SetText(string.format(L.navTakeFlight, N.route.waitTaxi))
+  elseif dist then
+    self.dist:SetText(string.format(L.navDist, math.floor(dist + 0.5), Fmt(dist / N.Speed())))
   elseif why == "continent" then
     self.dist:SetText(string.format(L.navOtherContinent, t.zone or "?"))
   else
@@ -165,6 +179,7 @@ end
 
 function N.Clear()
   N.target = nil
+  N.route = nil
   if frame then frame:Hide() end
   if C_Map and C_Map.ClearUserWaypoint then pcall(C_Map.ClearUserWaypoint) end
 end
@@ -199,3 +214,158 @@ root.OnLogin(function()
     SlashCmdList.FOREVERCOMPAGNONWAY = N.Command
   end
 end)
+
+----------------------------------------------------------------------
+-- Itinéraire le plus rapide : à pied, ou maître de vol le plus proche -> vol -> à pied. Les points de vol sont appris
+-- sur ton personnage quand tu ouvres la carte d'un maître de vol (le jeu ne les donne qu'à ce moment-là).
+----------------------------------------------------------------------
+local function CharKey() return (UnitName("player") or "?") .. "-" .. (GetRealmName and GetRealmName() or "") end
+local function Taxi()
+  if not root.db then return {} end
+  root.db.taxi = root.db.taxi or {}
+  root.db.taxi[CharKey()] = root.db.taxi[CharKey()] or {}
+  return root.db.taxi[CharKey()]
+end
+N.Taxi = Taxi
+
+-- Carte d'un maître de vol ouverte : chaque point connu (atteignable ou celui-ci) est retenu, avec sa position du monde
+function N.LearnTaxi()
+  local mapID = G.Get("GetTaxiMapID") and _G.GetTaxiMapID()
+  local known = Taxi()
+  local n = 0
+  local all = G.Get("C_TaxiMap.GetAllTaxiNodes")
+  if all and mapID then
+    local ok, nodes = pcall(all, mapID)
+    if ok and type(nodes) == "table" then
+      G.used.taxi = "C_TaxiMap.GetAllTaxiNodes"
+      local unreachable = Enum and Enum.FlightPathState and Enum.FlightPathState.Unreachable or 2
+      for _, nd in ipairs(nodes) do
+        local x, y = XY(nd.position)
+        if nd.name and x and nd.state ~= unreachable then
+          local c, wx, wy = N.World(mapID, x * 100, y * 100)
+          if c then known[nd.name] = { name = nd.name, mapID = mapID, x = x * 100, y = y * 100, c = c, wx = wx, wy = wy }; n = n + 1 end
+        end
+      end
+      return n
+    end
+  end
+  local num = G.Get("NumTaxiNodes")
+  if num and mapID then
+    G.used.taxi = "NumTaxiNodes"
+    for i = 1, num() do
+      local name = _G.TaxiNodeName(i)
+      local kind = _G.TaxiNodeGetType and _G.TaxiNodeGetType(i)
+      local x, y = _G.TaxiNodePosition(i)
+      if name and x and kind ~= "NONE" and kind ~= "DISTANT" then
+        local c, wx, wy = N.World(mapID, x * 100, y * 100)
+        if c then known[name] = { name = name, mapID = mapID, x = x * 100, y = y * 100, c = c, wx = wx, wy = wy }; n = n + 1 end
+      end
+    end
+  end
+  return n
+end
+
+local function Dist(ax, ay, bx, by) return math.sqrt((ax - bx) ^ 2 + (ay - by) ^ 2) end
+local function Nearest(c, x, y)
+  local best, bd
+  for _, f in pairs(Taxi()) do
+    if f.c == c then
+      local d = Dist(f.wx, f.wy, x, y)
+      if not bd or d < bd then best, bd = f, d end
+    end
+  end
+  return best, bd
+end
+
+-- Plan vers (carte, x, y) : { walk = secondes à pied, fly = { from, to, time } ou nil, other = autre continent }
+function N.Plan(mapID, x, y)
+  local pc, px, py = N.Player()
+  local dc, dx, dy = N.World(mapID, x, y)
+  if not (pc and dc) then return { unknown = true } end
+  if pc ~= dc then return { other = true } end
+  local speed = N.Speed()
+  local plan = { walk = Dist(px, py, dx, dy) / speed }
+  local a, da = Nearest(pc, px, py)
+  local b, db = Nearest(dc, dx, dy)
+  if a and b and a ~= b then
+    local t = da / speed + Dist(a.wx, a.wy, b.wx, b.wy) / FLY + FLY_EXTRA + db / speed
+    if t < plan.walk * 0.8 then plan.fly = { from = a, to = b, time = t } end
+  end
+  return plan
+end
+
+local function Fmt2(sec) return Fmt(sec or 0) end
+N.Fmt = Fmt2
+
+-- Va vers un lieu par le chemin le plus rapide : la flèche suit chaque étape toute seule
+function N.Go(mapID, x, y, title)
+  local plan = N.Plan(mapID, x, y)
+  if plan.fly then
+    local f = plan.fly
+    N.Set(f.from.mapID, f.from.x, f.from.y, string.format(L.navFlightMaster, f.from.name))
+    N.route = { step = 1, from = f.from, to = f.to, dest = { mapID = mapID, x = x, y = y, title = title } }
+    root.Print(L.navRoute, title or "?", f.from.name, f.to.name, Fmt2(f.time), Fmt2(plan.walk))
+    return true, plan
+  end
+  local ok = N.Set(mapID, x, y, title)
+  if ok and plan.walk then root.Print(L.navRouteWalk, title or "?", Fmt2(plan.walk)) end
+  return ok, plan
+end
+
+-- Étape atteinte : au maître de vol, on attend le vol ; après le vol (ou arrivé près du point d'arrivée), le but
+function N.Arrived()
+  local r = N.route
+  if not r then return end
+  if r.step == 1 then
+    r.step = 2
+    r.waitTaxi = r.to.name
+    root.Print(L.navTakeFlight, r.to.name)
+  end
+end
+
+local function Continue()
+  local r = N.route
+  if not r then return end
+  local d = r.dest
+  N.route = nil
+  N.Set(d.mapID, d.x, d.y, d.title)
+end
+
+local tev = CreateFrame("Frame")
+for _, e in ipairs({ "TAXIMAP_OPENED", "PLAYER_CONTROL_GAINED" }) do pcall(tev.RegisterEvent, tev, e) end
+tev:SetScript("OnEvent", function(_, event)
+  if event == "TAXIMAP_OPENED" then
+    local ok, n = pcall(N.LearnTaxi)
+    if ok and n and n > 0 then root.taxiLearned = n end
+  elseif event == "PLAYER_CONTROL_GAINED" and N.route and N.route.step == 2 then
+    -- fin du vol (le jeu rend le contrôle au joueur à l'atterrissage) : on vise le but
+    C_Timer.After(1, Continue)
+  end
+end)
+-- secours : déjà près du point d'arrivée (vol pris autrement, ou événement manqué)
+local function NearLanding()
+  local r = N.route
+  if not (r and r.step == 2) then return end
+  local pc, px, py = N.Player()
+  if pc and pc == r.to.c and Dist(px, py, r.to.wx, r.to.wy) < 150 and not (_G.UnitOnTaxi and _G.UnitOnTaxi("player")) then Continue() end
+end
+if C_Timer and C_Timer.NewTicker then C_Timer.NewTicker(2, NearLanding) end
+
+-- /fp vols : tes points de vol connus sur ce continent, le plus proche d'abord
+function N.ListTaxi()
+  local pc, px, py = N.Player()
+  local list = {}
+  for _, f in pairs(Taxi()) do list[#list + 1] = f end
+  if #list == 0 then root.Print(L.navNoTaxi); return end
+  table.sort(list, function(a, b)
+    local da = (pc == a.c and px) and Dist(a.wx, a.wy, px, py) or math.huge
+    local db = (pc == b.c and px) and Dist(b.wx, b.wy, px, py) or math.huge
+    if da ~= db then return da < db end
+    return a.name < b.name
+  end)
+  root.Print(L.navTaxiTitle, #list)
+  for _, f in ipairs(list) do
+    local d = (pc == f.c and px) and Dist(f.wx, f.wy, px, py)
+    root.Print("  %s%s", f.name, d and string.format(" |cffa0a0a0(%d m)|r", math.floor(d + 0.5)) or "")
+  end
+end

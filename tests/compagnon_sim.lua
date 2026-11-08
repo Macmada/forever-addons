@@ -101,10 +101,14 @@ check(root.mods.ForeverPrep.db.minimap.hide, "icône séparée de Prépa masqué
 -- écran Maintenant
 SlashCmdList.FOREVERCOMPAGNON("")
 check(ForeverCompagnonNowFrame and ForeverCompagnonNowFrame:IsShown(), "/fp : écran Maintenant")
-local lines = root.NowLines()
-local heads = 0
-for _, l in ipairs(lines) do if l.kind == "head" then heads = heads + 1 end end
-check(heads == 4 and #root.nowErrors == 0, "Maintenant : 4 sections sans erreur (" .. table.concat(root.nowErrors, " ; ") .. ")")
+local lines, _, tiles = root.NowLines()
+check(lines[1].kind == "head" and lines[1].title == root.L.secTodo and #root.nowErrors == 0,
+      "Maintenant : « À faire » en premier, sans erreur (" .. table.concat(root.nowErrors, " ; ") .. ")")
+local footers = 0
+for _, l in ipairs(lines) do if l.footer then footers = footers + 1 end end
+check(footers == 4, "Maintenant : liens vers les 4 onglets en bas")
+check(#tiles >= 3 and #tiles <= 4, "Maintenant : " .. #tiles .. " tuiles en haut")
+check(ForeverCompagnonNowFrame.tiles and ForeverCompagnonNowFrame.tiles[1]:IsShown(), "tuiles affichées")
 check(ForeverCompagnonRail and ForeverCompagnonRail:IsShown(), "barre d'onglets affichée à côté")
 
 -- onglets : une fenêtre à la fois
@@ -269,10 +273,10 @@ check((w.ITEM_MOD_STRENGTH_SHORT or 0) == 1 and not w.ITEM_MOD_DEFENSE_SKILL_RAT
 W.class = "PRIEST"
 check(table.concat(root.ClassRoles(), ",") == "heal,caster", "prêtre : soins ou ombre")
 root.SetRole("caster")
-local nl2 = root.NowLines()
-local hasPriest = false
-for _, l in ipairs(nl2) do if l.kind == "head" and l.title == root.L.secPriest then hasPriest = true end end
-check(not hasPriest, "prêtre ombre : pas de section soins sur Maintenant")
+local _, _, tl2 = root.NowLines()
+local hasHps = false
+for _, t in ipairs(tl2) do if t.kind == "hps" then hasHps = true end end
+check(not hasHps, "prêtre ombre : pas de tuile soins sur Maintenant")
 root.SetRole("auto")
 
 -- flèche intégrée (à la TomTom) : direction, distance, arrivée, /fp way, « y aller » depuis la base intégrée
@@ -456,6 +460,81 @@ _G.UnitLevel = function() return 12 end
 
 -- équiper depuis l'alerte (lien avec le jeu)
 check(root.Game.Equip("|Hitem:6948|h") and W.equipped, "équiper par le lien avec le jeu")
+
+-- « À faire » : maître de classe (sorts à apprendre d'après la dernière visite), donjons et zones (clic : itinéraire)
+do
+  local prep, loot = root.mods.ForeverPrep, root.mods.ForeverLoot
+  _G.GetNumTrainerServices = function() return 3 end
+  _G.GetTrainerServiceInfo = function(i) return ({ "Soins rapides", "Rénovation", "Soins supérieurs" })[i], i == 2 and "Rang 3" or "", i == 3 and "unavailable" or "available" end
+  _G.GetTrainerServiceLevelReq = function(i) return ({ 12, 12, 40 })[i] end
+  _G.GetTrainerServiceCost = function() return 1500 end
+  _G.IsTradeskillTrainer = function() return false end
+  W.fire("TRAINER_SHOW")
+  local due = prep.TrainerDue()
+  check(due and #due == 2 and due[2].rank == "Rang 3", "maître de classe : 2 sorts à ton niveau retenus (pas celui du niveau 40)")
+  local saveWhere = loot.WhereToGo
+  loot.WhereToGo = function() return { { key = "i64", name = "Donjon d'Ombrecroc", kind = "dungeon", level = 14, mapID = 1421, x = 36.6, y = 65.6,
+    items = { { c = { link = "|Hitem:6320|h[Torque de sorcier]|h", id = 6320 }, eval = { method = "heal", hps = 0.1, score = 3 } } },
+    quests = {}, nQuests = 0, score = 3 } } end
+  local went
+  local saveGo = root.Nav.Go
+  root.Nav.Go = function(m, x, y, t) went = t end
+  local lines = root.NowLines()
+  local trainer, place
+  for _, l in ipairs(lines) do
+    if l.trainer then trainer = l end
+    if l.place then place = l end
+  end
+  check(trainer and trainer.gain:find("2", 1, true) and trainer.source:find("Soins rapides", 1, true), "À faire : maître de classe, 2 sorts")
+  check(place and place.name:find("Ombrecroc", 1, true) and place.tags:find("14", 1, true) and place.tip.title == "Donjon d'Ombrecroc",
+        "À faire : donjon d'après tes améliorations, niveau et détail dans l'infobulle")
+  place.onClick()
+  check(went == "Donjon d'Ombrecroc", "clic sur le donjon : itinéraire le plus rapide")
+  root.Nav.Go, loot.WhereToGo = saveGo, saveWhere
+  _G.GetNumTrainerServices = nil
+  prep.db.trainer = nil
+end
+
+-- itinéraire le plus rapide : maître de vol proche -> vol -> à pied, points de vol appris à l'ouverture d'un maître de vol
+do
+  local N = root.Nav
+  local saveMap, saveTaxi, saveId = _G.C_Map, _G.C_TaxiMap, _G.GetTaxiMapID
+  local player = { 0.10, 0.10 }
+  _G.C_Map = {
+    GetBestMapForUnit = function() return 1 end,
+    GetPlayerMapPosition = function() return CreateVector2D(player[1], player[2]) end,
+    GetWorldPosFromMapPos = function(map, v) local x, y = v:GetXY(); return 0, CreateVector2D(x * 1000, y * 1000) end,
+    GetMapInfo = function(id) return { name = "Zone " .. id } end,
+  }
+  _G.GetPlayerFacing = function() return 0 end
+  _G.GetTaxiMapID = function() return 1 end
+  _G.C_TaxiMap = { GetAllTaxiNodes = function() return {
+    { name = "Près de toi", position = CreateVector2D(0.12, 0.12), state = 0 },
+    { name = "Près du donjon", position = CreateVector2D(0.93, 0.93), state = 1 },
+    { name = "Inconnu", position = CreateVector2D(0.50, 0.95), state = 2 } } end }
+  _G.Enum.FlightPathState = { Current = 0, Reachable = 1, Unreachable = 2 }
+  N.Clear()
+  local plan = N.Plan(1, 95, 95)
+  check(plan.walk and not plan.fly, "aucun point de vol connu : à pied")
+  W.fire("TAXIMAP_OPENED")
+  local known = N.Taxi()
+  check(known["Près de toi"] and known["Près du donjon"] and not known["Inconnu"], "points de vol appris à l'ouverture du maître de vol (sauf ceux pas encore découverts)")
+  plan = N.Plan(1, 95, 95)
+  check(plan.fly and plan.fly.from.name == "Près de toi" and plan.fly.to.name == "Près du donjon" and plan.fly.time < plan.walk,
+        "plus rapide en vol : maître de vol proche, vol jusqu'au plus proche du but")
+  check(N.Plan(1, 14, 14).fly == nil, "but tout près : à pied")
+  N.Go(1, 95, 95, "Donjon d'Ombrecroc")
+  check(N.target and N.target.title:find("Près de toi", 1, true) and N.route, "étape 1 : flèche vers le maître de vol")
+  N.Arrived()
+  check(N.route.waitTaxi == "Près du donjon", "au maître de vol : « prends le vol vers… »")
+  W.fire("PLAYER_CONTROL_GAINED")
+  W.run(2)
+  check(N.target and N.target.title == "Donjon d'Ombrecroc" and not N.route, "après le vol : flèche vers le donjon")
+  N.Clear()
+  SlashCmdList.FOREVERCOMPAGNON("vols")
+  _G.C_Map, _G.C_TaxiMap, _G.GetTaxiMapID = saveMap, saveTaxi, saveId
+  root.db.taxi = nil
+end
 
 -- noms des donjons : jamais la seule zone de l'entrée (le client de Forever n'a pas le journal des donjons)
 do
