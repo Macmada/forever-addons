@@ -16,7 +16,7 @@ jobs:
       - name: Modules communs identiques dans chaque addon (diagnostic, icône, tutoriel)
         run: sh tools/sync-shared.sh --check
       - name: Caractères absents de la police du jeu (→ ≈ ✓ ● ○ ★ s'affichent en carré)
-        run: "! grep -rn --include='*.lua' '[→≈✓●○★☆]' Forever* tools"
+        run: "! grep -rn --include='*.lua' '[→≈✓●○★☆∞]' Forever* tools"
       - name: Fonctions absentes du client Forever ou interdites (relevé de forever-addon-kit)
         run: python3 tools/forever_api_check.py
       - name: Piège Lua « cond and nil or x » (vaut toujours x)

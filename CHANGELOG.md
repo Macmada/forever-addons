@@ -1,12 +1,14 @@
 # Journal des versions
 
-## v3.5.0 (ForeverCompagnon 3.5.0) : nouvel écran Maintenant, itinéraire le plus rapide
+## v3.5.0 (ForeverCompagnon 3.5.0) : nouvel écran Maintenant, itinéraire le plus rapide (vols, bateaux, zeppelins)
 - **Écran Maintenant refait** (d'après la maquette) : 4 tuiles en haut (soins/s, autonomie, améliorations, à acheter), puis **« À faire »** : des actions écrites comme des phrases, un seul chiffre à droite, le détail au survol (infobulle), et en bas un lien vers chaque onglet.
 - **Maître de classe** dans « À faire » quand des sorts t'attendent : à chaque visite, ForeverCompagnon retient ses sorts (niveau requis, coût) et sa position ; dès que tu as le niveau, « Aller voir le maître de classe : 2 sorts à apprendre » (liste et coût dans l'infobulle, clic : y aller). Avant la première visite : rappel aux niveaux pairs.
 - **Donjons et zones** dans « À faire », choisis d'après les améliorations et les quêtes (pas encore faites) disponibles pour toi : « Faire : Donjon d'Ombrecroc », pastille du niveau, zone de l'entrée, nombre d'objets et de quêtes ; l'infobulle donne chaque objet et son gain.
 - **Vrais noms des donjons** (Donjon d'Ombrecroc, Cavernes des Lamentations, Les Mortemines…) au lieu de la zone de l'entrée (« Forêt des Pins argentés (donjon) »).
 - **Itinéraire le plus rapide** au clic (« À faire », « y aller » de l'Équipement, des Métiers, Guide-moi) : à pied, ou maître de vol le plus proche, vol jusqu'au point le plus proche du but, puis la flèche ; la flèche enchaîne les étapes toute seule (« Prends le vol vers… », puis le but à l'atterrissage). Tes points de vol sont appris quand tu ouvres la carte d'un maître de vol. `/fp vols` : tes points de vol connus, le plus proche d'abord.
-- Sonde : fonctions des maîtres de vol et des maîtres de classe ajoutées.
+- **Bateaux et zeppelins** : vers un autre continent, l'itinéraire passe par le meilleur bateau ou zeppelin de ta faction (Alliance : Menethil ↔ Auberdine ou Theramore ; Horde : zeppelins d'Orgrimmar ↔ Fossoyeuse ou Grom'gol ; tous : Baie-du-Butin ↔ Cabestan), avec les vols connus avant et après ; « Prends le bateau pour… » au quai, puis la suite dès que tu as débarqué. Positions des quais approchées (base classique).
+- **Monture vérifiée** : le journal des montures dit si tu en as une ; ta vraie vitesse sur ta monture est mesurée quand tu roules et remplace l'estimation (60 %, 100 % au niveau 60). Sans monture : la course.
+- Sonde : fonctions des maîtres de vol, des maîtres de classe et des montures ajoutées.
 
 ## v3.4.8 (ForeverCompagnon 3.4.8), d'après ta capture de l'écran Maintenant
 - **Tes soins** : « panne de mana en 30 s » devient « à sec après 30 s de soins sans pause » (c'est ton autonomie en soignant sans arrêt, pas une alerte).

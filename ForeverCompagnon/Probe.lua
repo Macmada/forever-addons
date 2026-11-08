@@ -36,6 +36,8 @@ root.PROBE_APIS = {
   "GetNumTrainerServices", "GetTrainerServiceInfo", "GetTrainerServiceLevelReq", "GetTrainerServiceCost", "IsTradeskillTrainer",
   -- maîtres de vol (itinéraire le plus rapide)
   "C_TaxiMap.GetAllTaxiNodes", "GetTaxiMapID", "NumTaxiNodes", "TaxiNodeName", "TaxiNodePosition", "TaxiNodeGetType", "UnitOnTaxi",
+  -- monture (vitesse de l'itinéraire)
+  "C_MountJournal.GetMountIDs", "C_MountJournal.GetMountInfoByID", "IsMounted", "GetUnitSpeed",
   -- réputation, carte, communauté
   "GetFactionInfoByID", "C_Reputation.GetFactionDataByID", "C_Map.GetBestMapForUnit", "C_Map.SetUserWaypoint",
   "C_SuperTrack.SetSuperTrackedUserWaypoint", "C_Minimap.SetTracking", "SetTracking", "C_Club.GetClubMembers",

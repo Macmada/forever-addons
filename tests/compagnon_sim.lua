@@ -526,11 +526,51 @@ do
   N.Go(1, 95, 95, "Donjon d'Ombrecroc")
   check(N.target and N.target.title:find("Près de toi", 1, true) and N.route, "étape 1 : flèche vers le maître de vol")
   N.Arrived()
-  check(N.route.waitTaxi == "Près du donjon", "au maître de vol : « prends le vol vers… »")
+  check(N.route.wait and N.route.wait:find("Près du donjon", 1, true), "au maître de vol : « prends le vol vers… »")
   W.fire("PLAYER_CONTROL_GAINED")
   W.run(2)
   check(N.target and N.target.title == "Donjon d'Ombrecroc" and not N.route, "après le vol : flèche vers le donjon")
   N.Clear()
+  -- autre continent : bateau de ta faction (Alliance : Menethil), puis la flèche vers le but
+  local saveWP = C_Map.GetWorldPosFromMapPos
+  local KALIMDOR = { [1439] = true, [1445] = true, [1413] = true, [1411] = true, [99] = true }
+  C_Map.GetWorldPosFromMapPos = function(map, v) local x, y = v:GetXY(); return KALIMDOR[map] and 1 or 0, CreateVector2D(x * 1000 + map, y * 1000) end
+  _G.UnitFactionGroup = function() return "Alliance" end
+  local plan = N.Plan(99, 50, 50, "Cavernes des Lamentations")
+  local boat
+  for _, st in ipairs(plan.steps or {}) do if st.kind == "boat" then boat = st end end
+  check(plan.other and boat and boat.transport.kind == "boat" and boat.from.name:find("Menethil", 1, true), "autre continent : bateau de Menethil (Alliance)")
+  _G.UnitFactionGroup = function() return "Horde" end
+  plan = N.Plan(99, 50, 50, "x")
+  local zep
+  for _, st in ipairs(plan.steps or {}) do if st.kind == "boat" then zep = st end end
+  check(zep and (zep.transport.kind == "zeppelin" or zep.transport.side == "both"), "Horde : zeppelin (ou bateau neutre), jamais Menethil")
+  _G.UnitFactionGroup = function() return "Alliance" end
+  N.Go(99, 50, 50, "Cavernes des Lamentations")
+  local guard = 0
+  while N.route and N.route.steps[N.route.i].kind ~= "boat" and guard < 5 do N.Arrived(); W.fire("PLAYER_CONTROL_GAINED"); W.run(2); guard = guard + 1 end
+  check(N.route and N.target.title:find(boat.to.name, 1, true), "flèche vers le quai du bateau")
+  N.Arrived()
+  check(N.route.wait and N.route.wait:find(boat.to.name, 1, true), "au quai : « prends le bateau pour… »")
+  C_Map.GetBestMapForUnit = function() return boat.to.mapID end
+  player = { boat.to.x / 100, boat.to.y / 100 }
+  N.Watch()
+  check(N.target and (not N.route or N.route.steps[N.route.i].kind ~= "boat"), "débarqué : la suite de l'itinéraire")
+  N.Clear()
+  C_Map.GetWorldPosFromMapPos = saveWP
+  C_Map.GetBestMapForUnit = function() return 1 end
+  player = { 0.10, 0.10 }
+  -- monture : possédée (journal des montures), vitesse mesurée sur la monture
+  root.db.mountSpeed = nil
+  _G.C_MountJournal = { GetMountIDs = function() return { 7 } end,
+                        GetMountInfoByID = function() return "Cheval", 1, "", false, true, 0, false, false, 1, false, true end }
+  check(N.HasMount() and math.abs(N.Speed() - 7 * 1.6) < 0.01, "monture possédée : vitesse estimée (60 %)")
+  _G.IsMounted, _G.GetUnitSpeed = function() return true end, function() return 14 end
+  N.MeasureMount()
+  check(root.db.mountSpeed == 14 and N.Speed() == 14, "vitesse sur monture mesurée : utilisée pour l'itinéraire")
+  _G.C_MountJournal, _G.IsMounted, _G.GetUnitSpeed = nil, nil, nil
+  root.db.mountSpeed = nil
+  check(N.Speed() == 7, "sans monture : la course")
   SlashCmdList.FOREVERCOMPAGNON("vols")
   _G.C_Map, _G.C_TaxiMap, _G.GetTaxiMapID = saveMap, saveTaxi, saveId
   root.db.taxi = nil

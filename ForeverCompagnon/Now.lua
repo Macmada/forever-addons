@@ -48,7 +48,7 @@ local function HealTiles(out)
   out[#out + 1] = { value = Num(M.hps, 0), label = L.tileHps, color = GREEN, open = "heal", kind = "hps",
                     tip = { title = string.format(L.hps, Num(M.hps, 1)), lines = lines } }
   local oom = Dur(M.oom)
-  out[#out + 1] = { value = oom or "∞", label = oom and L.tileAuto or L.tileNever, open = "heal", kind = "auto",
+  out[#out + 1] = { value = oom or "OK", label = oom and L.tileAuto or L.tileNever, open = "heal", kind = "auto",
                     color = (M.oom and M.oom < 60) and ORANGE or GREEN,
                     tip = { title = oom and string.format(L.oom, oom) or L.noOom } }
 end
