@@ -64,21 +64,31 @@ local function GetRow()
   local r = rows[used]
   if not r then
     r = CreateFrame("Button", nil, ui.content)
-    r:SetHeight(22)
+    r:SetHeight(26)
     r.stripe = r:CreateTexture(nil, "BACKGROUND")
     r.stripe:SetAllPoints()
-    r.dot = r:CreateTexture(nil, "ARTWORK")
-    r.dot:SetSize(16, 16)
-    r.dot:SetPoint("LEFT", 22, 0)
+    r.bar = r:CreateTexture(nil, "ARTWORK")                -- état : barre de couleur à gauche
+    r.bar:SetPoint("TOPLEFT", 0, -2)
+    r.bar:SetPoint("BOTTOMLEFT", 0, 2)
+    r.bar:SetWidth(4)
+    r.dot = r:CreateTexture(nil, "ARTWORK")                 -- gardé (tutoriel), plus affiché
+    r.dot:SetSize(1, 1)
+    r.dot:SetPoint("LEFT", 0, 0)
     r.icon = r:CreateTexture(nil, "ARTWORK")
-    r.icon:SetSize(20, 20)
-    r.icon:SetPoint("LEFT", 42, 0)
+    r.icon:SetSize(24, 24)
+    r.icon:SetPoint("LEFT", 34, 0)
     r.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    r.text:SetPoint("LEFT", 68, 0)
-    r.text:SetPoint("RIGHT", -4, 0)
+    r.title = r:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    r.title:SetPoint("TOPLEFT", 66, -4)
+    r.title:SetJustifyH("LEFT")
+    r.right = r:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    r.right:SetPoint("RIGHT", -10, 0)
+    r.right:SetJustifyH("RIGHT")
+    r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")   -- détail, sous le titre
+    r.text:SetPoint("TOPLEFT", r.title, "BOTTOMLEFT", 0, -2)
     r.text:SetJustifyH("LEFT")
     r.text:SetWordWrap(true)
+    r.text:SetTextColor(0.72, 0.68, 0.6)
     local hl = r:CreateTexture(nil, "HIGHLIGHT")
     hl:SetAllPoints()
     hl:SetColorTexture(1, 0.82, 0.3, 0.08)
@@ -147,14 +157,17 @@ local function Render(res)
   local y = -4
   local width = ui.content:GetWidth()
   local nWarn, nInfo, stripe = 0, 0, 0
-  local function Header(key, text, nTodo)
+  local function Header(key, text, nMust, nOpt)
     local h = GetHeader()
     h:ClearAllPoints()
     h:SetPoint("TOPLEFT", 0, y - 6)
     h:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
     h.icon:SetTexture(SECTION_ICON[key] or SECTION_ICON.consumables)
     h.fs:SetText(text)
-    h.count:SetText(nTodo and nTodo > 0 and ("|cffff9a1a" .. string.format(L.todoCount, nTodo) .. "|r") or "")
+    local parts = {}
+    if nMust and nMust > 0 then parts[#parts + 1] = "|cffff6a5a" .. string.format(L.countMust, nMust) .. "|r" end
+    if nOpt and nOpt > 0 then parts[#parts + 1] = "|cffffc860" .. string.format(L.countOpt, nOpt) .. "|r" end
+    h.count:SetText(table.concat(parts, "  ·  "))
     y = y - 34
     stripe = 0
   end
@@ -181,20 +194,51 @@ local function Render(res)
       end)
       box:SetScript("OnLeave", function() GameTooltip:Hide() end)
     end
+    box:ClearAllPoints()
+    box:SetPoint("LEFT", 8, 0)
     local withCheck = not noStatus and r.key ~= nil
     box:SetShown(withCheck)
     if withCheck then box.key = r.key; box:SetChecked(r.mandatory and true or false) end
     stripe = stripe + 1
     row.stripe:SetColorTexture(1, 1, 1, stripe % 2 == 0 and 0.04 or 0)
-    row.dot:SetShown(not noStatus)
-    if not noStatus then K.SetStatus(row.dot, r.status) end
+    row.dot:Hide()
+    local col = COLORS[r.status or "info"] or COLORS.info
+    row.bar:SetShown(not noStatus)
+    row.bar:SetColorTexture(col[1], col[2], col[3], 0.95)
     row.icon:SetShown(r.icon ~= nil)
     if r.icon then row.icon:SetTexture(r.icon) end
     row.itemID = r.itemID or r.id
-    row.text:SetWidth(width - 74)
-    local c = (r.status == "bad" and "|cffff6a5a") or (r.status == "warn" and "|cffffc860") or ""
-    row.text:SetText(c ~= "" and (c .. r.text .. "|r") or r.text)
-    local h = math.max(22, row.text:GetStringHeight() + 6)
+    -- « Potions de soins : 1 / 5 — 4 × Potion… » : titre, quantité à droite (en couleur), détail dessous
+    local text = tostring(r.text or "")
+    -- coupe sur la quantité (« Potions de soins : 1 / 5 — … »), sinon sur le dernier « : » (« Mot de pouvoir : Robustesse : … »)
+    local title, count, detail
+    if not noStatus then
+      local t, c, rest = text:match("^(.-)%s+:%s+(%d+%s*/%s*%d+)(.*)$")
+      if t then
+        title, count, detail = t, c, rest
+      else
+        title, detail = text:match("^(.*)%s+:%s+(.+)$")
+      end
+    end
+    if title then
+      detail = detail and detail:gsub("^%s*—%s*", ""):gsub("^%s+", "") or nil
+      if detail == "" then detail = nil end
+    else
+      title, detail = text, nil
+    end
+    local titleColor = (r.status == "bad" and "|cffff6a5a") or (r.status == "warn" and "|cffffc860") or (r.status == "info" and "|cffc8c0b0") or ""
+    row.title:SetText(titleColor .. title .. (titleColor ~= "" and "|r" or ""))
+    row.right:SetText(count and string.format("|cff%02x%02x%02x%s|r", col[1] * 255, col[2] * 255, col[3] * 255, count:gsub("%s", "")) or "")
+    local rw = row.right:GetStringWidth()
+    rw = (type(rw) == "number" and rw > 0) and (rw + 18) or 10
+    row.title:SetWidth(math.max(80, width - 76 - rw))
+    row.text:SetWidth(math.max(80, width - 76 - rw))
+    row.text:SetText(detail or "")
+    local th = row.title:GetStringHeight()
+    th = (type(th) == "number" and th > 0) and th or 14
+    local dh = detail and row.text:GetStringHeight() or 0
+    dh = (type(dh) == "number" and dh > 0) and dh + 2 or 0
+    local h = math.max(30, th + dh + 10)
     row:SetHeight(h)
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", 0, y)
@@ -203,9 +247,11 @@ local function Render(res)
   end
   for _, s in ipairs(res.sections) do
     if #s.rows > 0 then
-      local todo = 0
-      for _, r in ipairs(s.rows) do if r.status == "warn" or r.status == "bad" then todo = todo + 1 end end
-      Header(s.key, L["sec_" .. s.key], todo)
+      local must, opt = 0, 0
+      for _, r in ipairs(s.rows) do
+        if r.status == "bad" then must = must + 1 elseif r.status == "warn" then opt = opt + 1 end
+      end
+      Header(s.key, L["sec_" .. s.key], must, opt)
       for _, r in ipairs(s.rows) do
         Row(r)
         if r.status == "warn" or r.status == "bad" then nWarn = nWarn + 1 elseif r.status == "info" then nInfo = nInfo + 1 end
@@ -228,14 +274,22 @@ local function Render(res)
   ui.content:SetHeight(-y + 8)
   -- bandeau d'état : prêt (vert), presque (orange), pas prêt (rouge)
   local worst = res.worst or (nWarn > 0 and "warn" or "ok")
-  K.SetStatus(ui.bannerIcon, worst == "info" and "ok" or worst)
-  local c = COLORS[worst == "info" and "ok" or worst] or COLORS.ok
+  if worst == "info" then worst = "ok" end
+  local nMust, nOpt = 0, 0
+  for _, sct in ipairs(res.sections) do
+    for _, r in ipairs(sct.rows) do if r.status == "bad" then nMust = nMust + 1 elseif r.status == "warn" then nOpt = nOpt + 1 end end
+  end
+  K.SetStatus(ui.bannerIcon, worst)
+  local c = COLORS[worst] or COLORS.ok
   ui.bannerText:SetTextColor(c[1], c[2], c[3])
-  ui.bannerText:SetText((nWarn == 0) and (res.context == "raid" and L.bannerOkRaid or L.bannerOk)
-                        or string.format(worst == "bad" and L.bannerBad or L.bannerWarn, nWarn))
+  if ui.bannerTint then ui.bannerTint:SetColorTexture(c[1], c[2], c[3], 0.14) end
+  if ui.bannerBar then ui.bannerBar:SetColorTexture(c[1], c[2], c[3], 0.95) end
+  ui.bannerText:SetText((worst == "ok") and (res.context == "raid" and L.bannerOkRaid or L.bannerOk)
+                        or (worst == "bad" and string.format(L.bannerMust, nMust) or string.format(L.bannerOpt, nOpt)))
   ui.bannerSub:SetText((state.stale and ("|cffffc860" .. L.combatStale .. "|r · ") or "") .. (state.reason and (state.reason .. " · ") or "")
                        .. string.format(L.bannerSub, res.level, RoleLabel(res)))
-  ui.summary:SetText((nWarn == 0) and ("|cff40cc4d" .. L.allGood .. "|r") or string.format(L.summary, nWarn, nInfo))
+  ui.summary:SetText((nWarn == 0) and ("|cff40cc4d" .. L.allGood .. "|r")
+                     or (res.shopCost and string.format(L.summaryCost, ns.FormatMoney(res.shopCost)) or string.format(L.summary, nWarn, nInfo)))
   ui.title:SetText(res.context == "raid" and L.titleRaid or L.title)
   ui.tabDungeon:SetActive(res.context ~= "raid")
   ui.tabRaid:SetActive(res.context == "raid")
@@ -279,6 +333,13 @@ local function CreateUI()
   banner:SetHeight(52)
   K.Panel(banner, 0.9)
   ui.banner = banner
+  ui.bannerTint = banner:CreateTexture(nil, "BACKGROUND", nil, 1)
+  ui.bannerTint:SetPoint("TOPLEFT", 2, -2)
+  ui.bannerTint:SetPoint("BOTTOMRIGHT", -2, 2)
+  ui.bannerBar = banner:CreateTexture(nil, "ARTWORK")
+  ui.bannerBar:SetPoint("TOPLEFT", 2, -2)
+  ui.bannerBar:SetPoint("BOTTOMLEFT", 2, 2)
+  ui.bannerBar:SetWidth(5)
   ui.bannerIcon = banner:CreateTexture(nil, "ARTWORK")
   ui.bannerIcon:SetSize(34, 34)
   ui.bannerIcon:SetPoint("LEFT", 10, 0)
@@ -308,7 +369,7 @@ local function CreateUI()
     ns.db.role = order[cur % #order + 1]
     ns.Refresh()
   end)
-  ui.roleBtn:SetWidth(210)
+  ui.roleBtn:SetWidth(170)
   ui.roleBtn:SetPoint("LEFT", ui.tabRaid, "RIGHT", 12, 0)
   ui.roleBtn.icon = ui.roleBtn:CreateTexture(nil, "OVERLAY")
   ui.roleBtn.icon:SetSize(18, 18)
@@ -319,11 +380,11 @@ local function CreateUI()
   ui.helpBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_QuestionMark", L.helpLabel, L.tipHelp, function() ns.RunTour() end)
   ui.helpBtn:SetPoint("TOPRIGHT", -18, -90)
   ui.optBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.options, L.tipOptions, function() ns.ShowOptions() end)
-  ui.optBtn:SetPoint("RIGHT", ui.helpBtn, "LEFT", -22, 0)
+  ui.optBtn:SetPoint("RIGHT", ui.helpBtn, "LEFT", -30, 0)
   ui.refreshBtn = K.Action(ui, "Interface\\Icons\\Spell_Holy_Renew", L.refresh, L.tipRefresh, function() ns.Refresh() end)
-  ui.refreshBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -22, 0)
+  ui.refreshBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -34, 0)
   ui.guideBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Map_01", L.guideLabel, L.tipGuide, function() ns.GuideToVendor() end)
-  ui.guideBtn:SetPoint("RIGHT", ui.refreshBtn, "LEFT", -22, 0)
+  ui.guideBtn:SetPoint("RIGHT", ui.refreshBtn, "LEFT", -34, 0)
 
   -- la fiche, sur fond sombre encadré d'or
   local sheet = CreateFrame("Frame", nil, ui)
