@@ -104,7 +104,7 @@ function ns.Evaluate(link)
       r.method, r.slot, r.score = "weights", best.slot, best.score
     end
   end
-  if cacheN > 500 then wipe(cache); cacheN = 0 end
+  if cacheN > 5000 then wipe(cache); cacheN = 0 end      -- 500 avant la 3.5.3 : vidé en plein calcul (700+ objets)
   cache[key] = r or false
   cacheN = cacheN + 1
   return r

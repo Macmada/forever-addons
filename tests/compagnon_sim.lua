@@ -506,6 +506,21 @@ do
   local second = (loot.candidatesBuilt or 0) - before - first
   check(first <= 1 and second == 0, "Maintenant : objets évalués une fois par actualisation (" .. first .. "), pas à la suivante (" .. second .. ")")
 end
+-- performance : l'infobulle d'un objet n'est lue qu'une fois (avant la 3.5.3 : à chaque évaluation, objet porté compris)
+do
+  local heal = root.mods.ForeverHeal
+  local links = {}
+  for i = 1, 40 do links[i] = "|cffffffff|Hitem:" .. (7000 + i) .. "::::::::12:::::|h[Objet " .. (7000 + i) .. "]|h|r" end
+  local saveInst = C_Item.GetItemInfoInstant
+  C_Item.GetItemInfoInstant = function(x) local id = tonumber(tostring(x):match("(%d+)")); return id, "Armor", "Cloth", "INVTYPE_HAND", "Interface\\Icons\\INV_Misc_QuestionMark", 4, 1 end
+  heal.scanCount = 0
+  for _, l in ipairs(links) do ForeverHealAPI.Evaluate(l) end
+  local first = heal.scanCount
+  heal.scanCount = 0
+  for _, l in ipairs(links) do ForeverHealAPI.Evaluate(l) end
+  C_Item.GetItemInfoInstant = saveInst
+  check(first > 0 and first <= 41 * 2 and heal.scanCount == 0, "infobulles lues une fois par objet (" .. first .. " pour 40 objets), aucune à la 2e évaluation (" .. heal.scanCount .. ")")
+end
 
 -- niveaux des donjons : ceux du jeu (recherche de groupe), noms rapprochés (« Mortemines » = « Les Mortemines »)
 do

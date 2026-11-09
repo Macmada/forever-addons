@@ -140,9 +140,17 @@ root.Test("Métiers", "fenêtre de métier lue", function()
   if not ok2 and ns.TradeDump then detail = detail .. "\n      " .. table.concat(ns.TradeDump(), "\n      ") end
   return ok2, detail
 end)
-root.Test("Maintenant", "écran Maintenant", function()
+root.Test("Maintenant", "écran Maintenant (temps de calcul : 1re fois, puis en mémoire)", function()
+  local clock = _G.debugprofilestop
+  local loot = root.mods.ForeverLoot
+  if loot and loot.ForgetMemo then loot.ForgetMemo() end
+  local t0 = clock and clock()
   local lines = root.NowLines()
-  return #root.nowErrors == 0, #lines .. " lignes" .. (#root.nowErrors > 0 and (" ; " .. table.concat(root.nowErrors, " ; ")) or "")
+  local t1 = clock and clock()
+  root.NowLines()
+  local t2 = clock and clock()
+  local times = clock and string.format(" ; calcul %d ms, puis %d ms", math.floor(t1 - t0 + 0.5), math.floor(t2 - t1 + 0.5)) or ""
+  return #root.nowErrors == 0, #lines .. " lignes" .. times .. (#root.nowErrors > 0 and (" ; " .. table.concat(root.nowErrors, " ; ")) or "")
 end)
 root.Test("Jeu", "actions bloquées depuis la connexion", function()
   local b = _G.ForeverBlockedActions or {}

@@ -269,8 +269,9 @@ local function ScanLines(setup)
   scan:SetOwner(WorldFrame or UIParent, "ANCHOR_NONE")
   scan:ClearLines()
   setup(scan)
+  ns.scanCount = (ns.scanCount or 0) + 1
   local lines = {}
-  for i = 1, scan:NumLines() do
+  for i = 1, (scan.NumLines and scan:NumLines() or 0) do
     local fs = _G["ForeverHealScanTipTextLeft" .. i]
     local t = fs and fs:GetText()
     if t then lines[#lines + 1] = t:lower() end
@@ -298,11 +299,12 @@ local STATKEYS = {
   ITEM_MOD_HEALTH_SHORT = "hp", ITEM_MOD_MANA_SHORT = "mana",
 }
 
--- link : lien d'objet ; slot : emplacement porté (lit l'objet équipé, enchantement compris)
-function ns.ItemStats(link, slot)
+-- Caractéristiques d'un objet, mémorisées par lien (le lien inclut l'enchantement : un objet porté changé = nouveau lien).
+-- Avant la 3.5.3, chaque évaluation relisait l'infobulle de l'objet et celle de l'objet porté : des milliers de lectures
+-- à l'ouverture de l'écran Maintenant (gros ralentissements).
+local statsMemo, statsN = {}, 0
+local function ItemStatsRaw(link, slot)
   local st = { res = {} }
-  if slot then link = GetInventoryItemLink("player", slot) end
-  if not link then return st end
   local get = (C_Item and C_Item.GetItemStats) or GetItemStats
   local raw = get and get(link) or {}
   for k, v in pairs(raw) do
@@ -322,6 +324,21 @@ function ns.ItemStats(link, slot)
   return st
 end
 
+-- link : lien d'objet ; slot : emplacement porté (lit l'objet équipé, enchantement compris). Renvoie une copie.
+function ns.ItemStats(link, slot)
+  if slot then link = GetInventoryItemLink("player", slot) end
+  if not link then return { res = {} } end
+  local key = (slot and ("s" .. slot .. ":") or "") .. link
+  local m = statsMemo[key]
+  if not m then
+    m = ItemStatsRaw(link, slot)
+    if statsN > 3000 then statsMemo, statsN = {}, 0 end
+    statsMemo[key], statsN = m, statsN + 1
+  end
+  return Copy(m)
+end
+function ns.ForgetItemStats() statsMemo, statsN = {}, 0 end
+
 local function Diff(a, b)            -- a - b
   local d = { res = {} }
   for _, k in ipairs({ "sta", "int", "spi", "armor", "heal", "mp5", "crit", "hp", "mana" }) do d[k] = (a[k] or 0) - (b[k] or 0) end
@@ -331,15 +348,25 @@ end
 ns.Diff = Diff
 
 -- Écart si l'objet remplaçait ce que tu portes ; pour les anneaux et bijoux, la meilleure des deux places
+-- Relevé du personnage et métriques actuelles, partagés par une série de comparaisons (2 s ; oubliés quand l'équipement
+-- ou les caractéristiques changent)
+local cmpCtx
+function ns.CompareContext()
+  if cmpCtx and GetTime() - cmpCtx.t < 2 and cmpCtx.v == (ns.statVersion or 0) then return cmpCtx end
+  local S = ns.Snapshot()
+  local mix = ns.Mix()
+  cmpCtx = { t = GetTime(), v = ns.statVersion or 0, S = S, rates = ns.Rates(S), mix = mix, before = ns.Metrics(S, mix) }
+  return cmpCtx
+end
+function ns.ForgetCompare() cmpCtx = nil end
+
 function ns.CompareItem(link)
   local equipLoc = select(4, ((C_Item and C_Item.GetItemInfoInstant) or GetItemInfoInstant)(link))
   local slots = equipLoc and D.slots[equipLoc]
   if not slots then return nil end
   local new = ns.ItemStats(link)
-  local S = ns.Snapshot()
-  local rates = ns.Rates(S)
-  local mix = ns.Mix()
-  local before = ns.Metrics(S, mix)
+  local ctx = ns.CompareContext()
+  local S, rates, mix, before = ctx.S, ctx.rates, ctx.mix, ctx.before
   local best
   for _, slot in ipairs(slots) do
     local old = ns.ItemStats(nil, slot)
@@ -570,6 +597,7 @@ local last, pending
 
 -- Changement de caractéristiques : relevé avant/après, apprentissage et annonce (hors combat)
 local function StatsChanged()
+  if ns.ForgetCompare then ns.ForgetCompare() end
   if pending then return end
   pending = true
   C_Timer.After(0.6, function()
@@ -592,7 +620,7 @@ handlers.PLAYER_LOGIN = function()
   C_Timer.After(3, function() last = ns.Snapshot() end)
   if ns.OnLogin then ns.OnLogin() end
 end
-handlers.PLAYER_EQUIPMENT_CHANGED = function() ns.equipChanged = true; StatsChanged() end
+handlers.PLAYER_EQUIPMENT_CHANGED = function() ns.equipChanged = true; ns.ForgetCompare(); StatsChanged() end
 handlers.UNIT_STATS = function(unit) if unit == "player" then StatsChanged() end end
 handlers.UNIT_MAXHEALTH = handlers.UNIT_STATS
 handlers.UNIT_MAXPOWER = handlers.UNIT_STATS
@@ -808,7 +836,7 @@ _G.ForeverHealAPI = {
     if not ok or not cmp then return nil end
     local hps = cmp.after.hps - cmp.before.hps
     local healed = (cmp.after.healedBeforeOom or 0) - (cmp.before.healedBeforeOom or 0)
-    local hp = (cmp.d.sta or 0) * ns.Rates(ns.Snapshot()).hpPerSta + (cmp.d.hp or 0)
+    local hp = (cmp.d.sta or 0) * ns.CompareContext().rates.hpPerSta + (cmp.d.hp or 0)
     return { slot = cmp.slot, hps = hps, healed = healed, hp = hp, regen = (cmp.after.regenOut or 0) - (cmp.before.regenOut or 0),
              armor = cmp.d.armor or 0, score = ns.Score(cmp.before, cmp.after, cmp.d) }
   end,

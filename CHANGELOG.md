@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.5.3 (ForeverCompagnon 3.5.3)
+- **Ralentissements à l'ouverture et en revenant sur un onglet (vraie cause)** : pour chaque objet évalué (700+), le modèle de soins relisait l'infobulle de l'objet et celle de l'objet que tu portes, et refaisait deux fois le relevé de ton personnage ; et la mémoire des évaluations se vidait au-delà de 500 objets, donc tout recommençait à chaque ouverture. Maintenant : l'infobulle d'un objet n'est lue qu'une fois (l'objet porté, de nouveau s'il change), le relevé du personnage est partagé par toute la série, et la mémoire tient 5 000 objets.
+- **Auto-test** : la ligne « écran Maintenant » donne le temps de calcul (1re fois, puis en mémoire), pour mesurer en jeu.
+
 ## v3.5.2 (ForeverCompagnon 3.5.2)
 - **Gros ralentissements depuis la 3.5.0** (à l'ouverture et à chaque actualisation) : l'écran Maintenant évaluait tous tes objets connus (~700) quatre fois de suite, et relisait la recherche de groupe et DungeonJournal pour chaque source de chaque objet. Les résultats sont maintenant gardés en mémoire (remis à jour quand tes sacs, ton équipement, ton niveau ou ton rôle changent, et au plus tard toutes les 10 s) : une actualisation n'évalue tes objets qu'une fois, la suivante plus du tout. Une série de changements dans les sacs (butin ramassé) ne déclenche plus qu'un seul recalcul.
 
