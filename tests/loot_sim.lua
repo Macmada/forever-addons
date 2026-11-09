@@ -192,6 +192,11 @@ check(ns.ui.nearBtn.active and ns.ui.spanBtns[0].active, "/floot : onglet « À 
 ns.ui.spanBtns[10].scripts.OnClick(ns.ui.spanBtns[10])
 check(ns.nearSpan == 10 and ns.ui.spanBtns[10].active, "choix « +10 niveaux »")
 check(ns.db.nearSpan == 10, "choix retenu d'une fois sur l'autre")
+local tl = ns.NearTiles()
+check(#tl == 4 and tl[1].label == ns.L.tileUp and ns.ui.tiles[1]:IsShown(), "« À mon niveau » : 4 tuiles (améliorations, meilleur gain, sacs, donjon)")
+ns.ui.dunBtn.scripts.OnClick(ns.ui.dunBtn)
+check(not ns.ui.tiles[1]:IsShown(), "onglet Donjons : pas de tuiles")
+ns.ui.nearBtn.scripts.OnClick(ns.ui.nearBtn)
 
 -- 5e. alerte quand tu ramasses un objet qui t'améliore (05/11/2026)
 _G.EquipItemByName = function(l) equipped = l end

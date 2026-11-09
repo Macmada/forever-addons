@@ -70,9 +70,13 @@ local function Card()
     local hl = c:CreateTexture(nil, "HIGHLIGHT")
     hl:SetAllPoints()
     hl:SetColorTexture(1, 0.82, 0.3, 0.10)
+    c.bar = c:CreateTexture(nil, "ARTWORK")               -- barre de couleur : vert = amélioration, gris = pas mieux
+    c.bar:SetPoint("TOPLEFT", 0, -3)
+    c.bar:SetPoint("BOTTOMLEFT", 0, 3)
+    c.bar:SetWidth(4)
     c.iconFrame = CreateFrame("Frame", nil, c)
     c.iconFrame:SetSize(36, 36)
-    c.iconFrame:SetPoint("LEFT", 8, 0)
+    c.iconFrame:SetPoint("LEFT", 12, 0)
     c.icon = c.iconFrame:CreateTexture(nil, "ARTWORK")
     c.icon:SetPoint("TOPLEFT", 1, -1)
     c.icon:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -131,16 +135,16 @@ local function SlotHead()
   local h = slots[su]
   if not h then
     h = CreateFrame("Button", nil, ui.content)
-    h:SetHeight(34)
+    h:SetHeight(28)
     h.bg = h:CreateTexture(nil, "BACKGROUND")
     h.bg:SetAllPoints()
-    h.bg:SetColorTexture(0.32, 0.22, 0.08, 0.35)
+    h.bg:SetColorTexture(0.32, 0.22, 0.08, 0.0)
     h.icon = h:CreateTexture(nil, "ARTWORK")
-    h.icon:SetSize(26, 26)
-    h.icon:SetPoint("LEFT", 6, 0)
+    h.icon:SetSize(20, 20)
+    h.icon:SetPoint("LEFT", 2, 0)
     h.title = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     h.title:SetPoint("LEFT", h.icon, "RIGHT", 8, 0)
-    K.TitleFont(h.title, 17, "GameFontNormal")
+    K.TitleFont(h.title, 15, "GameFontNormal")
     h.worn = h:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     h.worn:SetPoint("RIGHT", -10, 0)
     h.worn:SetJustifyH("RIGHT")
@@ -193,7 +197,7 @@ local function Render(lines)
       h.title:SetText(l.title)
       h.worn:SetText(l.right or "")
       h.link = l.link
-      y = y - 44
+      y = y - 36
       stripe = 0
     elseif l.kind == "card" then
       local c = Card()
@@ -228,11 +232,13 @@ local function Render(lines)
       c.tags:SetWidth(math.max(1, room - nw - 8))
       c.tags:SetShown(room - nw - 8 > 30)
       c.star:SetShown(l.ref and true or false)
+      local good = (l.gain or "") ~= "" and not tostring(l.gain):find("ff5050", 1, true)
+      if good then c.bar:SetColorTexture(0.25, 0.85, 0.38, 0.95) else c.bar:SetColorTexture(0.5, 0.5, 0.5, 0.6) end
       c:ClearAllPoints()
       c:SetPoint("TOPLEFT", 6, y)
       c:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
       y = y - 50
-    else
+    elseif not l.hidden then     -- (ligne cachée : gardée pour les recherches et les tests, pas affichée)
       -- information ou ligne simple
       local f = InfoLine()
       f:SetFontObject(l.boss and "GameFontNormal" or "GameFontHighlightSmall")
@@ -363,7 +369,8 @@ function ns.NearLines(span)
   local level = UnitLevel("player")
   local maxLevel = math.min(60, level + span)
   local lines = {}
-  lines[#lines + 1] = { kind = "info", display = "|cffd8c8a0" .. string.format(L.nearIntro, maxLevel) .. "|r", text = string.format(L.nearIntro, maxLevel) }
+  -- (phrase d'introduction remplacée par les tuiles ; gardée dans le texte pour les recherches et les tests)
+  lines[#lines + 1] = { kind = "info", display = "", text = string.format(L.nearIntro, maxLevel), hidden = true }
   if not ns.DJ() and not (ns.ATT and ns.ATT.Available()) then lines[#lines + 1] = { kind = "info", display = "|cffa0a0a0" .. L.djOff .. "|r", text = L.djOff } end
   local bis = ns.BiS(2, maxLevel)
   local empty = {}
@@ -466,15 +473,67 @@ function ns.DungeonLines()
   return lines
 end
 
+-- Tuiles de l'onglet « À mon niveau » : améliorations, meilleur gain, dans tes sacs, donjon le plus utile
+function ns.NearTiles()
+  local level = UnitLevel("player")
+  local bis = ns.BiS(2, math.min(60, level + (ns.nearSpan or 0)))
+  local nUp, nBag, best = 0, 0, nil
+  for _, sl in pairs(bis) do
+    local c = sl.items[1]
+    if c then
+      nUp = nUp + 1
+      if c.src == "bags" then nBag = nBag + 1 end
+      if not best or (c.eval.score or 0) > (best.eval.score or 0) then best = c end
+    end
+  end
+  local out = {
+    { value = tostring(nUp), label = L.tileUp, color = nUp > 0 and { 1, 0.82, 0 } or { 0.25, 0.85, 0.38 } },
+    { value = best and (GainParts(best.eval)) or "-", label = L.tileBest, color = { 0.25, 0.85, 0.38 },
+      tip = best and best.link and (best.link:match("%[(.-)%]")) or nil },
+    { value = tostring(nBag), label = L.tileBags, color = nBag > 0 and { 0.25, 0.85, 0.38 } or { 0.5, 0.5, 0.5 },
+      tip = nBag > 0 and L.tileBagsTip or nil },
+  }
+  local places = ns.WhereToGo and ns.WhereToGo(1) or {}
+  local p = places[1]
+  out[#out + 1] = { value = p and string.format(L.tileItems, #p.items) or "0", label = p and p.name or L.tileNoPlace,
+                    color = { 0.4, 0.8, 1 }, tip = p and string.format(L.tilePlaceTip, #p.items, p.name) or nil,
+                    onClick = p and p.mapID and function() local nav = ns.root and ns.root.Nav; if nav then nav.Go(p.mapID, p.x, p.y, p.name) end end or nil }
+  return out
+end
+
 function ns.Refresh()
   if not ui or not ui:IsShown() then return end
+  local showTiles = tab == "near"
+  if showTiles then
+    local ok, tiles = pcall(ns.NearTiles)
+    tiles = ok and tiles or {}
+    local width = (ui:GetWidth() or W) - 32
+    if type(width) ~= "number" or width <= 0 then width = W - 32 end
+    local tw = (width - 18) / 4
+    for i, t in ipairs(ui.tiles) do
+      local d = tiles[i]
+      t:SetShown(d ~= nil)
+      if d then
+        t:ClearAllPoints()
+        t:SetPoint("TOPLEFT", 16 + (i - 1) * (tw + 6), -112)
+        t:SetWidth(tw)
+        t.value:SetText(d.value)
+        t.label:SetText(d.label)
+        t.label:SetWidth(tw - 8)
+        t.top:SetColorTexture(d.color[1], d.color[2], d.color[3], 1)
+        t.tip, t.onClick = d.tip, d.onClick
+      end
+    end
+  else
+    for _, t in ipairs(ui.tiles) do t:Hide() end
+  end
   Render((tab == "dungeons" and ns.DungeonLines()) or (tab == "bis" and ns.BisLines()) or ns.NearLines())
   ui.nearBtn:SetActive(tab == "near")
   ui.bisBtn:SetActive(tab == "bis")
   ui.dunBtn:SetActive(tab == "dungeons")
   for span, b in pairs(ui.spanBtns) do b:SetActive(ns.nearSpan == span); b:SetShown(tab == "near") end
   ui.spanLabel:SetShown(tab == "near")
-  ui.scroll:SetPoint("TOPLEFT", 16, tab == "near" and -112 or -82)
+  ui.scroll:SetPoint("TOPLEFT", 16, tab == "near" and -172 or -82)
 end
 
 ----------------------------------------------------------------------
@@ -617,6 +676,33 @@ local function CreateUI()
     if prevSpan then b:SetPoint("LEFT", prevSpan, "RIGHT", 4, 0) else b:SetPoint("LEFT", ui.spanLabel, "RIGHT", 10, 0) end
     ui.spanBtns[span] = b
     prevSpan = b
+  end
+  ui.tiles = {}
+  for i = 1, 4 do
+    local t = CreateFrame("Button", nil, ui)
+    t:SetHeight(52)
+    t.bg = t:CreateTexture(nil, "BACKGROUND")
+    t.bg:SetAllPoints()
+    t.bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
+    t.top = t:CreateTexture(nil, "ARTWORK")
+    t.top:SetPoint("TOPLEFT", 1, -1); t.top:SetPoint("TOPRIGHT", -1, -1); t.top:SetHeight(3)
+    K.Border(t, 0.45, 0.37, 0.24, 1, "BORDER")
+    t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    t.value:SetPoint("TOP", 0, -9)
+    t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
+    t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    t.label:SetPoint("BOTTOM", 0, 6)
+    t.label:SetTextColor(0.85, 0.78, 0.6)
+    if t.label.SetWordWrap then t.label:SetWordWrap(false) end
+    t:SetScript("OnClick", function(self) if self.onClick then self.onClick() end end)
+    t:SetScript("OnEnter", function(self)
+      if not self.tip then return end
+      GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+      GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    t:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    ui.tiles[i] = t
   end
   local sf = CreateFrame("ScrollFrame", nil, ui, "UIPanelScrollFrameTemplate")
   sf:SetPoint("TOPLEFT", 16, -82)
