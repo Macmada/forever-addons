@@ -311,7 +311,7 @@ local function RenderPanel(text)
 end
 
 -- Panneau visuel : tuiles, barres des sorts, barres des gains, ligne de caractéristiques (09/11/2026 : moins de texte)
-local vis = { rows = {}, tiles = {} }
+local vis = { rows = {} }
 local function VRow()
   vis.used = vis.used + 1
   local r = vis.rows[vis.used]
@@ -355,7 +355,7 @@ end
 local function RenderVisual(d)
   for _, k in ipairs({ "head", "fs" }) do for _, o in ipairs(pool[k]) do o:Hide() end; pused[k] = 0 end
   for _, r in ipairs(vis.rows) do r:Hide() end
-  for _, t in ipairs(vis.tiles) do t:Hide() end
+  if vis.tileSet then vis.tileSet.Hide() end
   vis.used = 0
   local width = panel.child:GetWidth()
   if type(width) ~= "number" or width <= 0 then width = 380 end
@@ -365,44 +365,14 @@ local function RenderVisual(d)
     panel.child:SetHeight(60)
     return
   end
-  -- tuiles
-  local gap, n = 6, #d.tiles
-  local tw = (width - 8 - gap * (n - 1)) / n
+  -- tuiles (composant commun, dans la zone qui défile)
+  vis.tileSet = vis.tileSet or K.Tiles(panel.child, 4, 52)
+  local defs = {}
   for i, td in ipairs(d.tiles) do
-    local t = vis.tiles[i]
-    if not t then
-      t = CreateFrame("Frame", nil, panel.child)
-      t:SetHeight(52)
-      t:EnableMouse(true)
-      t.bg = t:CreateTexture(nil, "BACKGROUND")
-      t.bg:SetAllPoints()
-      t.bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
-      t.top = t:CreateTexture(nil, "ARTWORK")
-      t.top:SetPoint("TOPLEFT", 1, -1); t.top:SetPoint("TOPRIGHT", -1, -1); t.top:SetHeight(3)
-      t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-      t.value:SetPoint("TOP", 0, -9)
-      t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
-      t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-      t.label:SetPoint("BOTTOM", 0, 6)
-      t.label:SetTextColor(0.85, 0.78, 0.6)
-      t:SetScript("OnEnter", function(self)
-        if not self.tipText then return end
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText(self.tipText, 1, 1, 1, 1, true)
-        GameTooltip:Show()
-      end)
-      t:SetScript("OnLeave", function() GameTooltip:Hide() end)
-      vis.tiles[i] = t
-    end
-    t:ClearAllPoints()
-    t:SetPoint("TOPLEFT", 4 + (i - 1) * (tw + gap), y)
-    t:SetWidth(tw)
-    t.value:SetText(td.value)
-    t.label:SetText(td.label)
-    t.tipText = td.tip
-    if td.warn then t.top:SetColorTexture(1, 0.66, 0.24, 1) else t.top:SetColorTexture(0.25, 0.85, 0.38, 1) end
-    t:Show()
+    defs[i] = { value = td.value, label = td.label, tip = td.tip,
+                color = td.warn and { 1, 0.66, 0.24 } or { 0.25, 0.85, 0.38 } }
   end
+  vis.tileSet.Render(defs, 4, y, width - 8)
   y = y - 62
   local function Head(title, icon, rest)
     local h = PHead()
@@ -649,7 +619,7 @@ function ns.RefreshPanel()
     r:Hide()
     if r.restore then r.restore = nil; r.bg:SetColorTexture(1, 1, 1, 0.08); r.name:SetWidth(128) end
   end
-  for _, t in ipairs(vis.tiles) do t:Hide() end
+  if vis.tileSet then vis.tileSet.Hide() end
   if panel.mode ~= "upgrades" then
     local ok, d = pcall(ns.PanelData)
     if ok and d then

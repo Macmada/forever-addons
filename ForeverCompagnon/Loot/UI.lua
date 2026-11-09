@@ -503,29 +503,13 @@ end
 
 function ns.Refresh()
   if not ui or not ui:IsShown() then return end
-  local showTiles = tab == "near"
-  if showTiles then
+  if tab == "near" then
     local ok, tiles = pcall(ns.NearTiles)
-    tiles = ok and tiles or {}
-    local width = (ui:GetWidth() or W) - 32
-    if type(width) ~= "number" or width <= 0 then width = W - 32 end
-    local tw = (width - 18) / 4
-    for i, t in ipairs(ui.tiles) do
-      local d = tiles[i]
-      t:SetShown(d ~= nil)
-      if d then
-        t:ClearAllPoints()
-        t:SetPoint("TOPLEFT", 16 + (i - 1) * (tw + 6), -112)
-        t:SetWidth(tw)
-        t.value:SetText(d.value)
-        t.label:SetText(d.label)
-        t.label:SetWidth(tw - 8)
-        t.top:SetColorTexture(d.color[1], d.color[2], d.color[3], 1)
-        t.tip, t.onClick = d.tip, d.onClick
-      end
-    end
+    local width = ui:GetWidth()
+    width = ((type(width) == "number" and width > 0) and width or W) - 32
+    ui.tileSet.Render(ok and tiles or {}, 16, -112, width)
   else
-    for _, t in ipairs(ui.tiles) do t:Hide() end
+    ui.tileSet.Hide()
   end
   Render((tab == "dungeons" and ns.DungeonLines()) or (tab == "bis" and ns.BisLines()) or ns.NearLines())
   ui.nearBtn:SetActive(tab == "near")
@@ -677,33 +661,8 @@ local function CreateUI()
     ui.spanBtns[span] = b
     prevSpan = b
   end
-  ui.tiles = {}
-  for i = 1, 4 do
-    local t = CreateFrame("Button", nil, ui)
-    t:SetHeight(52)
-    t.bg = t:CreateTexture(nil, "BACKGROUND")
-    t.bg:SetAllPoints()
-    t.bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
-    t.top = t:CreateTexture(nil, "ARTWORK")
-    t.top:SetPoint("TOPLEFT", 1, -1); t.top:SetPoint("TOPRIGHT", -1, -1); t.top:SetHeight(3)
-    K.Border(t, 0.45, 0.37, 0.24, 1, "BORDER")
-    t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-    t.value:SetPoint("TOP", 0, -9)
-    t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
-    t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    t.label:SetPoint("BOTTOM", 0, 6)
-    t.label:SetTextColor(0.85, 0.78, 0.6)
-    if t.label.SetWordWrap then t.label:SetWordWrap(false) end
-    t:SetScript("OnClick", function(self) if self.onClick then self.onClick() end end)
-    t:SetScript("OnEnter", function(self)
-      if not self.tip then return end
-      GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-      GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
-      GameTooltip:Show()
-    end)
-    t:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    ui.tiles[i] = t
-  end
+  ui.tileSet = K.Tiles(ui, 4, 52)                      -- composant commun (Widgets.lua)
+  ui.tiles = ui.tileSet.list
   local sf = CreateFrame("ScrollFrame", nil, ui, "UIPanelScrollFrameTemplate")
   sf:SetPoint("TOPLEFT", 16, -82)
   sf:SetPoint("BOTTOMRIGHT", -34, 16)
