@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v3.5.11 (ForeverCompagnon 3.5.11) : la session sur la fiche du personnage
+- **Bandeau sous la fiche du personnage (C)**, sous ses onglets : durée de la session, XP gagnée, XP/h et « niv. 24 dans ~35 min » ; en dessous, or gagné et dépensé, quêtes rendues, donjons ; fin filet bleu : ton avancée dans le niveau. Au survol : le récapitulatif complet, la zone de quêtes Questie conseillée et la session précédente ; clic : récapitulatif dans le chat. Mis à jour toutes les 15 s.
+
 ## v3.5.10 (ForeverCompagnon 3.5.10) : l'XP des monstres comptée
 - **Suivi de session** : l'XP gagnée en tuant des monstres n'était pas comptée (en combat, le jeu la rend illisible et le relevé était perdu) ; seules les quêtes, rendues hors combat, l'étaient. Le gain est maintenant rattrapé à la sortie du combat (et toutes les 15 s). Même chose pour l'or ramassé en combat.
 

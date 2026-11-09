@@ -57,6 +57,7 @@ local function Tick()
   if dt > 0 and dt < 120 then cur.elapsed = cur.elapsed + dt end
   cur.lastSeen = Now()
   if S.OnXP then S.OnXP(); S.OnMoney() end                    -- rattrapage si un relevé était illisible
+  if S.UpdateSheet then S.UpdateSheet() end
 end
 
 -- En combat, Forever peut rendre l'XP (et l'or) illisibles : on garde alors le dernier relevé lisible et on rattrape
@@ -167,6 +168,75 @@ function S.Tile()
            color = { 0.4, 0.75, 1 }, tip = tip, onClick = function() root.Print(S.Recap()) end }
 end
 
+-- Bandeau sous la fiche du personnage (C) : session et prochain niveau, détails au survol
+local sheet
+function S.SheetLines()
+  local s = cur
+  if not s then return L.sessNone, "" end
+  local top = { string.format(L.sessSheetHead, Dur(s.elapsed)), string.format(L.sessXP, Num(s.xp)) }
+  local rate = S.Rate(s)
+  if rate then top[#top + 1] = Num(rate) .. " XP/h" end
+  local eta = S.ETA()
+  if UnitLevel("player") < 60 then
+    top[#top + 1] = eta and string.format(L.sessSheetEta, UnitLevel("player") + 1, Dur(eta)) or L.sessSheetWait
+  end
+  local bottom = {}
+  if (s.moneyIn or 0) > 0 then bottom[#bottom + 1] = "+" .. Money(s.moneyIn) end
+  if (s.moneyOut or 0) > 0 then bottom[#bottom + 1] = "-" .. Money(s.moneyOut) end
+  if (s.quests or 0) > 0 then bottom[#bottom + 1] = string.format(L.sessQuests, s.quests) end
+  if (s.nDungeons or 0) > 0 then bottom[#bottom + 1] = string.format(L.sessSheetDungeons, s.nDungeons) end
+  return table.concat(top, "  ·  "), table.concat(bottom, "  ·  ")
+end
+
+function S.UpdateSheet()
+  if not (sheet and sheet:IsShown()) then return end
+  local a, b = S.SheetLines()
+  sheet.top:SetText(a)
+  sheet.bottom:SetText(b)
+  local xp, max = Plain(_G.UnitXP and UnitXP("player")), Plain(_G.UnitXPMax and UnitXPMax("player"))
+  if xp and max and max > 0 and UnitLevel("player") < 60 then
+    sheet.bar:SetWidth(math.max(1, (sheet:GetWidth() - 2) * xp / max)); sheet.bar:Show()
+  else sheet.bar:Hide() end
+end
+
+local function CreateSheet(cf)
+  local K = root.Kit
+  sheet = CreateFrame("Button", "ForeverCompagnonSessionSheet", cf)
+  sheet:SetSize(330, 40)
+  local tab = _G.CharacterFrameTab1
+  if tab then sheet:SetPoint("TOPLEFT", tab, "BOTTOMLEFT", 4, -2)
+  else sheet:SetPoint("TOPLEFT", cf, "BOTTOMLEFT", 16, -4) end
+  if K and K.Panel then K.Panel(sheet, 0.85) end
+  sheet.bar = sheet:CreateTexture(nil, "ARTWORK")             -- avancée dans le niveau, en bas
+  sheet.bar:SetPoint("BOTTOMLEFT", 1, 1)
+  sheet.bar:SetHeight(2)
+  sheet.bar:SetColorTexture(0.4, 0.75, 1, 0.9)
+  sheet.top = sheet:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  sheet.top:SetPoint("TOPLEFT", 8, -7); sheet.top:SetPoint("RIGHT", -8, 0); sheet.top:SetJustifyH("LEFT")
+  sheet.bottom = sheet:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+  sheet.bottom:SetPoint("TOPLEFT", sheet.top, "BOTTOMLEFT", 0, -4); sheet.bottom:SetPoint("RIGHT", -8, 0)
+  sheet.bottom:SetJustifyH("LEFT")
+  sheet:SetScript("OnEnter", function(self)
+    local t = S.Tile()
+    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+    GameTooltip:SetText(L.sessTitle, 1, 0.82, 0)
+    for _, ln in ipairs(t and t.tip.lines or { S.Recap() }) do GameTooltip:AddLine(ln, 1, 1, 1, true) end
+    if root.db and root.db.lastSession then GameTooltip:AddLine(L.sessLastLabel .. S.Recap(root.db.lastSession), 0.7, 0.7, 0.7, true) end
+    GameTooltip:AddLine(L.sessSheetClick, 0.5, 0.8, 1)
+    GameTooltip:Show()
+  end)
+  sheet:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  sheet:SetScript("OnClick", function() S.Command() end)
+  sheet:SetScript("OnShow", S.UpdateSheet)
+end
+
+function S.AttachSheet()
+  local cf = _G.CharacterFrame
+  if not cf or sheet then return end
+  CreateSheet(cf)
+  S.UpdateSheet()
+end
+
 function S.Command()
   root.Print(S.Recap())
   if root.db and root.db.lastSession then root.Print(L.sessLastLabel .. S.Recap(root.db.lastSession)) end
@@ -188,6 +258,7 @@ if C_Timer and C_Timer.NewTicker then C_Timer.NewTicker(15, Tick) end
 
 root.OnLogin(function()
   S.Start()
+  S.AttachSheet()
   if S.announceLast and root.db.lastSession then
     S.announceLast = nil
     C_Timer.After(5, function() root.Print(L.sessLastLabel .. S.Recap(root.db.lastSession)) end)

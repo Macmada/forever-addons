@@ -153,6 +153,16 @@ do
   check(s.moneyIn == 20000 and s.moneyOut == 5000 and s.quests == 1 and s.nDungeons == 1, "session : or, quêtes et donjons (" .. s.moneyIn .. "/" .. s.moneyOut .. "/" .. s.quests .. "/" .. tostring(s.nDungeons) .. ")")
   local recap = S.Recap()
   check(recap:find("Mortemines") and recap:find("9 500") and recap:find(lvl - 1 .. " %-> " .. lvl), "session : récapitulatif (" .. recap .. ")")
+  -- bandeau sous la fiche du personnage
+  local saveCF = _G.CharacterFrame
+  _G.CharacterFrame = _G.CharacterFrame or CreateFrame("Frame", "CharacterFrame", UIParent)
+  S.AttachSheet()
+  local sh = _G.ForeverCompagnonSessionSheet
+  sh:Show(); S.UpdateSheet()
+  local top, bottom = sh.top:GetText(), sh.bottom:GetText()
+  check(top:find("9 500") and top:find("XP/h") and bottom:find("1 d", 1, true) and bottom:find("-", 1, true),
+        "fiche du personnage : bandeau de session (" .. top .. " | " .. bottom .. ")")
+  _G.CharacterFrame = saveCF
   -- /reload : même session ; 1 h plus tard : nouvelle, l'ancienne résumée
   now = now + 60; S.Start()
   check(ForeverCompagnonDB.session == s, "session : un /reload garde la session")
