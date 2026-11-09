@@ -72,6 +72,9 @@ function root.NowTiles(prepRes, places)
     out[#out + 1] = { value = tostring(#(places or {})), label = L.tilePlaces, color = GOLD, open = "loot", kind = "places" }
   end
   while #out > 4 do table.remove(out) end
+  -- prochain niveau (rythme d'XP de la session), en 5e tuile
+  local st = root.Session and Safe("session", root.Session.Tile)
+  if st then st.kind = "session"; out[#out + 1] = st end
   return out
 end
 
@@ -335,7 +338,7 @@ function root.RefreshNow()
   local defs = {}
   for i, d in ipairs(tiles or {}) do
     defs[i] = { value = d.value, label = d.label, color = d.color, tip = d.tip,
-                onClick = d.open and function() root.Open(d.open) end or nil }
+                onClick = d.onClick or (d.open and function() root.Open(d.open) end) or nil }
   end
   ui.tileSet.Render(defs, 16, -100, W - 32, 10)
   ui.list.Render(lines)
@@ -392,7 +395,7 @@ local function Create()
   end
   ui.status = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   ui.status:SetPoint("TOPRIGHT", -20, -84)
-  ui.tileSet = K.Tiles(ui, 4, 64)                      -- composant commun (Widgets.lua)
+  ui.tileSet = K.Tiles(ui, 5, 64)                      -- composant commun (Widgets.lua) ; 5e : prochain niveau
   ui.tiles = ui.tileSet.list
   ui.list = K.CardList(ui, W - 60)
   ui.list.scroll:SetPoint("TOPLEFT", 16, -174)

@@ -103,7 +103,57 @@ check(lines[1].kind == "head" and lines[1].title == root.L.secTodo and #root.now
 local footers = 0
 for _, l in ipairs(lines) do if l.footer then footers = footers + 1 end end
 check(footers == 4, "Maintenant : liens vers les 4 onglets en bas")
-check(#tiles >= 3 and #tiles <= 4, "Maintenant : " .. #tiles .. " tuiles en haut")
+check(#tiles >= 3 and #tiles <= 5, "Maintenant : " .. #tiles .. " tuiles en haut")
+
+-- suivi de session : XP/h, prochain niveau, or, quêtes, donjons ; /reload garde la session, longue pause = nouvelle
+do
+  local S = root.Session
+  local xp, money, lvl = 1000, 50000, W.level or 30
+  _G.UnitXP = function() return xp end
+  _G.UnitXPMax = function() return 10000 end
+  _G.GetMoney = function() return money end
+  local saveLevel = _G.UnitLevel
+  _G.UnitLevel = function() return lvl end
+  local t0 = os.time()
+  local now = t0
+  _G.GetServerTime = function() return now end
+  ForeverCompagnonDB.session = nil
+  S.Start()
+  check(S.ETA() == nil and S.Tile().value == "…", "session : pas d'estimation au début")
+  for _ = 1, 40 do W.run(15) end                                  -- 10 min de jeu
+  xp = 3000; W.fire("PLAYER_XP_UPDATE", "player")                 -- +2000 en 10 min = 12 000/h
+  money = 70000; W.fire("PLAYER_MONEY"); money = 65000; W.fire("PLAYER_MONEY")
+  W.fire("QUEST_TURNED_IN", 1, 100, 50)
+  W.inInstance, W.instanceType = true, "party"
+  _G.GetInstanceInfo = function() return "Les Mortemines", "party" end
+  S.OnZone(); S.OnZone()                                          -- même donjon : compté une fois
+  W.inInstance, W.instanceType = false, "none"
+  local rate = S.Rate()
+  check(rate and math.abs(rate - 12000) < 200, "session : XP/h d'après le rythme réel (" .. tostring(rate) .. ")")
+  local eta = S.ETA()
+  check(eta and math.abs(eta - 7000 / rate * 3600) < 1, "session : temps jusqu'au prochain niveau")
+  local tile = S.Tile()
+  check(tile.value:find("^~") and tile.label:find(tostring(lvl + 1)), "session : tuile « ~" .. tile.value .. " " .. tile.label .. " »")
+  -- montée de niveau : XP restante du niveau + nouvelle XP
+  xp = 9500; W.fire("PLAYER_XP_UPDATE", "player")
+  lvl = lvl + 1; xp = 500; W.fire("PLAYER_LEVEL_UP", lvl); W.run(1)
+  local s = ForeverCompagnonDB.session
+  check(s.xp == 2000 + 6500 + 1000, "session : XP à travers la montée de niveau (" .. s.xp .. ")")
+  check(s.moneyIn == 20000 and s.moneyOut == 5000 and s.quests == 1 and s.nDungeons == 1, "session : or, quêtes et donjons (" .. s.moneyIn .. "/" .. s.moneyOut .. "/" .. s.quests .. "/" .. tostring(s.nDungeons) .. ")")
+  local recap = S.Recap()
+  check(recap:find("Mortemines") and recap:find("9 500") and recap:find(lvl - 1 .. " %-> " .. lvl), "session : récapitulatif (" .. recap .. ")")
+  -- /reload : même session ; 1 h plus tard : nouvelle, l'ancienne résumée
+  now = now + 60; S.Start()
+  check(ForeverCompagnonDB.session == s, "session : un /reload garde la session")
+  now = now + 3600; S.Start()
+  check(ForeverCompagnonDB.lastSession == s and ForeverCompagnonDB.session ~= s and S.announceLast, "session : longue pause = nouvelle session")
+  SlashCmdList.FOREVERCOMPAGNON("session")
+  lvl = 60
+  check(S.Tile() == nil, "session : pas de tuile au niveau 60")
+  _G.UnitLevel = saveLevel
+  _G.UnitXP, _G.UnitXPMax, _G.GetMoney, _G.GetServerTime, _G.GetInstanceInfo = nil, nil, nil, nil, nil
+  ForeverCompagnonDB.session, ForeverCompagnonDB.lastSession, S.announceLast = nil, nil, nil
+end
 check(ForeverCompagnonNowFrame.tiles and ForeverCompagnonNowFrame.tiles[1]:IsShown(), "tuiles affichées")
 check(ForeverCompagnonRail and ForeverCompagnonRail:IsShown(), "barre d'onglets affichée à côté")
 

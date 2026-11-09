@@ -216,6 +216,7 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
   if way then root.Nav.Command(way)
   elseif hb then root.HealBot.Command(hb)
   elseif msg == "vols" or msg == "taxi" or msg == "flights" then root.Nav.ListTaxi()
+  elseif msg == "session" then root.Session.Command()
   elseif msg == "flash" or msg == "annonce" then
     root.db.flash = (root.db.flash == false)
     root.Print(root.db.flash and L.flash_on or L.flash_off)

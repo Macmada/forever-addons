@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.5.9 (ForeverCompagnon 3.5.9) : suivi de session et prochain niveau
+- **Tuile « ~35 min · jusqu'au niv. 24 »** sur l'écran Maintenant : temps estimé jusqu'au prochain niveau d'après ton rythme d'XP réel (affiché après 5 min de jeu et un peu d'XP). Au survol : XP gagnée, XP/h, or, quêtes, donjons, et la zone de quêtes Questie la plus fournie à ton niveau. Cachée au niveau 60.
+- **`/fp session`** : récapitulatif de la session (durée, XP et XP/h, or gagné et dépensé, quêtes rendues, donjons faits, niveaux pris), et celui de la session précédente.
+- **À la connexion**, le récapitulatif de ta dernière session dans le chat. Un `/reload` ou une déconnexion de moins de 20 min ne coupent pas la session.
+
 ## v3.5.8 (ForeverCompagnon 3.5.8) : quêtes à ton niveau, addon allégé
 - **Connexion plus légère** : les sources des objets et recettes (850 Ko, base WoW Forever d'All The Things) sont dans un dossier à part, **ForeverCompagnon_Data**, chargé seulement au premier besoin (survol d'un objet, Équipement, « À faire »…) au lieu de chaque connexion. WowUp l'installe avec le reste.
 - **Anciens dossiers plus livrés** : ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers et ForeverPretre (simples coquilles depuis la 3.0). Supprime-les de ton dossier AddOns.
