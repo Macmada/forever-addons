@@ -326,61 +326,18 @@ end
 ----------------------------------------------------------------------
 -- Fenêtre
 ----------------------------------------------------------------------
-local function Tile(parent)
-  local t = CreateFrame("Button", nil, parent)
-  t:SetHeight(64)
-  t.bg = t:CreateTexture(nil, "BACKGROUND")
-  t.bg:SetAllPoints()
-  t.bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
-  t.bar = t:CreateTexture(nil, "ARTWORK")
-  t.bar:SetPoint("TOPLEFT", 2, -2)
-  t.bar:SetPoint("TOPRIGHT", -2, -2)
-  t.bar:SetHeight(3)
-  local hl = t:CreateTexture(nil, "HIGHLIGHT")
-  hl:SetAllPoints()
-  hl:SetColorTexture(1, 0.82, 0.3, 0.10)
-  t.border = K.Border(t, 0.45, 0.37, 0.24, 1, "BORDER")
-  t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-  t.value:SetPoint("TOP", 0, -12)
-  t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
-  t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  t.label:SetPoint("BOTTOM", 0, 8)
-  t.label:SetTextColor(0.85, 0.78, 0.6)
-  t:SetScript("OnClick", function(self) if self.open then root.Open(self.open) end end)
-  t:SetScript("OnEnter", function(self)
-    if not self.tip then return end
-    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText(self.tip.title or "", 1, 0.82, 0)
-    for _, ln in ipairs(self.tip.lines or {}) do GameTooltip:AddLine(ln, 1, 1, 1, true) end
-    GameTooltip:Show()
-  end)
-  t:SetScript("OnLeave", function() GameTooltip:Hide() end)
-  return t
-end
-
 function root.RefreshNow()
   if not (ui and ui:IsShown()) then return end
   local lines, stale, tiles = root.NowLines()
   ui.status:SetText(stale and ("|cffffc860" .. L.combat .. "|r") or "")
   local role = root.Role()
   for _, b in ipairs(ui.roleBtns) do if b.SetActive then b:SetActive(b.role == role) else b.active = (b.role == role) end end
-  tiles = tiles or {}
-  local n = math.max(1, #tiles)
-  local gap = 10
-  local tw = (W - 32 - gap * (n - 1)) / n
-  for i, t in ipairs(ui.tiles) do
-    local d = tiles[i]
-    t:SetShown(d ~= nil)
-    if d then
-      t:ClearAllPoints()
-      t:SetPoint("TOPLEFT", 16 + (i - 1) * (tw + gap), -100)
-      t:SetWidth(tw)
-      t.value:SetText(d.value)
-      t.label:SetText(d.label)
-      t.bar:SetColorTexture(d.color[1], d.color[2], d.color[3], 1)
-      t.open, t.tip = d.open, d.tip
-    end
+  local defs = {}
+  for i, d in ipairs(tiles or {}) do
+    defs[i] = { value = d.value, label = d.label, color = d.color, tip = d.tip,
+                onClick = d.open and function() root.Open(d.open) end or nil }
   end
+  ui.tileSet.Render(defs, 16, -100, W - 32, 10)
   ui.list.Render(lines)
 end
 
@@ -435,8 +392,8 @@ local function Create()
   end
   ui.status = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   ui.status:SetPoint("TOPRIGHT", -20, -84)
-  ui.tiles = {}
-  for i = 1, 4 do ui.tiles[i] = Tile(ui) end
+  ui.tileSet = K.Tiles(ui, 4, 64)                      -- composant commun (Widgets.lua)
+  ui.tiles = ui.tileSet.list
   ui.list = K.CardList(ui, W - 60)
   ui.list.scroll:SetPoint("TOPLEFT", 16, -174)
   ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 16)

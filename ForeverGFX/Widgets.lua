@@ -393,3 +393,94 @@ function K.CardList(parent, width)
   end
   return self
 end
+
+-- Tuiles (un chiffre en grand, un mot dessous, une barre de couleur en haut) : écran Maintenant, Équipement, Métiers,
+-- Addons, Soins. tiles = K.Tiles(parent, n, height) ; tiles.Render(defs, x, y, width) place les tuiles en rangée.
+-- def = { value, label, color = {r,g,b}, tip = "texte" ou { title, lines = {…} }, onClick, icon, frac (0-1, barre
+-- de progression en bas), open (ancien champ : clic -> root.Open) }. Les tuiles en trop sont masquées.
+function K.Tiles(parent, n, height)
+  local self = { list = {} }
+  height = height or 52
+  local font = (_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF")
+  for i = 1, n do
+    local t = CreateFrame("Button", nil, parent)
+    t:SetHeight(height)
+    t.bg = t:CreateTexture(nil, "BACKGROUND")
+    t.bg:SetAllPoints()
+    t.bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
+    t.top = t:CreateTexture(nil, "ARTWORK")
+    t.top:SetPoint("TOPLEFT", 1, -1)
+    t.top:SetPoint("TOPRIGHT", -1, -1)
+    t.top:SetHeight(3)
+    t.fill = t:CreateTexture(nil, "ARTWORK")
+    t.fill:SetPoint("BOTTOMLEFT", 1, 1)
+    t.fill:SetHeight(3)
+    K.Border(t, 0.45, 0.37, 0.24, 1, "BORDER")
+    local hl = t:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetAllPoints()
+    hl:SetColorTexture(1, 0.82, 0.3, 0.08)
+    t.icon = t:CreateTexture(nil, "ARTWORK")
+    t.icon:SetSize(22, 22)
+    t.icon:SetPoint("LEFT", 8, 2)
+    t.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    t.value:SetFont(font, 17, "OUTLINE")
+    t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    t.label:SetTextColor(0.85, 0.78, 0.6)
+    if t.label.SetWordWrap then t.label:SetWordWrap(false) end
+    t:SetScript("OnClick", function(o) if o.onClick then o.onClick() end end)
+    t:SetScript("OnEnter", function(o)
+      local tip = o.tip
+      if not tip then return end
+      GameTooltip:SetOwner(o, "ANCHOR_BOTTOM")
+      if type(tip) == "table" then
+        GameTooltip:SetText(tip.title or "", K.GOLD[1], K.GOLD[2], K.GOLD[3])
+        for _, ln in ipairs(tip.lines or {}) do GameTooltip:AddLine(ln, 1, 1, 1, true) end
+      else
+        GameTooltip:SetText(tip, 1, 1, 1, 1, true)
+      end
+      GameTooltip:Show()
+    end)
+    t:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    t:Hide()
+    self.list[i] = t
+  end
+
+  function self.Render(defs, x, y, width, gap)
+    defs = defs or {}
+    gap = gap or 6
+    local count = math.max(1, math.min(#defs, n))
+    local tw = (width - gap * (count - 1)) / count
+    for i, t in ipairs(self.list) do
+      local d = defs[i]
+      t:SetShown(d ~= nil)
+      if d then
+        t:ClearAllPoints()
+        t:SetPoint("TOPLEFT", parent, "TOPLEFT", x + (i - 1) * (tw + gap), y)
+        t:SetWidth(tw)
+        local off = d.icon and 12 or 0
+        t.icon:SetShown(d.icon ~= nil)
+        if d.icon then t.icon:SetTexture(d.icon) end
+        t.value:ClearAllPoints()
+        t.value:SetPoint("TOP", off, -9)
+        t.label:ClearAllPoints()
+        t.label:SetPoint("BOTTOM", off, 7)
+        t.label:SetWidth(tw - 8 - off)
+        t.value:SetText(d.value or "")
+        t.label:SetText(d.label or "")
+        local c = d.color or { 0.25, 0.85, 0.38 }
+        t.top:SetColorTexture(c[1], c[2], c[3], 1)
+        t.fill:SetShown(d.frac ~= nil)
+        if d.frac then
+          t.fill:SetColorTexture(c[1], c[2], c[3], 0.6)
+          t.fill:SetWidth(math.max(1, (tw - 2) * math.max(0, math.min(1, d.frac))))
+        end
+        t.tip, t.onClick = d.tip, d.onClick
+      end
+    end
+  end
+  function self.Hide() for _, t in ipairs(self.list) do t:Hide() end end
+  function self.Shown() return self.list[1] and self.list[1]:IsShown() end
+  self.tiles = self.list
+  return self
+end
