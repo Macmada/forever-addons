@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v3.5.10 (ForeverCompagnon 3.5.10) : l'XP des monstres comptée
+- **Suivi de session** : l'XP gagnée en tuant des monstres n'était pas comptée (en combat, le jeu la rend illisible et le relevé était perdu) ; seules les quêtes, rendues hors combat, l'étaient. Le gain est maintenant rattrapé à la sortie du combat (et toutes les 15 s). Même chose pour l'or ramassé en combat.
+
 ## v3.5.9 (ForeverCompagnon 3.5.9) : suivi de session et prochain niveau
 - **Tuile « ~35 min · jusqu'au niv. 24 »** sur l'écran Maintenant : temps estimé jusqu'au prochain niveau d'après ton rythme d'XP réel (affiché après 5 min de jeu et un peu d'XP). Au survol : XP gagnée, XP/h, or, quêtes, donjons, et la zone de quêtes Questie la plus fournie à ton niveau. Cachée au niveau 60.
 - **`/fp session`** : récapitulatif de la session (durée, XP et XP/h, or gagné et dépensé, quêtes rendues, donjons faits, niveaux pris), et celui de la session précédente.

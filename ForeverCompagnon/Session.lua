@@ -56,29 +56,36 @@ local function Tick()
   lastTick = t
   if dt > 0 and dt < 120 then cur.elapsed = cur.elapsed + dt end
   cur.lastSeen = Now()
+  if S.OnXP then S.OnXP(); S.OnMoney() end                    -- rattrapage si un relevé était illisible
 end
 
+-- En combat, Forever peut rendre l'XP (et l'or) illisibles : on garde alors le dernier relevé lisible et on rattrape
+-- l'écart au relevé lisible suivant (sortie de combat, tic de 15 s), sinon l'XP des monstres serait perdue.
 local function OnXP()
-  if not cur then return end
+  if not (cur and _G.UnitXP and _G.UnitXPMax) then return end
   local xp, max, level = Plain(UnitXP("player")), Plain(UnitXPMax("player")), UnitLevel("player")
-  if xp and lastXP then
+  if not xp then return end                                   -- illisible : on attend, sans oublier lastXP
+  if lastXP then
     local gained
     if level > (lastLevel or level) and lastMax then gained = (lastMax - lastXP) + xp
     else gained = xp - lastXP end
     if gained and gained > 0 then cur.xp = cur.xp + gained end
   end
-  lastXP, lastMax, lastLevel = xp, max, level
+  lastXP, lastLevel = xp, level
+  if max then lastMax = max end
 end
 
 local function OnMoney()
-  if not cur then return end
+  if not (cur and _G.GetMoney) then return end
   local m = Plain(GetMoney())
-  if m and lastMoney then
+  if not m then return end
+  if lastMoney then
     local d = m - lastMoney
     if d > 0 then cur.moneyIn = cur.moneyIn + d elseif d < 0 then cur.moneyOut = cur.moneyOut - d end
   end
   lastMoney = m
 end
+S.OnXP, S.OnMoney = OnXP, OnMoney
 
 local function OnZone()
   if not cur then return end
@@ -167,13 +174,14 @@ end
 
 local ev = CreateFrame("Frame")
 for _, e in ipairs({ "PLAYER_XP_UPDATE", "PLAYER_LEVEL_UP", "PLAYER_MONEY", "QUEST_TURNED_IN", "ZONE_CHANGED_NEW_AREA",
-                     "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT" }) do pcall(ev.RegisterEvent, ev, e) end
+                     "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT", "PLAYER_REGEN_ENABLED" }) do pcall(ev.RegisterEvent, ev, e) end
 ev:SetScript("OnEvent", function(_, event)
   if event == "PLAYER_XP_UPDATE" or event == "PLAYER_LEVEL_UP" then
     if event == "PLAYER_LEVEL_UP" then C_Timer.After(0.5, OnXP) else OnXP() end
   elseif event == "PLAYER_MONEY" then OnMoney()
   elseif event == "QUEST_TURNED_IN" then if cur then cur.quests = cur.quests + 1 end
   elseif event == "PLAYER_LOGOUT" then Tick()
+  elseif event == "PLAYER_REGEN_ENABLED" then OnXP(); OnMoney()
   else OnZone() end
 end)
 if C_Timer and C_Timer.NewTicker then C_Timer.NewTicker(15, Tick) end

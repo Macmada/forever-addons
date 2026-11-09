@@ -134,6 +134,17 @@ do
   check(eta and math.abs(eta - 7000 / rate * 3600) < 1, "session : temps jusqu'au prochain niveau")
   local tile = S.Tile()
   check(tile.value:find("^~") and tile.label:find(tostring(lvl + 1)), "session : tuile « ~" .. tile.value .. " " .. tile.label .. " »")
+  -- combat : XP illisible pendant 3 monstres, rattrapée à la sortie du combat
+  local secret = {}
+  local saveSV = _G.issecretvalue
+  _G.issecretvalue = function(v) return v == secret end
+  _G.UnitXP = function() return secret end
+  W.fire("PLAYER_XP_UPDATE", "player"); W.fire("PLAYER_XP_UPDATE", "player")
+  _G.UnitXP = function() return xp end
+  xp = 3600; W.fire("PLAYER_REGEN_ENABLED")
+  _G.issecretvalue = saveSV
+  check(ForeverCompagnonDB.session.xp == 2600, "session : XP des monstres gagnée en combat comptée (" .. ForeverCompagnonDB.session.xp .. ")")
+  xp = 3000; ForeverCompagnonDB.session.xp = 2000; S.OnXP()       -- on reprend le fil du test
   -- montée de niveau : XP restante du niveau + nouvelle XP
   xp = 9500; W.fire("PLAYER_XP_UPDATE", "player")
   lvl = lvl + 1; xp = 500; W.fire("PLAYER_LEVEL_UP", lvl); W.run(1)
