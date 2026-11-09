@@ -306,10 +306,7 @@ _G.C_CombatLog, _G.CombatLogGetCurrentEventInfo = nil, saveCL
 -- 11c. panneau : onglets « Mon prêtre » / « Mes sacs » (le bouton « Retour au panneau » restait sans effet, 05/11/2026)
 local pnl = ns.panel
 pnl:Show()
-pnl.tabBags.scripts.OnClick(pnl.tabBags)
-check(pnl.mode == "upgrades" and pnl.tabBags.active and not pnl.tabMain.active, "onglet « Mes sacs »")
-pnl.tabMain.scripts.OnClick(pnl.tabMain)
-check(rawget(pnl, "mode") == nil and pnl.tabMain.active and not pnl.tabBags.active, "retour à l'onglet « Mon prêtre » (l'ancien bouton restait bloqué sur les sacs : « and nil or »)")
+check(rawget(pnl, "tabBags") == nil and rawget(pnl, "mode") == nil, "panneau : plus d'onglet « Mes sacs » (une seule vue)")
 local realRaw, realData = ns.PanelRaw, ns.PanelData
 ns.PanelRaw = function() error("test de panne") end
 ns.PanelData = function() error("test de panne") end

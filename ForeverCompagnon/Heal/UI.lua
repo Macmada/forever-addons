@@ -495,12 +495,8 @@ local function CreatePanel()
   panel.diagBtn = ns.MakeDiagButton(panel)
 
   -- onglets : ton prêtre / tes sacs
-  local function SetMode(m) panel.mode = m; ns.RefreshPanel() end
-  panel.tabMain = K.Tab(panel, L.tabMain, function() SetMode(nil) end)
-  panel.tabMain:SetPoint("TOPLEFT", 14, -32)
-  panel.tabBags = K.Tab(panel, L.tabBags, function() SetMode("upgrades") end)
-  panel.tabBags:SetPoint("LEFT", panel.tabMain, "RIGHT", 4, 0)
-  panel.upBtn = panel.tabBags
+  -- (onglets « Mon soigneur » / « Mes sacs » retirés le 09/11/2026 : « Mes sacs » ne servait pas ; les améliorations des
+  -- sacs sont dans l'onglet Équipement et dans « À faire »)
 
   -- actions en icônes
   panel.whereBtn = K.Action(panel, "Interface\\Icons\\INV_Letter_03", "", L.tipWhere, function(self)
@@ -508,11 +504,7 @@ local function CreatePanel()
     self.label:SetText(L["whereShort_" .. ns.db.announceWhere])
   end)
   panel.whereBtn:SetPoint("TOPRIGHT", -18, -30)
-  panel.resetBtn = K.Action(panel, "Interface\\Icons\\Spell_Holy_DispelMagic", L.resetShort, L.reset, function()
-    wipe(ns.db.usage); wipe(ns.db.mult); ns.db.effective = { total = 0, over = 0 }
-    Print(L.resetDone); ns.RefreshPanel()
-  end)
-  panel.resetBtn:SetPoint("RIGHT", panel.whereBtn, "LEFT", -22, 0)
+  -- (bouton « Oublier » retiré le 09/11/2026 : la répartition des sorts se refait toute seule ; /fheal oublier reste)
   -- (bouton « Macros » retiré le 09/11/2026 : les conseils de rangs demandent les montants soignés du journal de combat,
   -- interdit aux addons sur Forever ; il n'a jamais rien créé)
 
@@ -679,8 +671,6 @@ end
 -- Un calcul qui échoue s'affiche dans le panneau (et dans le diagnostic) au lieu de le laisser figé (05/11/2026)
 function ns.RefreshPanel()
   if not panel or not panel:IsShown() then return end
-  panel.tabMain:SetActive(panel.mode ~= "upgrades")
-  panel.tabBags:SetActive(panel.mode == "upgrades")
   for _, r in ipairs(vis.rows) do
     r:Hide()
     if r.restore then r.restore = nil; r.bg:SetColorTexture(1, 1, 1, 0.08); r.name:SetWidth(128) end
@@ -881,10 +871,6 @@ SlashCmdList.FOREVERHEAL = function(msg)
     else ns.db.manaAlert = not ns.db.manaAlert end
     Print(L.optManaAlert .. " : " .. (ns.db.manaAlert and L.on or L.off))
     if ns.db.manaAlert and not ns.ManaReadable() then Print(L.manaSecretClient, math.floor((ns.db.manaLowPct or 0.3) * 100 + 0.5)) end
-  elseif cmd == "macros" then ns.MakeMacros()
-  elseif cmd == "sacs" or cmd == "bags" then
-    CreatePanel(); panel.mode = "upgrades"
-    if not panel:IsShown() then panel:ClearAllPoints(); panel:SetPoint("CENTER"); panel:Show() else ns.RefreshPanel() end
   elseif cmd == "chat" then ns.db.announceWhere = "chat"; Print(string.format(L.optWhere, L.where_chat))
   elseif cmd == "panneau" or cmd == "panel" then
     ns.db.panel = not ns.db.panel; Print(L.optPanel .. " : " .. (ns.db.panel and L.on or L.off))

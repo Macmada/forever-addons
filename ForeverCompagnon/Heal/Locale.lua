@@ -86,7 +86,7 @@ local fr = {
   where_screen = "à l'écran", where_chat = "dans la discussion",
   reset = "Oublier les sorts observés",
   resetDone = "Sorts observés oubliés.",
-  helpText = "Commandes : /fheal (panneau), /fheal infobulle, /fheal annonce, /fheal ecran|chat, /fheal oublier, /fheal alerte, /fheal sacs, /fheal macros, /fheal diag, /fheal lang fr|en",
+  helpText = "Commandes : /fheal (panneau), /fheal infobulle, /fheal annonce, /fheal ecran|chat, /fheal oublier, /fheal alerte, /fheal diag, /fheal lang fr|en",
   on = "activé", off = "désactivé",
 }
 
@@ -176,7 +176,7 @@ local en = {
   where_screen = "on screen", where_chat = "in chat",
   reset = "Forget observed spells",
   resetDone = "Observed spells forgotten.",
-  helpText = "Commands: /fheal (panel), /fheal tooltip, /fheal announce, /fheal screen|chat, /fheal forget, /fheal alert, /fheal bags, /fheal macros, /fheal diag, /fheal lang fr|en",
+  helpText = "Commands: /fheal (panel), /fheal tooltip, /fheal announce, /fheal screen|chat, /fheal forget, /fheal alert, /fheal diag, /fheal lang fr|en",
   on = "on", off = "off",
 }
 

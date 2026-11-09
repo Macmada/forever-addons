@@ -73,7 +73,7 @@ Pour jouer soigneur en sachant ce que vaut chaque point : l'addon traduit les ca
 - **Mieux dans mes sacs ?** : les objets de tes sacs qu'un prêtre peut porter et qui amélioreraient tes soins ou ton autonomie, emplacement par emplacement.
 - **Calé sur ton personnage** : les conversions (PV par Endurance, mana par Intelligence, Intelligence pour 1 % de critique, régénération par l'Esprit) sont mesurées à chaque changement d'équipement ; les montants des sorts sont lus dans le jeu ; ton **mélange de sorts** vient de tes lancers réels (part du temps passé sur chaque sort) et l'effet de tes talents est mesuré sur tes vrais soins.
 
-Commandes : `/fheal` (panneau), `/fheal sacs`, `/fheal macros`, `/fheal alerte`, `/fheal infobulle`, `/fheal annonce`, `/fheal ecran|chat`, `/fheal panneau`, `/fheal oublier`, `/fheal lang fr|en`.
+Commandes : `/fheal` (panneau), `/fheal alerte`, `/fheal infobulle`, `/fheal annonce`, `/fheal ecran|chat`, `/fheal panneau`, `/fheal oublier`, `/fheal lang fr|en`.
 
 ### Équipement (ex-ForeverLoot)
 
