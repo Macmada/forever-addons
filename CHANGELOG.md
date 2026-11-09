@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v3.5.2 (ForeverCompagnon 3.5.2)
+- **Gros ralentissements depuis la 3.5.0** (à l'ouverture et à chaque actualisation) : l'écran Maintenant évaluait tous tes objets connus (~700) quatre fois de suite, et relisait la recherche de groupe et DungeonJournal pour chaque source de chaque objet. Les résultats sont maintenant gardés en mémoire (remis à jour quand tes sacs, ton équipement, ton niveau ou ton rôle changent, et au plus tard toutes les 10 s) : une actualisation n'évalue tes objets qu'une fois, la suivante plus du tout. Une série de changements dans les sacs (butin ramassé) ne déclenche plus qu'un seul recalcul.
+
 ## v3.5.1 (ForeverCompagnon 3.5.1), d'après ta capture
 - **Niveaux des donjons de Forever** : pris dans le jeu (recherche de groupe : Donjon d'Ombrecroc 20-30, Mortemines 17-26, Cavernes des Lamentations 15-24), sinon dans DungeonJournal, la base classique d'All The Things seulement en dernier recours (elle donnait 14+ pour Ombrecroc). « À faire » ne propose plus un donjon trop haut (plus de 2 niveaux au-dessus de toi) ni trop bas pour toi ; pastille « niv. 20-30 » : verte à ton niveau, orange s'il est encore un peu haut, grise s'il devient trop facile. Le diagnostic de l'Équipement dit d'où viennent ces niveaux.
 - **Plus de suggestions dans « À faire »** : équiper une amélioration déjà dans tes sacs (clic : équiper), acheter une amélioration vendue par un PNJ (clic : y aller), apprendre le rang suivant d'un métier quand tu as la compétence et le niveau (ex. Cuisine 53/75 : Compagnon), apprendre le Secourisme si tu n'as aucun bandage.

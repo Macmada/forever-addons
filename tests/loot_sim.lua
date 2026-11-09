@@ -125,6 +125,7 @@ _G.Syndicator = { API = { IsReady = function() return true end,
     if id == 109 then return { characters = { { character = "Machin", bank = 1, bags = 0, mail = 0 } }, guilds = {} } end
     return { characters = {}, guilds = {} }
   end } }
+ns.ForgetMemo()                                         -- DungeonJournal arrivé : résultats recalculés
 bis = ns.BiS(3)
 check(bis[10] and bis[10].items[1] and bis[10].items[1].id == 107 and bis[10].items[1].where:find("Salle des thanes", 1, true),
       "BiS mains : gants de DungeonJournal (La Salle des thanes — Faldrim Anvilmar), plaques ignorées")

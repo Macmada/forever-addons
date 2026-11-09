@@ -495,6 +495,18 @@ do
   prep.db.trainer = nil
 end
 
+-- performance : une actualisation de l'écran Maintenant ne recalcule la liste des objets qu'une fois, la suivante pas du tout
+do
+  local loot = root.mods.ForeverLoot
+  loot.ForgetMemo()
+  local before = loot.candidatesBuilt or 0
+  root.NowLines()
+  local first = (loot.candidatesBuilt or 0) - before
+  root.NowLines()
+  local second = (loot.candidatesBuilt or 0) - before - first
+  check(first <= 1 and second == 0, "Maintenant : objets évalués une fois par actualisation (" .. first .. "), pas à la suivante (" .. second .. ")")
+end
+
 -- niveaux des donjons : ceux du jeu (recherche de groupe), noms rapprochés (« Mortemines » = « Les Mortemines »)
 do
   local loot = root.mods.ForeverLoot
@@ -502,6 +514,7 @@ do
                    GetActivityInfoTable = function(id) return ({ { fullName = "Donjon d'Ombrecroc", minLevelSuggestion = 20, maxLevelSuggestion = 30 },
                      { fullName = "Mortemines", minLevelSuggestion = 17, maxLevelSuggestion = 26 },
                      { fullName = "Cavernes des lamentations", minLevelSuggestion = 15, maxLevelSuggestion = 24 } })[id] end }
+  W.fire("LFG_LIST_AVAILABILITY_UPDATE")                 -- le jeu signale que la liste est prête
   local r = loot.DungeonRange("Donjon d'Ombrecroc", 14)
   check(r and r[1] == 20 and r[2] == 30 and r[3] == "jeu", "niveau d'Ombrecroc pris dans le jeu (20-30), pas la base classique (14)")
   r = loot.DungeonRange("Les Mortemines", 10)

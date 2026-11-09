@@ -212,7 +212,7 @@ function root.SetRole(role)
   local prep = root.mods.ForeverPrep
   if prep and prep.db then prep.db.role = role end
   local loot = root.mods.ForeverLoot
-  if loot then loot.version = (loot.version or 0) + 1 end
+  if loot then loot.version = (loot.version or 0) + 1; if loot.ForgetMemo then loot.ForgetMemo() end end
   if root.RefreshNow then root.RefreshNow() end
 end
 -- Rôles possibles pour la classe (d'après les poids d'Équipement)

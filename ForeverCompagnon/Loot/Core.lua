@@ -500,7 +500,13 @@ end
 ----------------------------------------------------------------------
 -- BiS : meilleurs objets connus par emplacement (portés, sacs, vus, référence, DungeonJournal)
 ----------------------------------------------------------------------
+local candMemo
+function ns.ForgetCandidates() candMemo = nil end
 function ns.Candidates()
+  if candMemo and GetTime() - candMemo.t < 10 and candMemo.k == tostring(ns.version) .. tostring(UnitFactionGroup and UnitFactionGroup("player")) then
+    return candMemo.v
+  end
+  ns.candidatesBuilt = (ns.candidatesBuilt or 0) + 1
   local list, seenIds = {}, {}
   local function add(link, src, where, ref)
     local id = ItemID(link)
@@ -553,6 +559,7 @@ function ns.Candidates()
     end
   end
   for _, c in ipairs(list) do c.ref = c.ref or refById[c.id] end   -- une référence déjà portée reste marquée
+  candMemo = { t = GetTime(), v = list, k = tostring(ns.version) .. tostring(UnitFactionGroup and UnitFactionGroup("player")) }
   return list
 end
 
@@ -567,7 +574,22 @@ function ns.ReqLevel(link)
 end
 
 -- maxLevel : seulement les objets utilisables jusqu'à ce niveau (onglet « À mon niveau ») ; sinon réglage « niveau supérieur »
+-- Résultats mémorisés : l'écran Maintenant et les onglets demandent plusieurs fois la même chose à chaque actualisation
+-- (des centaines d'objets évalués à chaque fois : ralentissements en 3.5.0). Oubliés quand tes sacs, ton équipement ou ton
+-- niveau changent, et au plus tard au bout de 10 s.
+local memo = { bis = {}, where = {} }
+local forgetRanges
+function ns.ForgetMemo() memo.bis, memo.where = {}, {}; ns.ForgetCandidates(); if forgetRanges then forgetRanges() end end
+local function Fresh(m) return m and GetTime() - m.t < 10 end
+-- ce qui change les résultats : réglages (version), niveau, faction, classe, rôle
+local function State()
+  return table.concat({ tostring(ns.version), tostring(UnitLevel("player")), tostring(UnitFactionGroup and UnitFactionGroup("player")),
+                        tostring(select(2, UnitClass("player"))), tostring(ns.Role()) }, ":")
+end
+
 function ns.BiS(limit, maxLevel)
+  local mkey = tostring(limit) .. ":" .. tostring(maxLevel) .. ":" .. State()
+  if Fresh(memo.bis[mkey]) then return memo.bis[mkey].v end
   local out = {}
   for _, c in ipairs(ns.Candidates()) do
     local r = ns.Evaluate(c.link)
@@ -590,6 +612,7 @@ function ns.BiS(limit, maxLevel)
     table.sort(s.items, function(a, b) return a.eval.score > b.eval.score end)
     while #s.items > (limit or 3) do table.remove(s.items) end
   end
+  memo.bis[mkey] = { t = GetTime(), v = out }
   return out
 end
 
@@ -607,9 +630,11 @@ local function NormName(n)
 end
 ns.NormName = NormName
 
-local lfgRanges
+local lfgRanges, lfgTried
 local function LFGRanges()
   if lfgRanges then return lfgRanges end
+  if lfgTried and GetTime() - lfgTried < 60 then return {} end
+  lfgTried = GetTime()
   local out = {}
   local LF = _G.C_LFGList
   if LF and LF.GetAvailableActivities and LF.GetActivityInfoTable then
@@ -633,29 +658,38 @@ local function LFGRanges()
   return out
 end
 
--- { min, max, source } ou nil
+local rangeMemo, djRanges, djSrc = {}, nil, nil
+forgetRanges = function() rangeMemo = {}; if not lfgRanges then lfgTried = nil end end
+local function DJRanges()
+  local fdj = ns.DJ()
+  if not fdj then return {} end
+  if djRanges and djSrc == fdj.DB then return djRanges end
+  local dj = {}
+  for k, d in pairs(fdj.DB) do
+    if type(d) == "table" and d.level then
+      local lo, hi = tostring(d.level):match("(%d+)%D+(%d+)")
+      lo = tonumber(lo) or tonumber(d.level)
+      if lo then dj[NormName(ns.DJName(fdj, k))] = { lo, tonumber(hi), "DungeonJournal" } end
+    end
+  end
+  djRanges, djSrc = dj, fdj.DB
+  return dj
+end
+
+-- { min, max, source } ou nil (mémorisé ; le niveau du jeu remplace les autres dès que la liste du jeu est chargée)
 function ns.DungeonRange(name, instLevel)
   local key = NormName(name)
+  local mk = key .. ":" .. tostring(instLevel)
+  local m = rangeMemo[mk]
+  if m and (m.r and m.r[3] == "jeu" or lfgRanges or (lfgTried and GetTime() - lfgTried < 60)) then return m.r or nil end
   local function find(t)
     if t[key] then return t[key] end
     for k, v in pairs(t) do if #k > 4 and (k:find(key, 1, true) or key:find(k, 1, true)) then return v end end
   end
-  local r = find(LFGRanges())
-  if r then return r end
-  local fdj = ns.DJ()
-  if fdj then
-    local dj = {}
-    for k, d in pairs(fdj.DB) do
-      if type(d) == "table" and d.level then
-        local lo, hi = tostring(d.level):match("(%d+)%D+(%d+)")
-        lo = tonumber(lo) or tonumber(d.level)
-        if lo then dj[NormName(ns.DJName(fdj, k))] = { lo, tonumber(hi), "DungeonJournal" } end
-      end
-    end
-    r = find(dj)
-    if r then return r end
-  end
-  if instLevel and instLevel > 0 then return { instLevel, nil, "ATT" } end
+  local r = find(LFGRanges()) or find(DJRanges())
+  if not r and instLevel and instLevel > 0 then r = { instLevel, nil, "ATT" } end
+  rangeMemo[mk] = { r = r or false }
+  return r
 end
 
 ----------------------------------------------------------------------
@@ -664,6 +698,8 @@ end
 -- { key, name, kind = "dungeon"|"zone", level, mapID, x, y, items = { {c, eval} }, quests = { id = true }, nQuests, score }
 ----------------------------------------------------------------------
 function ns.WhereToGo(max)
+  local wkey = tostring(max) .. ":" .. State()
+  if Fresh(memo.where[wkey]) then return memo.where[wkey].v end
   local level = UnitLevel("player")
   local reach = math.min(60, level + 3)
   local places, order = {}, {}
@@ -710,5 +746,13 @@ function ns.WhereToGo(max)
   end)
   for _, p in ipairs(order) do table.sort(p.items, function(a, b) return (a.eval.score or 0) > (b.eval.score or 0) end) end
   while #order > (max or 3) do table.remove(order) end
+  memo.where[wkey] = { t = GetTime(), v = order }
   return order
+end
+
+do
+  local f = CreateFrame("Frame")
+  for _, e in ipairs({ "BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "PLAYER_LEVEL_UP", "QUEST_TURNED_IN",
+                       "LFG_LIST_AVAILABILITY_UPDATE" }) do pcall(f.RegisterEvent, f, e) end
+  f:SetScript("OnEvent", function() ns.ForgetMemo() end)
 end

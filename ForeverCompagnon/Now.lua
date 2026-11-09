@@ -382,7 +382,12 @@ local function Create()
   for _, a in ipairs({ { "Interface\\Icons\\INV_Misc_Note_01", L.diag, function() root.ShowDiag() end },
                        { "Interface\\Icons\\INV_Misc_Spyglass_02", L.probe, function() root.ShowProbe() end },
                        { "Interface\\Icons\\INV_Misc_Gear_08", L.test, function() root.RunTests() end },
-                       { "Interface\\Icons\\Spell_ChargePositive", L.refresh, function() last = nil; root.RefreshNow() end } }) do
+                       { "Interface\\Icons\\Spell_ChargePositive", L.refresh, function()
+                         last = nil
+                         local loot = root.mods.ForeverLoot
+                         if loot and loot.ForgetMemo then loot.ForgetMemo() end
+                         root.RefreshNow()
+                       end } }) do
     local b = K.Action(ui, a[1], a[2], nil, a[3])
     b:SetPoint("TOPRIGHT", x, -30)
     x = x - 52
@@ -423,7 +428,12 @@ local ev = CreateFrame("Frame")
 ev:RegisterEvent("PLAYER_REGEN_ENABLED")
 ev:RegisterEvent("PLAYER_LEVEL_UP")
 ev:RegisterEvent("BAG_UPDATE_DELAYED")
+local pending = false
 ev:SetScript("OnEvent", function(_, event)
   if event == "BAG_UPDATE_DELAYED" and InCombatLockdown and InCombatLockdown() then return end
-  if ui and ui:IsShown() then C_Timer.After(0.5, root.RefreshNow) end
+  -- un seul recalcul pour une série de changements rapprochés (butin ramassé, achats)
+  if ui and ui:IsShown() and not pending then
+    pending = true
+    C_Timer.After(1, function() pending = false; root.RefreshNow() end)
+  end
 end)
