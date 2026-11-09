@@ -4,6 +4,7 @@
 - **Case « obligatoire »** sur chaque ligne de la Préparation (retenue pour ton personnage). Obligatoire et pas bon : **rouge** ; facultatif et pas bon : **orange**, hors de la liste de courses et du total à acheter. État général : **rouge** si un obligatoire manque, **orange** si seuls des facultatifs manquent, **vert** si tout est bon.
 - Par défaut : obligatoire = ce qui se compte et s'achète (potions, nourriture, boisson, composants, chez un marchand ou à l'hôtel des ventes) ; facultatif = ce qui se fabrique ou se trouve (bandages, nourriture de buff), les buffs et les conseils. Un clic sur la case change ça.
 - Écran Maintenant : « À faire » ne reprend plus que les manques obligatoires.
+- **Bouton flottant « Prépa »** : bordure **rouge** si un obligatoire manque, **orange** si les obligatoires sont faits mais pas tout le reste, **verte** si tout est fait (les simples conseils ne comptent pas) ; l'infobulle dit combien d'obligatoires ou de facultatifs restent.
 - **Lifting de la Préparation** : chaque ligne sur deux niveaux (titre, quantité à droite en grand et en couleur, détail dessous en gris), barre de couleur à gauche à la place des pictogrammes ✗ ? ✓ i, case « obligatoire » et icône de l'objet ; bandeau teinté de la couleur de l'état (« Pas prêt : 1 obligatoire manquant », « Presque prêt : 2 facultatifs à voir », « Prêt pour le donjon ») ; en-têtes « 1 obligatoire · 2 facultatifs » ; total des courses en bas ; boutons du haut espacés (« Guide-moi » ne chevauche plus « Actualiser »).
 
 ## v3.5.3 (ForeverCompagnon 3.5.3)

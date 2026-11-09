@@ -206,8 +206,15 @@ do
   for _, sec in ipairs(r2.sections) do for _, row in ipairs(sec.rows) do ns.SetMandatory(row.key, false) end end
   local r3 = ns.Analyze("dungeon")
   check(r3.worst == "warn" and #r3.shopping == 0, "rien d'obligatoire : état général orange, liste de courses vide")
+  -- bouton flottant : orange quand il ne manque que du facultatif
+  ForeverPrepDB.float = ForeverPrepDB.float or {}
+  ForeverPrepDB.float.shown = true
+  ns.UpdateFloat()
+  check(ns.floatButton and ns.floatButton.state == "warn", "bouton Prépa orange : obligatoires faits, facultatifs à voir")
   ForeverPrepDB.mandatory = nil
   check(ns.Analyze("dungeon").worst == "bad", "cases remises par défaut : rouge de nouveau")
+  ns.UpdateFloat()
+  check(ns.floatButton.state == "bad", "bouton Prépa rouge : un obligatoire manque")
 end
 check(Find(r, "Rune de téléportation") and Find(r, "Rune de téléportation").status == "bad", "rune de téléportation : sort connu, 0/3")
 check(not Find(r, "Rune des portails"), "rune des portails : sort de portail inconnu, pas demandée")

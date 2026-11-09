@@ -570,13 +570,18 @@ function ns.UpdateFloat()
   CreateFloat():Show()
   local okA, res = pcall(ns.Analyze)
   if not okA or type(res) ~= "table" then return end
-  local c = COLORS[res.worst] or COLORS.info
+  -- rouge : un obligatoire manque ; orange : obligatoires faits, il manque du facultatif ; vert : tout est fait
+  -- (les conseils seuls ne comptent pas : vert)
+  local worst = (res.worst == "bad" or res.worst == "warn") and res.worst or "ok"
+  local c = COLORS[worst]
   float.ring:SetColorTexture(c[1], c[2], c[3], 1)
-  local nWarn = 0
+  float.state = worst
+  local nMust, nOpt = 0, 0
   for _, sct in ipairs(res.sections) do
-    for _, r in ipairs(sct.rows) do if r.status == "warn" or r.status == "bad" then nWarn = nWarn + 1 end end
+    for _, r in ipairs(sct.rows) do if r.status == "bad" then nMust = nMust + 1 elseif r.status == "warn" then nOpt = nOpt + 1 end end
   end
-  float.summary = (nWarn == 0) and L.allGood or string.format(L.summary, nWarn, #res.shopping)
+  float.summary = (worst == "ok") and L.allGood
+                  or (worst == "bad" and string.format(L.bannerMust, nMust) or string.format(L.bannerOpt, nOpt))
 end
 
 -- En combat, le jeu cache aux addons une partie des informations (buffs, ressources) : pas d'analyse ; on montre la
