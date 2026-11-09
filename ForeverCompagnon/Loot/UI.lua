@@ -88,6 +88,12 @@ local function Card()
     c.src:SetPoint("BOTTOMLEFT", c.iconFrame, "BOTTOMRIGHT", 10, 2)
     c.src:SetJustifyH("LEFT")
     c.src:SetTextColor(0.72, 0.66, 0.55)
+    if c.src.SetWordWrap then c.src:SetWordWrap(false) end
+    c.pin = c:CreateTexture(nil, "OVERLAY")                -- « y aller » (clic droit)
+    c.pin:SetSize(14, 14)
+    c.pin:SetPoint("BOTTOMRIGHT", c.iconFrame, "BOTTOMRIGHT", 5, -4)   -- coin de l'icône : « on peut y aller »
+    c.pin:SetTexture("Interface\\Icons\\INV_Misc_Map_01")
+    c.pin:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     c.gain = c:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     c.gain:SetPoint("TOPRIGHT", -10, -6)
     c.gain:SetJustifyH("RIGHT")
@@ -103,6 +109,9 @@ local function Card()
       if self.link then
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         pcall(GameTooltip.SetHyperlink, GameTooltip, self.link)
+        if self.subFull and self.subFull ~= "" then GameTooltip:AddLine(" "); GameTooltip:AddLine(self.subFull, 1, 1, 1, true) end
+        if self.onRight then GameTooltip:AddLine(L.goTip, 0.4, 0.8, 1, true) end
+        GameTooltip:AddLine(L.healedTip, 0.6, 0.6, 0.6, true)
         GameTooltip:Show()
       end
     end)
@@ -197,10 +206,16 @@ local function Render(lines)
       c.name:SetText(l.name or "?")
       c.name:SetTextColor(q[1], q[2], q[3])
       c.tags:SetText(l.tags or "")
-      c.src:SetText(l.source or "")
-      c.src:SetWidth(width - 230)
       c.gain:SetText(l.gain or "")
       c.sub:SetText(l.gainSub or "")
+      c.subFull = l.gainSub
+      -- 2e ligne : la source à gauche, le détail du gain à droite, sans chevauchement (source coupée « … » si besoin)
+      local sw = c.sub:GetStringWidth()
+      sw = (type(sw) == "number" and sw) or 0
+      local srcRoom = width - 70 - (sw > 0 and sw + 18 or 0)
+      c.src:SetWidth(math.max(60, srcRoom))
+      c.src:SetText(l.source or "")
+      c.pin:SetShown(l.onRight ~= nil)
       -- nom et étiquettes sans chevaucher le gain : coupés s'ils sont trop longs
       local gw = c.gain:GetStringWidth()
       gw = (type(gw) == "number" and gw) or 0
@@ -216,7 +231,7 @@ local function Render(lines)
       c:ClearAllPoints()
       c:SetPoint("TOPLEFT", 6, y)
       c:SetPoint("RIGHT", ui.content, "RIGHT", 0, 0)
-      y = y - 48
+      y = y - 50
     else
       -- information ou ligne simple
       local f = InfoLine()
@@ -260,7 +275,7 @@ local function CardFrom(c, ref, extraTags)
   if c.src == "equipped" then gain, sub = "|cff40d860" .. L.refWear:gsub("^ — ", "") .. "|r", "" end
   -- clic droit : la flèche vers le lieu le plus proche où l'obtenir (sources intégrées)
   local go = ns.GoTo and c.src ~= "equipped" and ns.HasPlace(c.id)
-  if go then source = source .. "  ·  |cff66ccff" .. L.goTag .. "|r" end       -- sur la ligne de la source (place)
+  -- « y aller » : petite épingle sur la carte (plus de texte qui chevauche le gain), expliqué au survol
   return { kind = "card", link = c.link, ref = ref, name = name or (c.link and c.link:match("%[(.-)%]")) or "?",
            quality = quality or 1, icon = icon or iconI, tags = table.concat(tags, "  "), source = source, gain = gain, gainSub = sub,
            onRight = go and function() ns.GoTo(c.id) end or nil }
@@ -342,7 +357,7 @@ function ns.BisLines()
 end
 
 -- « À mon niveau » : pour chaque emplacement, les 2 meilleurs objets portables jusqu'au niveau choisi, et où les avoir
-ns.nearSpan = 5
+ns.nearSpan = 0                     -- ton niveau ; le choix est retenu (db.nearSpan)
 function ns.NearLines(span)
   span = span or ns.nearSpan
   local level = UnitLevel("player")
@@ -596,7 +611,7 @@ local function CreateUI()
   ui.spanBtns = {}
   local prevSpan
   for _, span in ipairs({ 0, 3, 5, 10 }) do
-    local b = K.Tab(ui, span == 0 and L.spanNow or string.format(L.spanPlus, span), function() ns.nearSpan = span; ns.Refresh() end)
+    local b = K.Tab(ui, span == 0 and L.spanNow or string.format(L.spanPlus, span), function() ns.nearSpan = span; ns.db.nearSpan = span; ns.Refresh() end)
     b:SetHeight(22)
     b:SetWidth(96)
     if prevSpan then b:SetPoint("LEFT", prevSpan, "RIGHT", 4, 0) else b:SetPoint("LEFT", ui.spanLabel, "RIGHT", 10, 0) end

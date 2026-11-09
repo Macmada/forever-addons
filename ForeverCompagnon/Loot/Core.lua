@@ -221,6 +221,8 @@ local function InitDB()
   if db.questHelp == nil then db.questHelp = true end
   if db.tooltipHint == nil then db.tooltipHint = true end
   if db.higher == nil then db.higher = true end
+  if db.nearSpan == nil then db.nearSpan = 0 end          -- « Jusqu'au niveau » : ton niveau par défaut, puis ton choix retenu
+  ns.nearSpan = db.nearSpan
   db.minimap = db.minimap or { angle = 250, hide = false }
   if db.lang then ns.lang = db.lang end
   ForeverLootGlobalDB = ForeverLootGlobalDB or {}

@@ -188,9 +188,10 @@ check(not dlf:find("Robe de la Horde", 1, true), "onglet Donjons (Alliance) : pa
 local n0 = NT(ns.NearLines(0))
 check(n0:find("Gants de l'oracle", 1, true), "À mon niveau (40) : déjà portable")
 SlashCmdList.FOREVERLOOT("")
-check(ns.ui.nearBtn.active and ns.ui.spanBtns[5].active, "/floot : onglet « À mon niveau » (+5 niveaux par défaut)")
+check(ns.ui.nearBtn.active and ns.ui.spanBtns[0].active, "/floot : onglet « À mon niveau » (ton niveau par défaut)")
 ns.ui.spanBtns[10].scripts.OnClick(ns.ui.spanBtns[10])
 check(ns.nearSpan == 10 and ns.ui.spanBtns[10].active, "choix « +10 niveaux »")
+check(ns.db.nearSpan == 10, "choix retenu d'une fois sur l'autre")
 
 -- 5e. alerte quand tu ramasses un objet qui t'améliore (05/11/2026)
 _G.EquipItemByName = function(l) equipped = l end

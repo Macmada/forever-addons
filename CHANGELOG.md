@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.5.6 (ForeverCompagnon 3.5.6) : onglet Équipement plus net
+- **« Jusqu'au niveau » : ton niveau par défaut** (avant : +5), et ton choix est retenu d'une fois sur l'autre.
+- **Cartes d'objets sans chevauchement** : la source tient sur une ligne (coupée « … » si besoin) et ne passe plus sous le détail du gain ; « clic droit : y aller » devient une petite épingle sur l'icône de l'objet, expliquée au survol.
+- **Gains plus courts** : « +43 soignés » au lieu de « +43 soignés avant d'être à sec » (le sens est rappelé dans l'infobulle), partout dans l'onglet et sur l'écran Maintenant.
+
 ## v3.5.5 (ForeverCompagnon 3.5.5) : panneau Soins plus lisible
 - **Panneau « Soins — ton personnage » refait** : 4 tuiles (soins/s, autonomie avant d'être à sec, soin moyen, mana et régénération), « Tes sorts » en barres (part de tes lancers, soin moyen), « Ce qui t'aide le plus » en barres triées du plus utile au moins utile avec un seul chiffre (« +433 soignés »), le détail au survol ; caractéristiques sur une seule ligne, conversions au survol.
 - **Bouton « Macros » et rubrique « Conseils de rangs » retirés** : ils demandaient les montants soignés du journal de combat, interdit aux addons sur Forever, et n'ont jamais rien donné.
