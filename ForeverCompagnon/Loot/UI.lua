@@ -733,6 +733,15 @@ function ns.DiagCollect(add)
   else
     add("DungeonJournal : absent ; butin des donjons tiré des sources intégrées : " .. #ns.DJItems() .. " objets")
   end
+  do
+    local names = { "Donjon d'Ombrecroc", "Les Mortemines", "Cavernes des Lamentations", "La Prison", "Profondeurs de Brassenoire" }
+    local parts = {}
+    for _, n in ipairs(names) do
+      local r = ns.DungeonRange and ns.DungeonRange(n)
+      parts[#parts + 1] = n .. " " .. (r and (r[1] .. "-" .. tostring(r[2] or "?") .. " (" .. r[3] .. ")") or "?")
+    end
+    add("Niveaux des donjons : " .. table.concat(parts, " ; "))
+  end
   local S = _G.Syndicator
   add("Syndicator : " .. ((S and S.API) and ("présent, prêt : " .. tostring(S.API.IsReady and S.API.IsReady())) or "absent"))
   ns.ATT.Diag(add)

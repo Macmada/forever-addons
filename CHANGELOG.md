@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.5.1 (ForeverCompagnon 3.5.1), d'après ta capture
+- **Niveaux des donjons de Forever** : pris dans le jeu (recherche de groupe : Donjon d'Ombrecroc 20-30, Mortemines 17-26, Cavernes des Lamentations 15-24), sinon dans DungeonJournal, la base classique d'All The Things seulement en dernier recours (elle donnait 14+ pour Ombrecroc). « À faire » ne propose plus un donjon trop haut (plus de 2 niveaux au-dessus de toi) ni trop bas pour toi ; pastille « niv. 20-30 » : verte à ton niveau, orange s'il est encore un peu haut, grise s'il devient trop facile. Le diagnostic de l'Équipement dit d'où viennent ces niveaux.
+- **Plus de suggestions dans « À faire »** : équiper une amélioration déjà dans tes sacs (clic : équiper), acheter une amélioration vendue par un PNJ (clic : y aller), apprendre le rang suivant d'un métier quand tu as la compétence et le niveau (ex. Cuisine 53/75 : Compagnon), apprendre le Secourisme si tu n'as aucun bandage.
+- **Tuile d'autonomie** : « 30 s » s'affichait « 30 8 » (police des titres) ; chiffres des tuiles en police normale.
+
 ## v3.5.0 (ForeverCompagnon 3.5.0) : nouvel écran Maintenant, itinéraire le plus rapide (vols, bateaux, zeppelins)
 - **Écran Maintenant refait** (d'après la maquette) : 4 tuiles en haut (soins/s, autonomie, améliorations, à acheter), puis **« À faire »** : des actions écrites comme des phrases, un seul chiffre à droite, le détail au survol (infobulle), et en bas un lien vers chaque onglet.
 - **Maître de classe** dans « À faire » quand des sorts t'attendent : à chaque visite, ForeverCompagnon retient ses sorts (niveau requis, coût) et sa position ; dès que tu as le niveau, « Aller voir le maître de classe : 2 sorts à apprendre » (liste et coût dans l'infobulle, clic : y aller). Avant la première visite : rappel aux niveaux pairs.

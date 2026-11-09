@@ -594,6 +594,71 @@ function ns.BiS(limit, maxLevel)
 end
 
 ----------------------------------------------------------------------
+-- Niveaux d'un donjon sur Forever : d'abord le jeu (recherche de groupe : « Donjon d'Ombrecroc (20 - 30) »), puis
+-- DungeonJournal (fait pour Forever, « 13-20 »), en dernier la base classique d'All The Things (minimum seulement).
+----------------------------------------------------------------------
+local function NormName(n)
+  n = tostring(n or ""):lower():gsub("\226\128\153", "'")
+  n = n:gsub("^%s+", ""):gsub("%s+$", "")
+  for _, art in ipairs({ "les ", "le ", "la ", "l'", "the " }) do
+    if n:sub(1, #art) == art then n = n:sub(#art + 1); break end
+  end
+  return n
+end
+ns.NormName = NormName
+
+local lfgRanges
+local function LFGRanges()
+  if lfgRanges then return lfgRanges end
+  local out = {}
+  local LF = _G.C_LFGList
+  if LF and LF.GetAvailableActivities and LF.GetActivityInfoTable then
+    local ok, ids = pcall(LF.GetAvailableActivities)
+    if ok and type(ids) == "table" then
+      for _, id in ipairs(ids) do
+        local ok2, info = pcall(LF.GetActivityInfoTable, id)
+        if ok2 and type(info) == "table" then
+          local lo = info.minLevelSuggestion or info.minLevel
+          local hi = info.maxLevelSuggestion or info.maxLevel
+          lo = (type(lo) == "number" and lo > 0) and lo or nil
+          hi = (type(hi) == "number" and hi > 0) and hi or nil
+          for _, n in ipairs({ info.fullName, info.shortName }) do
+            if n and lo then out[NormName(n)] = { lo, hi, "jeu" } end
+          end
+        end
+      end
+      if next(out) then lfgRanges = out end       -- vide : le jeu n'a peut-être pas encore chargé la liste
+    end
+  end
+  return out
+end
+
+-- { min, max, source } ou nil
+function ns.DungeonRange(name, instLevel)
+  local key = NormName(name)
+  local function find(t)
+    if t[key] then return t[key] end
+    for k, v in pairs(t) do if #k > 4 and (k:find(key, 1, true) or key:find(k, 1, true)) then return v end end
+  end
+  local r = find(LFGRanges())
+  if r then return r end
+  local fdj = ns.DJ()
+  if fdj then
+    local dj = {}
+    for k, d in pairs(fdj.DB) do
+      if type(d) == "table" and d.level then
+        local lo, hi = tostring(d.level):match("(%d+)%D+(%d+)")
+        lo = tonumber(lo) or tonumber(d.level)
+        if lo then dj[NormName(ns.DJName(fdj, k))] = { lo, tonumber(hi), "DungeonJournal" } end
+      end
+    end
+    r = find(dj)
+    if r then return r end
+  end
+  if instLevel and instLevel > 0 then return { instLevel, nil, "ATT" } end
+end
+
+----------------------------------------------------------------------
 -- Où aller : donjons et zones qui ont le plus d'améliorations pour toi (objets de boss, butin, récompenses de quêtes pas
 -- encore faites), à ta portée (niveau du lieu jusqu'à ton niveau + 3). Achats et fabrications n'en font pas partie.
 -- { key, name, kind = "dungeon"|"zone", level, mapID, x, y, items = { {c, eval} }, quests = { id = true }, nQuests, score }
@@ -613,16 +678,22 @@ function ns.WhereToGo(max)
         end
         local seen = {}
         for _, w in ipairs(where) do
-          if not seen[w.key] and not w.raid and (w.level or 0) <= reach then
+          if w.kind == "dungeon" and not w.range then
+            local r = ns.DungeonRange(w.name, w.level)
+            w.range = r or false
+            if r then w.level, w.maxLevel = r[1], r[2] end
+          end
+          local okLevel = (w.level or 0) <= level + 2 and not (w.maxLevel and level > w.maxLevel)
+          if not seen[w.key] and not w.raid and okLevel then
             seen[w.key] = true
             local p = places[w.key]
             if not p then
-              p = { key = w.key, name = w.name, kind = w.kind, level = w.level, mapID = w.mapID, x = w.x, y = w.y,
+              p = { key = w.key, name = w.name, kind = w.kind, level = w.level, maxLevel = w.maxLevel, mapID = w.mapID, x = w.x, y = w.y,
                     items = {}, quests = {}, nQuests = 0, score = 0 }
               places[w.key] = p
               order[#order + 1] = p
             end
-            if w.level and (not p.level or w.level < p.level) then p.level = w.level end
+            if w.level and (not p.level or w.level < p.level) and w.kind ~= "dungeon" then p.level = w.level end
             p.items[#p.items + 1] = { c = c, eval = c.eval, quest = w.quest }
             if w.quest and not p.quests[w.quest] then p.quests[w.quest] = true; p.nQuests = p.nQuests + 1 end
             p.score = p.score + (c.eval and c.eval.score or 0)
@@ -631,7 +702,12 @@ function ns.WhereToGo(max)
       end
     end
   end
-  table.sort(order, function(a, b) if a.score ~= b.score then return a.score > b.score end return a.name < b.name end)
+  local function fits(p) return (p.level or 0) <= level and not (p.maxLevel and level > p.maxLevel) end
+  table.sort(order, function(a, b)
+    if fits(a) ~= fits(b) then return fits(a) end
+    if a.score ~= b.score then return a.score > b.score end
+    return a.name < b.name
+  end)
   for _, p in ipairs(order) do table.sort(p.items, function(a, b) return (a.eval.score or 0) > (b.eval.score or 0) end) end
   while #order > (max or 3) do table.remove(order) end
   return order

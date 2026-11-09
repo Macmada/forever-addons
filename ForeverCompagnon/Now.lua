@@ -123,7 +123,11 @@ local function PlaceTodo(lines, places)
     local isDj = p.kind == "dungeon"
     local entrance = isDj and p.mapID and loot.ATT and loot.ATT.MapName and loot.ATT.MapName(p.mapID)
     local tags = { Chip(isDj and L.tagDungeon or L.tagZone, isDj and "66ccff" or "d8c8a0") }
-    if p.level and p.level > 0 then tags[#tags + 1] = Chip(string.format(L.tagLevel, p.level), p.level <= level and "40d860" or "ffaa3c") end
+    if p.level and p.level > 0 then
+      local txt = p.maxLevel and string.format(L.tagRange, p.level, p.maxLevel) or string.format(L.tagLevel, p.level)
+      local col = (level < p.level and "ffaa3c") or ((p.maxLevel and level > p.maxLevel - 3) and "a0a0a0") or "40d860"
+      tags[#tags + 1] = Chip(txt, col)
+    end
     local src = {}
     if entrance then src[#src + 1] = entrance end
     src[#src + 1] = string.format(L.placeItems, #p.items)
@@ -148,6 +152,81 @@ local function PlaceTodo(lines, places)
   end
 end
 
+-- Amélioration déjà dans tes sacs : l'équiper (clic)
+local function BagTodo(lines)
+  local loot = root.mods.ForeverLoot
+  if not (loot and loot.BiS) then return end
+  local level = UnitLevel("player")
+  local n = 0
+  for _, s in pairs(loot.BiS(1, level)) do
+    local c = s.items[1]
+    if c and c.src == "bags" and n < 2 then
+      n = n + 1
+      local name = c.link and c.link:match("%[(.-)%]") or "?"
+      local gain = loot._GainParts and (loot._GainParts(c.eval)) or ""
+      lines[#lines + 1] = { kind = "card", link = c.link, icon = select(5, root.Game.ItemInstant(c.link)), quality = 2,
+                            name = string.format(L.todoEquip, name), nameColor = { 1, 1, 1 }, source = L.todoEquipSrc, gain = gain,
+                            equip = true, onClick = function() root.Game.Equip(c.link) end,
+                            onRight = function() root.Open("loot") end }
+    end
+  end
+end
+
+-- Amélioration vendue par un PNJ (sources intégrées) : l'acheter (clic : y aller)
+local function VendorTodo(lines)
+  local loot = root.mods.ForeverLoot
+  if not (loot and loot.BiS and loot.ATT and loot.ATT.Available() and loot.ATT.Vendors) then return end
+  local level = UnitLevel("player")
+  local n = 0
+  for _, s in pairs(loot.BiS(2, level)) do
+    for _, c in ipairs(s.items) do
+      if n < 1 and c.src ~= "bags" and not loot.Owned(c.id) then
+        local vendors = loot.ATT.Vendors(c.id)
+        if #vendors > 0 then
+          n = n + 1
+          local best = root.Nav and root.Nav.Closest(vendors) or vendors[1]
+          local name = c.link and c.link:match("%[(.-)%]") or "?"
+          local gain = loot._GainParts and (loot._GainParts(c.eval)) or ""
+          lines[#lines + 1] = { kind = "card", link = c.link, icon = select(5, root.Game.ItemInstant(c.link)), quality = 2,
+                                name = string.format(L.todoBuyItem, name), nameColor = { 1, 1, 1 }, source = best and best.name or nil,
+                                gain = gain, onClick = function() if best then Go(best.mapID, best.x, best.y, best.name) end end,
+                                onRight = function() root.Open("loot") end }
+        end
+      end
+    end
+  end
+end
+
+-- Métiers : rang suivant à apprendre (compétence et niveau atteints) ; Secourisme si tu n'as aucun bandage
+local function ProfTodo(lines, res)
+  local m = root.mods.ForeverMetiers
+  if not (m and m.RankInfo and m.Learned) then return end
+  local level = UnitLevel("player")
+  for _, k in ipairs(m.Learned()) do
+    local ri = m.RankInfo(k)
+    if ri and ri.next and ri.rank >= ri.next.skill and level >= ri.next.level then
+      local ML = m.L or {}
+      lines[#lines + 1] = { kind = "card", icon = m.Data and m.Data.profs[k] and ("Interface\\Icons\\" .. m.Data.profs[k].icon) or "Interface\\Icons\\INV_Misc_Book_09",
+                            quality = 1, nameColor = { 1, 1, 1 },
+                            name = string.format(L.todoProfRank, m.ProfName(k), ML["rank_" .. ri.next.key] or ri.next.key),
+                            source = string.format(L.todoProfRankSrc, ri.rank, ri.max, ri.next.cap) .. (m.Trainer and (" · " .. m.Trainer(k, ri.next.key)) or ""),
+                            onClick = function() root.Open("metiers") end, onRight = function() root.Open("metiers") end }
+    end
+  end
+  local needBandage = false
+  for _, sec in ipairs(res and res.sections or {}) do
+    for _, r in ipairs(sec.rows or {}) do
+      if r.kind == "bandage" or (r.status == "warn" and tostring(r.text):lower():find("bandage", 1, true)) then needBandage = true end
+    end
+  end
+  local skills = m.db and m.db.skills or {}
+  if needBandage and not skills.firstaid then
+    lines[#lines + 1] = { kind = "card", icon = "Interface\\Icons\\Spell_Holy_SealOfSacrifice", quality = 1, nameColor = { 1, 1, 1 },
+                          name = L.todoFirstAid, source = L.todoFirstAidSrc, firstaid = true,
+                          onClick = function() root.Open("metiers") end, onRight = function() root.Open("metiers") end }
+  end
+end
+
 local function CraftTodo(lines)
   local ns = root.mods.ForeverMetiers
   if not (ns and ns.LevelLines) then return end
@@ -168,7 +247,7 @@ local function BuyTodo(lines, res)
   local n = 0
   for _, s in ipairs(res and res.sections or {}) do
     for _, r in ipairs(s.rows or {}) do
-      if (r.status == "warn" or r.status == "bad") and n < 2 and not r.trainer then
+      if (r.status == "warn" or r.status == "bad") and n < 3 and not r.trainer then
         n = n + 1
         local title, detail = tostring(r.text):match("^(.-)%s+—%s+(.+)$")
         local tipLines = {}
@@ -204,8 +283,11 @@ function root.NowLines()
   local lines = { { kind = "head", icon = "Interface\\Icons\\INV_Misc_Note_01", title = L.secTodo, text = L.secTodo } }
   local before = #lines
   Safe("maître de classe", TrainerTodo, lines)
+  Safe("équiper", BagTodo, lines)
+  Safe("métiers (rangs)", ProfTodo, lines, res)
   Safe("lieux", PlaceTodo, lines, places)
   Safe("métiers", CraftTodo, lines)
+  Safe("marchand", VendorTodo, lines)
   Safe("achats", BuyTodo, lines, res)
   if #lines == before then lines[#lines + 1] = { kind = "info", text = Gray(L.noTodo) } end
   local tiles = root.NowTiles(res, places)
@@ -234,7 +316,7 @@ local function Tile(parent)
   t.border = K.Border(t, 0.45, 0.37, 0.24, 1, "BORDER")
   t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
   t.value:SetPoint("TOP", 0, -12)
-  K.TitleFont(t.value, 22, "GameFontHighlightLarge")
+  t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 20, "OUTLINE")
   t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
   t.label:SetPoint("BOTTOM", 0, 8)
   t.label:SetTextColor(0.85, 0.78, 0.6)

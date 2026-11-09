@@ -495,6 +495,42 @@ do
   prep.db.trainer = nil
 end
 
+-- niveaux des donjons : ceux du jeu (recherche de groupe), noms rapprochés (« Mortemines » = « Les Mortemines »)
+do
+  local loot = root.mods.ForeverLoot
+  _G.C_LFGList = { GetAvailableActivities = function() return { 1, 2, 3 } end,
+                   GetActivityInfoTable = function(id) return ({ { fullName = "Donjon d'Ombrecroc", minLevelSuggestion = 20, maxLevelSuggestion = 30 },
+                     { fullName = "Mortemines", minLevelSuggestion = 17, maxLevelSuggestion = 26 },
+                     { fullName = "Cavernes des lamentations", minLevelSuggestion = 15, maxLevelSuggestion = 24 } })[id] end }
+  local r = loot.DungeonRange("Donjon d'Ombrecroc", 14)
+  check(r and r[1] == 20 and r[2] == 30 and r[3] == "jeu", "niveau d'Ombrecroc pris dans le jeu (20-30), pas la base classique (14)")
+  r = loot.DungeonRange("Les Mortemines", 10)
+  check(r and r[1] == 17 and r[2] == 26, "Les Mortemines = Mortemines du jeu (17-26)")
+  r = loot.DungeonRange("Cavernes des Lamentations", 10)
+  check(r and r[1] == 15, "majuscules sans effet (Cavernes des lamentations)")
+  check(loot.DungeonRange("Donjon inconnu", 33)[3] == "ATT", "donjon inconnu du jeu : base ATT en dernier recours")
+  -- pastille : plage du jeu, orange si trop haut pour toi
+  local saveWhere = loot.WhereToGo
+  loot.WhereToGo = function() return { { key = "i64", name = "Donjon d'Ombrecroc", kind = "dungeon", level = 20, maxLevel = 30, mapID = 1421, x = 36.6, y = 65.6,
+    items = { { c = { link = "|Hitem:6320|h[Torque]|h", id = 6320 }, eval = { method = "heal", hps = 0.1, score = 3 } } }, quests = {}, nQuests = 0, score = 3 } } end
+  local place
+  for _, l in ipairs(root.NowLines()) do if l.place then place = l end end
+  check(place and place.tags:find("20-30", 1, true) and place.tags:find("ffaa3c", 1, true), "pastille « niv. 20-30 », orange au niveau 12")
+  loot.WhereToGo = saveWhere
+  _G.C_LFGList = nil
+  -- métiers : rang suivant à apprendre (Cuisine 53/75 au niveau 12 : compagnon, compétence 50 et niveau 10 atteints)
+  local m = root.mods.ForeverMetiers
+  local saveSk = m.db.skills
+  m.db.skills = { cooking = { rank = 53, max = 75 }, tailoring = { rank = 89, max = 150 } }
+  local cook, tail
+  for _, l in ipairs(root.NowLines()) do
+    if l.name and l.name:find(m.ProfName("cooking"), 1, true) then cook = l end
+    if l.name and l.name:find(m.ProfName("tailoring"), 1, true) and l.name:find("(", 1, true) then tail = l end
+  end
+  check(cook and cook.source:find("53/75", 1, true) and not tail, "À faire : rang de Cuisine à apprendre ; Couture 89/150 : pas encore (125)")
+  m.db.skills = saveSk
+end
+
 -- itinéraire le plus rapide : maître de vol proche -> vol -> à pied, points de vol appris à l'ouverture d'un maître de vol
 do
   local N = root.Nav
