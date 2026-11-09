@@ -75,7 +75,7 @@ local function Recommended(e)
 end
 
 function root.AddonLines()
-  local lines = { { kind = "info", text = "|cffd8c8a0" .. L.addonsIntro .. "|r" } }
+  local lines = {}                       -- (introduction remplacée par les tuiles actifs / désactivés / absents)
   -- remplacés par ForeverCompagnon (facultatifs : utilisés en plus s'ils sont là), puis utiles en complément
   local groups = { { title = L.addonsBuiltin, builtin = true }, { title = L.addonsMore, builtin = false } }
   for _, g in ipairs(groups) do
@@ -87,6 +87,8 @@ function root.AddonLines()
         local tag = (st == "on" and ("|cff40d860" .. L.addonOn .. "|r")) or (st == "off" and ("|cffffc860" .. L.addonOff .. "|r"))
                     or ("|cffa0a0a0" .. L.addonAbsent .. "|r")
         lines[#lines + 1] = { kind = "card", icon = e.icon, quality = st == "on" and 2 or (st == "off" and 1 or 0), name = e.name,
+                              bar = (st == "on" and { 0.25, 0.85, 0.38 }) or (st == "off" and { 1, 0.66, 0.24 }) or { 0.5, 0.5, 0.5 },
+                              status = st,
                               source = e.builtin and (e.what .. "\n|cff40d860" .. L["builtin_" .. e.key] .. "|r") or e.what, gain = tag, gainSub = st == "absent" and L.addonClick or (st == "off" and L.addonEnable or nil),
                               onClick = function() root.SelectAddon(e, st, folder) end }
       end
@@ -109,7 +111,24 @@ function root.SelectAddon(e, st, folder)
 end
 
 function root.RefreshAddons()
-  if ui and ui:IsShown() then ui.list.Render(root.AddonLines()) end
+  if not (ui and ui:IsShown()) then return end
+  local lines = root.AddonLines()
+  local n = { on = 0, off = 0, absent = 0 }
+  for _, l in ipairs(lines) do if l.status then n[l.status] = n[l.status] + 1 end end
+  local defs = { { n.on, L.tileOn, { 0.25, 0.85, 0.38 } }, { n.off, L.tileOff, { 1, 0.66, 0.24 } }, { n.absent, L.tileAbsent, { 0.5, 0.5, 0.5 } } }
+  local fw = ui:GetWidth()
+  fw = (type(fw) == "number" and fw > 0) and fw or 600
+  local tw = (fw - 32 - 12) / 3
+  for i, t in ipairs(ui.tiles) do
+    local d = defs[i]
+    t:ClearAllPoints()
+    t:SetPoint("TOPLEFT", 16 + (i - 1) * (tw + 6), -32)
+    t:SetWidth(tw)
+    t.value:SetText(tostring(d[1]))
+    t.label:SetText(d[2])
+    t.top:SetColorTexture(d[3][1], d[3][2], d[3][3], 1)
+  end
+  ui.list.Render(lines)
 end
 
 local function Create()
@@ -129,8 +148,26 @@ local function Create()
   tinsert(UISpecialFrames, "ForeverCompagnonAddonsFrame")
   ui:Hide()
   K.Dress(ui, "Interface\\Icons\\Trade_Engineering", L.title .. " — " .. L.addons)
+  ui.tiles = {}
+  for i = 1, 3 do
+    local t = CreateFrame("Frame", nil, ui)
+    t:SetHeight(46)
+    local bg = t:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
+    t.top = t:CreateTexture(nil, "ARTWORK")
+    t.top:SetPoint("TOPLEFT", 1, -1); t.top:SetPoint("TOPRIGHT", -1, -1); t.top:SetHeight(3)
+    K.Border(t, 0.45, 0.37, 0.24, 1, "BORDER")
+    t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    t.value:SetPoint("TOP", 0, -8)
+    t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 16, "OUTLINE")
+    t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    t.label:SetPoint("BOTTOM", 0, 6)
+    t.label:SetTextColor(0.85, 0.78, 0.6)
+    ui.tiles[i] = t
+  end
   ui.list = K.CardList(ui, W - 60)
-  ui.list.scroll:SetPoint("TOPLEFT", 16, -32)
+  ui.list.scroll:SetPoint("TOPLEFT", 16, -88)
   ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 74)
   K.Backdrop(ui, ui.list.scroll, 0.6, 6)
   ui.urlLabel = ui:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")

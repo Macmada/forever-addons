@@ -1,6 +1,9 @@
 # Journal des versions
 
-## v3.5.7 (ForeverCompagnon 3.5.7) : onglet Métiers accordé aux autres
+## v3.5.7 (ForeverCompagnon 3.5.7, ForeverMacros 1.9.1, ForeverGFX 3.5.7) : Métiers, Addons, Macros et Graphismes accordés aux autres
+- **Onglet Addons** : 3 tuiles (actifs, désactivés, absents) à la place de l'introduction ; barre de couleur à gauche de chaque addon (vert actif, orange désactivé, gris absent).
+- **ForeverGFX** : cartes des niveaux et des outils au style des autres (fond sombre uni, fin cadre doré, barre à gauche verte pour le réglage actif) ; bouton « Trouver le meilleur réglage » éloigné de la croix ; l'astuce du mode expert passe dans l'infobulle du bouton (elle chevauchait celle de la minicarte).
+- **ForeverMacros** : macros prêtes en cartes au même style, barre verte (prête) ou orange (sort pas encore appris) ; « Nouvelle macro » à côté de « Mes macros… » (il chevauchait l'aide de l'éditeur).
 - **Tuiles en haut de « Que faire ? »** : un métier par tuile (compétence / plafond, barre de progression, orange quand le plafond approche et qu'il faut voir le maître ; rang et maître au survol) ; phrase d'introduction retirée.
 - **Cartes et en-têtes** (Métiers et écran Maintenant, même composant) : barre de couleur à gauche de chaque carte (or, vert pour un gain, rouge pour un manque), en-têtes de section plus légers, comme l'Équipement et le panneau Soins.
 

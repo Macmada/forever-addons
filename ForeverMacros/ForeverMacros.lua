@@ -617,6 +617,7 @@ local function UpdateLibrary()
       row.title:SetText(ns.Pick(e.title, e.title_en))
       row.desc:SetText(ns.Pick(e.desc, e.desc_en))
       row.status:SetText(missing and string.format(L.libMissing, missing) or L.libReady)
+      if missing then row.bar:SetColorTexture(1, 0.66, 0.24, 1) else row.bar:SetColorTexture(0.25, 0.85, 0.38, 1) end
       row:Show()
     else
       row:Hide()
@@ -674,22 +675,23 @@ function BuildLibrary(parent)
 
   ui.libRows = {}
   for i = 1, LIB_ROWS do
-    local row = CreateFrame("Frame", nil, area, "BackdropTemplate")
+    -- carte au style des autres addons Forever : fond sombre uni, fin cadre doré, barre d'état à gauche
+    local row = CreateFrame("Frame", nil, area)
     row:SetPoint("TOPLEFT", 0, -(i - 1) * LIB_H)
     row:SetSize(386, LIB_H - 4)
-    row:SetBackdrop({
-      bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-      edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-      tile = true, tileSize = 16, edgeSize = 12,
-      insets = { left = 3, right = 3, top = 3, bottom = 3 },
-    })
-    row:SetBackdropColor(0.1, 0.1, 0.14, 0.8)
-    row:SetBackdropBorderColor(0.4, 0.4, 0.5, 0.8)
+    local rbg = row:CreateTexture(nil, "BACKGROUND")
+    rbg:SetAllPoints()
+    rbg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
+    ns.Kit.Border(row, 0.45, 0.37, 0.24, 0.9, "BORDER")
+    row.bar = row:CreateTexture(nil, "ARTWORK")
+    row.bar:SetPoint("TOPLEFT", 1, -1)
+    row.bar:SetPoint("BOTTOMLEFT", 1, 1)
+    row.bar:SetWidth(4)
     row:EnableMouse(true)
     row:EnableMouseWheel(true)
 
     row.title = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    row.title:SetPoint("TOPLEFT", 8, -7)
+    row.title:SetPoint("TOPLEFT", 12, -7)
     row.title:SetWidth(250)
     row.title:SetJustifyH("LEFT")
     row.title:SetWordWrap(false)
@@ -1150,13 +1152,13 @@ local function CreateUI()
   eHint:SetWidth(300)
   eHint:SetJustifyH("LEFT")
   eHint:SetText(L.editorHint)
-  ui.status = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  ui.status:SetPoint("TOPRIGHT", -34, -38)
-
   local macrosBtn = MakeButton(ui, L.macros, 160, function(self)
     OpenMenu(self, MacroItems(), LoadMacro)
   end)
   macrosBtn:SetPoint("TOPLEFT", 448, -62)
+  -- « Nouvelle macro » / « Modification de … » à côté du bouton (il chevauchait l'aide de l'éditeur)
+  ui.status = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  ui.status:SetPoint("LEFT", macrosBtn, "RIGHT", 12, 0)
 
   Label(ui, L.name, 448, -100)
   ui.nameBox = CreateFrame("EditBox", nil, ui, "InputBoxTemplate")

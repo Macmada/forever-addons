@@ -14,17 +14,27 @@ local function MakeButton(parent, text, width, onClick)
   return b
 end
 
+-- Carte au style des autres addons Forever : fond sombre uni, fin cadre doré, barre de couleur à gauche
 local function Card(parent, w, h)
-  local f = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+  local f = CreateFrame("Frame", nil, parent)
   f:SetSize(w, h)
-  f:SetBackdrop({
-    bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 14,
-    insets = { left = 3, right = 3, top = 3, bottom = 3 },
-  })
-  f:SetBackdropColor(0.12, 0.12, 0.16, 0.95)
-  f:SetBackdropBorderColor(0.5, 0.5, 0.6, 1)
+  local bg = f:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints()
+  bg:SetColorTexture(0.12, 0.1, 0.08, 0.95)
+  f.border = ns.Kit.Border(f, 0.45, 0.37, 0.24, 1, "BORDER")
+  f.bar = f:CreateTexture(nil, "ARTWORK")
+  f.bar:SetPoint("TOPLEFT", 1, -1)
+  f.bar:SetPoint("BOTTOMLEFT", 1, 1)
+  f.bar:SetWidth(4)
+  f.bar:SetColorTexture(0.85, 0.66, 0.2, 0.9)
+  -- compatibilité : l'ancien code colore le cadre ; on colore la barre et le cadre
+  function f:SetBackdropBorderColor(r, g, b, a)
+    for _, t in ipairs(self.border or {}) do t:SetColorTexture(r, g, b, a or 1) end
+  end
+  function f:SetActiveColor(on)
+    if on then self.bar:SetColorTexture(0.25, 0.85, 0.38, 1); self:SetBackdropBorderColor(0.25, 0.85, 0.38, 1)
+    else self.bar:SetColorTexture(0.85, 0.66, 0.2, 0.9); self:SetBackdropBorderColor(0.45, 0.37, 0.24, 1) end
+  end
   return f
 end
 
@@ -72,7 +82,7 @@ function ns.BuildSimple(ui)
     ns.OpenMenu(self, items, function(v) ns.TunerStart(v) end)
   end)
   tuneBtn:SetHeight(26)
-  tuneBtn:SetPoint("TOPRIGHT", -12, -8)
+  tuneBtn:SetPoint("TOPRIGHT", -44, -8)          -- loin de la croix de fermeture
   Text(sp, "GameFontDisableSmall", 616, -38, 290, L.tuneHint)
 
   -- Niveaux de qualité
@@ -138,9 +148,11 @@ function ns.BuildSimple(ui)
     ns.ApplyView()
   end)
   expertBtn:SetPoint("BOTTOMRIGHT", -12, 12)
-  local eh = sp:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  eh:SetPoint("RIGHT", expertBtn, "LEFT", -10, 0)
-  eh:SetText(L.expertHint)
+  -- l'astuce du mode expert passe dans l'infobulle du bouton (elle chevauchait celle de la minicarte)
+  expertBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP"); GameTooltip:SetText(L.expertHint, 1, 1, 1, 1, true); GameTooltip:Show()
+  end)
+  expertBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
   local mh = sp:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
   mh:SetPoint("BOTTOMLEFT", 14, 18)
   mh:SetText(L.minimapHint)
@@ -180,7 +192,7 @@ function ns.UpdateSimple()
   for _, c in ipairs(cards) do
     local isActive = last == string.format(L.presetPrefix, ns.PresetLabel(c.preset))
     c.active:SetText(isActive and L.active or "")
-    if isActive then c:SetBackdropBorderColor(0.4, 1, 0.4, 1) else c:SetBackdropBorderColor(0.5, 0.5, 0.6, 1) end
+    c:SetActiveColor(isActive)
   end
   tools.auto.status:SetText(ns.db.context.enabled and L.autoOn or L.autoOff)
   local b = ns.bench

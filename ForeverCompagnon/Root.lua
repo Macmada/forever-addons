@@ -84,6 +84,7 @@ root.L = FR and {
   addonPick = "Clique sur un addon pour afficher son adresse.", addonUrlFor = "Adresse de %s (Ctrl+C pour copier) :",
   addonNoUrl = "pas d'adresse connue : cherche-le dans WowUp ou sur CurseForge",
   addonEnableBtn = "Activer", addonEnabled = "%s sera actif au prochain /reload.",
+  tileOn = "actifs", tileOff = "désactivés", tileAbsent = "absents (facultatifs)",
 } or {
   title = "ForeverCompanion",
   now = "Now", heal = "Healing", loot = "Gear", prep = "Preparation", metiers = "Professions",
@@ -156,6 +157,7 @@ root.L = FR and {
   addonPick = "Click an addon to show its address.", addonUrlFor = "Address of %s (Ctrl+C to copy):",
   addonNoUrl = "no known address: look for it in WowUp or on CurseForge",
   addonEnableBtn = "Enable", addonEnabled = "%s will be enabled after the next /reload.",
+  tileOn = "enabled", tileOff = "disabled", tileAbsent = "missing (optional)",
 }
 
 function root.Print(fmt, ...)
