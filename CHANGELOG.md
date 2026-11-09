@@ -1,6 +1,9 @@
 # Journal des versions
 
-## v3.5.8 (ForeverCompagnon 3.5.8) : quêtes à ton niveau
+## v3.5.8 (ForeverCompagnon 3.5.8) : quêtes à ton niveau, addon allégé
+- **Connexion plus légère** : les sources des objets et recettes (850 Ko, base WoW Forever d'All The Things) sont dans un dossier à part, **ForeverCompagnon_Data**, chargé seulement au premier besoin (survol d'un objet, Équipement, « À faire »…) au lieu de chaque connexion. WowUp l'installe avec le reste.
+- **Anciens dossiers plus livrés** : ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers et ForeverPretre (simples coquilles depuis la 3.0). Supprime-les de ton dossier AddOns.
+- **Code mort retiré** (≈ 300 lignes) : lecture du journal de combat, conseils de rangs, macros de rang et correction des talents, impossibles sur Forever (journal de combat interdit aux addons).
 - **« Quêtes : <zone> » dans « À faire »** (avec Questie) : les zones qui ont le plus de quêtes disponibles à ton niveau d'après Questie (déjà faites, trop hautes, mauvaise faction ou prérequis manquants : exclues), ton continent d'abord ; pastille « niv. 21-25 », nombre de quêtes, liste au survol, clic : itinéraire vers le donneur le plus proche. Questie est lu tel quel, rien n'est modifié chez lui. L'auto-test dit si la lecture fonctionne.
 - **Préparation** : niveaux de la nourriture de buff alignés sur ceux de Forever (Rôti de raptor 15, Omelette monstrueuse 35…). L'analyse prenait déjà le niveau donné par le jeu ; la base était juste en retard.
 

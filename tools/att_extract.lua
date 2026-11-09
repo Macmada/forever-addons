@@ -5,7 +5,7 @@
 -- Les fichiers d'ATT sont du code Lua qui construit un arbre (zone > PNJ > objet…). Ils sont exécutés dans un bac à sable :
 -- seules les fonctions factices ci-dessous y sont visibles (ni io, ni os, ni chargement de code).
 --
--- Usage : lua5.1 tools/att_extract.lua <dossier db/Camelot d'ATT> <révision d'ATT> > ForeverCompagnon/Data/Sources.lua
+-- Usage : lua5.1 tools/att_extract.lua <dossier db/Camelot d'ATT> <révision d'ATT> > ForeverCompagnon_Data/Sources.lua
 
 local dir, rev = arg[1], arg[2] or "?"
 assert(dir, "usage : lua5.1 tools/att_extract.lua <db/Camelot> [révision]")
@@ -218,8 +218,8 @@ io.write("-- Sources d'un objet : { genre, PNJ/objet/quête, carte, x, y, { inst
 io.write("-- genres : boss, drop (butin d'un PNJ), vendor, quest, obj, craft, zone. Recettes : [métier][sort] = { objet, appris à,\n")
 io.write("-- PNJ, carte, genre, coût, faction, réputation }. PNJ : [id] = { carte, x, y }. Donjons : [id] = { carte de l'entrée,\n")
 io.write("-- x, y, niveau, raid }.\n")
-io.write("local _, root = ...\n")
-io.write("root.Sources = { rev = ", S(rev), ", items = {\n")
+io.write("-- Addon chargé à la demande par ForeverCompagnon (root.LoadSources), qui reprend cette table puis efface la variable.\n")
+io.write("ForeverCompagnonSources = { rev = ", S(rev), ", items = {\n")
 for _, id in ipairs(Sorted(items)) do io.write("[", id, "]=", S(items[id]), ",\n") end
 io.write("}, recipes = {\n")
 for _, skill in ipairs(Sorted(recipes)) do

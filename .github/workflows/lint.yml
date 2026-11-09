@@ -12,7 +12,7 @@ jobs:
       - name: Luacheck
         uses: lunarmodules/luacheck@v1
         with:
-          args: ForeverGFX ForeverMacros ForeverCompagnon
+          args: ForeverGFX ForeverMacros ForeverCompagnon ForeverCompagnon_Data
       - name: Modules communs identiques dans chaque addon (diagnostic, icône, tutoriel)
         run: sh tools/sync-shared.sh --check
       - name: Caractères absents de la police du jeu (→ ≈ ✓ ● ○ ★ s'affichent en carré)

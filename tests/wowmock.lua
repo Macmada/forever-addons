@@ -106,7 +106,12 @@ return function(LANG)
   _G.GetRealmName = function() return "Forever" end
   _G.GetAddOnMetadata = function(_, f) return f == "Version" and "test" or nil end
   _G.IsAddOnLoaded = function() return false end
-  _G.C_AddOns = { IsAddOnLoaded = function() return false end, GetAddOnMetadata = _G.GetAddOnMetadata }
+  _G.C_AddOns = { IsAddOnLoaded = function() return false end, GetAddOnMetadata = _G.GetAddOnMetadata,
+                  -- addon chargé à la demande (sources intégrées de ForeverCompagnon) : comme le jeu, il exécute ses fichiers
+                  LoadAddOn = function(name)
+                    if name == "ForeverCompagnon_Data" then W.dataLoads = (W.dataLoads or 0) + 1; dofile("ForeverCompagnon_Data/Sources.lua"); return true end
+                    return false, "MISSING"
+                  end }
   _G.HideUIPanel, _G.ShowUIPanel = noop, noop
   _G.ConsoleExec = function(s) W.lastConsole = s end
   _G.RestartGx = function() W.restartGx = (W.restartGx or 0) + 1 end

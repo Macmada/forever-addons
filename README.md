@@ -16,6 +16,8 @@ Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macma
 
 **Depuis la v3.0.0**, ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers sont réunis dans un seul addon, appelé **ForeverCompagnon** depuis la v3.1.0 (ForeverPrêtre avant). Les anciens dossiers (ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers, ForeverPretre) ne sont plus livrés depuis la v3.5.8 : supprime-les s'ils sont encore dans ton dossier AddOns. Les réglages repartent de zéro.
 
+ForeverCompagnon s'accompagne de **ForeverCompagnon_Data** (sources des objets et recettes, 850 Ko) : un dossier à part, chargé seulement au premier besoin. Les deux doivent être dans le dossier AddOns ; WowUp les installe ensemble.
+
 ### À la main
 
 1. Télécharge les archives de la dernière version dans l'onglet **Releases**.

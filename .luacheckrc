@@ -6,7 +6,7 @@ self = false
 
 -- Variables globales écrites par les addons
 globals = {
-  "ForeverGFXDB", "ForeverMacrosDB", "ForeverPrepDB", "ForeverHealDB",
+  "ForeverGFXDB", "ForeverMacrosDB", "ForeverPrepDB", "ForeverHealDB", "ForeverCompagnonSources",
   "SLASH_FOREVERGFX1", "SLASH_FOREVERGFX2", "SLASH_FOREVERMACROS1", "SLASH_FOREVERMACROS2",
   "ForeverGFX_OnCompartmentClick", "ForeverMacros_OnCompartmentClick",
   "SLASH_FOREVERPREP1", "SLASH_FOREVERPREP2", "ForeverPrep_OnCompartmentClick",

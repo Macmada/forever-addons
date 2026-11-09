@@ -58,8 +58,8 @@ root.Test("Jeu", "sauvegardes relues d'une connexion à l'autre", function()
   return true, n .. " chargements comptés : les réglages sont bien relus"
 end)
 root.Test("Intégré", "sources (base All The Things incluse)", function()
-  local db = root.Sources
-  if not db then return false, "Data/Sources.lua absent" end
+  local db = root.LoadSources()
+  if not db then return false, "ForeverCompagnon_Data absent (dossier à côté de ForeverCompagnon)" end
   local n = 0
   for _ in pairs(db.items) do n = n + 1 end
   local npc = root.mods.ForeverLoot and root.mods.ForeverLoot.ATT and root.mods.ForeverLoot.ATT.NpcName(1853)

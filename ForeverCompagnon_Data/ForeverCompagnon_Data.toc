@@ -1,0 +1,10 @@
+## Interface: 16000, 16001
+## Title: ForeverCompagnon (données)
+## Notes: Sources des objets et recettes (base WoW Forever d'All The Things, licence MIT), chargées par ForeverCompagnon seulement quand elles servent.
+## Author: Macmada
+## Version: 1.0.0
+## LoadOnDemand: 1
+## Dependencies: ForeverCompagnon
+## X-Category: Data
+
+Sources.lua

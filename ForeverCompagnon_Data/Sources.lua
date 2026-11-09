@@ -4,8 +4,8 @@
 -- genres : boss, drop (butin d'un PNJ), vendor, quest, obj, craft, zone. Recettes : [métier][sort] = { objet, appris à,
 -- PNJ, carte, genre, coût, faction, réputation }. PNJ : [id] = { carte, x, y }. Donjons : [id] = { carte de l'entrée,
 -- x, y, niveau, raid }.
-local _, root = ...
-root.Sources = { rev = "7bf3b5e", items = {
+-- Addon chargé à la demande par ForeverCompagnon (root.LoadSources), qui reprend cette table puis efface la variable.
+ForeverCompagnonSources = { rev = "7bf3b5e", items = {
 [25]={{"zone",0,0,0,0}},
 [35]={{"zone",0,0,0,0}},
 [36]={{"zone",0,0,0,0}},

@@ -10,7 +10,6 @@
 ## AddonCompartmentFunc: ForeverCompagnon_OnCompartmentClick
 
 Root.lua
-Data\Sources.lua
 Shared\Diag.lua
 Shared\Widgets.lua
 Shared\ATT.lua

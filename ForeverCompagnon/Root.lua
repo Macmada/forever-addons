@@ -162,6 +162,21 @@ root.L = FR and {
   tileOn = "enabled", tileOff = "disabled", tileAbsent = "missing (optional)",
 }
 
+-- Sources intégrées (850 Ko) : addon ForeverCompagnon_Data, chargé au premier besoin (survol d'un objet, Équipement,
+-- « À faire »…) au lieu de chaque connexion. Une seule tentative ; sans lui, les fonctions qui s'en servent se taisent.
+function root.LoadSources()
+  if root.Sources then return root.Sources end
+  if root.sourcesTried then return nil end
+  root.sourcesTried = true
+  local load = (C_AddOns and C_AddOns.LoadAddOn) or _G.LoadAddOn
+  if load then pcall(load, "ForeverCompagnon_Data") end
+  if type(_G.ForeverCompagnonSources) == "table" then
+    root.Sources = _G.ForeverCompagnonSources
+    _G.ForeverCompagnonSources = nil
+  end
+  return root.Sources
+end
+
 function root.Print(fmt, ...)
   local msg = select("#", ...) > 0 and string.format(fmt, ...) or fmt
   if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffffd100" .. root.L.title .. "|r " .. tostring(msg)) end

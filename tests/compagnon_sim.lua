@@ -80,6 +80,7 @@ W.fire("ADDON_LOADED", "ForeverCompagnon")
 W.fire("PLAYER_LOGIN")
 W.fire("PLAYER_ENTERING_WORLD")
 W.run(5)
+check(rawget(root, "Sources") == nil and (W.dataLoads or 0) == 0, "sources intégrées (850 Ko) pas chargées à la connexion")
 for _, name in ipairs(root.order) do
   check(root.mods[name] and root.mods[name].db, name .. " : chargé et initialisé dans ForeverCompagnon")
 end
@@ -94,6 +95,7 @@ check(root.mods.ForeverPrep.db.minimap.hide, "icône séparée de Prépa masqué
 
 -- écran Maintenant
 SlashCmdList.FOREVERCOMPAGNON("")
+check(root.Sources and W.dataLoads == 1, "sources chargées une fois, au premier besoin (écran Maintenant)")
 check(ForeverCompagnonNowFrame and ForeverCompagnonNowFrame:IsShown(), "/fp : écran Maintenant")
 local lines, _, tiles = root.NowLines()
 check(lines[1].kind == "head" and lines[1].title == root.L.secTodo and #root.nowErrors == 0,

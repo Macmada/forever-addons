@@ -387,7 +387,7 @@ local djCache
 -- des noms manquent (le jeu les donne peu à peu).
 local srcCache
 local function SourceItems()
-  local src = ns.root and ns.root.Sources
+  local src = ns.root and (ns.root.Sources or (ns.root.LoadSources and ns.root.LoadSources()))
   if not (src and ns.ATT) then return {} end
   if srcCache and not (srcCache.partial and GetTime() - srcCache.t > 30) then return srcCache.list end
   local list, partial = {}, false

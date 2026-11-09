@@ -31,10 +31,10 @@ jobs:
       - name: Créer les archives
         run: |
           mkdir dist
-          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverCompagnon
+          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverCompagnon ForeverCompagnon_Data
           zip -r "dist/ForeverGFX-v${{ steps.v.outputs.gfx }}.zip" ForeverGFX
           zip -r "dist/ForeverMacros-v${{ steps.v.outputs.macros }}.zip" ForeverMacros
-          zip -r "dist/ForeverCompagnon-v${{ steps.v.outputs.compagnon }}.zip" ForeverCompagnon
+          zip -r "dist/ForeverCompagnon-v${{ steps.v.outputs.compagnon }}.zip" ForeverCompagnon ForeverCompagnon_Data
 
       - name: Créer release.json (WowUp)
         run: |

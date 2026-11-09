@@ -4,7 +4,7 @@ root.Shared.ATT = function(...)
 local _, ns = ...
 
 -- Où obtenir les objets et les recettes, commun aux parties de ForeverCompagnon (copié par tools/sync-shared.sh).
--- Données intégrées : extrait de la base WoW Forever d'All The Things (licence MIT), Data/Sources.lua, régénéré à chaque
+-- Données intégrées : extrait de la base WoW Forever d'All The Things (licence MIT), ForeverCompagnon_Data/Sources.lua, régénéré à chaque
 -- version par tools/att_extract.lua : plus besoin d'installer ATT. Les noms (PNJ, zones, donjons, quêtes, monnaies)
 -- sont demandés au jeu, dans sa langue, et les noms de PNJ sont gardés une fois connus.
 local A = {}
@@ -22,7 +22,10 @@ local T = FR and { quest = "quête", object = "objet", npc = "PNJ", crafted = "f
                    currency = "currency #", with = " with ", gold = "%dg", silver = "%ds",
                    entrance = "%s (entrance: %s)" }
 
-local function DB() local r = ns.root or ns; return r.Sources end
+local function DB()
+  local r = ns.root or ns
+  return r.Sources or (r.LoadSources and r.LoadSources()) or nil      -- chargées au premier besoin (ForeverCompagnon_Data)
+end
 function A.Available() return DB() ~= nil end
 
 -- Faction du joueur au sens d'ATT (champ r : 1 Horde, 2 Alliance)

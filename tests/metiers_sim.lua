@@ -115,7 +115,7 @@ _G.GetCraftDescription = function(i) return CRAFT[i][6] end
 
 W.class, W.level = "PRIEST", 30
 local ns = W.load("ForeverMetiers")
-ns.root.Sources = nil      -- guides seuls ici ; les sources intégrées sont testées plus bas (8b) et dans compagnon_sim
+ns.root.Sources, ns.root.sourcesTried = nil, true     -- addon de données absent : guides seuls ici ; sources testées plus bas (8b)
 W.fire("ADDON_LOADED", "ForeverMetiers")
 W.fire("PLAYER_LOGIN")
 W.run(3)
