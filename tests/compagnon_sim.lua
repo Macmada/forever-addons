@@ -72,13 +72,7 @@ end
 W.client(profile)
 check(_G.GetItemInfo == nil and _G.IsAddOnLoaded == nil and _G.GetItemCount == nil, "profil du client Forever appliqué (" .. #profile.absent .. " fonctions absentes)")
 
--- anciens dossiers (coquilles) : se désactivent tout seuls
-local disabled = {}
-_G.C_AddOns.DisableAddOn = function(a) disabled[a] = true end
-for _, a in ipairs({ "ForeverHeal", "ForeverLoot", "ForeverPrep", "ForeverMetiers", "ForeverPretre" }) do
-  assert(loadfile(a .. "/Obsolete.lua"))(a, {})
-end
-check(disabled.ForeverHeal and disabled.ForeverMetiers and disabled.ForeverPretre, "anciens dossiers : remplacés par une coquille qui se désactive")
+-- (anciens dossiers ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers, ForeverPretre retirés en 3.5.8)
 
 -- chargement complet
 local root = W.load("ForeverCompagnon")

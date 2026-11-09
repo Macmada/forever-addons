@@ -1,8 +1,0 @@
-## Interface: 16000, 16001
-## Title: ForeverHeal (obsolète : voir ForeverCompagnon)
-## Notes: Fait maintenant partie de ForeverCompagnon. Ce dossier peut être supprimé.
-## Notes-enUS: Now part of ForeverCompanion. This folder can be deleted.
-## Author: ForeverGFX
-## Version: 3.0.0
-
-Obsolete.lua

@@ -14,7 +14,7 @@ Des addons World of Warcraft pour **WoW Forever** (et seulement WoW Forever depu
 
 Dans WowUp, **Get Addons → Install from URL**, colle `https://github.com/Macmada/forever-addons` puis installe : tous les addons arrivent ensemble (ForeverCompagnon ne se charge que sur WoW Forever) et WowUp propose chaque nouvelle version.
 
-**Depuis la v3.0.0**, ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers sont réunis dans un seul addon, appelé **ForeverCompagnon** depuis la v3.1.0 (ForeverPrêtre avant). Les anciens dossiers (ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers, ForeverPretre) sont remplacés par une coquille vide qui se désactive toute seule : tu peux les supprimer. Les réglages repartent de zéro.
+**Depuis la v3.0.0**, ForeverHeal, ForeverLoot, ForeverPrep et ForeverMetiers sont réunis dans un seul addon, appelé **ForeverCompagnon** depuis la v3.1.0 (ForeverPrêtre avant). Les anciens dossiers (ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers, ForeverPretre) ne sont plus livrés depuis la v3.5.8 : supprime-les s'ils sont encore dans ton dossier AddOns. Les réglages repartent de zéro.
 
 ### À la main
 

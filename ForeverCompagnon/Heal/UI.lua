@@ -234,7 +234,6 @@ local function SectionIcons()
   SECTION_ICON[L.p_stats] = "Interface\\Icons\\Spell_Holy_InnerFire"
   SECTION_ICON[L.p_mix] = "Interface\\Icons\\Spell_Holy_LesserHeal"
   SECTION_ICON[L.p_results] = "Interface\\Icons\\Spell_Holy_GreaterHeal"
-  SECTION_ICON[L.p_ranks] = "Interface\\Icons\\Spell_Holy_FlashHeal"
   SECTION_ICON[L.p_worth] = "Interface\\Icons\\INV_Misc_Coin_02"
   SECTION_ICON[L.upTitle] = "Interface\\Icons\\INV_Misc_Bag_10"
 end
@@ -529,12 +528,6 @@ end
 -- titre de rubrique, marqué pour l'affichage (\1titre\2) ; ns.PanelText() rend le texte lisible
 local function H(t) return "\1" .. t .. "\2" end
 
--- HealBot Continued chargé ? (le conseil de rangs indique alors aussi quoi changer dans ses sorts)
-local function HealBotLoaded()
-  if C_AddOns and C_AddOns.IsAddOnLoaded then return C_AddOns.IsAddOnLoaded("HealBot") end
-  return IsAddOnLoaded and IsAddOnLoaded("HealBot") or false
-end
-
 local function Readable(t) return (t:gsub("\1(.-)\2", "|cffffd100%1|r")) end
 ns.Readable = Readable
 
@@ -566,25 +559,6 @@ function ns.PanelRaw()
   add(string.format(L.p_hps, Fmt(M.hps, 1)))
   add(string.format(L.p_perCast, Fmt(M.perCast)))
   add(string.format(L.p_oom, Duration(M.oom)) .. (M.healedBeforeOom and (" — " .. string.format(L.p_oomTotal, Fmt(M.healedBeforeOom))) or ""))
-  add("")
-  add(H(L.p_ranks))
-  local advice = ns.RankAdvice()
-  if #advice == 0 then add(GREY .. L.p_rankNone .. "|r") end
-  for _, a in ipairs(advice) do
-    local label = (a.model and a.model.name or a.family) .. " r" .. a.rank
-    if a.better then
-      add(string.format(L.p_rankAdvice, label, Fmt(a.overPct * 100), Fmt(a.useful), a.better.rank, Fmt(a.betterNormal), a.saving))
-      if HealBotLoaded() then
-        local sub = (C_Spell and C_Spell.GetSpellSubtext and C_Spell.GetSpellSubtext(a.better.id))
-                    or (GetSpellSubtext and GetSpellSubtext(a.better.id)) or ("r" .. a.better.rank)
-        add("   " .. string.format(L.p_rankHealBot, a.model.name, a.better.name .. "(" .. sub .. ")"))
-      end
-    elseif a.overPct >= 0.15 then
-      add(string.format(L.p_rankKeep, label, Fmt(a.overPct * 100), Fmt(a.useful)))
-    else
-      add(string.format(L.p_rankOk, label, Fmt(a.overPct * 100)))
-    end
-  end
   add("")
   add(H(L.p_worth))
   local gains = {
@@ -695,12 +669,6 @@ function ns.RefreshPanel()
   RenderPanel(text)
 end
 
-function ns.MakeMacros()
-  local n, why = ns.CreateRankMacros()
-  if why == "combat" then return Print(L.macrosCombat) end
-  if why == "full" then Print(L.macrosFull) end
-  Print(n > 0 and string.format(L.macrosDone, n) or L.macrosNone)
-end
 
 local alert
 -- Alerte bien visible (06/11/2026 : noyée dans le texte de combat) : cadre sombre à bordure orange qui pulse, icône de

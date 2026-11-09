@@ -196,13 +196,7 @@ check(mix.observed >= 28 and mix.observed <= 30 and #mix == 2, "mélange observ�
 local shareG
 for _, m in ipairs(mix) do if m.spell.family == "greater" then shareG = m.share end end
 check(shareG and math.abs(shareG - 0.5) < 0.02, "part de Soins supérieurs ≈ 50 % du temps (10 × 3 s contre 20 × 1,5 s)")
-local predicted = 1240 + 200 * 3 / 3.5
-for _ = 1, 40 do
-  _G.CombatLogGetCurrentEventInfo = function() return 0, "SPELL_HEAL", false, "Player-1", "", 0, 0, "x", "", 0, 0, 10963, "", 2, predicted * 1.1, 100, 0, false end
-  Fire("COMBAT_LOG_EVENT_UNFILTERED")
-end
-check(math.abs(ns.db.mult.greater - 1.1) < 0.02, "talents mesurés : Soins supérieurs × 1,10 (Soins spirituels)")
-check(ns.db.effective.over > 0, "excédent de soins mesuré")
+-- (correction des talents par les soins réels : retirée, le journal de combat est interdit sur Forever)
 
 -- 6. panneau
 CharacterFrame.scripts.OnShow()
@@ -222,23 +216,7 @@ if os.getenv("SHOW_DIAG") then print(diagText) end
 check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, true), "diagnostic : texte complet, sans erreur (" .. #diagText .. " caractères)")
 if os.getenv("SHOW_DIAG") then print(diagText) end
 SlashCmdList["FOREVERHEAL"]("diag")
--- 8. conseiller de rangs : Soins supérieurs r2 avec beaucoup d'excédent -> le r1 suffit
-for _ = 1, 60 do
-  _G.CombatLogGetCurrentEventInfo = function() return 0, "SPELL_HEAL", false, "Player-1", "", 0, 0, "x", "", 0, 0, 10963, "", 2, 1500, 1100, 0, false end
-  Fire("COMBAT_LOG_EVENT_UNFILTERED")
-end
-local adv
-for _, a in ipairs(ns.RankAdvice()) do if a.family == "greater" then adv = a end end
-check(adv and adv.better and adv.better.rank == 1 and adv.saving == 56, "conseil : Soins supérieurs r2 avec beaucoup d'excédent -> rang 1 suffit, −56 mana")
-check(strip(ns.PanelText()):find("le rang 1", 1, true) or strip(ns.PanelText()):find("rank 1", 1, true), "conseil affiché dans le panneau")
-_G.IsAddOnLoaded = function(n) return n == "HealBot" end
-check(strip(ns.PanelText()):find("HealBot", 1, true) and strip(ns.PanelText()):find("Soins supérieurs(Rang 1)", 1, true), "HealBot chargé : conseil « remplace par Soins supérieurs(Rang 1) » dans ses sorts")
-_G.IsAddOnLoaded = function() return false end
-check(not strip(ns.PanelText()):find("HealBot", 1, true), "sans HealBot : pas de ligne HealBot")
-ns.MakeMacros()
-check(MACROS[1] and MACROS[1].name == "SoinsSup 1" and MACROS[1].body:find("Soins supérieurs(Rang 1)", 1, true), "macro de rang créée : " .. tostring(MACROS[1] and MACROS[1].body))
-ns.MakeMacros()
-check(#MACROS == 1, "second clic : macro mise à jour, pas de doublon")
+-- (8. conseiller de rangs et macros : retirés, impossibles sur Forever)
 -- 9. objets des sacs : la robe (tissu) oui, la cuirasse (plaques) non
 local ups = ns.BagUpgrades()
 check(#ups == 1 and ups[1].link == "item:robe", "meilleurs objets des sacs : robe proposée, plaques ignorées")

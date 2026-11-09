@@ -397,100 +397,8 @@ function ns.OnCast(spellID)
   if ns.castsSinceVersion >= 10 then ns.castsSinceVersion = 0; ns.statVersion = (ns.statVersion or 0) + 1 end
 end
 
-function ns.OnHeal(spellID, amount, overheal, crit, periodic)
-  local f = familyOf[spellID]
-  if not f or not db then return end
-  db.effective.total = db.effective.total + (amount or 0)
-  db.effective.over = db.effective.over + (overheal or 0)
-  if D.downrank[f.family] and not periodic then
-    local r = db.ranks[spellID] or { n = 0, amount = 0, over = 0 }
-    db.ranks[spellID] = r
-    -- moyenne glissante sur les ~100 derniers soins de ce rang
-    if r.n >= 100 then r.amount, r.over, r.n = r.amount * 0.99, r.over * 0.99, r.n * 0.99 end
-    r.n, r.amount, r.over = r.n + 1, r.amount + (amount or 0), r.over + (overheal or 0)
-  end
-  -- correction des talents : montant réel non critique / montant prévu (soins directs seulement)
-  if crit or periodic then return end
-  local sp = ns.SpellModel(f.family, f.rank)
-  if not sp then return end
-  local predicted = sp.base + sp.coef * (ns.Snapshot().heal)
-  if predicted <= 0 then return end
-  local ratio = amount / predicted
-  if ratio >= 0.85 and ratio <= 1.6 then
-    local old = db.mult[f.family]
-    db.mult[f.family] = old and (old * 0.9 + ratio * 0.1) or ratio
-  end
-end
-
-----------------------------------------------------------------------
--- Conseiller de rangs : rang inférieur qui couvrirait le soin réellement utile, mana économisée
-----------------------------------------------------------------------
-function ns.RankAdvice()
-  local out = {}
-  local S = ns.Snapshot()
-  for family in pairs(D.downrank) do
-    local ranks = D.families[family].ranks
-    -- rang le plus utilisé (au moins 10 soins observés)
-    local used, usedIdx
-    for i, r in ipairs(ranks) do
-      local st = db.ranks[r[1]]
-      if st and st.n >= 10 and (not used or st.n > used.n) then used, usedIdx = st, i end
-    end
-    if used then
-      local cur = ns.SpellModel(family, usedIdx)
-      local useful = (used.amount - used.over) / used.n
-      local overPct = used.over / math.max(used.amount, 1)
-      local adv = { family = family, rank = usedIdx, model = cur, useful = useful, overPct = overPct, n = used.n }
-      if cur and overPct >= 0.15 then
-        for k = 1, usedIdx - 1 do
-          if Known(ranks[k][1]) then
-            local m = ns.SpellModel(family, k)
-            if m then
-              local normal = (m.base + m.coef * S.heal) * m.mult
-              if normal >= useful * 1.05 and m.cost < cur.cost then
-                adv.better, adv.betterNormal, adv.saving = m, normal, cur.cost - m.cost
-                break
-              end
-            end
-          end
-        end
-      end
-      out[#out + 1] = adv
-    end
-  end
-  table.sort(out, function(a, b) return a.n > b.n end)
-  return out
-end
-
--- Texte de rang pour /cast (« Rang 2 » / « Rank 2 », donné par le jeu)
-local function RankText(id)
-  local sub
-  if C_Spell and C_Spell.GetSpellSubtext then sub = C_Spell.GetSpellSubtext(id) elseif GetSpellSubtext then sub = GetSpellSubtext(id) end
-  return sub
-end
-
--- Crée ou met à jour une macro par conseil (sur le survol, sinon la cible) ; hors combat seulement
-function ns.CreateRankMacros()
-  if InCombatLockdown() then return 0, "combat" end
-  local made = 0
-  for _, a in ipairs(ns.RankAdvice()) do
-    if a.better then
-      local rank = RankText(a.better.id)
-      local spell = a.better.name .. (rank and rank ~= "" and ("(" .. rank .. ")") or "")
-      local name = (D.downrank[a.family] .. " " .. a.better.rank):sub(1, 16)
-      local body = "#showtooltip\n/cast [@mouseover,help,nodead][] " .. spell
-      local idx = GetMacroIndexByName(name)
-      if idx and idx > 0 then
-        EditMacro(idx, name, nil, body)
-      else
-        local ok = pcall(CreateMacro, name, "INV_MISC_QUESTIONMARK", body, true)
-        if not ok then return made, "full" end
-      end
-      made = made + 1
-    end
-  end
-  return made
-end
+-- (09/11/2026 : retirés, car impossibles sur Forever — journal de combat interdit aux addons : montants soignés par
+-- rang, conseiller de rangs, macros de rang, correction des talents par les soins réels)
 
 ----------------------------------------------------------------------
 -- Meilleurs objets de tes sacs (prêtre : tissu, dague, masse à une main, bâton, baguette)
@@ -577,7 +485,6 @@ local function InitDB()
   db.usage = db.usage or {}
   db.mult = db.mult or {}
   db.effective = db.effective or { total = 0, over = 0 }
-  db.ranks = db.ranks or {}
   if db.manaAlert == nil then db.manaAlert = true end
   db.manaAlertSeconds = db.manaAlertSeconds or 20
   if db.tooltip == nil then db.tooltip = true end
@@ -592,7 +499,6 @@ ns._InitDB = InitDB
 local ev = CreateFrame("Frame")
 ns.eventFrame = ev
 local handlers = {}
-local playerGUID
 local last, pending
 
 -- Changement de caractéristiques : relevé avant/après, apprentissage et annonce (hors combat)
@@ -616,7 +522,6 @@ end
 ns.StatsChanged = StatsChanged
 
 handlers.PLAYER_LOGIN = function()
-  playerGUID = UnitGUID("player")
   C_Timer.After(3, function() last = ns.Snapshot() end)
   if ns.OnLogin then ns.OnLogin() end
 end
@@ -648,17 +553,7 @@ handlers.UNIT_POWER_FREQUENT = function(unit, kind)
 end
 handlers.PLAYER_LEVEL_UP = function() C_Timer.After(1, function() last = ns.Snapshot() end) end
 handlers.UNIT_SPELLCAST_SUCCEEDED = function(unit, _, spellID) if unit == "player" then ns.OnCast(spellID) end end
--- Journal de combat : seulement CombatLogGetCurrentEventInfo. Sur le client de Forever (05/11/2026), il n'existe pas et
--- C_CombatLog.GetCurrentEventInfo est réservé à l'interface de Blizzard : l'appeler bloque l'addon. Ne jamais l'utiliser.
-local function CombatLogInfo()
-  if CombatLogGetCurrentEventInfo then return CombatLogGetCurrentEventInfo() end
-end
-ns.CombatLogInfo = CombatLogInfo
-handlers.COMBAT_LOG_EVENT_UNFILTERED = function()
-  local _, sub, _, src, _, _, _, _, _, _, _, spellID, _, _, amount, over, _, crit = CombatLogInfo()
-  if src ~= playerGUID then return end
-  if sub == "SPELL_HEAL" or sub == "SPELL_PERIODIC_HEAL" then ns.OnHeal(spellID, amount, over, crit, sub == "SPELL_PERIODIC_HEAL") end
-end
+-- Journal de combat : jamais utilisé (interdit aux addons sur Forever ; C_CombatLog.GetCurrentEventInfo bloque l'addon).
 
 ev:RegisterEvent("ADDON_LOADED")
 ev:SetScript("OnEvent", function(_, event, ...)

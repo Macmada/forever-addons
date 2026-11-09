@@ -31,8 +31,7 @@ jobs:
       - name: Créer les archives
         run: |
           mkdir dist
-          # ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers : coquilles qui remplacent les anciens dossiers (fusionnés dans ForeverCompagnon)
-          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverCompagnon ForeverPretre ForeverHeal ForeverLoot ForeverPrep ForeverMetiers
+          zip -r "dist/ForeverAddons-${GITHUB_REF_NAME}.zip" ForeverGFX ForeverMacros ForeverCompagnon
           zip -r "dist/ForeverGFX-v${{ steps.v.outputs.gfx }}.zip" ForeverGFX
           zip -r "dist/ForeverMacros-v${{ steps.v.outputs.macros }}.zip" ForeverMacros
           zip -r "dist/ForeverCompagnon-v${{ steps.v.outputs.compagnon }}.zip" ForeverCompagnon
