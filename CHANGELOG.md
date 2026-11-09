@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.5.5 (ForeverCompagnon 3.5.5) : panneau Soins plus lisible
+- **Panneau « Soins — ton personnage » refait** : 4 tuiles (soins/s, autonomie avant d'être à sec, soin moyen, mana et régénération), « Tes sorts » en barres (part de tes lancers, soin moyen), « Ce qui t'aide le plus » en barres triées du plus utile au moins utile avec un seul chiffre (« +433 soignés »), le détail au survol ; caractéristiques sur une seule ligne, conversions au survol.
+- **Bouton « Macros » et rubrique « Conseils de rangs » retirés** : ils demandaient les montants soignés du journal de combat, interdit aux addons sur Forever, et n'ont jamais rien donné.
+
 ## v3.5.4 (ForeverCompagnon 3.5.4) : Préparation, lignes obligatoires et lifting
 - **Case « obligatoire »** sur chaque ligne de la Préparation (retenue pour ton personnage). Obligatoire et pas bon : **rouge** ; facultatif et pas bon : **orange**, hors de la liste de courses et du total à acheter. État général : **rouge** si un obligatoire manque, **orange** si seuls des facultatifs manquent, **vert** si tout est bon.
 - Par défaut : obligatoire = ce qui se compte et s'achète (potions, nourriture, boisson, composants, chez un marchand ou à l'hôtel des ventes) ; facultatif = ce qui se fabrique ou se trouve (bandages, nourriture de buff), les buffs et les conseils. Un clic sur la case change ça.

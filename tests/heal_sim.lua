@@ -310,13 +310,19 @@ pnl.tabBags.scripts.OnClick(pnl.tabBags)
 check(pnl.mode == "upgrades" and pnl.tabBags.active and not pnl.tabMain.active, "onglet « Mes sacs »")
 pnl.tabMain.scripts.OnClick(pnl.tabMain)
 check(rawget(pnl, "mode") == nil and pnl.tabMain.active and not pnl.tabBags.active, "retour à l'onglet « Mon prêtre » (l'ancien bouton restait bloqué sur les sacs : « and nil or »)")
-local realRaw = ns.PanelRaw
+local realRaw, realData = ns.PanelRaw, ns.PanelData
 ns.PanelRaw = function() error("test de panne") end
+ns.PanelData = function() error("test de panne") end
 ns.RefreshPanel()
 check(ns.lastPanelError and ns.lastPanelError:find("test de panne", 1, true), "calcul en échec : erreur gardée et affichée dans le panneau")
 check(ns.DiagText():find("Calcul du panneau : ERREUR", 1, true), "diagnostic : le calcul du panneau en échec est signalé")
-ns.PanelRaw = realRaw
+ns.PanelRaw, ns.PanelData = realRaw, realData
 ns.RefreshPanel()
+-- panneau visuel : tuiles, sorts, gains triés (le plus utile d'abord), ligne de caractéristiques
+local pd = ns.PanelData()
+check(#pd.tiles == 4 and #pd.spells > 0 and #pd.gains == 5 and pd.gains[1].healed >= pd.gains[#pd.gains].healed and pd.footer,
+      "panneau visuel : 4 tuiles, sorts, gains triés du plus utile au moins utile")
+check(rawget(pnl, "macroBtn") == nil, "bouton Macros retiré (conseils de rangs impossibles sur Forever)")
 check(ns.DiagText():find("Calcul du panneau : ok", 1, true), "diagnostic : calcul du panneau ok")
 
 -- 12. API pour les autres addons : écart de caractéristiques seul (enchantement)

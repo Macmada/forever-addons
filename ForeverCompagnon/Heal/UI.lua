@@ -311,6 +311,164 @@ local function RenderPanel(text)
   panel.child:SetHeight(-y + 8)
 end
 
+-- Panneau visuel : tuiles, barres des sorts, barres des gains, ligne de caractéristiques (09/11/2026 : moins de texte)
+local vis = { rows = {}, tiles = {} }
+local function VRow()
+  vis.used = vis.used + 1
+  local r = vis.rows[vis.used]
+  if not r then
+    r = CreateFrame("Frame", nil, panel.child)
+    r:SetHeight(24)
+    r:EnableMouse(true)
+    r.icon = r:CreateTexture(nil, "ARTWORK")
+    r.icon:SetSize(18, 18)
+    r.icon:SetPoint("LEFT", 4, 0)
+    r.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    r.name:SetPoint("LEFT", 28, 0)
+    r.name:SetWidth(128)
+    r.name:SetJustifyH("LEFT")
+    if r.name.SetWordWrap then r.name:SetWordWrap(false) end
+    r.bg = r:CreateTexture(nil, "BACKGROUND")
+    r.bg:SetPoint("LEFT", 160, 0)
+    r.bg:SetSize(130, 10)
+    r.bg:SetColorTexture(1, 1, 1, 0.08)
+    r.bar = r:CreateTexture(nil, "ARTWORK")
+    r.bar:SetPoint("LEFT", r.bg, "LEFT", 0, 0)
+    r.bar:SetHeight(10)
+    r.right = r:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    r.right:SetPoint("RIGHT", -6, 0)
+    r.right:SetJustifyH("RIGHT")
+    r:SetScript("OnEnter", function(self)
+      if not self.tip then return end
+      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+      GameTooltip:SetText(self.tip[1], 1, 0.82, 0)
+      for i = 2, #self.tip do GameTooltip:AddLine(self.tip[i], 1, 1, 1, true) end
+      GameTooltip:Show()
+    end)
+    r:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    vis.rows[vis.used] = r
+  end
+  r:Show()
+  return r
+end
+
+local function RenderVisual(d)
+  for _, k in ipairs({ "head", "fs" }) do for _, o in ipairs(pool[k]) do o:Hide() end; pused[k] = 0 end
+  for _, r in ipairs(vis.rows) do r:Hide() end
+  for _, t in ipairs(vis.tiles) do t:Hide() end
+  vis.used = 0
+  local width = panel.child:GetWidth()
+  if type(width) ~= "number" or width <= 0 then width = 380 end
+  local y = -4
+  if not d.priest then
+    local f = PLine(); f:SetWidth(width - 14); f:SetText(L.notPriest); f:SetPoint("TOPLEFT", 10, y)
+    panel.child:SetHeight(60)
+    return
+  end
+  -- tuiles
+  local gap, n = 6, #d.tiles
+  local tw = (width - 8 - gap * (n - 1)) / n
+  for i, td in ipairs(d.tiles) do
+    local t = vis.tiles[i]
+    if not t then
+      t = CreateFrame("Frame", nil, panel.child)
+      t:SetHeight(52)
+      t:EnableMouse(true)
+      t.bg = t:CreateTexture(nil, "BACKGROUND")
+      t.bg:SetAllPoints()
+      t.bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
+      t.top = t:CreateTexture(nil, "ARTWORK")
+      t.top:SetPoint("TOPLEFT", 1, -1); t.top:SetPoint("TOPRIGHT", -1, -1); t.top:SetHeight(3)
+      t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+      t.value:SetPoint("TOP", 0, -9)
+      t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
+      t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+      t.label:SetPoint("BOTTOM", 0, 6)
+      t.label:SetTextColor(0.85, 0.78, 0.6)
+      t:SetScript("OnEnter", function(self)
+        if not self.tipText then return end
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText(self.tipText, 1, 1, 1, 1, true)
+        GameTooltip:Show()
+      end)
+      t:SetScript("OnLeave", function() GameTooltip:Hide() end)
+      vis.tiles[i] = t
+    end
+    t:ClearAllPoints()
+    t:SetPoint("TOPLEFT", 4 + (i - 1) * (tw + gap), y)
+    t:SetWidth(tw)
+    t.value:SetText(td.value)
+    t.label:SetText(td.label)
+    t.tipText = td.tip
+    if td.warn then t.top:SetColorTexture(1, 0.66, 0.24, 1) else t.top:SetColorTexture(0.25, 0.85, 0.38, 1) end
+    t:Show()
+  end
+  y = y - 62
+  local function Head(title, icon, rest)
+    local h = PHead()
+    h:ClearAllPoints()
+    h:SetPoint("TOPLEFT", 0, y - 2)
+    h:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
+    h.icon:SetTexture(icon)
+    h.fs:SetText(title)
+    h.rest:SetText(rest or "")
+    y = y - 32
+  end
+  local function Row(icon, name, frac, color, right, tip)
+    local r = VRow()
+    r:ClearAllPoints()
+    r:SetPoint("TOPLEFT", 0, y)
+    r:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
+    r.icon:SetShown(icon ~= nil)
+    if icon then r.icon:SetTexture(icon) end
+    r.name:SetText(name)
+    local room = math.max(60, width - 160 - 108)            -- 108 : place du chiffre de droite (« +433 soignés »)
+    r.bg:SetWidth(room)
+    local bw = math.max(1, room * math.max(0, math.min(1, frac or 0)))
+    r.bar:SetWidth(bw)
+    r.bar:SetColorTexture(color[1], color[2], color[3], 0.9)
+    r.right:SetText(right or "")
+    r.tip = tip
+    y = y - 26
+  end
+  -- tes sorts
+  Head(L.v_spells, "Interface\\Icons\\Spell_Holy_LesserHeal",
+       GREY .. ((d.observed or 0) >= 15 and string.format(L.v_spellsObserved, d.observed) or L.v_spellsDefault) .. "|r")
+  for _, sp in ipairs(d.spells) do
+    local icon = sp.id and C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(sp.id) or nil
+    Row(icon, sp.name, sp.share, { 1, 0.78, 0.3 }, Fmt(sp.share * 100) .. " %  ·  " .. Fmt(sp.avg),
+        { sp.name, string.format(L.v_spellTip, Fmt(sp.share * 100), Fmt(sp.normal), Fmt(sp.avg)) })
+  end
+  -- ce qui t'aide le plus
+  Head(L.v_worth, "Interface\\Icons\\INV_Misc_Coin_02")
+  local top = math.max(1, d.gains[1] and d.gains[1].healed or 1)
+  for i, g in ipairs(d.gains) do
+    local best = i == 1 and g.healed > 0
+    Row(nil, (best and GREEN or "") .. g.label .. (best and "|r" or ""), g.healed / top, best and { 0.25, 0.85, 0.38 } or { 0.45, 0.6, 0.45 },
+        (best and GREEN or "") .. string.format(L.v_healed, Signed(g.healed)) .. (best and "|r" or ""),
+        { g.label, string.format(L.v_gainTip, Signed(g.hps, 1), g.oom, Signed(g.healed)), best and L.v_bestTip or nil })
+  end
+  Row(nil, GREY .. d.survival.label .. "|r", 0, { 0.5, 0.5, 0.5 }, GREY .. string.format(L.v_survival, Signed(d.survival.hp)) .. "|r",
+      { d.survival.label, L.v_survivalTip })
+  -- caractéristiques, en une ligne (conversions au survol)
+  y = y - 6
+  local r = VRow()
+  r:ClearAllPoints()
+  r:SetPoint("TOPLEFT", 0, y)
+  r:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
+  r.icon:Hide(); r.bar:SetWidth(1); r.bar:SetColorTexture(0, 0, 0, 0); r.bg:SetWidth(1); r.bg:SetColorTexture(0, 0, 0, 0)
+  r.name:SetWidth(width - 20)
+  r.name:SetText(GREY .. d.footer .. "|r")
+  r.right:SetText("")
+  r.tip = { L.v_footerTitle, d.footerTip }
+  y = y - 26
+  panel.child:SetHeight(-y + 8)
+  -- remet le fond des barres pour la prochaine fois (la ligne de caractéristiques l'a effacé)
+  r.restore = true
+end
+ns._RenderVisual = RenderVisual
+
 local function CreatePanel()
   if panel then return panel end
   SectionIcons()
@@ -355,8 +513,8 @@ local function CreatePanel()
     Print(L.resetDone); ns.RefreshPanel()
   end)
   panel.resetBtn:SetPoint("RIGHT", panel.whereBtn, "LEFT", -22, 0)
-  panel.macroBtn = K.Action(panel, "Interface\\Icons\\INV_Misc_Note_01", L.macrosShort, L.btnMacros, function() ns.MakeMacros() end)
-  panel.macroBtn:SetPoint("RIGHT", panel.resetBtn, "LEFT", -22, 0)
+  -- (bouton « Macros » retiré le 09/11/2026 : les conseils de rangs demandent les montants soignés du journal de combat,
+  -- interdit aux addons sur Forever ; il n'a jamais rien créé)
 
   local sheet = CreateFrame("Frame", nil, panel)
   sheet:SetPoint("TOPLEFT", 12, -76)
@@ -461,6 +619,46 @@ function ns.PanelRaw()
   return table.concat(out, "\n")
 end
 
+-- Données du panneau visuel : tuiles, sorts (part d'usage, soin moyen), gains triés, ligne de caractéristiques
+function ns.PanelData()
+  local S = ns.Snapshot()
+  local rates = ns.Rates(S)
+  local mix = ns.Mix()
+  local M = ns.Metrics(S, mix)
+  local d = { priest = IsPriest(), S = S, M = M, rates = rates }
+  if not d.priest then return d end
+  d.tiles = {
+    { value = Fmt(M.hps, 0), label = L.v_hps, tip = string.format(L.p_hps, Fmt(M.hps, 1)) },
+    { value = (M.oom and M.oom ~= math.huge) and Duration(M.oom) or "OK", label = L.v_oom,
+      tip = M.healedBeforeOom and string.format(L.p_oomTotal, Fmt(M.healedBeforeOom)) or L.noOomTip,
+      warn = M.oom and M.oom < 60 },
+    { value = Fmt(M.perCast), label = L.v_perCast, tip = string.format(L.p_perCast, Fmt(M.perCast)) },
+    { value = Fmt(S.mana), label = string.format(L.v_mana, Fmt(S.regenOut, 1)),
+      tip = string.format(L.p_mana, Fmt(S.mana), Fmt(S.regenOut, 1), Fmt(S.regenIn, 1)) },
+  }
+  d.spells = {}
+  for _, m in ipairs(mix) do
+    d.spells[#d.spells + 1] = { name = m.spell.name, share = m.share or 0, avg = m.avg or 0, normal = m.normal or 0,
+                                id = m.spell.id }
+  end
+  d.observed = mix.observed or 0
+  local gains = {
+    { "+10 " .. L.int, { int = 10 } }, { "+10 " .. L.spi, { spi = 10 } }, { "+10 " .. L.heal, { heal = 10 } },
+    { "+5 " .. L.mp5, { mp5 = 5 } }, { "+1 " .. L.crit, { crit = 1 } },
+  }
+  d.gains = {}
+  for _, g in ipairs(gains) do
+    local A = ns.Metrics(ns.Apply(S, g[2], rates), mix)
+    d.gains[#d.gains + 1] = { label = g[1], healed = (A.healedBeforeOom or 0) - (M.healedBeforeOom or 0), hps = A.hps - M.hps,
+                              oom = DurationDelta(M.oom, A.oom) }
+  end
+  table.sort(d.gains, function(a, b) if a.healed ~= b.healed then return a.healed > b.healed end return a.hps > b.hps end)
+  d.survival = { label = "+10 " .. L.sta, hp = 10 * rates.hpPerSta }
+  d.footer = string.format(L.v_footer, Fmt(S.hp), Fmt(M.armorReduc * 100, 1), Fmt(S.heal), Fmt(S.crit * 100, 1))
+  d.footerTip = string.format(L.p_rates, Fmt(rates.hpPerSta, 1), Fmt(rates.manaPerInt, 1), Fmt(rates.intPerCrit, 1))
+  return d
+end
+
 function ns.UpgradesRaw()
   local out = { H(L.upTitle), "|cffa0a0a0" .. L.upIntro .. "|r" }
   local list = ns.BagUpgrades()
@@ -483,7 +681,23 @@ function ns.RefreshPanel()
   if not panel or not panel:IsShown() then return end
   panel.tabMain:SetActive(panel.mode ~= "upgrades")
   panel.tabBags:SetActive(panel.mode == "upgrades")
-  local ok, text = pcall(panel.mode == "upgrades" and ns.UpgradesRaw or ns.PanelRaw)
+  for _, r in ipairs(vis.rows) do
+    r:Hide()
+    if r.restore then r.restore = nil; r.bg:SetColorTexture(1, 1, 1, 0.08); r.name:SetWidth(128) end
+  end
+  for _, t in ipairs(vis.tiles) do t:Hide() end
+  if panel.mode ~= "upgrades" then
+    local ok, d = pcall(ns.PanelData)
+    if ok and d then
+      local ok2, err = pcall(RenderVisual, d)
+      if ok2 then return end
+      d = err
+    end
+    ns.lastPanelError = tostring(d)
+    RenderPanel("|cffff6a5a" .. string.format(L.panelError, tostring(d)) .. "|r")
+    return
+  end
+  local ok, text = pcall(ns.UpgradesRaw)
   if not ok then
     ns.lastPanelError = tostring(text)
     text = "|cffff6a5a" .. string.format(L.panelError, tostring(text)) .. "|r"
