@@ -177,6 +177,28 @@ function root.LoadSources()
   return root.Sources
 end
 
+-- Infobulles d'objets : une seule accroche pour tout ForeverCompagnon (avant : une par partie). Chaque partie inscrit sa
+-- fonction avec un rang (Soins 1, Équipement 2, Métiers 3 : lignes toujours dans cet ordre) ; une erreur dans l'une
+-- n'empêche pas les autres.
+local tipHandlers, tipHooked = {}, false
+function root.HookItemTooltip(rank, fn)
+  tipHandlers[#tipHandlers + 1] = { rank = rank, fn = fn }
+  table.sort(tipHandlers, function(a, b) return a.rank < b.rank end)
+  if tipHooked then return end
+  tipHooked = true
+  local function Run(tt)
+    if tt ~= GameTooltip and tt ~= ItemRefTooltip then return end
+    for _, h in ipairs(tipHandlers) do pcall(h.fn, tt) end
+  end
+  if TooltipDataProcessor and Enum and Enum.TooltipDataType and Enum.TooltipDataType.Item then
+    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, Run)
+  else
+    for _, tt in ipairs({ GameTooltip, ItemRefTooltip }) do
+      if tt and tt.HookScript then tt:HookScript("OnTooltipSetItem", Run) end
+    end
+  end
+end
+
 function root.Print(fmt, ...)
   local msg = select("#", ...) > 0 and string.format(fmt, ...) or fmt
   if DEFAULT_CHAT_FRAME then DEFAULT_CHAT_FRAME:AddMessage("|cffffd100" .. root.L.title .. "|r " .. tostring(msg)) end

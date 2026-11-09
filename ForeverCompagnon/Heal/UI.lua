@@ -146,15 +146,7 @@ end
 ns.OnTooltipItem = OnTooltipItem
 
 local function HookTooltips()
-  if TooltipDataProcessor and Enum and Enum.TooltipDataType and Enum.TooltipDataType.Item then
-    TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tt)
-      if tt == GameTooltip or tt == ItemRefTooltip then OnTooltipItem(tt) end
-    end)
-  else
-    for _, tt in ipairs({ GameTooltip, ItemRefTooltip }) do
-      if tt and tt.HookScript then tt:HookScript("OnTooltipSetItem", OnTooltipItem) end
-    end
-  end
+  ns.root.HookItemTooltip(1, OnTooltipItem)        -- accroche commune (Root.lua)
 end
 
 ----------------------------------------------------------------------

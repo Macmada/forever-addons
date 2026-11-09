@@ -585,6 +585,17 @@ do
   check(not root.Quests.Available() and #root.Quests.Zones(2) == 0, "sans Questie : rien")
 end
 
+-- infobulles d'objets : une seule accroche, parties dans l'ordre, une erreur n'arrête pas les autres
+do
+  local seen = {}
+  root.HookItemTooltip(0, function() seen[#seen + 1] = "avant"; error("panne volontaire") end)
+  root.HookItemTooltip(9, function() seen[#seen + 1] = "après" end)
+  local run = GameTooltip.scripts and GameTooltip.scripts.OnTooltipSetItem
+  check(run ~= nil, "infobulle : accroche posée sur GameTooltip")
+  if run then run(GameTooltip) end
+  check(seen[1] == "avant" and seen[2] == "après", "infobulle : parties appelées dans l'ordre, une erreur n'arrête pas les suivantes")
+end
+
 -- itinéraire le plus rapide : maître de vol proche -> vol -> à pied, points de vol appris à l'ouverture d'un maître de vol
 do
   local N = root.Nav
