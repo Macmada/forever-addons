@@ -221,7 +221,7 @@ end
 
 function ns.LevelLines()
   local lines = {}
-  lines[#lines + 1] = { kind = "info", text = "|cffd8c8a0" .. L.todoIntro .. "|r" }
+  -- (phrase d'introduction remplacée par les tuiles des métiers, 09/11/2026)
   -- tes métiers appris (tous), puis ceux conseillés pour ta classe tant qu'il te manque un métier principal
   local learned, primaries = ns.Learned(), 0
   for _, k in ipairs(learned) do
@@ -438,9 +438,45 @@ function ns.UpdateDEButton()
   ui.deBtn:SetEnabled(ns.deMacro ~= nil)
 end
 
+-- Tuiles de « Que faire ? » : un métier appris par tuile (compétence / plafond, rang, maître à voir si le plafond approche)
+function ns.ProfTiles()
+  local out = {}
+  for _, k in ipairs(ns.Learned()) do
+    local ri = ns.RankInfo(k)
+    if ri and #out < 4 then
+      local soon = ri.next and ri.rank >= ri.max - 15
+      out[#out + 1] = { icon = "Interface\\Icons\\" .. D.profs[k].icon, value = ri.rank .. " / " .. ri.max,
+                        label = ns.ProfName(k), frac = ri.max > 0 and ri.rank / ri.max or 0,
+                        color = soon and { 1, 0.66, 0.24 } or { 0.25, 0.85, 0.38 },
+                        tip = ns.ProfName(k) .. " · " .. L["rank_" .. ri.cur.key]
+                              .. (soon and ("\n" .. string.format(L.todoTrainerDetail, ri.next.skill, ri.next.cap, ns.Trainer(k, ri.next.key))) or "") }
+    end
+  end
+  return out
+end
+
 function ns.Refresh()
   if ui and ui:IsShown() then
     local lines = (tab == "foryou" and ns.ForYouLines()) or (tab == "de" and ns.DELines()) or (tab == "recipes" and ns.RecipeLines()) or ns.LevelLines()
+    local tiles = (tab == "level") and ns.ProfTiles() or {}
+    local tw = (W - 32 - 6 * 3) / 4
+    for i, t in ipairs(ui.tiles) do
+      local d = tiles[i]
+      t:SetShown(d ~= nil)
+      if d then
+        t:ClearAllPoints()
+        t:SetPoint("TOPLEFT", 16 + (i - 1) * (tw + 6), -82)
+        t:SetWidth(tw)
+        t.icon:SetTexture(d.icon)
+        t.value:SetText(d.value)
+        t.label:SetText(d.label)
+        t.top:SetColorTexture(d.color[1], d.color[2], d.color[3], 1)
+        t.fill:SetColorTexture(d.color[1], d.color[2], d.color[3], 0.6)
+        t.fill:SetWidth(math.max(1, (tw - 2) * d.frac))
+        t.tip = d.tip
+      end
+    end
+    ui.list.scroll:SetPoint("TOPLEFT", 16, #tiles > 0 and -142 or -82)
     ui.list.Render(lines)
     for _, t in ipairs(TABS) do ui.tabs[t[1]]:SetActive(tab == t[1]) end
     ui.allBtn:SetShown(tab == "recipes")
@@ -512,6 +548,38 @@ local function CreateUI()
   ui.allBtn = MakeButton(ui, L.showAll, 130, function() ns.showAll = not ns.showAll; ns.Refresh() end)
   ui.allBtn:SetPoint("RIGHT", ui.optBtn, "LEFT", -16, 4)
   ui.allBtn:Hide()
+  ui.tiles = {}
+  for i = 1, 4 do
+    local t = CreateFrame("Button", nil, ui)
+    t:SetHeight(52)
+    t.bg = t:CreateTexture(nil, "BACKGROUND")
+    t.bg:SetAllPoints()
+    t.bg:SetColorTexture(0.12, 0.1, 0.08, 0.9)
+    t.top = t:CreateTexture(nil, "ARTWORK")
+    t.top:SetPoint("TOPLEFT", 1, -1); t.top:SetPoint("TOPRIGHT", -1, -1); t.top:SetHeight(3)
+    t.fill = t:CreateTexture(nil, "ARTWORK")                  -- progression vers le plafond du rang
+    t.fill:SetPoint("BOTTOMLEFT", 1, 1)
+    t.fill:SetHeight(3)
+    K.Border(t, 0.45, 0.37, 0.24, 1, "BORDER")
+    t.icon = t:CreateTexture(nil, "ARTWORK")
+    t.icon:SetSize(22, 22)
+    t.icon:SetPoint("LEFT", 8, 2)
+    t.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    t.value = t:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    t.value:SetPoint("TOP", 12, -9)
+    t.value:SetFont(_G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", 17, "OUTLINE")
+    t.label = t:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    t.label:SetPoint("BOTTOM", 12, 7)
+    t.label:SetTextColor(0.85, 0.78, 0.6)
+    t:SetScript("OnEnter", function(self)
+      if not self.tip then return end
+      GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+      GameTooltip:SetText(self.tip, 1, 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    t:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    ui.tiles[i] = t
+  end
   ui.list = K.CardList(ui, W - 60)
   ui.list.scroll:SetPoint("TOPLEFT", 16, -82)
   ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 48)

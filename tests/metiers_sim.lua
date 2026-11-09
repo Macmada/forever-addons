@@ -384,4 +384,10 @@ check(wrist and wrist.tags:GetText() == ns.L.enchMissing and wrist.gain:GetText(
       "carte « Poignets » : sans enchantement, gain du meilleur enchantement à droite")
 ns.ui.optBtn.scripts.OnClick(ns.ui.optBtn)
 check(_G.ForeverMetiersOptionsFrame and _G.ForeverMetiersOptionsFrame:IsShown(), "options dans une petite fenêtre")
+-- tuiles de « Que faire ? » : une par métier appris, compétence / plafond et rang
+do
+  local tl = ns.ProfTiles()
+  local learned = ns.Learned()
+  check(#tl == math.min(4, #learned) and (#tl == 0 or tl[1].value:find("/", 1, true)), "Que faire ? : une tuile par métier appris (" .. #tl .. ")")
+end
 W.rprint("\nTOUT OK (" .. LANG .. ")")

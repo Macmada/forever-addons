@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.5.7 (ForeverCompagnon 3.5.7) : onglet Métiers accordé aux autres
+- **Tuiles en haut de « Que faire ? »** : un métier par tuile (compétence / plafond, barre de progression, orange quand le plafond approche et qu'il faut voir le maître ; rang et maître au survol) ; phrase d'introduction retirée.
+- **Cartes et en-têtes** (Métiers et écran Maintenant, même composant) : barre de couleur à gauche de chaque carte (or, vert pour un gain, rouge pour un manque), en-têtes de section plus légers, comme l'Équipement et le panneau Soins.
+
 ## v3.5.6 (ForeverCompagnon 3.5.6) : onglet Équipement plus net
 - **Lifting de l'onglet Équipement**, accordé aux autres écrans : 4 tuiles en haut de « À mon niveau » (améliorations, meilleur gain, améliorations dans tes sacs, donjon le plus utile avec son nombre d'objets, clic : itinéraire), phrase d'introduction retirée, en-têtes d'emplacement plus légers, barre verte à gauche des cartes d'amélioration.
 - **« Jusqu'au niveau » : ton niveau par défaut** (avant : +5), et ton choix est retenu d'une fois sur l'autre.

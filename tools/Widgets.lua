@@ -223,9 +223,13 @@ function K.CardList(parent, width)
       local hl = c:CreateTexture(nil, "HIGHLIGHT")
       hl:SetAllPoints()
       hl:SetColorTexture(1, 0.82, 0.3, 0.10)
+      c.bar = c:CreateTexture(nil, "ARTWORK")
+      c.bar:SetPoint("TOPLEFT", 0, -3)
+      c.bar:SetPoint("BOTTOMLEFT", 0, 3)
+      c.bar:SetWidth(4)
       c.iconFrame = CreateFrame("Frame", nil, c)
       c.iconFrame:SetSize(34, 34)
-      c.iconFrame:SetPoint("LEFT", 8, 0)
+      c.iconFrame:SetPoint("LEFT", 12, 0)
       c.icon = c.iconFrame:CreateTexture(nil, "ARTWORK")
       c.icon:SetPoint("TOPLEFT", 1, -1)
       c.icon:SetPoint("BOTTOMRIGHT", -1, 1)
@@ -269,16 +273,16 @@ function K.CardList(parent, width)
     local h = self.heads[hu]
     if not h then
       h = CreateFrame("Button", nil, content)
-      h:SetHeight(34)
+      h:SetHeight(28)
       h.bg = h:CreateTexture(nil, "BACKGROUND")
       h.bg:SetAllPoints()
-      h.bg:SetColorTexture(0.32, 0.22, 0.08, 0.35)
+      h.bg:SetColorTexture(0.32, 0.22, 0.08, 0.12)
       h.icon = h:CreateTexture(nil, "ARTWORK")
-      h.icon:SetSize(26, 26)
-      h.icon:SetPoint("LEFT", 6, 0)
+      h.icon:SetSize(20, 20)
+      h.icon:SetPoint("LEFT", 4, 0)
       h.title = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
       h.title:SetPoint("LEFT", h.icon, "RIGHT", 8, 0)
-      K.TitleFont(h.title, 17, "GameFontNormal")
+      K.TitleFont(h.title, 15, "GameFontNormal")
       h.right = h:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
       h.right:SetPoint("RIGHT", -10, 0)
       h.right:SetJustifyH("RIGHT")
@@ -327,7 +331,7 @@ function K.CardList(parent, width)
         h.title:SetText(l.title or "")
         h.right:SetText(l.right or "")
         h.link, h.onClick, h.tip = l.link, l.onClick, l.tip
-        y = y - 44
+        y = y - 36
         stripe = 0
       elseif l.kind == "card" then
         local c = Card()
@@ -347,10 +351,10 @@ function K.CardList(parent, width)
         gw = (type(gw) == "number" and gw or 0)
         local sw = c.sub:GetStringWidth()
         gw = math.max(gw, (type(sw) == "number" and sw or 0))
-        c.src:SetWidth(math.max(120, w - 70 - (gw > 0 and gw + 20 or 0)))
+        c.src:SetWidth(math.max(120, w - 74 - (gw > 0 and gw + 20 or 0)))
         c.src:SetText(l.source or "")
         -- nom et étiquettes sur une ligne, sans chevaucher le gain à droite : coupés (« … ») s'ils sont trop longs
-        local room = w - 70 - (gw > 0 and gw + 24 or 0)
+        local room = w - 74 - (gw > 0 and gw + 24 or 0)
         local nw = c.name:GetStringWidth()
         nw = (type(nw) == "number" and nw) or 0
         if nw > room then c.name:SetWidth(math.max(60, room)); nw = room else c.name:SetWidth(0) end
@@ -363,6 +367,14 @@ function K.CardList(parent, width)
         local hgt = math.max(44, 22 + ((l.source and l.source ~= "") and sh or 0) + 6)
         c:SetHeight(hgt)
         c.star:SetShown(l.star and true or false)
+        local bar = l.bar
+        if not bar then
+          local nc = l.nameColor
+          if nc and nc[1] > 0.9 and nc[2] < 0.5 then bar = { 0.95, 0.3, 0.25 }
+          elseif tostring(l.gain or ""):find("40d860", 1, true) or tostring(l.gain or ""):find("^|cff40") then bar = { 0.25, 0.85, 0.38 }
+          else bar = { 0.85, 0.66, 0.2 } end
+        end
+        c.bar:SetColorTexture(bar[1], bar[2], bar[3], 0.9)
         c:ClearAllPoints()
         c:SetPoint("TOPLEFT", 4, y)
         c:SetPoint("RIGHT", content, "RIGHT", 0, 0)
