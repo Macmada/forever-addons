@@ -159,9 +159,11 @@ do
   S.AttachSheet()
   local sh = _G.ForeverCompagnonSessionSheet
   sh:Show(); S.UpdateSheet()
-  local top, bottom = sh.top:GetText(), sh.bottom:GetText()
-  check(top:find("9 500") and top:find("XP/h") and bottom:find("1 d", 1, true) and bottom:find("-", 1, true),
-        "fiche du personnage : bandeau de session (" .. top .. " | " .. bottom .. ")")
+  local d = S.SheetDefs()
+  local vals = {}
+  for k, x in ipairs(d) do vals[k] = x.value .. " " .. x.label end
+  check(#d == 5 and d[1].value == "+9 500" and d[3].frac and d[3].frac > 0 and d[4].value == "+1 po 50 pa" and d[5].value == "1"
+        and sh.tiles.list[5]:IsShown(), "fiche du personnage : 5 tuiles de session (" .. table.concat(vals, " | ") .. ")")
   _G.CharacterFrame = saveCF
   -- /reload : même session ; 1 h plus tard : nouvelle, l'ancienne résumée
   now = now + 60; S.Start()

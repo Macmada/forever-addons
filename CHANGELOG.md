@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v3.5.12 (ForeverCompagnon 3.5.12) : bandeau de session en tuiles
+- **Fiche du personnage** : le bandeau de session prend toute la largeur de la fiche, en 5 tuiles comme le panneau des soins : XP gagnée (et durée), XP par heure, temps jusqu'au prochain niveau (barre verte : ton avancée dans le niveau), or net, quêtes rendues (et donjons). Avant, le texte passait à la ligne et se chevauchait. Survol : récapitulatif complet, zone Questie conseillée, session précédente ; clic : récapitulatif dans le chat.
+
 ## v3.5.11 (ForeverCompagnon 3.5.11) : la session sur la fiche du personnage
 - **Bandeau sous la fiche du personnage (C)**, sous ses onglets : durée de la session, XP gagnée, XP/h et « niv. 24 dans ~35 min » ; en dessous, or gagné et dépensé, quêtes rendues, donjons ; fin filet bleu : ton avancée dans le niveau. Au survol : le récapitulatif complet, la zone de quêtes Questie conseillée et la session précédente ; clic : récapitulatif dans le chat. Mis à jour toutes les 15 s.
 

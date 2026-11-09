@@ -168,71 +168,71 @@ function S.Tile()
            color = { 0.4, 0.75, 1 }, tip = tip, onClick = function() root.Print(S.Recap()) end }
 end
 
--- Bandeau sous la fiche du personnage (C) : session et prochain niveau, détails au survol
+-- Bandeau de tuiles sous la fiche du personnage (C), sur toute sa largeur : XP gagnée, XP/h, prochain niveau (barre :
+-- avancée dans le niveau), or net, quêtes et donjons. Survol : récapitulatif complet ; clic : récapitulatif dans le chat.
 local sheet
-function S.SheetLines()
-  local s = cur
-  if not s then return L.sessNone, "" end
-  local top = { string.format(L.sessSheetHead, Dur(s.elapsed)), string.format(L.sessXP, Num(s.xp)) }
-  local rate = S.Rate(s)
-  if rate then top[#top + 1] = Num(rate) .. " XP/h" end
-  local eta = S.ETA()
-  if UnitLevel("player") < 60 then
-    top[#top + 1] = eta and string.format(L.sessSheetEta, UnitLevel("player") + 1, Dur(eta)) or L.sessSheetWait
+local function Short(c)                                       -- or court : « 74 pa », « 1 po 50 pa », « 120 po »
+  local a = math.abs(math.floor(c or 0))
+  if a >= 10000 then
+    local g, sv = math.floor(a / 10000), math.floor(a / 100) % 100
+    if g < 100 and sv > 0 then return g .. " po " .. sv .. " pa" end
+    return g .. " po"
   end
-  local bottom = {}
-  if (s.moneyIn or 0) > 0 then bottom[#bottom + 1] = "+" .. Money(s.moneyIn) end
-  if (s.moneyOut or 0) > 0 then bottom[#bottom + 1] = "-" .. Money(s.moneyOut) end
-  if (s.quests or 0) > 0 then bottom[#bottom + 1] = string.format(L.sessQuests, s.quests) end
-  if (s.nDungeons or 0) > 0 then bottom[#bottom + 1] = string.format(L.sessSheetDungeons, s.nDungeons) end
-  return table.concat(top, "  ·  "), table.concat(bottom, "  ·  ")
+  if a >= 100 then return math.floor(a / 100) .. " pa" end
+  return a .. " pc"
+end
+
+function S.SheetDefs()
+  local s = cur
+  if not s then return {} end
+  local tip = { title = L.sessTitle, lines = { S.Recap() } }
+  local zones = root.Quests and root.Quests.Available() and root.Quests.Zones(1) or {}
+  if zones[1] then tip.lines[#tip.lines + 1] = string.format(L.sessZone, zones[1].name, #zones[1].quests) end
+  if root.db and root.db.lastSession then tip.lines[#tip.lines + 1] = "|cffaaaaaa" .. L.sessLastLabel .. S.Recap(root.db.lastSession) .. "|r" end
+  tip.lines[#tip.lines + 1] = "|cff80ccff" .. L.sessSheetClick .. "|r"
+  local click = function() S.Command() end
+  local BLUE, GREEN, GOLD, RED = { 0.4, 0.75, 1 }, { 0.3, 0.9, 0.5 }, { 1, 0.82, 0 }, { 1, 0.4, 0.3 }
+  local defs = {}
+  local function Add(value, label, color, frac)
+    defs[#defs + 1] = { value = value, label = label, color = color, frac = frac, tip = tip, onClick = click }
+  end
+  Add("+" .. Num(s.xp), string.format(L.sessSheetXP, Dur(s.elapsed)), BLUE)
+  local rate = S.Rate(s)
+  Add(rate and Num(rate) or "…", L.sessSheetRate, BLUE)
+  local lv = UnitLevel("player")
+  if lv < 60 then
+    local eta = S.ETA()
+    local xp, max = Plain(_G.UnitXP and UnitXP("player")), Plain(_G.UnitXPMax and UnitXPMax("player"))
+    Add(eta and ("~" .. Dur(eta)) or "…", string.format(L.sessNext, lv + 1), GREEN, (xp and max and max > 0) and xp / max or nil)
+  end
+  local net = (s.moneyIn or 0) - (s.moneyOut or 0)
+  Add((net >= 0 and "+" or "-") .. Short(net), L.sessSheetMoney, net >= 0 and GOLD or RED)
+  local nd = s.nDungeons or 0
+  Add(tostring(s.quests or 0), nd > 0 and string.format(L.sessSheetQD, nd) or L.sessSheetQuests, GOLD)
+  return defs
 end
 
 function S.UpdateSheet()
   if not (sheet and sheet:IsShown()) then return end
-  local a, b = S.SheetLines()
-  sheet.top:SetText(a)
-  sheet.bottom:SetText(b)
-  local xp, max = Plain(_G.UnitXP and UnitXP("player")), Plain(_G.UnitXPMax and UnitXPMax("player"))
-  if xp and max and max > 0 and UnitLevel("player") < 60 then
-    sheet.bar:SetWidth(math.max(1, (sheet:GetWidth() - 2) * xp / max)); sheet.bar:Show()
-  else sheet.bar:Hide() end
+  sheet.tiles.Render(S.SheetDefs(), 6, -6, sheet:GetWidth() - 12, 6)
 end
 
 local function CreateSheet(cf)
   local K = root.Kit
-  sheet = CreateFrame("Button", "ForeverCompagnonSessionSheet", cf)
-  sheet:SetSize(330, 40)
-  local tab = _G.CharacterFrameTab1
-  if tab then sheet:SetPoint("TOPLEFT", tab, "BOTTOMLEFT", 4, -2)
-  else sheet:SetPoint("TOPLEFT", cf, "BOTTOMLEFT", 16, -4) end
-  if K and K.Panel then K.Panel(sheet, 0.85) end
-  sheet.bar = sheet:CreateTexture(nil, "ARTWORK")             -- avancée dans le niveau, en bas
-  sheet.bar:SetPoint("BOTTOMLEFT", 1, 1)
-  sheet.bar:SetHeight(2)
-  sheet.bar:SetColorTexture(0.4, 0.75, 1, 0.9)
-  sheet.top = sheet:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  sheet.top:SetPoint("TOPLEFT", 8, -7); sheet.top:SetPoint("RIGHT", -8, 0); sheet.top:SetJustifyH("LEFT")
-  sheet.bottom = sheet:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-  sheet.bottom:SetPoint("TOPLEFT", sheet.top, "BOTTOMLEFT", 0, -4); sheet.bottom:SetPoint("RIGHT", -8, 0)
-  sheet.bottom:SetJustifyH("LEFT")
-  sheet:SetScript("OnEnter", function(self)
-    local t = S.Tile()
-    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-    GameTooltip:SetText(L.sessTitle, 1, 0.82, 0)
-    for _, ln in ipairs(t and t.tip.lines or { S.Recap() }) do GameTooltip:AddLine(ln, 1, 1, 1, true) end
-    if root.db and root.db.lastSession then GameTooltip:AddLine(L.sessLastLabel .. S.Recap(root.db.lastSession), 0.7, 0.7, 0.7, true) end
-    GameTooltip:AddLine(L.sessSheetClick, 0.5, 0.8, 1)
-    GameTooltip:Show()
-  end)
-  sheet:SetScript("OnLeave", function() GameTooltip:Hide() end)
-  sheet:SetScript("OnClick", function() S.Command() end)
+  sheet = CreateFrame("Frame", "ForeverCompagnonSessionSheet", cf)
+  sheet:SetHeight(64)
+  sheet:SetPoint("TOPLEFT", cf, "BOTTOMLEFT", 0, -4)
+  sheet:SetPoint("TOPRIGHT", cf, "BOTTOMRIGHT", 0, -4)
+  if sheet:GetWidth() < 200 then sheet:SetWidth(math.max(cf:GetWidth() or 0, 340)) end
+  K.Panel(sheet, 0.85)
+  sheet.tiles = K.Tiles(sheet, 5, 52)
   sheet:SetScript("OnShow", S.UpdateSheet)
+  sheet:SetScript("OnSizeChanged", S.UpdateSheet)
 end
 
 function S.AttachSheet()
   local cf = _G.CharacterFrame
-  if not cf or sheet then return end
+  if not cf or sheet or not root.Kit then return end
   CreateSheet(cf)
   S.UpdateSheet()
 end
