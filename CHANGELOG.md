@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.5.4 (ForeverCompagnon 3.5.4) : Préparation, lignes obligatoires
+- **Case « obligatoire »** sur chaque ligne de la Préparation (retenue pour ton personnage). Obligatoire et pas bon : **rouge** ; facultatif et pas bon : **orange**, hors de la liste de courses et du total à acheter. État général : **rouge** si un obligatoire manque, **orange** si seuls des facultatifs manquent, **vert** si tout est bon.
+- Par défaut : obligatoire = ce qui se compte et s'achète (potions, nourriture, boisson, composants, chez un marchand ou à l'hôtel des ventes) ; facultatif = ce qui se fabrique ou se trouve (bandages, nourriture de buff), les buffs et les conseils. Un clic sur la case change ça.
+- Écran Maintenant : « À faire » ne reprend plus que les manques obligatoires.
+
 ## v3.5.3 (ForeverCompagnon 3.5.3)
 - **Ralentissements à l'ouverture et en revenant sur un onglet (vraie cause)** : pour chaque objet évalué (700+), le modèle de soins relisait l'infobulle de l'objet et celle de l'objet que tu portes, et refaisait deux fois le relevé de ton personnage ; et la mémoire des évaluations se vidait au-delà de 500 objets, donc tout recommençait à chaque ouverture. Maintenant : l'infobulle d'un objet n'est lue qu'une fois (l'objet porté, de nouveau s'il change), le relevé du personnage est partagé par toute la série, et la mémoire tient 5 000 objets.
 - **Auto-test** : la ligne « écran Maintenant » donne le temps de calcul (1re fois, puis en mémoire), pour mesurer en jeu.

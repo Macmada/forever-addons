@@ -69,13 +69,13 @@ local function GetRow()
     r.stripe:SetAllPoints()
     r.dot = r:CreateTexture(nil, "ARTWORK")
     r.dot:SetSize(16, 16)
-    r.dot:SetPoint("LEFT", 6, 0)
+    r.dot:SetPoint("LEFT", 22, 0)
     r.icon = r:CreateTexture(nil, "ARTWORK")
     r.icon:SetSize(20, 20)
-    r.icon:SetPoint("LEFT", 28, 0)
+    r.icon:SetPoint("LEFT", 42, 0)
     r.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    r.text:SetPoint("LEFT", 54, 0)
+    r.text:SetPoint("LEFT", 68, 0)
     r.text:SetPoint("RIGHT", -4, 0)
     r.text:SetJustifyH("LEFT")
     r.text:SetWordWrap(true)
@@ -124,6 +124,7 @@ local function GetHeader()
   return h
 end
 
+local mustBoxes = {}                 -- case « obligatoire » de chaque ligne (table à part : rien d'ajouté aux lignes)
 local function Render(res)
   for _, r in ipairs(rows) do r:Hide() end
   for _, h in ipairs(headers) do h:Hide() end
@@ -159,6 +160,30 @@ local function Render(res)
   end
   local function Row(r, noStatus)
     local row = GetRow()
+    -- case « obligatoire » (lignes de la fiche seulement)
+    local box = mustBoxes[row]
+    if not box then
+      box = CreateFrame("CheckButton", nil, row, "UICheckButtonTemplate")
+      mustBoxes[row] = box
+      box:SetSize(20, 20)
+      box:SetPoint("LEFT", -2, 0)
+      box:SetScript("OnClick", function(self)
+        ns.SetMandatory(self.key, self:GetChecked())
+        if ns.Refresh then ns.Refresh() end
+        local now = ns.root and ns.root.RefreshNow
+        if now then now() end
+      end)
+      box:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(L.mustTitle, 1, 0.82, 0)
+        GameTooltip:AddLine(L.mustTip, 1, 1, 1, true)
+        GameTooltip:Show()
+      end)
+      box:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    end
+    local withCheck = not noStatus and r.key ~= nil
+    box:SetShown(withCheck)
+    if withCheck then box.key = r.key; box:SetChecked(r.mandatory and true or false) end
     stripe = stripe + 1
     row.stripe:SetColorTexture(1, 1, 1, stripe % 2 == 0 and 0.04 or 0)
     row.dot:SetShown(not noStatus)
@@ -166,7 +191,7 @@ local function Render(res)
     row.icon:SetShown(r.icon ~= nil)
     if r.icon then row.icon:SetTexture(r.icon) end
     row.itemID = r.itemID or r.id
-    row.text:SetWidth(width - 60)
+    row.text:SetWidth(width - 74)
     local c = (r.status == "bad" and "|cffff6a5a") or (r.status == "warn" and "|cffffc860") or ""
     row.text:SetText(c ~= "" and (c .. r.text .. "|r") or r.text)
     local h = math.max(22, row.text:GetStringHeight() + 6)

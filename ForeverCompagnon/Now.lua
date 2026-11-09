@@ -247,7 +247,7 @@ local function BuyTodo(lines, res)
   local n = 0
   for _, s in ipairs(res and res.sections or {}) do
     for _, r in ipairs(s.rows or {}) do
-      if (r.status == "warn" or r.status == "bad") and n < 3 and not r.trainer then
+      if r.status == "bad" and r.mandatory ~= false and n < 3 and not r.trainer then     -- obligatoires seulement
         n = n + 1
         local title, detail = tostring(r.text):match("^(.-)%s+—%s+(.+)$")
         local tipLines = {}

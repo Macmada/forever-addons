@@ -192,9 +192,25 @@ function ns.Price(id, ah)
   end
 end
 
+-- Obligatoire ? Ton choix (case cochée) s'il existe, sinon : ce qui se compte et s'achète (potions, nourriture, boisson,
+-- composants), chez un marchand ou à l'hôtel des ventes ; ce qui ne se compte pas, seulement s'il manque gravement
+-- (durabilité…) ; le reste (bandages à fabriquer, nourriture de buff, buffs, conseils) est facultatif.
+function ns.IsMandatory(r, section)
+  local key = r.key
+  local m = db and db.mandatory and key and db.mandatory[key]
+  if m ~= nil then return m end
+  if r.need then return not r.optional and (not r.noBuy or r.ah) and true or false end   -- compte : s'achète -> obligatoire
+  return r.status == "bad"
+end
+function ns.SetMandatory(key, value)
+  if not (db and key) then return end
+  db.mandatory = db.mandatory or {}
+  db.mandatory[key] = value and true or false
+end
+
 local function CountRow(label, best, have, need, optional, noBuy, vendor, ah)
   local st = Status(have, need, optional)
-  local row = { status = st, icon = best and best.icon, have = have, need = need }
+  local row = { status = st, icon = best and best.icon, have = have, need = need, optional = optional, noBuy = noBuy, ah = ah }
   local name = best and best.name or "?"   -- meilleur rang utilisable (à égalité de niveau : le dernier de la liste)
   if st == "ok" then
     row.text = string.format(L.rowOk, label, have, need)
@@ -402,19 +418,29 @@ function ns.Analyze(ctx, roleOverride)
                                   text = left > 60 and string.format(L.hearthCooldown, math.ceil(left / 60)) or L.hearthOk }
   end
 
+  -- lignes obligatoires (cases cochées dans la fenêtre) : un manque obligatoire est rouge, un manque facultatif orange et
+  -- hors de la liste de courses ; état général : rouge si un obligatoire manque, orange si seuls des facultatifs manquent
+  for _, s in ipairs(res.sections) do
+    for _, r in ipairs(s.rows) do
+      r.key = r.key or (s.key .. ":" .. (tostring(r.text):match("^(.-)%s*:") or tostring(r.text)))
+      r.mandatory = ns.IsMandatory(r, s.key)
+      if r.status == "warn" or r.status == "bad" then r.status = r.mandatory and "bad" or "warn" end
+    end
+  end
+
   -- liste de courses et état général
   local worst = "ok"
   for _, s in ipairs(res.sections) do
     for _, r in ipairs(s.rows) do
       if RANK[r.status] > RANK[worst] then worst = r.status end
-      if r.buyID and r.buyQty and r.buyQty > 0 then
+      if r.buyID and r.buyQty and r.buyQty > 0 and r.mandatory then
         local p, est = ns.Price(r.buyID)
         res.shopping[#res.shopping + 1] = { id = r.buyID, qty = r.buyQty, name = r.buyName, icon = r.icon, vendor = r.vendor,
                                             price = p, estimated = est }
         if p then res.shopCost = (res.shopCost or 0) + p * r.buyQty end
       end
       -- objets de l'hôtel des ventes : achetés quand même si le marchand ouvert en vend
-      if r.ahID and r.ahQty and r.ahQty > 0 then
+      if r.ahID and r.ahQty and r.ahQty > 0 and r.mandatory then
         res.ahWanted = res.ahWanted or {}
         res.ahWanted[#res.ahWanted + 1] = { id = r.ahID, qty = r.ahQty }
       end

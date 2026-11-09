@@ -188,11 +188,27 @@ local r = ns.Analyze("dungeon")
 print("\n-- Mage 38, donjon"); Dump(r)
 check(r.role == "caster", "rôle deviné par les talents (Arcanes -> dégâts magiques)")
 local hp = Find(r, ns.L.cat_healpot)
-check(hp and hp.status == "warn" and hp.text:find("Potion de soins excellente", 1, true) and hp.ahQty == 2 and not hp.buyID,
+check(hp and hp.status == "bad" and hp.mandatory and hp.text:find("Potion de soins excellente", 1, true) and hp.ahQty == 2 and not hp.buyID,
       "potions de soins : 3/5, 2 × la meilleure à son niveau (excellente, niv. 35) à l'hôtel des ventes (pas chez un marchand)")
 local water = Find(r, ns.L.cat_water)
-check(water and water.status == "warn" and water.buyQty == 8 and water.text:find("Jus de lunebaie", 1, true), "boisson : 12/20 (eau du mage comptée), achète 8 jus de lunebaie (niv. 35)")
+check(water and water.status == "bad" and water.buyQty == 8 and water.text:find("Jus de lunebaie", 1, true), "boisson : 12/20 (eau du mage comptée), achète 8 jus de lunebaie (niv. 35)")
 check(Find(r, ns.L.cat_food).status == "ok", "nourriture : 25/20, rien à acheter")
+-- cases « obligatoire » : décochée -> orange, hors de la liste de courses ; état général rouge seulement pour un obligatoire
+do
+  local function shopHas(res, id) for _, it in ipairs(res.shopping) do if it.id == id then return true end end end
+  local wid = water.buyID
+  check(water.mandatory and shopHas(r, wid) and r.worst == "bad", "boisson obligatoire (achetable) : rouge, dans la liste de courses")
+  ns.SetMandatory(water.key, false)
+  local r2 = ns.Analyze("dungeon")
+  local w2 = Find(r2, ns.L.cat_water)
+  check(w2.status == "warn" and not w2.mandatory and not shopHas(r2, wid), "boisson décochée : orange, plus dans la liste de courses")
+  -- tout décocher : état général orange au pire
+  for _, sec in ipairs(r2.sections) do for _, row in ipairs(sec.rows) do ns.SetMandatory(row.key, false) end end
+  local r3 = ns.Analyze("dungeon")
+  check(r3.worst == "warn" and #r3.shopping == 0, "rien d'obligatoire : état général orange, liste de courses vide")
+  ForeverPrepDB.mandatory = nil
+  check(ns.Analyze("dungeon").worst == "bad", "cases remises par défaut : rouge de nouveau")
+end
 check(Find(r, "Rune de téléportation") and Find(r, "Rune de téléportation").status == "bad", "rune de téléportation : sort connu, 0/3")
 check(not Find(r, "Rune des portails"), "rune des portails : sort de portail inconnu, pas demandée")
 check(not Find(r, "Poudre des arcanes"), "poudre des arcanes : seulement en raid")
