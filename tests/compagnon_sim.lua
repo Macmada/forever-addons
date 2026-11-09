@@ -559,6 +559,36 @@ do
   m.db.skills = saveSk
 end
 
+-- quêtes à ton niveau (Questie) : regroupées par zone, trop hautes exclues, clic : donneur le plus proche
+do
+  local quests = { [1] = { 11, 101 }, [2] = { 12, 101 }, [3] = { 13, 102 }, [4] = { 30, 101 }, [5] = { 12, 103 } }
+  local npcs = { [101] = { name = "Gryan", spawns = { [40] = { { 56.3, 47.5 } } } }, [102] = { name = "Gryan bis", spawns = { [40] = { { 52, 50 } } } },
+                 [103] = { name = "Garde", spawns = { [12] = { { 40, 60 } } } } }
+  _G.QuestieLoader = { _modules = {
+    AvailableQuests = { __availableQuests = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true } },
+    QuestieDB = { GetQuest = function(id) local q = quests[id]; return q and { name = "Quête " .. id, questLevel = q[1], requiredLevel = q[1] - 3, Starts = { NPC = { q[2] } } } end,
+                  GetNPC = function(_, id) return npcs[id] end },
+    ZoneDB = { GetUiMapIdByAreaId = function(_, a) return ({ [40] = 1436, [12] = 1429 })[a] end },
+  } }
+  root.Quests.Forget()
+  check(root.Quests.Available(), "Questie présent : quêtes lisibles")
+  local zs = root.Quests.Zones(2)
+  check(#zs == 2 and #zs[1].quests == 3 and zs[1].lo == 11 and zs[1].hi == 13, "zones de quêtes : 3 à ton niveau dans la première, la quête niveau 30 exclue")
+  local ql
+  for _, l in ipairs(root.NowLines()) do if l.quests then ql = ql or l end end
+  check(ql and ql.gain:find("3", 1, true) and ql.tags:find("11-13", 1, true) and ql.tip.lines[1][1]:find("Quête", 1, true),
+        "À faire : « Quêtes : zone », 3 quêtes, niv. 11-13, liste au survol")
+  local went
+  local saveGo = root.Nav.Go
+  root.Nav.Go = function(m, x, y, t) went = t end
+  ql.onClick()
+  check(went and went:find("Gryan", 1, true), "clic : itinéraire vers le donneur")
+  root.Nav.Go = saveGo
+  _G.QuestieLoader = nil
+  root.Quests.Forget()
+  check(not root.Quests.Available() and #root.Quests.Zones(2) == 0, "sans Questie : rien")
+end
+
 -- itinéraire le plus rapide : maître de vol proche -> vol -> à pied, points de vol appris à l'ouverture d'un maître de vol
 do
   local N = root.Nav

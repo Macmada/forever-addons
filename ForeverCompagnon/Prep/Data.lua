@@ -45,8 +45,9 @@ D.consumables = {
   },
   {
     key = "statfood", need = { 5, 10 }, roles = "all", minLevel = 20, optional = true, noBuy = true,
-    items = { { 2680, 1 }, { 2682, 5 }, { 12210, 30 }, { 13928, 35 }, { 13931, 35 }, { 12218, 40 }, { 18045, 40 },
-              { 18254, 45 }, { 21023, 45 }, { 20452, 45 } },
+    -- niveaux de WoW Forever (relevés dans le jeu le 09/11/2026 : Rôti de raptor 15, Omelette monstrueuse 35…)
+    items = { { 2680, 1 }, { 2682, 1 }, { 12210, 15 }, { 13928, 35 }, { 13931, 35 }, { 12218, 35 }, { 18045, 35 },
+              { 18254, 35 }, { 21023, 45 }, { 20452, 45 } },
   },
 }
 

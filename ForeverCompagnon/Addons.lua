@@ -35,8 +35,8 @@ root.ADDONS = {
               or "Click-to-heal frames. Click the line, then \"Set up HealBot\": priest clicks and party/raid frames set for you." },
   { key = "questie", name = "Questie", match = { "questie" }, global = "Questie",
     icon = "Interface\\Icons\\INV_Misc_Note_02", url = "https://www.curseforge.com/wow/addons/questie",
-    what = FR and "Quêtes sur la carte et la minicarte (version WoW Forever)."
-              or "Quests on the map and minimap (WoW Forever version)." },
+    what = FR and "Quêtes sur la carte et la minicarte (version WoW Forever) ; ForeverCompagnon s'en sert pour « Quêtes : zone » dans « À faire »."
+              or "Quests on the map and minimap (WoW Forever version); ForeverCompagnon uses it for \"Quests: zone\" in \"To do\"." },
   { key = "fmf", name = "Full Mana Forever", match = { "fullmanaforever" }, mana = true,
     icon = "Interface\\Icons\\INV_Potion_76", url = "https://www.curseforge.com/wow/addons/full-mana-forever",
     what = FR and "Barre de mana avec la règle des 5 secondes, et la bonne potion au bon moment (fait pour Forever)."

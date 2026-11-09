@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.5.8 (ForeverCompagnon 3.5.8) : quêtes à ton niveau
+- **« Quêtes : <zone> » dans « À faire »** (avec Questie) : les zones qui ont le plus de quêtes disponibles à ton niveau d'après Questie (déjà faites, trop hautes, mauvaise faction ou prérequis manquants : exclues), ton continent d'abord ; pastille « niv. 21-25 », nombre de quêtes, liste au survol, clic : itinéraire vers le donneur le plus proche. Questie est lu tel quel, rien n'est modifié chez lui. L'auto-test dit si la lecture fonctionne.
+- **Préparation** : niveaux de la nourriture de buff alignés sur ceux de Forever (Rôti de raptor 15, Omelette monstrueuse 35…). L'analyse prenait déjà le niveau donné par le jeu ; la base était juste en retard.
+
 ## v3.5.7 (ForeverCompagnon 3.5.7, ForeverMacros 1.9.1, ForeverGFX 3.5.7) : Métiers, Addons, Macros et Graphismes accordés aux autres
 - **Onglet Addons** : 3 tuiles (actifs, désactivés, absents) à la place de l'introduction ; barre de couleur à gauche de chaque addon (vert actif, orange désactivé, gris absent).
 - **ForeverGFX** : cartes des niveaux et des outils au style des autres (fond sombre uni, fin cadre doré, barre à gauche verte pour le réglage actif) ; bouton « Trouver le meilleur réglage » éloigné de la croix ; l'astuce du mode expert passe dans l'infobulle du bouton (elle chevauchait celle de la minicarte).

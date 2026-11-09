@@ -227,6 +227,31 @@ local function ProfTodo(lines, res)
   end
 end
 
+-- Quêtes à ton niveau (Questie) : zones avec le plus de quêtes disponibles, clic : itinéraire vers le donneur le plus proche
+local function QuestTodo(lines)
+  local Q = root.Quests
+  if not (Q and Q.Available()) then return end
+  local level = UnitLevel("player")
+  for _, z in ipairs(Q.Zones(2)) do
+    local tip = { title = z.name, lines = {} }
+    for i, q in ipairs(z.quests) do
+      if i <= 10 then
+        local col = (q.level > level + 1 and { 1, 0.66, 0.24 }) or (q.level < level - 1 and { 0.6, 0.8, 0.6 }) or { 1, 1, 0.6 }
+        tip.lines[#tip.lines + 1] = { "[" .. q.level .. "] " .. q.name, col[1], col[2], col[3] }
+      end
+    end
+    if #z.quests > 10 then tip.lines[#tip.lines + 1] = { string.format(L.todoQuestsMore, #z.quests - 10), 0.7, 0.7, 0.7 } end
+    if z.giver then tip.lines[#tip.lines + 1] = { string.format(L.todoQuestsGiver, z.giver.name or "?"), 0.85, 0.78, 0.6 } end
+    local range = z.lo == z.hi and string.format(L.tagLevel, z.lo):gsub("%+", "") or string.format(L.tagRange, z.lo, z.hi)
+    lines[#lines + 1] = { kind = "card", icon = "Interface\\GossipFrame\\AvailableQuestIcon", quality = 1, nameColor = { 1, 1, 1 },
+                          name = string.format(L.todoQuests, z.name),
+                          tags = Chip(L.tagQuests, "ffd100") .. "  " .. Chip(range, "40d860"),
+                          source = z.giver and string.format(L.todoQuestsGiver, z.giver.name or "?") or nil,
+                          gain = "|cffffd100" .. string.format(L.todoQuestsN, #z.quests) .. "|r", tip = tip, quests = true,
+                          onClick = function() if z.giver then Go(z.giver.mapID, z.giver.x, z.giver.y, z.giver.name) end end }
+  end
+end
+
 local function CraftTodo(lines)
   local ns = root.mods.ForeverMetiers
   if not (ns and ns.LevelLines) then return end
@@ -286,6 +311,7 @@ function root.NowLines()
   Safe("équiper", BagTodo, lines)
   Safe("métiers (rangs)", ProfTodo, lines, res)
   Safe("lieux", PlaceTodo, lines, places)
+  Safe("quêtes", QuestTodo, lines)
   Safe("métiers", CraftTodo, lines)
   Safe("marchand", VendorTodo, lines)
   Safe("achats", BuyTodo, lines, res)

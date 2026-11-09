@@ -152,6 +152,14 @@ root.Test("Maintenant", "écran Maintenant (temps de calcul : 1re fois, puis en 
   local times = clock and string.format(" ; calcul %d ms, puis %d ms", math.floor(t1 - t0 + 0.5), math.floor(t2 - t1 + 0.5)) or ""
   return #root.nowErrors == 0, #lines .. " lignes" .. times .. (#root.nowErrors > 0 and (" ; " .. table.concat(root.nowErrors, " ; ")) or "")
 end)
+root.Test("Intégré", "quêtes à ton niveau (Questie)", function()
+  local Q = root.Quests
+  if not (Q and Q.Available()) then return nil, "Questie absent ou pas encore prêt : relance /fp test dans un moment" end
+  local zs = Q.Zones(3)
+  local parts = {}
+  for _, z in ipairs(zs) do parts[#parts + 1] = z.name .. " " .. #z.quests end
+  return true, #zs .. " zone(s) : " .. table.concat(parts, ", ")
+end)
 root.Test("Jeu", "actions bloquées depuis la connexion", function()
   local b = _G.ForeverBlockedActions or {}
   return #b == 0, #b == 0 and "aucune" or table.concat(b, " | ")
