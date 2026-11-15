@@ -20,7 +20,7 @@ globals = {
 
 -- API WoW lue (présente sur Forever, TBC Anniversary et retail, ou testée avant usage)
 read_globals = {
-  "geterrorhandler", "seterrorhandler", "debugstack", "GetNumAddOns", "GetAddOnInfo", "UpdateAddOnMemoryUsage", "GetAddOnMemoryUsage",
+  "geterrorhandler", "seterrorhandler", "debugstack", "hooksecurefunc", "StaticPopup_Show", "GetNumAddOns", "GetAddOnInfo", "UpdateAddOnMemoryUsage", "GetAddOnMemoryUsage",
   "UnitAttackPower", "GetSpellBonusDamage", "GetCritChance", "C_AuctionHouse", "UnitPowerPercent", "C_CurveUtil", "CreateColor", "CurveConstants", "CreateVector2D", "UiMapPoint", "C_SuperTrack", "GetPlayerFacing", "C_TooltipInfo", "EJ_GetInstanceInfo", "C_QuestLog",
   "DisableAddOn", "GetContainerItemID", "PickupContainerItem", "AutoEquipCursorItem", "CursorHasItem",
   "C_AddOns", "C_CVar", "C_Console", "C_Item", "C_Spell", "C_Timer", "ChatFontNormal",

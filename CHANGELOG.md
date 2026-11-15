@@ -3,6 +3,9 @@
 ## v3.6.2 (ForeverCompagnon 3.6.2) : erreurs d'HealBot neutralisées
 - **Protection HealBot** : HealBot 26.11.14, quand la couleur des soins entrants ou des absorptions est « selon la vie », passe la vie secrète du groupe à une fonction que le jeu refuse aux addons depuis le client 1.60.1 : environ 3 erreurs par seconde en donjon, puis « Vos add-ons subissent un grand nombre d'erreurs ». ForeverCompagnon enveloppe la fonction de prédiction d'HealBot : l'erreur est absorbée et HealBot passe à sa barre simple. Aucun fichier d'HealBot n'est modifié ; `/fp healbot protection` la coupe ou la remet ; `/fp erreurs` affiche le nombre d'erreurs absorbées.
 - **Skins « Forever Groupe » et « Forever Raid »** : couleur des soins entrants et des absorptions par classe (réglage par défaut d'HealBot, sans souci) au prochain `/fp healbot`.
+- **Quand le jeu affiche « Vos add-ons subissent un grand nombre d'erreurs »**, la fenêtre `/fp erreurs` s'ouvre toute seule avec le texte déjà sélectionné (une fois par session ; `/fp erreurs muet` la coupe) : il ne reste qu'à faire Ctrl+C.
+- **Bouton « Copier pour Claude »** sur les fenêtres de texte (erreurs, journal, rapport, auto-test, sonde) : sélectionne tout d'un clic (le jeu réserve le presse-papiers à Blizzard, Ctrl+C reste à faire).
+- **`/fp erreurs afficher`** : active ou coupe l'affichage des erreurs Lua par le jeu lui-même, sans passer par les menus.
 - **`/fp erreurs`** : conseil pour le déplacement des cadres d'HealBot en combat (interdit par le jeu) ; la ligne `pcall` du relevé n'apparaît plus dans la pile.
 
 ## v3.6.1 (ForeverCompagnon 3.6.1) : le bon coupable

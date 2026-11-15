@@ -201,6 +201,19 @@ end
 Hook()
 
 local ef = CreateFrame("Frame")
+-- Le jeu affiche « Vos add-ons subissent un grand nombre d'erreurs » : on ouvre aussitôt /fp erreurs, texte sélectionné
+-- (une fois par session ; « /fp erreurs muet » le coupe aussi)
+local popupShown = false
+if hooksecurefunc and StaticPopup_Show then
+  hooksecurefunc("StaticPopup_Show", function(which)
+    if popupShown or type(which) ~= "string" or not which:find("LUA_ERROR", 1, true) then return end
+    if root.db and root.db.debugQuiet then return end
+    popupShown = true
+    D.Log("JEU", "fenêtre « grand nombre d'erreurs » : " .. Summary(session.items))
+    C_Timer.After(0.3, function() pcall(D.Command, "") end)
+  end)
+end
+
 -- actions bloquées : reçues de la fenêtre commune du diagnostic (Shared/Diag.lua), abonnée une seule fois pour tous
 _G.ForeverOnBlocked = function(event, addon, func)
   if event ~= "ADDON_ACTION_BLOCKED" and event ~= "ADDON_ACTION_FORBIDDEN" then return end
@@ -386,11 +399,21 @@ function D.Command(arg)
   elseif arg == "log effacer" or arg == "journal effacer" or arg == "log clear" then
     wipe(log); last.key, last.index = nil, 0
     root.Print(T.cleared)
+  elseif arg == "afficher" or arg == "show" then
+    local get = (C_CVar and C_CVar.GetCVar) or GetCVar
+    local set = (C_CVar and C_CVar.SetCVar) or SetCVar
+    if get and set then
+      local on = tostring(get("scriptErrors")) ~= "1"
+      pcall(set, "scriptErrors", on and "1" or "0")
+      root.Print(FR and ("Affichage des erreurs Lua par le jeu : " .. (on and "activé" or "coupé") .. " (fenêtre de Blizzard à chaque erreur)")
+                     or ("Game Lua error display: " .. (on and "on" or "off")))
+    end
   elseif arg == "muet" or arg == "mute" then
     root.db.debugQuiet = not root.db.debugQuiet
     root.Print(T.chatQuiet, root.db.debugQuiet and T.off or T.on)
   else
     root.ShowText(T.title, D.ErrorsText(true))
+    if root.textFrame and root.textFrame.edit then root.textFrame.edit:SetFocus(); root.textFrame.edit:HighlightText() end
   end
 end
 

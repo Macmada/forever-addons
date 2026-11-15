@@ -82,6 +82,10 @@ _G.geterrorhandler = function() return handler end
 _G.seterrorhandler = function(f) handler = f end
 _G.debugstack = function() return "[string \"@Interface/AddOns/Questie/Modules/Map.lua\"]:42: in function <...>\n[C]: in function 'pcall'" end
 local function GameError(msg) return geterrorhandler()(msg) end
+_G.hooksecurefunc = _G.hooksecurefunc or function(name, f)
+  local orig = _G[name]
+  _G[name] = function(...) local r = { orig(...) }; f(...); return unpack(r) end
+end
 local root = W.load("ForeverCompagnon")
 W.fire("ADDON_LOADED", "ForeverCompagnon")
 W.fire("PLAYER_LOGIN")
@@ -977,6 +981,22 @@ do
   SlashCmdList.FOREVERCOMPAGNON("healbot protection")
   check(HBm.SKINS[1].edits["BarIACol~f~1"].IC == 3, "skins Forever : couleur des soins entrants par classe")
   _G.HealBot_Forever_UpdatePrediction = nil
+  -- le jeu affiche « grand nombre d'erreurs » : /fp erreurs s'ouvre tout seul, texte sélectionné, une fois par session
+  ForeverCompagnonTextFrame:Hide()
+  StaticPopup_Show("TOO_MANY_LUA_ERRORS")
+  W.run(1)
+  check(ForeverCompagnonTextFrame:IsShown(), "fenêtre « grand nombre d'erreurs » du jeu : /fp erreurs ouvert automatiquement")
+  ForeverCompagnonTextFrame:Hide()
+  StaticPopup_Show("TOO_MANY_LUA_ERRORS")
+  W.run(1)
+  check(not ForeverCompagnonTextFrame:IsShown(), "une seule fois par session")
+  check(root.textFrame and root.textFrame.copy, "bouton « Copier pour Claude »")
+  root.textFrame.copy.scripts.OnClick(root.textFrame.copy)
+  W.cvars.scriptErrors = "0"
+  SlashCmdList.FOREVERCOMPAGNON("erreurs afficher")
+  check(W.cvars.scriptErrors == "1", "/fp erreurs afficher : erreurs Lua affichées par le jeu")
+  SlashCmdList.FOREVERCOMPAGNON("erreurs afficher")
+  check(W.cvars.scriptErrors == "0", "/fp erreurs afficher : de nouveau coupé")
   -- une erreur dans le gestionnaire ne doit jamais casser le jeu
   local okNil = pcall(GameError, nil)
   check(okNil, "erreur sans message : rien ne casse")

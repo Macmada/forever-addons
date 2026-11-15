@@ -141,7 +141,7 @@ Chaque addon a un **bouton « Diag »** dans la barre de titre de sa fenêtre (e
 | `/floot diag` | numéro de chaque objet de la liste de référence et son nom dans ce client (les numéros non vérifiés sont signalés), nombre d'objets vus, butin noté par donjon |
 | `/fp diag` | toutes les parties de ForeverCompagnon d'un coup, avec les méthodes retenues par le lien avec le jeu |
 | `/fp test` / `/fp sonde` | auto-test en jeu de chaque fonction / fonctions présentes et absentes du client |
-| `/fp erreurs` / `/fp log` / `/fp rapport` | erreurs et actions bloquées de tous les addons (avec conseil) / journal horodaté gardé dans la sauvegarde / tout en un seul texte |
+| `/fp erreurs` / `/fp log` / `/fp rapport` | erreurs et actions bloquées de tous les addons (avec conseil ; s'ouvre seul quand le jeu signale « un grand nombre d'erreurs » ; `afficher` : erreurs Lua du jeu) / journal horodaté gardé dans la sauvegarde / tout en un seul texte, bouton « Copier pour Claude » |
 | `/fheal diag` | relevé du jeu et conversions mesurées, sorts de soin avec leur description brute et ce que l'addon en lit, sorts de soin du grimoire inconnus de la base, caractéristiques de chaque pièce portée |
 
 Chaque texte commence par la version du client, le numéro d'interface, la langue, le personnage et les addons chargés. Le module est commun (`tools/Diag.lua`, copié dans chaque addon par `tools/sync-shared.sh`, comme l'icône commune `tools/Hub.lua` et le tutoriel `tools/Tour.lua` ; dans ForeverCompagnon, une seule copie enveloppée, `ForeverCompagnon/Shared/`, appliquée à chaque partie).
