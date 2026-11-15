@@ -442,4 +442,30 @@ _G.C_Container.GetItemCooldown = function() return 0, 0 end
 local okModern, resModern = pcall(ns.Analyze, "dungeon")
 check(okModern and resModern, "client moderne : analyse sans GetItemCooldown global")
 check(not ns.DiagText():find("Erreur", 1, true), "client moderne : diagnostic sans erreur")
+-- client 1.60.1 (70938, 12/11/2026) : en combat, GetAuraDataByIndex lève une erreur (« Auras cannot be accessed when
+-- secret while tainted ») ; l'analyse ne doit plus échouer, et garde la dernière lecture faite hors combat
+Char({ level = 38, class = "MAGE", talents = { 31, 0, 5 },
+       known = { [1459] = true, [168] = true, [7302] = true, [3561] = true, [130] = true },
+       auras = { player = { "Intelligence des arcanes" }, party1 = {} }, names = { party1 = "Grosbill" } })
+local secretAuras = false
+_G.C_UnitAuras = { GetAuraDataByIndex = function(u, i)
+  if secretAuras then error("GetAuraDataByIndex(): Auras cannot be accessed when secret while tainted by 'ForeverCompagnon'") end
+  local n = (P.auras[u] or {})[i]; return n and { name = n } or nil
+end }
+local guids = true
+_G.UnitGUID = function(u) return guids and ("Player-" .. u) or nil end
+local before = ns.Analyze("dungeon")
+check(Find(before, "Armure de givre").status == "warn" and not ns.aurasHidden, "auras lisibles hors combat : armure à lancer")
+secretAuras = true
+local okSecret, during = pcall(ns.Analyze, "dungeon")
+check(okSecret and during, "auras secrètes en combat : plus d'erreur Lua")
+check(ns.aurasHidden and Find(during, "Armure de givre").status == "warn", "en combat : dernière lecture hors combat gardée")
+guids = false
+local blind = ns.Analyze("dungeon")
+local armor = Find(blind, "Armure de givre")
+check(armor.status == "info" and armor.text:find(ns.L.buffUnknown:sub(5, 12), 1, true), "jamais lu hors combat : « illisible en combat », pas « à lancer »")
+check(not Find(blind, "manque à"), "groupe illisible : personne n'est déclaré sans amélioration")
+secretAuras, guids = false, true
+_G.C_UnitAuras = nil
+
 print("\nTOUT OK (" .. LANG .. ")")

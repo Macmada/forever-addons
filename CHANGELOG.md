@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.5.13 (ForeverCompagnon 3.5.13) : compatible avec le client 1.60.1
+- **Plus d'avalanche d'erreurs Lua en combat** depuis le patch 1.60.1 (build 70938, 12/11/2026) : le jeu refuse désormais aux addons la lecture des améliorations (buffs) en combat, et la fiche Préparation comme l'écran Maintenant échouaient à chaque mise à jour (« Auras cannot be accessed when secret »), d'où le message « Vos add-ons subissent un grand nombre d'erreurs ».
+- **En combat**, la fiche garde ce qu'elle a lu juste avant ; si elle n'a encore rien pu lire, l'amélioration est marquée « illisible en combat (vérifié après le combat) » au lieu de « à lancer », et personne du groupe n'est déclaré sans amélioration à tort.
+
 ## v3.5.12 (ForeverCompagnon 3.5.12) : bandeau de session en tuiles
 - **Fiche du personnage** : le bandeau de session prend toute la largeur de la fiche, en 5 tuiles comme le panneau des soins : XP gagnée (et durée), XP par heure, temps jusqu'au prochain niveau (barre verte : ton avancée dans le niveau), or net, quêtes rendues (et donjons). Avant, le texte passait à la ligne et se chevauchait. Survol : récapitulatif complet, zone Questie conseillée, session précédente ; clic : récapitulatif dans le chat.
 

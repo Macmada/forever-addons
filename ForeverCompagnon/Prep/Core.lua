@@ -63,24 +63,48 @@ function ns.KnowsAny(list)
   return false
 end
 
--- Noms des améliorations présentes sur une unité
+-- Noms des améliorations présentes sur une unité, ou nil si le jeu les cache.
+-- Client 1.60.1 (70938, 12/11/2026) : en combat, GetAuraDataByIndex LÈVE une erreur (« Auras cannot be accessed when
+-- secret while tainted ») au lieu de renvoyer une valeur secrète ; chaque lecture était une erreur Lua. On lit donc sous
+-- pcall, on refuse les noms secrets, et on garde la dernière lecture réussie (hors combat) de chaque personnage.
+local auraCache = {}          -- GUID -> noms lus hors combat
+ns.aurasHidden = false        -- vrai si la dernière lecture a été refusée par le jeu
+
+local function ReadAura(unit, i)
+  if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+    local ok, a = pcall(C_UnitAuras.GetAuraDataByIndex, unit, i, "HELPFUL")
+    if not ok then return false end
+    local name = a and a.name
+    if name ~= nil and issecretvalue and issecretvalue(name) then return false end
+    return true, name
+  elseif UnitBuff then
+    local ok, name = pcall(UnitBuff, unit, i)
+    if not ok or (name ~= nil and issecretvalue and issecretvalue(name)) then return false end
+    return true, name
+  end
+  return true, nil
+end
+
 function ns.Buffs(unit)
+  local guid = UnitGUID and UnitGUID(unit)
   local names = {}
   for i = 1, 40 do
-    local name
-    if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
-      local a = C_UnitAuras.GetAuraDataByIndex(unit, i, "HELPFUL")
-      name = a and a.name
-    elseif UnitBuff then
-      name = UnitBuff(unit, i)
+    local ok, name = ReadAura(unit, i)
+    if not ok then
+      ns.aurasHidden = true
+      return guid and auraCache[guid] or nil          -- dernière lecture connue, ou « inconnu »
     end
     if not name then break end
     names[name] = true
   end
+  ns.aurasHidden = false
+  if guid then auraCache[guid] = names end
   return names
 end
 
+-- vrai / faux, ou nil si les améliorations de l'unité sont illisibles
 local function HasAny(buffs, spells)
+  if not buffs then return nil end
   for _, id in ipairs(spells) do
     local n = ns.SpellName(id)
     if n and buffs[n] then return true end
@@ -320,14 +344,22 @@ function ns.Analyze(ctx, roleOverride)
         local icon = GetSpellTexture and GetSpellTexture(b.spells[1])
         if b.self then
           local ok = HasAny(mine, b.spells)
-          buffs.rows[#buffs.rows + 1] = { status = ok and "ok" or "warn", icon = icon,
-                                          text = ok and string.format(L.buffOk, name) or string.format(L.buffMissing, name) }
-        elseif b.group then
-          local missing = {}
-          for _, u in ipairs(ns.GroupUnits()) do
-            if not HasAny(ns.Buffs(u), b.spells) then missing[#missing + 1] = ns.Clear(UnitName(u)) or "?" end
+          if ok == nil then
+            buffs.rows[#buffs.rows + 1] = { status = "info", icon = icon, text = string.format(L.buffUnknown, name) }
+          else
+            buffs.rows[#buffs.rows + 1] = { status = ok and "ok" or "warn", icon = icon,
+                                            text = ok and string.format(L.buffOk, name) or string.format(L.buffMissing, name) }
           end
-          if #missing == 0 then
+        elseif b.group then
+          local missing, unknown = {}, 0
+          for _, u in ipairs(ns.GroupUnits()) do
+            local has = HasAny(ns.Buffs(u), b.spells)
+            if has == nil then unknown = unknown + 1
+            elseif not has then missing[#missing + 1] = ns.Clear(UnitName(u)) or "?" end
+          end
+          if #missing == 0 and unknown > 0 then
+            buffs.rows[#buffs.rows + 1] = { status = "info", icon = icon, text = string.format(L.buffUnknown, name) }
+          elseif #missing == 0 then
             buffs.rows[#buffs.rows + 1] = { status = "ok", icon = icon, text = string.format(L.groupBuffOk, name) }
           else
             buffs.rows[#buffs.rows + 1] = { status = "warn", icon = icon,
