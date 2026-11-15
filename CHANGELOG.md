@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.6.2 (ForeverCompagnon 3.6.2) : erreurs d'HealBot neutralisées
+- **Protection HealBot** : HealBot 26.11.14, quand la couleur des soins entrants ou des absorptions est « selon la vie », passe la vie secrète du groupe à une fonction que le jeu refuse aux addons depuis le client 1.60.1 : environ 3 erreurs par seconde en donjon, puis « Vos add-ons subissent un grand nombre d'erreurs ». ForeverCompagnon enveloppe la fonction de prédiction d'HealBot : l'erreur est absorbée et HealBot passe à sa barre simple. Aucun fichier d'HealBot n'est modifié ; `/fp healbot protection` la coupe ou la remet ; `/fp erreurs` affiche le nombre d'erreurs absorbées.
+- **Skins « Forever Groupe » et « Forever Raid »** : couleur des soins entrants et des absorptions par classe (réglage par défaut d'HealBot, sans souci) au prochain `/fp healbot`.
+- **`/fp erreurs`** : conseil pour le déplacement des cadres d'HealBot en combat (interdit par le jeu) ; la ligne `pcall` du relevé n'apparaît plus dans la pile.
+
 ## v3.6.1 (ForeverCompagnon 3.6.1) : le bon coupable
 - **`/fp erreurs`** : une erreur dont le message ne contient pas de chemin de fichier était attribuée à ForeverCompagnon (le relevé se voyait lui-même en haut de la pile d'appels). La ligne du relevé est maintenant retirée de la pile, et l'erreur est attribuée au premier addon qui reste (ici HealBot).
 - **Conseil ajouté** pour l'erreur « SetPredictedValues … Secret values are only allowed during untainted execution » de HealBot (barre de soins entrants en donjon, depuis le client 1.60.1).

@@ -67,8 +67,14 @@ D.T = T
 -- Problèmes connus (motif dans le message ou la fonction) : explication et quoi faire
 D.KNOWN = {
   { find = "SetPredictedValues", addon = "HealBot",
-    fr = "bug de HealBot depuis le client 1.60.1 : en donjon, la vie des membres du groupe est secrète et HealBot la passe à sa barre de soins entrants, ce que le jeu n'autorise plus aux addons. Sans conséquence grave (seule la prédiction des soins entrants manque). Mets HealBot à jour ; en attendant, désactive l'affichage des soins entrants dans ses options s'il en a un, ou clique « Ignorer »",
-    en = "HealBot bug since client 1.60.1: in dungeons, group members' health is secret and HealBot passes it to its incoming-heals bar, which the game no longer allows addons to do. Not serious (only incoming-heal prediction is missing). Update HealBot; meanwhile turn off incoming heals in its options if it has one, or click « Ignore »" },
+    fr = "bug de HealBot depuis le client 1.60.1 : avec la couleur des soins entrants ou des absorptions « selon la vie » (modes 5 et 6), HealBot passe la vie secrète du groupe à une fonction que le jeu refuse aux addons. Neutralisé par ForeverCompagnon 3.6.2 (protection HealBot, /fp healbot protection). Sinon : options d'HealBot, couleur des soins entrants et des absorptions sur « couleur de classe »",
+    en = "HealBot bug since client 1.60.1: with incoming-heal or absorb colour « by health » (modes 5 and 6), HealBot passes the group's secret health to a function the game refuses to addons. Neutralised by ForeverCompagnon 3.6.2 (HealBot guard, /fp healbot protection). Otherwise: HealBot options, incoming-heal and absorb colour set to « class colour »" },
+  { find = "HealBot_Action:StartMoving", addon = "HealBot",
+    fr = "déplacer un cadre d'HealBot en combat est interdit par le jeu : verrouille les cadres dans HealBot, ou déplace-les hors combat. Sans conséquence",
+    en = "moving an HealBot frame in combat is forbidden by the game: lock HealBot frames, or move them out of combat. Harmless" },
+  { find = "HealBot_Action:StopMovingOrSizing", addon = "HealBot",
+    fr = "déplacer un cadre d'HealBot en combat est interdit par le jeu : verrouille les cadres dans HealBot, ou déplace-les hors combat. Sans conséquence",
+    en = "moving an HealBot frame in combat is forbidden by the game: lock HealBot frames, or move them out of combat. Harmless" },
   { find = "SetPassThroughButtons", addon = "Questie",
     fr = "bug connu de Questie depuis le client 1.60.1 : ses icônes de la carte du monde touchent une fonction réservée en combat. Sans conséquence (les icônes ne réagissent pas pendant le combat). Mets Questie à jour ; suivi : github.com/Questie/Questie/issues/8304",
     en = "known Questie bug since client 1.60.1: its world map icons call a function reserved in combat. Harmless (icons do not react during combat). Update Questie; tracking: github.com/Questie/Questie/issues/8304" },
@@ -97,7 +103,9 @@ local function CleanStack(stack)
   if type(stack) ~= "string" then return nil end
   local out = {}
   for line in stack:gmatch("[^\n]+") do
-    if not line:find("ForeverCompagnon[/\\]Debug%.lua") then out[#out + 1] = line end
+    if not line:find("ForeverCompagnon[/\\]Debug%.lua") and not (#out == 0 and line:find("in function 'pcall'", 1, true)) then
+      out[#out + 1] = line
+    end
   end
   return table.concat(out, "\n")
 end
@@ -300,6 +308,8 @@ function D.ErrorsText(withStacks)
       end
     end
   end
+  local guard = root.HealBot and root.HealBot.GuardText and root.HealBot.GuardText()
+  if guard then out[#out + 1] = ""; out[#out + 1] = guard end
   local prev = root.db and root.db.debug and root.db.debug.sessions or {}
   if #prev > 0 then
     out[#out + 1] = ""

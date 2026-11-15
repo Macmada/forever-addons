@@ -239,6 +239,9 @@ local COMMON = {
                     BORDERA = 0.7, PADDING = 3 },
   ["HeadBar~f~1"] = { SHOW = "true", TEXTURE = "Smooth v2", HEIGHT = 18, WIDTH = 1, R = 0.18, G = 0.13, B = 0.05, A = 0.9 },
   ["HeadText~f~1"] = { FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, R = GOLD.R, G = GOLD.G, B = GOLD.B, A = 1 },
+  -- couleur des soins entrants et des absorptions : celle de la classe (3, défaut d'HealBot). Les modes « selon la vie »
+  -- (5, 6) passent la vie secrète du groupe à SetPredictedValues, refusé aux addons depuis le client 1.60.1 (15/11/2026)
+  ["BarIACol~f~1"] = { IC = 3, AC = 3 },
 }
 local function With(extra)
   local t = {}
@@ -403,9 +406,50 @@ function HB.ShowPlan()
   end
 end
 
+----------------------------------------------------------------------
+-- Protection de la prédiction des soins d'HealBot (client 1.60.1, 15/11/2026) : HealBot 26.11.14, en mode de couleur
+-- « selon la vie » (BarIACol IC/AC = 5 ou 6), passe la vie secrète du groupe à SetPredictedValues, ce que le jeu refuse
+-- aux addons : ~3 erreurs par seconde en donjon. HealBot appelle sa fonction par son nom global à chaque fois
+-- (HealBot_ForeverFrames.lua:19) ; on l'enveloppe : en cas d'erreur, elle rend false et HealBot passe à sa barre simple
+-- (sans couleur selon la vie). Aucun fichier d'HealBot n'est modifié. /fp healbot protection : couper ou remettre.
+----------------------------------------------------------------------
+HB.guard = { absorbed = 0, installed = false }
+local function GuardOn() return not (root.db and root.db.healbotGuard == false) end
+function HB.GuardPrediction()
+  if HB.guard.installed then return true end
+  local orig = _G.HealBot_Forever_UpdatePrediction
+  if type(orig) ~= "function" then return false end
+  HB.guard.installed, HB.guard.orig = true, orig
+  _G.HealBot_Forever_UpdatePrediction = function(button, ...)
+    if not GuardOn() then return orig(button, ...) end
+    local ok, res = pcall(orig, button, ...)
+    if ok then return res end
+    HB.guard.absorbed = HB.guard.absorbed + 1
+    HB.guard.last = tostring(res):sub(1, 200)
+    return false
+  end
+  return true
+end
+function HB.GuardText()
+  if not HB.guard.installed then return nil end
+  return string.format(FR and "Protection HealBot (prédiction des soins) : %s, %d erreur(s) absorbée(s) depuis la connexion"
+                          or "HealBot guard (heal prediction): %s, %d error(s) absorbed since login",
+    GuardOn() and (FR and "active" or "on") or (FR and "coupée" or "off"), HB.guard.absorbed)
+end
+local gev = CreateFrame("Frame")
+gev:RegisterEvent("ADDON_LOADED")
+gev:RegisterEvent("PLAYER_LOGIN")
+gev:SetScript("OnEvent", function(_, event, name)
+  if event == "PLAYER_LOGIN" or name == "HealBot" then pcall(HB.GuardPrediction) end
+end)
+
 function HB.Command(arg)
   arg = (arg or ""):lower()
-  if arg == "annuler" or arg == "undo" or arg == "restore" then HB.Restore()
+  if arg == "protection" or arg == "guard" then
+    root.db.healbotGuard = (root.db.healbotGuard == false)
+    HB.GuardPrediction()
+    root.Print(HB.GuardText() or (FR and "HealBot : fonction de prédiction absente." or "HealBot: prediction function not found."))
+  elseif arg == "annuler" or arg == "undo" or arg == "restore" then HB.Restore()
   elseif arg == "voir" or arg == "plan" or arg == "show" then HB.ShowPlan()
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()

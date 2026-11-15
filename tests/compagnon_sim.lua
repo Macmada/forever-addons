@@ -961,6 +961,22 @@ do
   local hb = D.session.items[#D.session.items]
   check(hb.addon == "HealBot" and not hb.stack:find("Debug.lua", 1, true), "erreur sans chemin : attribuée à HealBot, pas à ForeverCompagnon")
   check(D.Advice(hb):find("HealBot", 1, true) and D.Advice(hb) ~= D.T.oursIt, "conseil du bug connu de HealBot")
+  -- 3.6.2 : protection de la prédiction des soins d'HealBot (couleur « selon la vie » + vie secrète du groupe)
+  local HBm = root.HealBot
+  _G.HealBot_Forever_UpdatePrediction = function(button)
+    if button == "secret" then error("bad argument #3 to '?' (Current Field: [health], Usage: self:SetPredictedValues(predictedValues). Secret values are only allowed during untainted execution for this argument.)") end
+    return true
+  end
+  check(HBm.GuardPrediction() and HBm.guard.installed, "protection HealBot installée sur sa fonction globale")
+  local okG, resG = pcall(_G.HealBot_Forever_UpdatePrediction, "secret")
+  check(okG and resG == false and HBm.guard.absorbed == 1, "erreur de prédiction absorbée : HealBot passe à sa barre simple")
+  check(_G.HealBot_Forever_UpdatePrediction("ok") == true, "sans erreur : résultat d'HealBot inchangé")
+  check(D.ErrorsText():find("Protection HealBot", 1, true) or D.ErrorsText():find("HealBot guard", 1, true), "/fp erreurs : protection HealBot et nombre d'erreurs absorbées")
+  SlashCmdList.FOREVERCOMPAGNON("healbot protection")
+  check(root.db.healbotGuard == false and not pcall(_G.HealBot_Forever_UpdatePrediction, "secret"), "/fp healbot protection : coupée, l'erreur repasse")
+  SlashCmdList.FOREVERCOMPAGNON("healbot protection")
+  check(HBm.SKINS[1].edits["BarIACol~f~1"].IC == 3, "skins Forever : couleur des soins entrants par classe")
+  _G.HealBot_Forever_UpdatePrediction = nil
   -- une erreur dans le gestionnaire ne doit jamais casser le jeu
   local okNil = pcall(GameError, nil)
   check(okNil, "erreur sans message : rien ne casse")
