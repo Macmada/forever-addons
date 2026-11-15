@@ -16,7 +16,8 @@ local Z = {   -- donjons et sources (noms français / anglais)
 D.zones = Z
 
 -- Prêtre soigneur (Sacré et Discipline : même liste), niveau 60 avant les raids, WoW Forever.
--- Source : liste BiS de kami-labs.fr (calculée le 02/11/2026 avec le simulateur wowsims/forever), numéros relevés
+-- Source : liste BiS de kami-labs.fr (calculée le 02/11/2026 avec le simulateur wowsims/forever ; revérifiée le
+-- 15/11/2026, identique : Sacré et Discipline, 17 emplacements ; enchantement de torse 20028 = Mana majeur), numéros relevés
 -- dans son lien « Ouvrir dans l'outil ». new = objet nouveau de Forever ; ench = enchantement conseillé.
 -- boss : comme sur la source (le jeu affiche le nom réel de l'objet dans ta langue).
 D.reference = {
@@ -25,7 +26,7 @@ D.reference = {
     { slot = 2, id = 22149, zone = "dm", boss = "quête « La vendetta de Falrin »", ench = "Pouvoir de guérison" },
     { slot = 3, id = 16695, zone = "brs", boss = "monstres du donjon" },
     { slot = 15, id = 18510, zone = "craft", boss = "Travail du cuir 300" },
-    { slot = 5, id = 16690, zone = "brs", boss = "Général Drakkisath", ench = "Intelligence majeure" },
+    { slot = 5, id = 16690, zone = "brs", boss = "Général Drakkisath", ench = "Mana majeur" },
     { slot = 9, id = 16697, zone = "strat", boss = "monstres du donjon", ench = "Intelligence excellente" },
     { slot = 10, id = 18409, zone = "craft", boss = "Couture 300", ench = "Pouvoir de guérison" },
     { slot = 6, id = 16696, zone = "brs", boss = "Intendant Zigris" },

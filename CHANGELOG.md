@@ -2,6 +2,8 @@
 
 ## v3.6.3 (ForeverCompagnon 3.6.3) : base des consommables vérifiée par le jeu
 - **Base corrigée** : 12 niveaux requis de la base de Préparation différaient du client Forever 1.60.1 (diagnostic du 15/11/2026) : Élixir de Force supérieure 48 (au lieu de 38), Élixir de sang de Troll majeur 53, Élixir d'Agilité inférieur 18, Élixir de Puissance du givre 28, pierres à aiguiser et cailloux à lester grossiers 5, lourds 15, solides 25, denses 35.
+- **Sources d'All The Things mises à jour** (révision 6f204fc du 15/11/2026) : 14 006 objets au lieu de 12 887, plus de recettes dans chaque métier (couture 352, cuisine 111, forge 331…). L'extracteur suit le nouveau format de la base d'ATT (données de quête par faction).
+- **Liste BiS de kami-labs revérifiée** : identique pour le prêtre Sacré et Discipline (17 emplacements) ; libellé corrigé de l'enchantement de torse conseillé : Mana majeur.
 - **La base se corrige d'elle-même** : le niveau requis lu dans le jeu est retenu (sauvegarde du compte) et remplace celui de la base pour un objet dont le jeu n'a pas encore chargé les données ; avant, la valeur de la base s'affichait en attendant. Le diagnostic de Préparation indique combien de niveaux ont été appris.
 
 ## v3.6.2 (ForeverCompagnon 3.6.2) : erreurs d'HealBot neutralisées

@@ -33,6 +33,9 @@ local function Ctor(kind)
     node.id, node.id2 = nums[1], nums[2]
     -- enfants : champ g, ou directement la liste du tableau (h(-59, { n(…), n(…) }))
     node.children = node.fields.g or ((type(node.fields[1]) == "table" and node.fields[1].kind) and node.fields) or {}
+    -- ATT (15/11/2026) passe certains nœuds dans une fonction en ligne qui lit t.g, t.qgs, t.coords
+    -- (« (function(t) local g=t.g for i=1,#g … end)(h(-799, …)) ») : mêmes champs, au niveau du nœud
+    node.g, node.qgs, node.coords = node.children, node.fields.qgs, node.fields.coords
     return node
   end
 end
@@ -40,6 +43,8 @@ end
 local handlers = {}
 local U = setmetatable({}, { __index = function(_, k)
   if k == "AddEventHandler" then return function(_, fn) handlers[#handlers + 1] = fn end end
+  -- données de quête par faction (aqd : Alliance, hqd : Horde) : on garde le tableau tel quel (enfants dans g)
+  if k == "ResolveQuestData" then return function(t) return t end end
   if type(k) == "string" and k:find("^Create") then return Ctor(KIND[k] or "other") end
   return magic
 end, __newindex = function() end })
