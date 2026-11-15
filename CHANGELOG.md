@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v3.6.1 (ForeverCompagnon 3.6.1) : le bon coupable
+- **`/fp erreurs`** : une erreur dont le message ne contient pas de chemin de fichier était attribuée à ForeverCompagnon (le relevé se voyait lui-même en haut de la pile d'appels). La ligne du relevé est maintenant retirée de la pile, et l'erreur est attribuée au premier addon qui reste (ici HealBot).
+- **Conseil ajouté** pour l'erreur « SetPredictedValues … Secret values are only allowed during untainted execution » de HealBot (barre de soins entrants en donjon, depuis le client 1.60.1).
+
 ## v3.6.0 (ForeverCompagnon 3.6.0) : outil de diagnostic complet
 - **`/fp erreurs`** : toutes les erreurs Lua, actions bloquées et avertissements de **tous les addons** sont relevés, même quand le jeu ne les montre pas (seulement « Vos add-ons subissent un grand nombre d'erreurs ») : addon en cause, nombre de fois (dont en combat), heure, pile d'appels, et un **conseil** pour les problèmes connus (bug de la carte de Questie depuis le client 1.60.1, valeurs secrètes, fonction retirée par un patch…). Une ligne dans le chat par addon et par session (`/fp erreurs muet` pour la couper). Les 3 sessions précédentes restent visibles, pour voir si un problème revient.
 - **`/fp log`** : un **journal horodaté** que WoW n'a pas (erreurs, actions bloquées, connexion, `/reload`, zones, combats, niveaux, morts), gardé d'une session à l'autre dans le fichier de sauvegarde, donc lisible sur le PC hors du jeu (`WTF\Account\<compte>\SavedVariables\ForeverCompagnon.lua`). Une même ligne répétée dans la minute est regroupée (« ×20 »).

@@ -66,6 +66,9 @@ D.T = T
 
 -- Problèmes connus (motif dans le message ou la fonction) : explication et quoi faire
 D.KNOWN = {
+  { find = "SetPredictedValues", addon = "HealBot",
+    fr = "bug de HealBot depuis le client 1.60.1 : en donjon, la vie des membres du groupe est secrète et HealBot la passe à sa barre de soins entrants, ce que le jeu n'autorise plus aux addons. Sans conséquence grave (seule la prédiction des soins entrants manque). Mets HealBot à jour ; en attendant, désactive l'affichage des soins entrants dans ses options s'il en a un, ou clique « Ignorer »",
+    en = "HealBot bug since client 1.60.1: in dungeons, group members' health is secret and HealBot passes it to its incoming-heals bar, which the game no longer allows addons to do. Not serious (only incoming-heal prediction is missing). Update HealBot; meanwhile turn off incoming heals in its options if it has one, or click « Ignore »" },
   { find = "SetPassThroughButtons", addon = "Questie",
     fr = "bug connu de Questie depuis le client 1.60.1 : ses icônes de la carte du monde touchent une fonction réservée en combat. Sans conséquence (les icônes ne réagissent pas pendant le combat). Mets Questie à jour ; suivi : github.com/Questie/Questie/issues/8304",
     en = "known Questie bug since client 1.60.1: its world map icons call a function reserved in combat. Harmless (icons do not react during combat). Update Questie; tracking: github.com/Questie/Questie/issues/8304" },
@@ -87,6 +90,18 @@ local function AddonOf(text)
   if type(text) ~= "string" then return nil end
   return text:match("[Aa]dd[Oo]ns[/\\]([^/\\\"%]:]+)")
 end
+
+-- Pile d'appels sans les lignes de ce relevé (sinon ForeverCompagnon s'accusait lui-même, 15/11/2026 : erreur de
+-- HealBot dont le message ne contient aucun chemin)
+local function CleanStack(stack)
+  if type(stack) ~= "string" then return nil end
+  local out = {}
+  for line in stack:gmatch("[^\n]+") do
+    if not line:find("ForeverCompagnon[/\\]Debug%.lua") then out[#out + 1] = line end
+  end
+  return table.concat(out, "\n")
+end
+D.CleanStack = CleanStack
 
 local function Advice(e)
   local hay = (e.msg or "") .. " " .. (e.func or "")
@@ -169,7 +184,7 @@ local function Hook()
   if prev == mine then return end
   mine = function(msg, ...)
     pcall(function()
-      D.Record("error", msg, nil, nil, debugstack and debugstack(3, 12, 0) or nil)
+      D.Record("error", msg, nil, nil, CleanStack(debugstack and debugstack(2, 14, 0) or nil))
     end)
     if prev then return prev(msg, ...) end
   end

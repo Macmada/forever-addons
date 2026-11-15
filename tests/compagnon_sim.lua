@@ -949,6 +949,18 @@ do
   check(saved == D.session, "session en cours gardée dans la sauvegarde")
   SlashCmdList.FOREVERCOMPAGNON("erreurs effacer")
   check(#D.session.items == 0, "/fp erreurs effacer")
+  -- 3.6.1 : message sans chemin (erreur de HealBot du 15/11/2026) : la ligne du relevé lui-même est retirée de la pile,
+  -- l'erreur est attribuée au premier addon qui reste (avant : ForeverCompagnon s'accusait lui-même)
+  local saveStack = _G.debugstack
+  _G.debugstack = function() return table.concat({
+    "[Interface/AddOns/ForeverCompagnon/Debug.lua]:171: in function <Interface/AddOns/ForeverCompagnon/Debug.lua:170>",
+    "[C]: ?", "[C]: in function 'SetPredictedValues'",
+    "[Interface/AddOns/HealBot/HealBot_ForeverPrediction.lua]:97: in function <...terface/AddOns/HealBot/HealBot_ForeverPrediction.lua:85>" }, "\n") end
+  GameError("bad argument #3 to '?' (Current Field: [health], Usage: self:SetPredictedValues(predictedValues). Secret values are only allowed during untainted execution for this argument.)")
+  _G.debugstack = saveStack
+  local hb = D.session.items[#D.session.items]
+  check(hb.addon == "HealBot" and not hb.stack:find("Debug.lua", 1, true), "erreur sans chemin : attribuée à HealBot, pas à ForeverCompagnon")
+  check(D.Advice(hb):find("HealBot", 1, true) and D.Advice(hb) ~= D.T.oursIt, "conseil du bug connu de HealBot")
   -- une erreur dans le gestionnaire ne doit jamais casser le jeu
   local okNil = pcall(GameError, nil)
   check(okNil, "erreur sans message : rien ne casse")
