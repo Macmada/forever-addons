@@ -230,6 +230,9 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
   elseif msg == "test" then root.RunTests()
   elseif msg == "sonde" or msg == "probe" then root.ShowProbe()
   elseif msg == "diag" then root.ShowDiag()
+  elseif msg == "rapport" or msg == "report" or msg == "diag complet" then root.Debug.ShowReport()
+  elseif msg == "log" or msg == "journal" or msg:match("^log ") or msg:match("^journal ") then root.Debug.Command(msg)
+  elseif msg:match("^erreurs?%s*") or msg:match("^errors?%s*") then root.Debug.Command(msg:gsub("^%a+%s*", ""))
   else root.Print(L.help) end
 end
 

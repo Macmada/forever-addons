@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v3.6.0 (ForeverCompagnon 3.6.0) : outil de diagnostic complet
+- **`/fp erreurs`** : toutes les erreurs Lua, actions bloquées et avertissements de **tous les addons** sont relevés, même quand le jeu ne les montre pas (seulement « Vos add-ons subissent un grand nombre d'erreurs ») : addon en cause, nombre de fois (dont en combat), heure, pile d'appels, et un **conseil** pour les problèmes connus (bug de la carte de Questie depuis le client 1.60.1, valeurs secrètes, fonction retirée par un patch…). Une ligne dans le chat par addon et par session (`/fp erreurs muet` pour la couper). Les 3 sessions précédentes restent visibles, pour voir si un problème revient.
+- **`/fp log`** : un **journal horodaté** que WoW n'a pas (erreurs, actions bloquées, connexion, `/reload`, zones, combats, niveaux, morts), gardé d'une session à l'autre dans le fichier de sauvegarde, donc lisible sur le PC hors du jeu (`WTF\Account\<compte>\SavedVariables\ForeverCompagnon.lua`). Une même ligne répétée dans la minute est regroupée (« ×20 »).
+- **`/fp rapport`** : tout en un seul texte à copier pour Claude : erreurs, addons installés (version, mémoire, raison s'ils ne se chargent pas), journal, auto-test, diagnostic et sonde.
+
 ## v3.5.13 (ForeverCompagnon 3.5.13) : compatible avec le client 1.60.1
 - **Plus d'avalanche d'erreurs Lua en combat** depuis le patch 1.60.1 (build 70938, 12/11/2026) : le jeu refuse désormais aux addons la lecture des améliorations (buffs) en combat, et la fiche Préparation comme l'écran Maintenant échouaient à chaque mise à jour (« Auras cannot be accessed when secret »), d'où le message « Vos add-ons subissent un grand nombre d'erreurs ».
 - **En combat**, la fiche garde ce qu'elle a lu juste avant ; si elle n'a encore rien pu lire, l'amélioration est marquée « illisible en combat (vérifié après le combat) » au lieu de « à lancer », et personne du groupe n'est déclaré sans amélioration à tort.

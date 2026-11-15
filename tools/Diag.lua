@@ -89,6 +89,9 @@ if not blocked then
     if #blocked < 30 then
       blocked[#blocked + 1] = string.format("%s %s %s %s", date("%H:%M:%S"), tostring(event), tostring(addon), tostring(func))
     end
+    -- relevé des erreurs de ForeverCompagnon (Debug.lua) : il reçoit aussi les actions bloquées, sans second abonnement
+    local hook = _G.ForeverOnBlocked
+    if type(hook) == "function" then pcall(hook, event, addon, func) end
   end)
 end
 

@@ -60,6 +60,9 @@ Une seule fenêtre pour ton personnage, **quelle que soit sa classe, sa race ou 
 - **Auto-test** (`/fp test`) : essaie pour de vrai chaque fonction importante sur ton client (sacs, équiper, marchand, sorts, mana, métiers, chaque partie) et donne un rapport à copier.
 - **Sonde** (`/fp sonde`) : la liste des fonctions de WoW présentes ou absentes sur ton client, à coller telle quelle : elle devient le profil du client dans les tests hors jeu (`tests/forever_client.lua`).
 - **Diag** (`/fp diag`) : le diagnostic de toutes les parties en un seul texte.
+- **Erreurs des addons** (`/fp erreurs`) : relève les erreurs Lua, les actions bloquées et les avertissements de **tous** les addons, même quand le jeu ne les affiche pas (« Vos add-ons subissent un grand nombre d'erreurs ») : addon en cause, nombre de fois, en combat ou non, heure, pile d'appels, et un conseil pour les problèmes connus. Une ligne dans le chat par addon et par session (`/fp erreurs muet` pour la couper, `/fp erreurs effacer` pour repartir de zéro). Les 3 sessions précédentes sont gardées pour voir si un problème revient.
+- **Journal** (`/fp log`) : ce que WoW n'a pas, un journal horodaté (erreurs, actions bloquées, connexion, `/reload`, zones, combats, niveaux, morts), gardé d'une session à l'autre dans le fichier de sauvegarde, donc lisible sur le PC hors du jeu : `WTF\Account\<compte>\SavedVariables\ForeverCompagnon.lua` (`ForeverCompagnonDB.debug.log`, 800 dernières lignes). Le jeu écrit ce fichier à la déconnexion et à chaque `/reload`, pas après un plantage.
+- **Rapport complet** (`/fp rapport`) : erreurs, addons installés (version, mémoire, raison s'ils ne sont pas chargés), journal, auto-test, diagnostic et sonde, en un seul texte à copier pour Claude.
 
 Le **lien avec le jeu** (`ForeverCompagnon/Compat.lua`) est le seul endroit qui appelle les fonctions du jeu qui diffèrent entre clients (équiper, marchand, sacs, sorts, mana secrète en combat) ; la sonde et l'auto-test disent quelle méthode a été retenue.
 
@@ -138,6 +141,7 @@ Chaque addon a un **bouton « Diag »** dans la barre de titre de sa fenêtre (e
 | `/floot diag` | numéro de chaque objet de la liste de référence et son nom dans ce client (les numéros non vérifiés sont signalés), nombre d'objets vus, butin noté par donjon |
 | `/fp diag` | toutes les parties de ForeverCompagnon d'un coup, avec les méthodes retenues par le lien avec le jeu |
 | `/fp test` / `/fp sonde` | auto-test en jeu de chaque fonction / fonctions présentes et absentes du client |
+| `/fp erreurs` / `/fp log` / `/fp rapport` | erreurs et actions bloquées de tous les addons (avec conseil) / journal horodaté gardé dans la sauvegarde / tout en un seul texte |
 | `/fheal diag` | relevé du jeu et conversions mesurées, sorts de soin avec leur description brute et ce que l'addon en lit, sorts de soin du grimoire inconnus de la base, caractéristiques de chaque pièce portée |
 
 Chaque texte commence par la version du client, le numéro d'interface, la langue, le personnage et les addons chargés. Le module est commun (`tools/Diag.lua`, copié dans chaque addon par `tools/sync-shared.sh`, comme l'icône commune `tools/Hub.lua` et le tutoriel `tools/Tour.lua` ; dans ForeverCompagnon, une seule copie enveloppée, `ForeverCompagnon/Shared/`, appliquée à chaque partie).

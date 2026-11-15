@@ -75,6 +75,13 @@ check(_G.GetItemInfo == nil and _G.IsAddOnLoaded == nil and _G.GetItemCount == n
 -- (anciens dossiers ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers, ForeverPretre retirés en 3.5.8)
 
 -- chargement complet
+-- gestionnaire d'erreurs du jeu (le relevé des erreurs de tous les addons s'y chaîne)
+local blizzHandled = {}
+local handler = function(msg) blizzHandled[#blizzHandled + 1] = msg end
+_G.geterrorhandler = function() return handler end
+_G.seterrorhandler = function(f) handler = f end
+_G.debugstack = function() return "[string \"@Interface/AddOns/Questie/Modules/Map.lua\"]:42: in function <...>\n[C]: in function 'pcall'" end
+local function GameError(msg) return geterrorhandler()(msg) end
 local root = W.load("ForeverCompagnon")
 W.fire("ADDON_LOADED", "ForeverCompagnon")
 W.fire("PLAYER_LOGIN")
@@ -900,6 +907,52 @@ do
   _G.IsPlayerSpell, _G.C_Spell = saveIPS, saveSpell
   root.Game.used.spellName = nil
   for _, k in ipairs({ "HealBot_Config_Spells", "HealBot_Action_SetSpell", "HealBot_Config", "HealBot_Share_SkinLoad" }) do _G[k] = nil end
+end
+
+-- 3.6.0 : relevé des erreurs de tous les addons, journal horodaté gardé dans la sauvegarde, rapport complet
+do
+  local D = root.Debug
+  check(D and handler ~= nil, "relevé des erreurs installé (gestionnaire chaîné)")
+  local before = #D.session.items
+  SlashCmdList.FOREVERCOMPAGNON("erreurs effacer")          -- part d'un relevé vide (les tests d'avant ont pu en noter)
+  wipe(blizzHandled)
+  GameError("Interface/AddOns/HealBot/HealBot_Action.lua:812: attempt to compare secret number value")
+  GameError("Interface/AddOns/HealBot/HealBot_Action.lua:812: attempt to compare secret number value")
+  check(#blizzHandled == 2, "le gestionnaire de Blizzard reçoit toujours les erreurs")
+  W.combat = true
+  for _ = 1, 20 do W.fire("ADDON_ACTION_BLOCKED", "Questie", "Button:SetPassThroughButtons()") end
+  W.fire("PLAYER_REGEN_ENABLED")
+  W.combat = false
+  local items = D.session.items
+  if os.getenv("DBG") then for i, e in ipairs(items) do io.stderr:write("ITEM ", i, " ", e.kind, " ", e.addon, " ", e.n, " ", tostring(e.func or e.msg), "\n") end end
+  check(#items == 2 and items[1].addon == "HealBot" and items[1].n == 2, "erreur Lua : addon trouvé dans le chemin, comptée 2 fois")
+  check(items[2].addon == "Questie" and items[2].n == 20 and items[2].combat == 20, "action bloquée : 20 fois, en combat")
+  local text = D.ErrorsText(true)
+  check(text:find("Questie/issues/8304", 1, true), "conseil du problème connu de Questie")
+  check(text:find("HealBot", 1, true) and (text:find("secrète", 1, true) or text:find("secret", 1, true)), "conseil pour une valeur secrète")
+  local logText = D.LogText()
+  check(logText:find("×20", 1, true), "journal : la même action bloquée regroupée (×20)")
+  check(root.db.debug and root.db.debug.log == D.log() and #root.db.debug.log >= 3, "journal gardé dans ForeverCompagnonDB (fichier de sauvegarde)")
+  check(D.Summary(items):find("Questie 20", 1, true), "résumé : Questie 20 en tête")
+  local full = D.FullReport()
+  check(full:find("Addons installés", 1, true) or full:find("Installed addons", 1, true), "rapport complet : liste des addons")
+  check(full:find("auto-test", 1, true) and full:find("sonde", 1, true), "rapport complet : auto-test et sonde inclus")
+  SlashCmdList.FOREVERCOMPAGNON("erreurs")
+  check(ForeverCompagnonTextFrame:IsShown(), "/fp erreurs : fenêtre à copier")
+  SlashCmdList.FOREVERCOMPAGNON("log")
+  SlashCmdList.FOREVERCOMPAGNON("rapport")
+  SlashCmdList.FOREVERCOMPAGNON("erreurs muet")
+  check(root.db.debugQuiet == true, "/fp erreurs muet : chat coupé")
+  SlashCmdList.FOREVERCOMPAGNON("erreurs muet")
+  -- session suivante : l'ancienne passe dans l'historique
+  local saved = root.db.debug.current
+  check(saved == D.session, "session en cours gardée dans la sauvegarde")
+  SlashCmdList.FOREVERCOMPAGNON("erreurs effacer")
+  check(#D.session.items == 0, "/fp erreurs effacer")
+  -- une erreur dans le gestionnaire ne doit jamais casser le jeu
+  local okNil = pcall(GameError, nil)
+  check(okNil, "erreur sans message : rien ne casse")
+  check(before >= 0, "relevé avant le test : " .. before .. " élément(s)")
 end
 
 if os.getenv("SHOW") then W.rprint(report) end
