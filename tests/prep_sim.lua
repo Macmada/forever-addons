@@ -442,6 +442,18 @@ _G.C_Container.GetItemCooldown = function() return 0, 0 end
 local okModern, resModern = pcall(ns.Analyze, "dungeon")
 check(okModern and resModern, "client moderne : analyse sans GetItemCooldown global")
 check(not ns.DiagText():find("Erreur", 1, true), "client moderne : diagnostic sans erreur")
+-- base corrigée d'elle-même (15/11/2026) : le niveau lu dans le jeu est retenu et sert tant que l'objet n'est pas chargé
+do
+  ns.root.db = ns.root.db or {}
+  local it = ns.Item(1710, 21)
+  check(it and not it.loading and ns.LearnedLevels()[1710] == it.level, "niveau du jeu retenu dans la sauvegarde du compte")
+  Item(99999, nil, 48)                                     -- connu du jeu (icône) mais données pas encore chargées
+  ns.LearnedLevels()[99999] = 48
+  local pend = ns.Item(99999, 10)
+  check(pend.loading and pend.level == 48, "objet pas encore chargé : niveau appris (48) au lieu de celui de la base (10)")
+  ITEMS[99999] = nil
+end
+
 -- client 1.60.1 (70938, 12/11/2026) : en combat, GetAuraDataByIndex lève une erreur (« Auras cannot be accessed when
 -- secret while tainted ») ; l'analyse ne doit plus échouer, et garde la dernière lecture faite hors combat
 Char({ level = 38, class = "MAGE", talents = { 31, 0, 5 },

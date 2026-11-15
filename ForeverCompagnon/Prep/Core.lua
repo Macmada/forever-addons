@@ -24,15 +24,29 @@ local GetCount = (C_Item and C_Item.GetItemCount) or GetItemCount
 local pendingItems = {}
 
 -- name, niveau requis, icône ; nil si l'objet n'existe pas dans ce client
+-- Niveaux appris du jeu (base corrigée d'elle-même) : le niveau requis lu dans le jeu est retenu dans la sauvegarde
+-- du compte (ForeverCompagnonDB.itemLevels) et remplace celui de la base tant que l'objet n'est pas chargé (15/11/2026 :
+-- 12 niveaux de la base différaient du client 1.60.1 ; Forever change parfois les niveaux des objets)
+local function Learned()
+  local rdb = ns.root and ns.root.db
+  if not rdb then return nil end
+  rdb.itemLevels = rdb.itemLevels or {}
+  return rdb.itemLevels
+end
+ns.LearnedLevels = Learned
+
 function ns.Item(id, hintLevel)
   local _, _, _, _, icon = GetInstant(id)
   if not icon then return nil end
   local name, _, _, _, minLevel = GetInfo(id)
+  local learned = Learned()
   if not name then
     pendingItems[id] = true
     if C_Item and C_Item.RequestLoadItemDataByID then C_Item.RequestLoadItemDataByID(id) end
-    return { id = id, name = "#" .. id, level = hintLevel or 1, icon = icon, loading = true }
+    local known = learned and learned[id]
+    return { id = id, name = "#" .. id, level = known or hintLevel or 1, icon = icon, loading = true }
   end
+  if learned and minLevel and minLevel > 0 and learned[id] ~= minLevel then learned[id] = minLevel end
   return { id = id, name = name, level = (minLevel and minLevel > 0) and minLevel or (hintLevel or 1), icon = icon }
 end
 
@@ -669,6 +683,11 @@ function ns.DiagCollect(add)
         tostring(it.classID), tostring(it.subID), flag))
     end
   end
+  local learned = Learned() or {}
+  local nLearned = 0
+  for _ in pairs(learned) do nLearned = nLearned + 1 end
+  add("")
+  add(string.format("Niveaux appris du jeu (base corrigée d'elle-même) : %d objet(s)", nLearned))
   add("")
   add("## Consommables de la base")
   for _, cat in ipairs(D.consumables) do
