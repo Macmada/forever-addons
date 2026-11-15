@@ -189,7 +189,8 @@ for _, e in ipairs({ "LUA_WARNING", "PLAYER_LOGIN", "PLAYER_LOGOUT",
 local combatFrom
 local function Zone()
   local z = GetRealZoneText and GetRealZoneText() or "?"
-  local inInst, kind = IsInInstance and IsInInstance()
+  local inInst, kind
+  if IsInInstance then inInst, kind = IsInInstance() end     -- « a and f() » ne garderait que la 1re valeur
   return tostring(z) .. (inInst and (" (" .. tostring(kind) .. ")") or "")
 end
 ef:SetScript("OnEvent", function(_, event, a, b)
@@ -306,7 +307,7 @@ function D.AddonsText()
   if UpdateAddOnMemoryUsage and not Combat() then pcall(UpdateAddOnMemoryUsage) end
   local loadedRows, otherRows, nLoaded = {}, {}, 0
   for i = 1, num() do
-    local name, title, _, loadable, reason = info(i)
+    local name, _, _, loadable, reason = info(i)
     if name then
       local ok, isLoaded = pcall(Loaded, name)
       local version = Meta(name, "Version")
