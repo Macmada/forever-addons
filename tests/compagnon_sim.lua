@@ -113,81 +113,13 @@ check(lines[1].kind == "head" and lines[1].title == root.L.secTodo and #root.now
       "Maintenant : « À faire » en premier, sans erreur (" .. table.concat(root.nowErrors, " ; ") .. ")")
 local footers = 0
 for _, l in ipairs(lines) do if l.footer then footers = footers + 1 end end
-check(footers == 4, "Maintenant : liens vers les 4 onglets en bas")
-check(#tiles >= 3 and #tiles <= 5, "Maintenant : " .. #tiles .. " tuiles en haut")
+check(footers == 3, "Maintenant : liens vers les 3 onglets en bas")
+check(#tiles >= 3 and #tiles <= 4, "Maintenant : " .. #tiles .. " tuiles en haut")
 
--- suivi de session : XP/h, prochain niveau, or, quêtes, donjons ; /reload garde la session, longue pause = nouvelle
-do
-  local S = root.Session
-  local xp, money, lvl = 1000, 50000, W.level or 30
-  _G.UnitXP = function() return xp end
-  _G.UnitXPMax = function() return 10000 end
-  _G.GetMoney = function() return money end
-  local saveLevel = _G.UnitLevel
-  _G.UnitLevel = function() return lvl end
-  local t0 = os.time()
-  local now = t0
-  _G.GetServerTime = function() return now end
-  ForeverCompagnonDB.session = nil
-  S.Start()
-  check(S.ETA() == nil and S.Tile().value == "…", "session : pas d'estimation au début")
-  for _ = 1, 40 do W.run(15) end                                  -- 10 min de jeu
-  xp = 3000; W.fire("PLAYER_XP_UPDATE", "player")                 -- +2000 en 10 min = 12 000/h
-  money = 70000; W.fire("PLAYER_MONEY"); money = 65000; W.fire("PLAYER_MONEY")
-  W.fire("QUEST_TURNED_IN", 1, 100, 50)
-  W.inInstance, W.instanceType = true, "party"
-  _G.GetInstanceInfo = function() return "Les Mortemines", "party" end
-  S.OnZone(); S.OnZone()                                          -- même donjon : compté une fois
-  W.inInstance, W.instanceType = false, "none"
-  local rate = S.Rate()
-  check(rate and math.abs(rate - 12000) < 200, "session : XP/h d'après le rythme réel (" .. tostring(rate) .. ")")
-  local eta = S.ETA()
-  check(eta and math.abs(eta - 7000 / rate * 3600) < 1, "session : temps jusqu'au prochain niveau")
-  local tile = S.Tile()
-  check(tile.value:find("^~") and tile.label:find(tostring(lvl + 1)), "session : tuile « ~" .. tile.value .. " " .. tile.label .. " »")
-  -- combat : XP illisible pendant 3 monstres, rattrapée à la sortie du combat
-  local secret = {}
-  local saveSV = _G.issecretvalue
-  _G.issecretvalue = function(v) return v == secret end
-  _G.UnitXP = function() return secret end
-  W.fire("PLAYER_XP_UPDATE", "player"); W.fire("PLAYER_XP_UPDATE", "player")
-  _G.UnitXP = function() return xp end
-  xp = 3600; W.fire("PLAYER_REGEN_ENABLED")
-  _G.issecretvalue = saveSV
-  check(ForeverCompagnonDB.session.xp == 2600, "session : XP des monstres gagnée en combat comptée (" .. ForeverCompagnonDB.session.xp .. ")")
-  xp = 3000; ForeverCompagnonDB.session.xp = 2000; S.OnXP()       -- on reprend le fil du test
-  -- montée de niveau : XP restante du niveau + nouvelle XP
-  xp = 9500; W.fire("PLAYER_XP_UPDATE", "player")
-  lvl = lvl + 1; xp = 500; W.fire("PLAYER_LEVEL_UP", lvl); W.run(1)
-  local s = ForeverCompagnonDB.session
-  check(s.xp == 2000 + 6500 + 1000, "session : XP à travers la montée de niveau (" .. s.xp .. ")")
-  check(s.moneyIn == 20000 and s.moneyOut == 5000 and s.quests == 1 and s.nDungeons == 1, "session : or, quêtes et donjons (" .. s.moneyIn .. "/" .. s.moneyOut .. "/" .. s.quests .. "/" .. tostring(s.nDungeons) .. ")")
-  local recap = S.Recap()
-  check(recap:find("Mortemines") and recap:find("9 500") and recap:find(lvl - 1 .. " %-> " .. lvl), "session : récapitulatif (" .. recap .. ")")
-  -- bandeau sous la fiche du personnage
-  local saveCF = _G.CharacterFrame
-  _G.CharacterFrame = _G.CharacterFrame or CreateFrame("Frame", "CharacterFrame", UIParent)
-  S.AttachSheet()
-  local sh = _G.ForeverCompagnonSessionSheet
-  sh:Show(); S.UpdateSheet()
-  local d = S.SheetDefs()
-  local vals = {}
-  for k, x in ipairs(d) do vals[k] = x.value .. " " .. x.label end
-  check(#d == 5 and d[1].value == "+9 500" and d[3].frac and d[3].frac > 0 and d[4].value == "+1 po 50 pa" and d[5].value == "1"
-        and sh.tiles.list[5]:IsShown(), "fiche du personnage : 5 tuiles de session (" .. table.concat(vals, " | ") .. ")")
-  _G.CharacterFrame = saveCF
-  -- /reload : même session ; 1 h plus tard : nouvelle, l'ancienne résumée
-  now = now + 60; S.Start()
-  check(ForeverCompagnonDB.session == s, "session : un /reload garde la session")
-  now = now + 3600; S.Start()
-  check(ForeverCompagnonDB.lastSession == s and ForeverCompagnonDB.session ~= s and S.announceLast, "session : longue pause = nouvelle session")
-  SlashCmdList.FOREVERCOMPAGNON("session")
-  lvl = 60
-  check(S.Tile() == nil, "session : pas de tuile au niveau 60")
-  _G.UnitLevel = saveLevel
-  _G.UnitXP, _G.UnitXPMax, _G.GetMoney, _G.GetServerTime, _G.GetInstanceInfo = nil, nil, nil, nil, nil
-  ForeverCompagnonDB.session, ForeverCompagnonDB.lastSession, S.announceLast = nil, nil, nil
-end
+-- 3.7.0 : plus de suivi de session (XP) ni de Métiers
+check(root.Session == nil and root.mods.ForeverMetiers == nil, "suivi de session et Métiers retirés")
+for _, t in ipairs(tiles) do check(t.kind ~= "session", "pas de tuile de session") end
+check(_G.ForeverCompagnonSessionSheet == nil, "pas de bandeau de session sous la fiche du personnage")
 check(ForeverCompagnonNowFrame.tiles and ForeverCompagnonNowFrame.tiles[1]:IsShown(), "tuiles affichées")
 check(ForeverCompagnonRail and ForeverCompagnonRail:IsShown(), "barre d'onglets affichée à côté")
 
@@ -198,13 +130,14 @@ SlashCmdList.FOREVERPREP("")
 check(ForeverPrepFrame:IsShown() and not ForeverLootFrame:IsShown() and ForeverCompagnonRail:IsShown(), "/prep : passe aussi par la barre")
 root.Open("heal")
 check(ForeverHealPanel:IsShown() and not ForeverPrepFrame:IsShown(), "onglet Soins")
-root.Open("metiers")
-check(ForeverMetiersFrame:IsShown() and not ForeverHealPanel:IsShown(), "onglet Métiers")
-ForeverMetiersFrame:Hide()
+ForeverHealPanel:Hide()
 check(not ForeverCompagnonRail:IsShown(), "fermer la fenêtre ferme la barre")
 root.Toggle()
-check(ForeverMetiersFrame:IsShown(), "réouverture : dernier onglet")
-ForeverMetiersFrame:Hide()
+check(ForeverHealPanel:IsShown(), "réouverture : dernier onglet")
+ForeverHealPanel:Hide()
+root.Open("metiers")
+check(ForeverCompagnonNowFrame:IsShown() and root.db.lastTab == "now", "ancien onglet Métiers : Maintenant à la place")
+ForeverCompagnonNowFrame:Hide()
 
 -- en combat : pas de recalcul
 W.combat = true
@@ -230,7 +163,7 @@ check(report:find("C_Item.EquipItemByName", 1, true), "auto-test : équiper par 
 
 -- diagnostic commun : chaque partie
 local d = root.DiagText()
-check(d:find("ForeverHeal", 1, true) and d:find("ForeverMetiers", 1, true) and d:find("Lien avec le jeu", 1, true), "diagnostic commun avec chaque partie")
+check(d:find("ForeverHeal", 1, true) and d:find("ForeverPrep", 1, true) and d:find("Lien avec le jeu", 1, true), "diagnostic commun avec chaque partie")
 
 -- mana secrète même hors combat : dite clairement, rien ne plante
 check(report:find("mana actuelle secrète même hors combat", 1, true), "auto-test : mana secrète hors combat signalée comme limite du client")
@@ -310,35 +243,6 @@ local warrior = table.concat((function() local t = {} for _, l in ipairs(root.Ad
 check(not warrior:find("HealBot", 1, true) and not warrior:find("Full Mana", 1, true), "guerrier : ni HealBot ni Full Mana proposés")
 W.class = "PRIEST"
 ForeverCompagnonAddonsFrame:Hide()
-
--- Métiers : tous les métiers, conseils selon la classe
-local met = root.mods.ForeverMetiers
-local profs = {}
-_G.GetProfessions = function() return profs[1], profs[2], nil, profs[4], profs[5] end
-local PINFO = { [1] = { "Forge", 164, 120, 150 }, [2] = { "Minage", 186, 140, 150 }, [5] = { "Cuisine", 185, 30, 75 } }
-_G.GetProfessionInfo = function(i) local p = PINFO[i]; return p[1], "icone", p[3], p[4], 0, 0, p[2] end
-_G.GetNumSkillLines, _G.GetSkillLineInfo = nil, nil
-W.class = "WARRIOR"
-profs = { 1, 2, nil, nil, 5 }
-met.ReadSkills()
-check(met.db.skills.blacksmithing and met.db.skills.mining and met.db.skills.cooking and not met.db.skills.tailoring,
-      "guerrier : forge, minage et cuisine lus (par numéro de métier)")
-local function Txt(lines) local t = {} for _, l in ipairs(lines) do t[#t + 1] = (l.title or "") .. " " .. (l.name or "") .. " " .. (l.text or "") .. " " .. (l.source or "") end return table.concat(t, "\n") end
-local wl = Txt(met.LevelLines())
-local PN = met.ProfName
-check(wl:find(PN("blacksmithing"), 1, true) and wl:find(PN("mining"), 1, true) and wl:find(PN("cooking"), 1, true), "guerrier : ses trois métiers dans « Que faire ? »")
-check(not wl:find(PN("tailoring"), 1, true) and not wl:find(PN("enchanting"), 1, true), "guerrier : ni couture ni enchantement proposés")
-check(wl:find("maître", 1, true) or wl:find("trainer", 1, true), "forge 120/150 : rappel du maître, sans données propres")
-check(not wl:find("todoLearn_", 1, true) and not wl:find("prof_", 1, true), "aucun texte manquant affiché")
-profs = { nil, nil, nil, nil, 5 }
-met.ReadSkills()
-check(not met.db.skills.blacksmithing, "métier abandonné : retiré")
-local nl = Txt(met.LevelLines())
-check(nl:find(PN("mining"), 1, true) and nl:find(PN("blacksmithing"), 1, true),
-      "guerrier sans métier principal : minage et forge conseillés")
-W.class = "PRIEST"
-local pl = Txt(met.LevelLines())
-check(pl:find(PN("tailoring"), 1, true) and pl:find(PN("enchanting"), 1, true), "prêtre sans métier : couture et enchantement conseillés")
 
 -- rôle choisi (le client ne donne pas les talents) : poids d'Équipement selon classe et rôle
 local loot = root.mods.ForeverLoot
@@ -455,8 +359,6 @@ check(b == 5 and bk == 20 and alts == 0, "banque relevée à l'ouverture : 5 en 
 root.db.inv["Reroll - Forever"] = { bags = { [2589] = 7 }, bank = { [14047] = 3 } }
 b, bk, alts = store.Count(2589)
 check(alts == 7 and store.Owned(2589):find("Reroll", 1, true), "reroll : 7 étoffes de lin chez Reroll")
-local mb, mbank, malts = root.mods.ForeverMetiers.Count(2589)
-check(mb == 5 and mbank == 20 and malts == 7, "Métiers : composants comptés sans Syndicator (sacs, banque, rerolls)")
 check(root.mods.ForeverLoot.Owned(14047):find("Reroll", 1, true), "Équipement : objet chez un reroll, sans Syndicator")
 _G.C_Container = realCC
 -- hôtel des ventes : bouton, relevé complet, prix unitaire le plus bas
@@ -475,7 +377,6 @@ W.run(1)
 check(store.Price(2589) == 15 and store.Price(14047) == 1000, "prix unitaire le plus bas : lin 15 pc, étoffe runique 1000 pc")
 ForeverCompagnonScanButton.scripts.OnClick()
 check(replicated == 1, "deuxième relevé refusé avant 15 minutes (limite du jeu)")
-check(root.mods.ForeverMetiers.Price(2589) == 15, "Métiers : prix relevé par ForeverCompagnon sans Auctionator")
 check(root.mods.ForeverPrep.Price(2589, true) == 15, "Préparation : prix de l'hôtel des ventes relevé")
 _G.C_AuctionHouse, _G.AuctionHouseFrame = nil, nil
 
@@ -626,17 +527,6 @@ do
   check(place and place.tags:find("20-30", 1, true) and place.tags:find("ffaa3c", 1, true), "pastille « niv. 20-30 », orange au niveau 12")
   loot.WhereToGo = saveWhere
   _G.C_LFGList = nil
-  -- métiers : rang suivant à apprendre (Cuisine 53/75 au niveau 12 : compagnon, compétence 50 et niveau 10 atteints)
-  local m = root.mods.ForeverMetiers
-  local saveSk = m.db.skills
-  m.db.skills = { cooking = { rank = 53, max = 75 }, tailoring = { rank = 89, max = 150 } }
-  local cook, tail
-  for _, l in ipairs(root.NowLines()) do
-    if l.name and l.name:find(m.ProfName("cooking"), 1, true) then cook = l end
-    if l.name and l.name:find(m.ProfName("tailoring"), 1, true) and l.name:find("(", 1, true) then tail = l end
-  end
-  check(cook and cook.source:find("53/75", 1, true) and not tail, "À faire : rang de Cuisine à apprendre ; Couture 89/150 : pas encore (125)")
-  m.db.skills = saveSk
 end
 
 -- quêtes à ton niveau (Questie) : regroupées par zone, trop hautes exclues, clic : donneur le plus proche

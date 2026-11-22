@@ -1,23 +1,24 @@
 local ADDON, root = ...
 
--- ForeverCompagnon : Soins, Équipement, Préparation et Métiers en un seul addon (avant : ForeverHeal, ForeverLoot,
--- ForeverPrep, ForeverMetiers). Chaque partie garde son propre espace de noms (root.mods.<ancien nom>), ses réglages
+-- ForeverCompagnon : Soins, Équipement et Préparation en un seul addon (avant : ForeverHeal, ForeverLoot,
+-- ForeverPrep). Les Métiers et le suivi de session (XP) ont été retirés en 3.7.0, à la demande du joueur.
+-- Chaque partie garde son propre espace de noms (root.mods.<ancien nom>), ses réglages
 -- et ses commandes ; les modules communs (diagnostic, composants, sources ATT, tutoriel) n'existent qu'une fois
 -- (Shared/*.lua) et sont appliqués à chaque partie à la place qu'ils avaient dans son ancien chargement.
 
 root.ROOT = ADDON
 root.Shared = {}
 root.mods = {}
-root.order = { "ForeverHeal", "ForeverLoot", "ForeverPrep", "ForeverMetiers" }
+root.order = { "ForeverHeal", "ForeverLoot", "ForeverPrep" }
 
 local FR = GetLocale() == "frFR"
 root.FR = FR
 root.L = FR and {
   title = "ForeverCompagnon",
-  now = "Maintenant", heal = "Soins", loot = "Équipement", prep = "Préparation", metiers = "Métiers",
+  now = "Maintenant", heal = "Soins", loot = "Équipement", prep = "Préparation",
   nowTitle = "Que faire maintenant ?",
   secTodo = "À faire", tileHps = "soins/s", tileAuto = "de soins sans pause", tileNever = "jamais à sec", tileUp = "améliorations",
-  tileBuy = "à acheter", tileProf = "métiers", tilePlaces = "lieux à faire",
+  tileBuy = "à acheter", tilePlaces = "lieux à faire",
   todoTrainer = "Aller voir le maître de classe", todoTrainerSpells = "%d sort(s) à apprendre", todoTrainerLikely = "nouveaux sorts probables à ton niveau",
   todoTrainerCost = "coût %s", todoTrainerNoPos = "Passe une fois chez ton maître de classe : je retiens où il est et ses sorts.",
   todoDungeon = "Faire : %s", todoZone = "Quêtes et butin : %s", tagDungeon = "donjon", tagZone = "zone", tagLevel = "niv. %d+",
@@ -25,25 +26,18 @@ root.L = FR and {
   clickGo = "Clic : itinéraire le plus rapide (flèche, vols connus)", rightOpen = "Clic droit : ouvrir l'onglet",
   noTodo = "Rien d'urgent : tu es prêt.", footer = "Tout voir :",
   tagRange = "niv. %d-%d", todoEquip = "Équiper : %s", todoEquipSrc = "déjà dans tes sacs · clic : équiper",
-  todoBuyItem = "Acheter : %s", todoProfRank = "Apprendre %s (%s)", todoProfRankSrc = "%d/%d : le maître te fait passer à %d",
-  sessTitle = "Ta session", sessHead = "Session (%s) : ", sessXP = "+%s XP", sessRate = " (%s/h)", sessIn = "+%s gagnés",
-  sessOut = "%s dépensés", sessQuests = "%d quête(s) rendue(s)", sessDungeons = "%d donjon(s) : %s", sessLevels = "niveau %d -> %d",
-  sessNone = "Pas encore de session.", sessNext = "jusqu'au niv. %d", sessWait = "Le temps estimé s'affiche après 5 min de jeu et un peu d'XP.",
-  sessZone = "Pour monter : quêtes à %s (%d)", sessLastLabel = "Dernière session · ", sessSheetXP = "XP · %s", sessSheetRate = "XP par heure", sessSheetMoney = "or (net)",
-  sessSheetQuests = "quêtes rendues", sessSheetQD = "quêtes · %d donjon(s)", sessSheetClick = "Clic : récapitulatif dans le chat",
+  todoBuyItem = "Acheter : %s",
   todoQuests = "Quêtes : %s", todoQuestsN = "%d quêtes", todoQuestsGiver = "donneur : %s", todoQuestsMore = "… et %d autres",
   tagQuests = "quêtes",
-  todoFirstAid = "Apprendre le Secourisme", todoFirstAidSrc = "aucun bandage : le Secourisme les fabrique avec le tissu que tu ramasses",
   role = "Rôle :", role_tank = "Tank", role_heal = "Soins", role_melee = "Dégâts (mêlée)", role_caster = "Dégâts (sorts)",
   roleTip = "Ton rôle règle les conseils d'équipement et de préparation (le jeu ne donne pas tes talents aux addons).",
   nowIntro = "Le plus utile à ton niveau (%d), en un coup d'œil. Clique sur une ligne pour le détail.",
-  secPriest = "Tes soins", secGear = "Équipement à ta portée", secBuy = "À acheter avant le donjon", secProf = "Métiers",
+  secPriest = "Tes soins", secGear = "Équipement à ta portée", secBuy = "À acheter avant le donjon",
   hps = "%s soins/s", oom = "à sec après %s de soins sans pause", noOom = "jamais à sec", regen = "régén. %s mana/s hors combat",
   manaSecret = "Valeurs du prêtre lues hors combat.",
   noGear = "Rien de mieux à portée pour l'instant (jusqu'au niveau %d).",
   allGood = "Rien à acheter : tu es prêt.",
   guide = "Guide-moi vers le vendeur", guideSub = "%d article(s) à acheter",
-  noProf = "Rien à faire en métier pour l'instant.",
   more = "Voir tout",
   combat = "En combat : dernier état connu (mise à jour après le combat).",
   refresh = "Actualiser", test = "Auto-test", probe = "Sonde", diag = "Diag",
@@ -51,9 +45,9 @@ root.L = FR and {
   testTitle = "ForeverCompagnon — auto-test", probeTitle = "ForeverCompagnon — sonde du client",
   testHelp = "Copie ce rapport (Ctrl+A, Ctrl+C) et colle-le à Claude.",
   ok = "OK", ko = "ÉCHEC", skip = "non testé",
-  help = "Commandes : /fp (maintenant), /fp soins, /fp equipement, /fp prepa, /fp metiers, /fp addons, /fp healbot [voir|annuler], /fp vols, /fp session, /fp way x y [nom], /fp test, /fp sonde, /fp diag ; problèmes : /fp erreurs [afficher|effacer|muet], /fp log, /fp rapport",
+  help = "Commandes : /fp (maintenant), /fp soins, /fp equipement, /fp prepa, /fp addons, /fp healbot [voir|annuler], /fp vols, /fp way x y [nom], /fp test, /fp sonde, /fp diag ; problèmes : /fp erreurs [afficher|effacer|muet], /fp log, /fp rapport",
   ownBank = "dans ta banque", ownOther = "chez %s",
-  scanButton = "Relever les prix", scanTip = "ForeverCompagnon relève tous les prix de l'hôtel des ventes (une fois toutes les 15 minutes, limite du jeu) pour la préparation et les métiers.",
+  scanButton = "Relever les prix", scanTip = "ForeverCompagnon relève tous les prix de l'hôtel des ventes (une fois toutes les 15 minutes, limite du jeu) pour la préparation.",
   scanStart = "Relevé des prix de l'hôtel des ventes en cours…", scanDone = "Prix relevés : %d objets (%d enchères).",
   scanWait = "Le jeu permet un relevé toutes les 15 minutes : réessaie dans %d min.", scanNoApi = "Relevé des prix impossible sur ce client.",
   scanLast = "Dernier relevé : %s",
@@ -93,10 +87,10 @@ root.L = FR and {
   tileOn = "actifs", tileOff = "désactivés", tileAbsent = "absents (facultatifs)",
 } or {
   title = "ForeverCompanion",
-  now = "Now", heal = "Healing", loot = "Gear", prep = "Preparation", metiers = "Professions",
+  now = "Now", heal = "Healing", loot = "Gear", prep = "Preparation",
   nowTitle = "What to do now?",
   secTodo = "To do", tileHps = "healing/s", tileAuto = "of non-stop healing", tileNever = "never dry", tileUp = "upgrades",
-  tileBuy = "to buy", tileProf = "professions", tilePlaces = "places to do",
+  tileBuy = "to buy", tilePlaces = "places to do",
   todoTrainer = "Visit your class trainer", todoTrainerSpells = "%d spell(s) to learn", todoTrainerLikely = "new spells likely at your level",
   todoTrainerCost = "cost %s", todoTrainerNoPos = "Visit your class trainer once: I'll remember where it is and its spells.",
   todoDungeon = "Run: %s", todoZone = "Quests and loot: %s", tagDungeon = "dungeon", tagZone = "zone", tagLevel = "lvl %d+",
@@ -104,25 +98,18 @@ root.L = FR and {
   clickGo = "Click: fastest route (arrow, known flights)", rightOpen = "Right-click: open the tab",
   noTodo = "Nothing urgent: you're ready.", footer = "See all:",
   tagRange = "lvl %d-%d", todoEquip = "Equip: %s", todoEquipSrc = "already in your bags · click: equip",
-  todoBuyItem = "Buy: %s", todoProfRank = "Learn %s (%s)", todoProfRankSrc = "%d/%d: the trainer raises it to %d",
-  sessTitle = "Your session", sessHead = "Session (%s): ", sessXP = "+%s XP", sessRate = " (%s/h)", sessIn = "+%s earned",
-  sessOut = "%s spent", sessQuests = "%d quest(s) turned in", sessDungeons = "%d dungeon(s): %s", sessLevels = "level %d -> %d",
-  sessNone = "No session yet.", sessNext = "to level %d", sessWait = "The estimate appears after 5 min of play and some XP.",
-  sessZone = "To level up: quests in %s (%d)", sessLastLabel = "Last session · ", sessSheetXP = "XP · %s", sessSheetRate = "XP per hour", sessSheetMoney = "gold (net)",
-  sessSheetQuests = "quests turned in", sessSheetQD = "quests · %d dungeon(s)", sessSheetClick = "Click: recap in chat",
+  todoBuyItem = "Buy: %s",
   todoQuests = "Quests: %s", todoQuestsN = "%d quests", todoQuestsGiver = "giver: %s", todoQuestsMore = "… and %d more",
   tagQuests = "quests",
-  todoFirstAid = "Learn First Aid", todoFirstAidSrc = "no bandages: First Aid makes them from the cloth you loot",
   role = "Role:", role_tank = "Tank", role_heal = "Healer", role_melee = "Damage (melee)", role_caster = "Damage (spells)",
   roleTip = "Your role drives gear and preparation advice (the game does not give your talents to addons).",
   nowIntro = "The most useful things at your level (%d), at a glance. Click a line for details.",
-  secPriest = "Your healing", secGear = "Gear within reach", secBuy = "To buy before the dungeon", secProf = "Professions",
+  secPriest = "Your healing", secGear = "Gear within reach", secBuy = "To buy before the dungeon",
   hps = "%s healing/s", oom = "dry after %s of non-stop healing", noOom = "never out of mana", regen = "regen %s mana/s out of combat",
   manaSecret = "Priest values read out of combat.",
   noGear = "Nothing better within reach for now (up to level %d).",
   allGood = "Nothing to buy: you're ready.",
   guide = "Guide me to the vendor", guideSub = "%d item(s) to buy",
-  noProf = "Nothing to do in professions for now.",
   more = "See all",
   combat = "In combat: last known state (updated after the fight).",
   refresh = "Refresh", test = "Self-test", probe = "Probe", diag = "Diag",
@@ -130,7 +117,7 @@ root.L = FR and {
   testTitle = "ForeverCompanion — self-test", probeTitle = "ForeverCompanion — client probe",
   testHelp = "Copy this report (Ctrl+A, Ctrl+C) and paste it to Claude.",
   ok = "OK", ko = "FAIL", skip = "not tested",
-  help = "Commands: /fp (now), /fp heal, /fp gear, /fp prep, /fp prof, /fp addons, /fp healbot [voir|annuler], /fp vols, /fp session, /fp way x y [name], /fp test, /fp probe, /fp diag; problems: /fp erreurs [afficher|effacer|muet], /fp log, /fp rapport",
+  help = "Commands: /fp (now), /fp heal, /fp gear, /fp prep, /fp addons, /fp healbot [voir|annuler], /fp vols, /fp way x y [name], /fp test, /fp probe, /fp diag; problems: /fp erreurs [afficher|effacer|muet], /fp log, /fp rapport",
   ownBank = "in your bank", ownOther = "on %s",
   scanButton = "Scan prices", scanTip = "ForeverCompanion reads every auction house price (once every 15 minutes, game limit) for preparation and professions.",
   scanStart = "Scanning auction house prices…", scanDone = "Prices saved: %d items (%d auctions).",
@@ -245,6 +232,9 @@ ev:SetScript("OnEvent", function(_, event, arg)
     root.db.loads = (root.db.loads or 0) + 1
     root.loadsAtStart = root.db.loads
     root.db.hub = root.db.hub or {}
+    -- 3.7.0 : suivi de session et Métiers retirés ; on efface ce qu'ils avaient gardé
+    root.db.session, root.db.lastSession = nil, nil
+    if root.db.lastTab == "metiers" then root.db.lastTab = "now" end
     for _, f in ipairs(root.onLoaded or {}) do pcall(f) end
   elseif event == "PLAYER_LOGIN" then
     for _, f in ipairs(root.onLogin or {}) do pcall(f) end

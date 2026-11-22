@@ -1,7 +1,7 @@
 local ADDON, root = ...
 local L = root.L
 
--- Une seule fenêtre : une barre d'onglets verticale (Maintenant, Soins, Équipement, Préparation, Métiers) collée
+-- Une seule fenêtre : une barre d'onglets verticale (Maintenant, Soins, Équipement, Préparation, Addons) collée
 -- à gauche de la fenêtre affichée. Chaque partie garde sa propre fenêtre ; une seule est visible à la fois,
 -- à la même place. La barre suit la fenêtre (déplacement compris).
 
@@ -18,8 +18,6 @@ root.TABS = {
     mod = "ForeverLoot", toggle = "Toggle" },
   { key = "prep", label = L.prep, icon = "Interface\\Icons\\INV_Potion_51", frame = "ForeverPrepFrame",
     mod = "ForeverPrep", toggle = "Toggle" },
-  { key = "metiers", label = L.metiers, icon = "Interface\\Icons\\Trade_Tailoring", frame = "ForeverMetiersFrame",
-    mod = "ForeverMetiers", toggle = "Toggle" },
   { key = "addons", label = L.addons, icon = "Interface\\Icons\\Trade_Engineering", frame = "ForeverCompagnonAddonsFrame",
     open = function() root.ShowAddons() end },
 }
@@ -147,7 +145,7 @@ function root.Toggle()
 end
 function ForeverCompagnon_OnCompartmentClick() root.Toggle() end
 
--- Les commandes des parties (/fheal, /floot, /prep, /metiers) passent aussi par la barre : on enveloppe leurs Toggle
+-- Les commandes des parties (/fheal, /floot, /prep) passent aussi par la barre : on enveloppe leurs Toggle
 local function Wrap()
   for _, t in ipairs(root.TABS) do
     local ns = t.mod and root.mods[t.mod]
@@ -209,14 +207,13 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
   local raw = (msg or ""):match("^%s*(.-)%s*$")
   msg = raw:lower()
   local map = { [""] = "now", maintenant = "now", now = "now", soins = "heal", heal = "heal", equipement = "loot", ["équipement"] = "loot",
-                gear = "loot", loot = "loot", prepa = "prep", ["prépa"] = "prep", prep = "prep", metiers = "metiers", ["métiers"] = "metiers",
-                prof = "metiers", addons = "addons", addon = "addons" }
+                gear = "loot", loot = "loot", prepa = "prep", ["prépa"] = "prep", prep = "prep",
+                addons = "addons", addon = "addons" }
   local way = raw:match("^[Ww][Aa][Yy]%s*(.*)$")
   local hb = msg:match("^healbot%s*(.*)$")
   if way then root.Nav.Command(way)
   elseif hb then root.HealBot.Command(hb)
   elseif msg == "vols" or msg == "taxi" or msg == "flights" then root.Nav.ListTaxi()
-  elseif msg == "session" then root.Session.Command()
   elseif msg == "flash" or msg == "annonce" then
     root.db.flash = (root.db.flash == false)
     root.Print(root.db.flash and L.flash_on or L.flash_off)

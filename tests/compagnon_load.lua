@@ -1,7 +1,7 @@
--- Charge une partie de ForeverCompagnon seule (ancien addon : ForeverHeal, ForeverLoot, ForeverPrep, ForeverMetiers),
+-- Charge une partie de ForeverCompagnon seule (ancien addon : ForeverHeal, ForeverLoot, ForeverPrep),
 -- comme avant la fusion : socle (Root, modules communs, lien avec le jeu) puis seulement les fichiers de cette partie.
 -- Usage : local ns = dofile("tests/compagnon_load.lua")("ForeverHeal")  (l'API imitée doit déjà être en place)
-local MODDIR = { ForeverHeal = "Heal", ForeverLoot = "Loot", ForeverPrep = "Prep", ForeverMetiers = "Metiers" }
+local MODDIR = { ForeverHeal = "Heal", ForeverLoot = "Loot", ForeverPrep = "Prep" }
 local function tocFiles()
   local files = {}
   local toc = io.open("ForeverCompagnon/ForeverCompagnon.toc"):read("*a")

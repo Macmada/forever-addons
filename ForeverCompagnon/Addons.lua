@@ -11,16 +11,16 @@ local FR = root.FR
 root.ADDONS = {
   { key = "att", builtin = true, name = "All The Things", match = { "allthethings" }, global = "ATTC", used = true,
     icon = "Interface\\Icons\\INV_Misc_Book_11", url = "https://www.curseforge.com/wow/addons/all-the-things",
-    what = FR and "Où obtenir chaque objet et chaque recette (PNJ, quête, zone, réputation) : Équipement et Métiers."
-              or "Where to get every item and recipe (NPC, quest, zone, reputation): Gear and Professions." },
+    what = FR and "Où obtenir chaque objet (PNJ, quête, zone, réputation) : onglet Équipement."
+              or "Where to get every item (NPC, quest, zone, reputation): Gear tab." },
   { key = "dj", builtin = true, name = "DungeonJournal", match = { "dungeonjournal", "dungeon journal" }, global = "ForeverDungeonJournal_NS", used = true,
     icon = "Interface\\Icons\\INV_Misc_Book_09", url = nil,
     what = FR and "Butin de chaque boss et récompenses de quête des donjons de Forever : l'onglet Équipement s'en sert pour tes améliorations à ton niveau."
               or "Every boss's loot and dungeon quest rewards on Forever: the Gear tab uses it for upgrades at your level." },
   { key = "auctionator", builtin = true, name = "Auctionator", match = { "auctionator" }, global = "Auctionator", used = true,
     icon = "Interface\\Icons\\INV_Misc_Coin_01", url = "https://www.curseforge.com/wow/addons/auctionator",
-    what = FR and "Prix de l'hôtel des ventes : coût des achats (Préparation) et des crafts (Métiers)."
-              or "Auction house prices: cost of purchases (Preparation) and crafts (Professions)." },
+    what = FR and "Prix de l'hôtel des ventes : coût des achats (Préparation)."
+              or "Auction house prices: cost of purchases (Preparation)." },
   { key = "syndicator", builtin = true, name = "Syndicator", match = { "syndicator" }, global = "Syndicator", used = true,
     icon = "Interface\\Icons\\INV_Misc_Bag_10", url = "https://www.curseforge.com/wow/addons/syndicator",
     what = FR and "Ta banque, ton courrier et tes autres personnages : un objet déjà possédé est signalé, les composants comptés."

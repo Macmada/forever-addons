@@ -3,7 +3,7 @@ local L = root.L
 local K = root.Kit
 
 -- « Maintenant » : en haut, quelques tuiles (un chiffre chacune) ; dessous, « À faire » : des actions écrites comme des
--- phrases (maître de classe, donjons et zones d'après tes améliorations et tes quêtes, fabrication, achats), un seul
+-- phrases (maître de classe, donjons et zones d'après tes améliorations et tes quêtes, achats), un seul
 -- chiffre à droite, le détail dans l'infobulle ; un clic lance l'itinéraire le plus rapide (Nav.Go), un clic droit ouvre
 -- l'onglet. Chaque partie est protégée : une erreur devient une ligne lisible (et un point du diagnostic). En combat,
 -- rien n'est recalculé (valeurs secrètes sur Forever) : l'écran garde le dernier état connu.
@@ -72,9 +72,6 @@ function root.NowTiles(prepRes, places)
     out[#out + 1] = { value = tostring(#(places or {})), label = L.tilePlaces, color = GOLD, open = "loot", kind = "places" }
   end
   while #out > 4 do table.remove(out) end
-  -- prochain niveau (rythme d'XP de la session), en 5e tuile
-  local st = root.Session and Safe("session", root.Session.Tile)
-  if st then st.kind = "session"; out[#out + 1] = st end
   return out
 end
 
@@ -200,36 +197,6 @@ local function VendorTodo(lines)
   end
 end
 
--- Métiers : rang suivant à apprendre (compétence et niveau atteints) ; Secourisme si tu n'as aucun bandage
-local function ProfTodo(lines, res)
-  local m = root.mods.ForeverMetiers
-  if not (m and m.RankInfo and m.Learned) then return end
-  local level = UnitLevel("player")
-  for _, k in ipairs(m.Learned()) do
-    local ri = m.RankInfo(k)
-    if ri and ri.next and ri.rank >= ri.next.skill and level >= ri.next.level then
-      local ML = m.L or {}
-      lines[#lines + 1] = { kind = "card", icon = m.Data and m.Data.profs[k] and ("Interface\\Icons\\" .. m.Data.profs[k].icon) or "Interface\\Icons\\INV_Misc_Book_09",
-                            quality = 1, nameColor = { 1, 1, 1 },
-                            name = string.format(L.todoProfRank, m.ProfName(k), ML["rank_" .. ri.next.key] or ri.next.key),
-                            source = string.format(L.todoProfRankSrc, ri.rank, ri.max, ri.next.cap) .. (m.Trainer and (" · " .. m.Trainer(k, ri.next.key)) or ""),
-                            onClick = function() root.Open("metiers") end, onRight = function() root.Open("metiers") end }
-    end
-  end
-  local needBandage = false
-  for _, sec in ipairs(res and res.sections or {}) do
-    for _, r in ipairs(sec.rows or {}) do
-      if r.kind == "bandage" or (r.status == "warn" and tostring(r.text):lower():find("bandage", 1, true)) then needBandage = true end
-    end
-  end
-  local skills = m.db and m.db.skills or {}
-  if needBandage and not skills.firstaid then
-    lines[#lines + 1] = { kind = "card", icon = "Interface\\Icons\\Spell_Holy_SealOfSacrifice", quality = 1, nameColor = { 1, 1, 1 },
-                          name = L.todoFirstAid, source = L.todoFirstAidSrc, firstaid = true,
-                          onClick = function() root.Open("metiers") end, onRight = function() root.Open("metiers") end }
-  end
-end
-
 -- Quêtes à ton niveau (Questie) : zones avec le plus de quêtes disponibles, clic : itinéraire vers le donneur le plus proche
 local function QuestTodo(lines)
   local Q = root.Quests
@@ -252,21 +219,6 @@ local function QuestTodo(lines)
                           source = z.giver and string.format(L.todoQuestsGiver, z.giver.name or "?") or nil,
                           gain = "|cffffd100" .. string.format(L.todoQuestsN, #z.quests) .. "|r", tip = tip, quests = true,
                           onClick = function() if z.giver then Go(z.giver.mapID, z.giver.x, z.giver.y, z.giver.name) end end }
-  end
-end
-
-local function CraftTodo(lines)
-  local ns = root.mods.ForeverMetiers
-  if not (ns and ns.LevelLines) then return end
-  for _, l in ipairs(ns.LevelLines()) do
-    if l.kind == "card" then
-      local c = {}
-      for k, v in pairs(l) do c[k] = v end
-      c.onRight = function() root.Open("metiers") end
-      c.onClick = c.onClick or c.onRight
-      lines[#lines + 1] = c
-      return
-    end
   end
 end
 
@@ -295,7 +247,7 @@ end
 
 local function Footer(lines)
   for _, t in ipairs({ { "loot", L.loot, "Interface\\Icons\\INV_Chest_Cloth_17" }, { "prep", L.prep, "Interface\\Icons\\INV_Potion_51" },
-                       { "metiers", L.metiers, "Interface\\Icons\\Trade_Tailoring" }, { "heal", L.heal, "Interface\\Icons\\Spell_Holy_GreaterHeal" } }) do
+                       { "heal", L.heal, "Interface\\Icons\\Spell_Holy_GreaterHeal" } }) do
     lines[#lines + 1] = { kind = "head", icon = t[3], title = t[2], text = t[2], right = "|cffd8c8a0" .. L.more .. " »|r",
                           onClick = function() root.Open(t[1]) end, footer = true }
   end
@@ -312,10 +264,8 @@ function root.NowLines()
   local before = #lines
   Safe("maître de classe", TrainerTodo, lines)
   Safe("équiper", BagTodo, lines)
-  Safe("métiers (rangs)", ProfTodo, lines, res)
   Safe("lieux", PlaceTodo, lines, places)
   Safe("quêtes", QuestTodo, lines)
-  Safe("métiers", CraftTodo, lines)
   Safe("marchand", VendorTodo, lines)
   Safe("achats", BuyTodo, lines, res)
   if #lines == before then lines[#lines + 1] = { kind = "info", text = Gray(L.noTodo) } end

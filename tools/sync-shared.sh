@@ -2,7 +2,7 @@
 # Copie les modules communs (tools/*.lua) dans les addons. --check : échoue si une copie diffère.
 #   Diag.lua : diagnostic ; Hub.lua : icône commune « Forever » ; Tour.lua : tutoriel ; ATT.lua : sources d'All The Things ;
 #   Widgets.lua : composants d'interface.
-# ForeverCompagnon (Soins, Équipement, Préparation, Métiers en un seul addon) : une seule copie de chaque module, enveloppée
+# ForeverCompagnon (Soins, Équipement, Préparation en un seul addon) : une seule copie de chaque module, enveloppée
 # dans une fonction (ForeverCompagnon/Shared/*.lua) que chaque module appelle avec son propre espace de noms.
 set -e
 cd "$(dirname "$0")/.."

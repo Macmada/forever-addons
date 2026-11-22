@@ -707,7 +707,7 @@ function ns.DiagCollect(add)
 end
 
 ----------------------------------------------------------------------
--- Pour les autres addons (ForeverLoot, ForeverMetiers) : évaluation avec le modèle du prêtre
+-- Pour les autres parties (ForeverLoot) : évaluation avec le modèle du prêtre
 ----------------------------------------------------------------------
 _G.ForeverHealAPI = {
   version = 2,

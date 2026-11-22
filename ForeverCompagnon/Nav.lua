@@ -3,7 +3,7 @@ local L = root.L
 
 -- Flèche de navigation intégrée (à la TomTom) : une flèche à l'écran qui pointe vers le but, avec la distance en mètres
 -- de jeu (yards) et le temps à pied, plus le repère natif du jeu sur la carte. Utilisée par « Guide-moi » (Préparation),
--- les sources des objets (Équipement, Métiers) et la commande /fp way x y [nom] (ou /way si TomTom n'est pas là).
+-- les sources des objets (Équipement) et la commande /fp way x y [nom] (ou /way si TomTom n'est pas là).
 --
 -- Positions : C_Map.GetWorldPosFromMapPos donne des coordonnées du monde (x vers le nord, y vers l'ouest) ;
 -- GetPlayerFacing : 0 = nord, sens inverse des aiguilles d'une montre. Dans les donjons, le jeu cache la position :

@@ -78,9 +78,8 @@ for _, faction in ipairs({ "Alliance", "Horde" }) do
       check(#root.mods.ForeverLoot.NearLines(5) > 0, "Équipement à ton niveau, rôle " .. r)
     end
     check(#root.ClassRoles() >= 1, "au moins un rôle")
-    for _, key in ipairs({ "loot", "prep", "metiers", "addons" }) do root.Open(key) end
+    for _, key in ipairs({ "loot", "prep", "addons" }) do root.Open(key) end
     if class == "PRIEST" then root.Open("heal") end
-    check(#root.mods.ForeverMetiers.LevelLines() > 1, "Métiers : métiers conseillés pour la classe")
     -- cadre « Flash » : un objet équipé change les caractéristiques (relevé générique, ou partie Soins pour un soigneur)
     local bonus = 0
     _G.UnitStat = function(_, i) return 20, 20 + i + (i == 3 and bonus or 0) end

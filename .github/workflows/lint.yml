@@ -39,8 +39,6 @@ jobs:
           lua5.1 tests/macros_sim.lua en
           lua5.1 tests/loot_sim.lua fr
           lua5.1 tests/loot_sim.lua en
-          lua5.1 tests/metiers_sim.lua fr
-          lua5.1 tests/metiers_sim.lua en
           lua5.1 tests/forbidden_sim.lua fr
           lua5.1 tests/forbidden_sim.lua en
           lua5.1 tests/compagnon_sim.lua fr

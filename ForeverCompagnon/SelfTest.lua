@@ -3,7 +3,7 @@ local L = root.L
 local G = root.Game
 
 -- Auto-test en jeu (/fp test) : chaque fonction importante est essayée pour de vrai sur ce client, et le rapport
--- (à copier) dit ce qui marche, ce qui échoue et ce qui n'a pas pu être testé (marchand fermé, fenêtre de métier fermée…).
+-- (à copier) dit ce qui marche, ce qui échoue et ce qui n'a pas pu être testé (marchand fermé…).
 -- Un test renvoie true / false (+ détail), ou nil + raison s'il ne peut pas être fait maintenant.
 
 root.tests = {}
@@ -116,29 +116,6 @@ root.Test("Préparation", "fiche de préparation", function()
     for _, r in ipairs(s.rows) do rows = rows + 1; if r.status == "warn" or r.status == "bad" then todo = todo + 1 end end
   end
   return rows > 0, rows .. " lignes, " .. todo .. " à faire, " .. #res.shopping .. " achat(s)"
-end)
-root.Test("Métiers", "métiers lus", function()
-  local ns = Mod("ForeverMetiers")
-  ns.ReadSkills()
-  local list = {}
-  for k, v in pairs(ns.db and ns.db.skills or {}) do list[#list + 1] = k .. " " .. tostring(v.rank) .. "/" .. tostring(v.max) end
-  return true, #list > 0 and table.concat(list, ", ") or "aucun métier"
-end)
-root.Test("Métiers", "fenêtre de métier lue", function()
-  local ns = Mod("ForeverMetiers")
-  local api = ns.TradeAPI()
-  local f = api and api.frame and api.frame()
-  if not (f and f:IsShown()) then return nil, "ouvre ta fenêtre de couture ou d'enchantement puis relance /fp test" end
-  local ok, sc = pcall(ns.Scan, api)
-  if not ok then return false, tostring(sc) end
-  local n = 0
-  for _ in pairs(sc and sc.recipes or {}) do n = n + 1 end
-  local ls = ns.lastScan or {}
-  local ok2 = sc ~= nil and sc.prof ~= nil
-  local detail = "méthode " .. tostring(api.kind) .. ", métier " .. tostring(sc and sc.prof)
-         .. ", " .. n .. " recettes ; le jeu dit : « " .. tostring(ls.name) .. " » (n° " .. tostring(ls.skillLine) .. ")"
-  if not ok2 and ns.TradeDump then detail = detail .. "\n      " .. table.concat(ns.TradeDump(), "\n      ") end
-  return ok2, detail
 end)
 root.Test("Maintenant", "écran Maintenant (temps de calcul : 1re fois, puis en mémoire)", function()
   local clock = _G.debugprofilestop

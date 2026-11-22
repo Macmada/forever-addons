@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v3.7.0 (ForeverCompagnon 3.7.0) : sans Métiers ni suivi d'XP
+- **Partie Métiers retirée** (à la demande du joueur) : onglet, `/metiers`, `/fp metiers`, panneau à côté de la fenêtre du métier, conseils de métiers et de Secourisme dans « À faire », infobulles des patrons et formules, tests de l'auto-test. Ses sauvegardes (`ForeverMetiersDB`, `ForeverMetiersGlobalDB`) ne sont plus chargées : le jeu les efface à la prochaine déconnexion.
+- **Suivi de session retiré** : plus de tuile « prochain niveau » ni d'XP par heure sur l'écran Maintenant, plus de bandeau de session sous la fiche du personnage, plus de récapitulatif à la connexion ni de `/fp session` ; la session enregistrée est effacée au chargement.
+- Un onglet Métiers retenu comme dernier onglet ouvert rouvre Maintenant à la place.
+- Le journal (`/fp log`) et le relevé des erreurs (`/fp erreurs`) ne changent pas.
+
 ## v3.6.3 (ForeverCompagnon 3.6.3) : base des consommables vérifiée par le jeu
 - **Base corrigée** : 12 niveaux requis de la base de Préparation différaient du client Forever 1.60.1 (diagnostic du 15/11/2026) : Élixir de Force supérieure 48 (au lieu de 38), Élixir de sang de Troll majeur 53, Élixir d'Agilité inférieur 18, Élixir de Puissance du givre 28, pierres à aiguiser et cailloux à lester grossiers 5, lourds 15, solides 25, denses 35.
 - **Sources d'All The Things mises à jour** (révision 6f204fc du 15/11/2026) : 14 006 objets au lieu de 12 887, plus de recettes dans chaque métier (couture 352, cuisine 111, forge 331…). L'extracteur suit le nouveau format de la base d'ATT (données de quête par faction).
