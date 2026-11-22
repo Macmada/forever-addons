@@ -53,6 +53,17 @@ W.fire("ADDON_LOADED", "ForeverLoot")
 W.fire("PLAYER_LOGIN")
 W.run(3)
 check(ForeverLootDB and ForeverLootGlobalDB and ForeverLootGlobalDB.dungeons, "bases créées (personnage et compte)")
+-- Sections 1 à 8 : l'évaluation par poids et objets vus (autres classes et rôles). Le prêtre soigneur a son moteur
+-- (Priest.lua, base wowsims) : section 9, à la fin.
+local priestActive = ns.Priest.Active
+ns.Priest.Active = function() return false end
+-- liste de référence d'avant (15/11) pour ces sections ; la vraie (kami-labs du 20/11) est vérifiée en section 9
+local realRef = ns.Data.reference.PRIEST
+ns.Data.reference.PRIEST = {
+  { slot = 1, id = 16693, zone = "scholo", boss = "Sombre Maître Gandling" },
+  { slot = 2, id = 22149, zone = "dm", boss = "quête « La vendetta de Falrin »", ench = "Pouvoir de guérison" },
+  { slot = 11, id = 13345, zone = "strat", boss = "Baron Rivendare" },
+}
 
 -- 1. ce qu'un prêtre peut porter
 check(ns.Wearable(Link(101)) and not ns.Wearable(Link(102)), "prêtre : tissu oui, plaques non")
@@ -261,7 +272,7 @@ W.class, W.level = "PRIEST", 40
 
 -- 8. diagnostic, icône commune, commande
 local diag = ns.DiagText()
-check(diag:find("Liste de référence", 1, true) and diag:find("272406", 1, true) and not diag:find("Erreur", 1, true), "diagnostic complet")
+check(diag:find("Liste de référence", 1, true) and diag:find("16693", 1, true) and not diag:find("Erreur", 1, true), "diagnostic complet")
 SlashCmdList.FOREVERLOOT("donjons")
 check(ns.ui:IsShown(), "/floot donjons")
 check(ns.ui.dunBtn.active and not ns.ui.bisBtn.active, "onglet Donjons actif (style Forever)")
@@ -287,5 +298,89 @@ do
   check(t:find("35", 1, true), "survie : le vrai gain (armure) en titre : " .. t)
   t = G({ method = "heal", hps = 0, regen = 0.3, healed = 10 })
   check((t:find("0.30", 1, true) or t:find("0,30", 1, true)) and true, "mana hors combat en titre s'il est positif : " .. t)
+end
+-- 9. Prêtre soigneur : base wowsims (Items.lua), points de soins, Maintenant, Objectif 60
+do
+  ns.Priest.Active = priestActive
+  ns.Data.reference.PRIEST = realRef
+  local P = ns.Priest
+  W.class, W.level = "PRIEST", 40
+  for k in pairs(GEAR) do GEAR[k] = nil end
+  for k in pairs(BAGS) do BAGS[k] = nil end
+  ns.db.priestProfile = nil
+  ns.version = ns.version + 1; P.Forget(); ns.ForgetMemo()
+  check(P.Active() and ns.Items and ns.ItemsInfo.count > 1500, "prêtre soigneur : base wowsims chargée (" .. ns.ItemsInfo.count .. " objets)")
+  local function near(a, b) return math.abs(a - b) < 0.01 end
+  -- Collerette de dévot : 20 soins, 24 int, 15 esprit, 13 endurance ; Sacré, soins de groupe : 20 + 24×0,30 + 15×0,25 + 13×0,01
+  check(near(P.ItemEP(16693), 31.08), "points de soins de la Collerette de dévot (poids wowsims) : " .. P.ItemEP(16693))
+  check(near((P.Gain(16693)), 31.08), "gain = sa valeur quand la tête est vide")
+  ns.db.priestProfile = "disc_st"
+  check(near(P.ItemEP(16693), 20 + 24 * 0.2 + 15 * 0.15 + 0.13), "profil Discipline une cible : autres poids")
+  ns.db.priestProfile = nil
+  -- ce qu'on ne propose pas : l'autre camp, la phase suivante, le JcJ seul
+  check(P.Obtainable(271945), "Protège-mains de Theramore : Alliance, proposés")
+  _G.UnitFactionGroup = function() return "Horde" end
+  check(not P.Obtainable(271945), "Horde : pas les Protège-mains de Theramore (Alliance exalté)")
+  _G.UnitFactionGroup = function() return "Alliance" end
+  local phase2, pvp
+  for id, it in pairs(ns.Items) do
+    if it[5] > P.PHASE then phase2 = phase2 or id end
+    if #it[9] > 0 and it[9][1][1] == "pvp" and #it[9] == 1 then pvp = pvp or id end
+  end
+  check(phase2 and not P.Obtainable(phase2) and pvp and not P.Obtainable(pvp), "phase suivante et JcJ seul : jamais proposés")
+  -- provenances en clair
+  check((P.SourceText(16693) or ""):find("Scholomance", 1, true), "provenance : boss et donjon (" .. tostring(P.SourceText(16693)) .. ")")
+  check((P.SourceText(15802) or ""):find(LANG == "en" and "Tailoring" or "Couture", 1, true), "provenance : artisanat (" .. tostring(P.SourceText(15802)) .. ")")
+  check((P.SourceText(271945) or ""):find(LANG == "en" and "Exalted" or "exalté", 1, true), "provenance : réputation exalté")
+  -- Maintenant : niveau 40, jusqu'à 43 ; un objet de tes sacs hors base (vert aléatoire) compte aussi
+  GEAR[5] = Link(100)
+  BAGS[1] = Link(101)
+  ns.version = ns.version + 1; P.Forget(); ns.ForgetMemo()
+  local bis = ns.BiS(2, 43)
+  local nSlots, tooHigh, unsorted = 0, false, false
+  for _, s in pairs(bis) do
+    nSlots = nSlots + 1
+    for i, c in ipairs(s.items) do
+      if (c.eval.minLevel or 0) > 43 then tooHigh = true end
+      if i > 1 and c.eval.score > s.items[i - 1].eval.score + 1 then unsorted = true end
+    end
+  end
+  check(nSlots >= 12 and not tooHigh and not unsorted, "Maintenant : " .. nSlots .. " emplacements, rien au-dessus du niveau 43, trié par gain")
+  local robe
+  local all = ns.BiS(99, 43)
+  for _, c in ipairs(all[5] and all[5].items or {}) do if c.id == 101 then robe = c end end
+  check(robe and robe.src == "bags" and near(robe.eval.score, (30 + 15 * 0.3) - 5 * 0.3), "torse : la robe de tes sacs (hors base) évaluée par ses caractéristiques")
+  local e = ns.Evaluate(P.Link(16693))
+  check(e and e.method == "ep" and e.minLevel == 57 and ns.GainText(e):find(ns.L.cardEp, 1, true), "infobulles et jets : même mesure (points de soins)")
+  -- écrans
+  ns.ShowTab("near")
+  local txt = {}
+  for _, l in ipairs(ns.NearLines(3)) do txt[#txt + 1] = l.text or "" end
+  txt = table.concat(txt, "\n")
+  check(txt:find(string.format(ns.L.nowIntro, 43), 1, true), "onglet Maintenant : introduction")
+  check(ns.ui.nearBtn.fs:GetText() == ns.L.tabNow and ns.ui.bisBtn.fs:GetText() == ns.L.tabGoal and not ns.ui.dunBtn:IsShown(), "onglets « Maintenant » et « Objectif 60 », plus d'onglet Donjons")
+  local goal = {}
+  for _, l in ipairs(ns.GoalLines()) do goal[#goal + 1] = l.text or "" end
+  goal = table.concat(goal, "\n")
+  check(goal:find(string.format(ns.L.goalDone, 0, 16), 1, true), "Objectif 60 : 0/16 emplacements de la référence")
+  check(goal:find("Collerette de dévot", 1, true) and goal:find("Theramore Handwraps", 1, true), "Objectif 60 : la référence de kami-labs (Collerette de dévot, Protège-mains de Theramore)")
+  check(not goal:find(" " .. ns.L.goalBest .. " — ", 1, true) and not goal:find(ns.L.slot17, 1, true),
+        "Alliance : aucune pièce de la référence remplacée par un calcul, pas de main gauche (bâton à deux mains)")
+  _G.UnitFactionGroup = function() return "Horde" end
+  local hgoal = {}
+  for _, l in ipairs(ns.GoalLines()) do hgoal[#hgoal + 1] = l.text or "" end
+  hgoal = table.concat(hgoal, "\n")
+  check(select(2, hgoal:gsub(" " .. ns.L.goalBest .. " — ", "")) == 1, "Horde : les Protège-mains de Theramore (Alliance) remplacés par le meilleur calculé, et seulement eux")
+  _G.UnitFactionGroup = function() return "Alliance" end
+  GEAR[1] = P.Link(16693)
+  P.Forget()
+  goal = {}
+  for _, l in ipairs(ns.GoalLines()) do goal[#goal + 1] = l.text or "" end
+  check(table.concat(goal, "\n"):find(string.format(ns.L.goalDone, 1, 16), 1, true), "Collerette portée : 1/16")
+  -- profil : le bouton passe au suivant
+  ns.Refresh()
+  ns.ui.profileBtn.scripts.OnClick(ns.ui.profileBtn)
+  check(ns.db.priestProfile == "holy_st" and ns.ui.profileBtn:IsShown(), "bouton de profil : Sacré une cible")
+  ns.db.priestProfile = nil
 end
 W.rprint("\nTOUT OK (" .. LANG .. ")")

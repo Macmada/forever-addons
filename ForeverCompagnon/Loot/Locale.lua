@@ -62,6 +62,22 @@ local fr = {
   alertChat = "Amélioration ramassée : %s (%s) — clique sur « Équiper » dans l'alerte.", alertChatLater = "À garder pour plus tard : %s (%s).",
   optLootAlert = "M'alerter quand je ramasse un objet qui m'améliore",
   optTitle = "Options de ForeverLoot", optShort = "Options", optTip2 = "Conseils de jet et de quête, infobulles, objets de niveau supérieur.",
+  -- prêtre soigneur (Priest.lua)
+  srcTrash = "monstres du donjon — %s", srcWorld = "butin du monde (aléatoire, hôtel des ventes)", srcQuestNamed = "quête « %s »",
+  srcVendorNamed = "marchand %s", srcCraft = "%s (artisanat : hôtel des ventes ou artisan)", srcRep = "réputation %s (%s)",
+  srcPvp = "JcJ", srcMore = " (+%d autre(s) provenance(s))", srcUnknown = "provenance inconnue",
+  statHeal = "soins", statInt = "intelligence", statSpi = "esprit", statMp5 = "mp5", statCrit = "critique", statHaste = "hâte", statSta = "endurance",
+  cardEp = "pts", tabNow = "Maintenant", tabGoal = "Objectif 60",
+  profile = "Calcul : %s", profileTip = "Valeur de chaque caractéristique en « points de soins » (simulateur wowsims/forever). Clic : changer.",
+  profile_holy_raid = "Sacré, soins de groupe", profile_holy_st = "Sacré, une cible", profile_disc_raid = "Discipline, soins de groupe", profile_disc_st = "Discipline, une cible",
+  epTip = "« pts » : valeur de l'objet en points de puissance des soins (1 point de soins = 1). %s",
+  nowIntro = "Ta meilleure amélioration à chaque emplacement, jusqu'au niveau %d, parmi tous les objets de Forever qu'un prêtre peut porter.",
+  nowNothing = "Rien de mieux jusqu'au niveau %d pour : %s.",
+  goalIntro = "Liste de référence : %s, simulée sur des combats entiers (bonus de set et mana compris). ✓ = tu l'as. Si une pièce n'est pas pour ton camp, le meilleur calculé la remplace.",
+  goalHave = "|cff40d860✓ porté|r", goalBags = "|cff40d860✓ dans tes sacs|r", goalOwned = "|cff40d860✓ %s|r", goalMissing = "|cffffd100à obtenir|r",
+  goalLevel = "niv. %d", goalCalc = "Meilleur calculé", goalOther = "|cffff6a5aautre camp seulement|r", goalPhase = "|cffa0a0a0phase %d|r",
+  goalDone = "%d/%d emplacements de la référence obtenus.", goalBest = "meilleur calculé", goalWornEP = "porté : %s pts",
+  goalSet = "pièce de set (bonus compté par la simulation)",
 }
 
 local en = {
@@ -126,6 +142,21 @@ local en = {
   alertChat = "Upgrade looted: %s (%s) — click \"Equip\" in the alert.", alertChatLater = "Keep for later: %s (%s).",
   optLootAlert = "Alert me when I loot an item that improves me",
   optTitle = "ForeverLoot options", optShort = "Options", optTip2 = "Roll and quest advice, tooltips, higher-level items.",
+  srcTrash = "dungeon trash — %s", srcWorld = "world drop (random, auction house)", srcQuestNamed = "quest \"%s\"",
+  srcVendorNamed = "vendor %s", srcCraft = "%s (crafted: auction house or crafter)", srcRep = "%s reputation (%s)",
+  srcPvp = "PvP", srcMore = " (+%d more source(s))", srcUnknown = "unknown source",
+  statHeal = "healing", statInt = "intellect", statSpi = "spirit", statMp5 = "mp5", statCrit = "crit", statHaste = "haste", statSta = "stamina",
+  cardEp = "pts", tabNow = "Now", tabGoal = "Level 60 goal",
+  profile = "Scoring: %s", profileTip = "Value of each stat in \"healing points\" (wowsims/forever simulator). Click: change.",
+  profile_holy_raid = "Holy, group healing", profile_holy_st = "Holy, single target", profile_disc_raid = "Discipline, group healing", profile_disc_st = "Discipline, single target",
+  epTip = "\"pts\": item value in healing power points (1 healing = 1). %s",
+  nowIntro = "Your best upgrade in each slot, up to level %d, among every Forever item a priest can wear.",
+  nowNothing = "Nothing better up to level %d for: %s.",
+  goalIntro = "Reference list: %s, simulated over whole fights (set bonuses and mana included). ✓ = you have it. If a piece is not for your faction, the best computed item replaces it.",
+  goalHave = "|cff40d860✓ worn|r", goalBags = "|cff40d860✓ in your bags|r", goalOwned = "|cff40d860✓ %s|r", goalMissing = "|cffffd100to get|r",
+  goalLevel = "lvl %d", goalCalc = "Best computed", goalOther = "|cffff6a5aother faction only|r", goalPhase = "|cffa0a0a0phase %d|r",
+  goalDone = "%d/%d reference slots obtained.", goalBest = "best computed", goalWornEP = "worn: %s pts",
+  goalSet = "set piece (bonus counted by the simulation)",
 }
 
 ns.lang = (GetLocale() == "frFR") and "fr" or "en"

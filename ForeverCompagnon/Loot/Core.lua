@@ -69,6 +69,7 @@ end
 
 function ns.Evaluate(link)
   if not link then return nil end
+  if ns.Priest and ns.Priest.Active() then return ns.Priest.Evaluate(link) end      -- prêtre soigneur : Priest.lua
   local key = link .. "#" .. ns.version .. "#" .. tostring(ns.Role())
   if cache[key] ~= nil then return cache[key] or nil end
   local r
@@ -113,6 +114,7 @@ end
 -- Résumé humain d'une évaluation
 function ns.GainText(r)
   if not r then return "" end
+  if r.method == "ep" then return ns.Signed(r.score, 1) .. " " .. L.cardEp end
   if r.method == "heal" then
     local parts = {}
     if math.abs(r.hps or 0) >= 0.05 then parts[#parts + 1] = string.format(L.gainHps, ns.Signed(r.hps, 1)) end
@@ -590,6 +592,7 @@ local function State()
 end
 
 function ns.BiS(limit, maxLevel)
+  if ns.Priest and ns.Priest.Active() then return ns.Priest.BiS(limit, maxLevel) end
   local mkey = tostring(limit) .. ":" .. tostring(maxLevel) .. ":" .. State()
   if Fresh(memo.bis[mkey]) then return memo.bis[mkey].v end
   local out = {}

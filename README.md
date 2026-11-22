@@ -82,7 +82,13 @@ Commandes : `/fheal` (panneau), `/fheal alerte`, `/fheal infobulle`, `/fheal ann
 
 ### Équipement (ex-ForeverLoot)
 
-Équipement et butin, évalués **pour ton personnage** : modèle de soins pour un soigneur, sinon poids des caractéristiques selon ta **classe et ton rôle** (tank : endurance, armure, défense ; mêlée : force ou agilité et DPS de l'arme ; sorts : puissance des sorts, toucher…) :
+**Prêtre soigneur (refait en 3.8.0)** : deux onglets.
+
+- **Maintenant** : à chaque emplacement, la meilleure amélioration jusqu'à ton niveau (+0, +3, +5 ou +10), parmi **tous les objets de Forever qu'un prêtre peut porter** (1 657 objets tirés du simulateur [wowsims/forever](https://github.com/wowsims/forever), licence MIT : caractéristiques, niveau, faction, provenance), plus ceux de tes sacs. Pour chacun : d'où il vient (boss et donjon, quête, marchand, artisanat, réputation) et un clic droit pour l'itinéraire. Les objets de l'autre camp, de la phase suivante, JcJ seulement ou sans provenance connue ne sont pas proposés.
+- **Objectif 60** : la liste BiS pré-raid de [kami-labs.fr](https://kami-labs.fr/bis-list-wow-forever/) (prêtre Sacré, simulée avec wowsims sur des combats entiers, bonus du set de dévot et mana compris), emplacement par emplacement : ✓ si tu l'as (porté, sacs, banque, autre personnage), sinon où l'obtenir et l'enchantement conseillé. Une pièce réservée à l'autre camp est remplacée par le meilleur calculé.
+- **Une seule mesure**, en « points de soins » : 1 point de puissance des soins = 1, les autres caractéristiques selon les poids de wowsims (Sacré ou Discipline, soins de groupe ou une cible : bouton « Calcul » en haut). Le détail est dans l'infobulle. Les jets de butin, récompenses de quête, infobulles et alertes utilisent la même mesure.
+
+**Autres classes et rôles** : équipement et butin évalués par les poids des caractéristiques selon ta **classe et ton rôle** (tank : endurance, armure, défense ; mêlée : force ou agilité et DPS de l'arme ; sorts : puissance des sorts, toucher…) :
 
 - **BiS calculé** : chaque objet croisé (infobulles, butin, jets, récompenses de quête, marchands, butin des autres) est mémorisé et évalué ; l'onglet BiS montre, emplacement par emplacement, les meilleurs objets connus et où ils ont été vus, avec la **liste de référence de WoW Forever** (prêtre soigneur niveau 60 avant les raids, liste de kami-labs.fr calculée avec le simulateur wowsims/forever) et l'enchantement conseillé pour chaque pièce.
 - **Jets de butin** : conseil « BESOIN » ou « Cupidité » au-dessus de la fenêtre de jet, avec le gain (« +3,5 soins/s ») ou la raison (ta classe ne peut pas le porter, niveau trop élevé, pas mieux).

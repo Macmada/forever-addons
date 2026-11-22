@@ -11,38 +11,40 @@ local Z = {   -- donjons et sources (noms français / anglais)
   strat = { "Stratholme", "Stratholme" }, scholo = { "Scholomance", "Scholomance" },
   brs = { "Pic Blackrock", "Blackrock Spire" }, dm = { "Hache-tripes", "Dire Maul" }, maraudon = { "Maraudon", "Maraudon" },
   strangle = { "Vallée de Strangleronce (marchand Pix Xizzix)", "Stranglethorn Vale (vendor Pix Xizzix)" },
-  craft = { "Artisanat", "Crafted" },
+  craft = { "Artisanat", "Crafted" }, brd = { "Profondeurs de Blackrock", "Blackrock Depths" },
+  world = { "Butin du monde", "World drop" }, theramore = { "Réputation", "Reputation" },
 }
 D.zones = Z
 
--- Prêtre soigneur (Sacré et Discipline : même liste), niveau 60 avant les raids, WoW Forever.
--- Source : liste BiS de kami-labs.fr (calculée le 02/11/2026 avec le simulateur wowsims/forever ; revérifiée le
--- 15/11/2026, identique : Sacré et Discipline, 17 emplacements ; enchantement de torse 20028 = Mana majeur), numéros relevés
--- dans son lien « Ouvrir dans l'outil ». new = objet nouveau de Forever ; ench = enchantement conseillé.
--- boss : comme sur la source (le jeu affiche le nom réel de l'objet dans ta langue).
+-- Prêtre soigneur Sacré, niveau 60 avant les raids, WoW Forever.
+-- Source : liste BiS de kami-labs.fr calculée le 20/11/2026 avec le simulateur wowsims/forever (sources du 15/11/2026),
+-- numéros relevés dans son lien « Ouvrir dans l'outil » :
+-- #1.pretre-sacre.60-preraid.16693-1443~1249058-16695-18510-16690~20028-16697~1248661-271945~25079-16696-16694-15802~20024-
+-- 18395-22334-18469-272439-812~1248636-0-22254 (tête, cou, épaules, dos, torse, poignets, mains, taille, jambes, pieds,
+-- doigts, bijoux, main droite, main gauche, distance ; « ~ » = enchantement). Pas de main gauche : bâton à deux mains.
+-- new = objet nouveau de Forever ; ench = enchantement conseillé (libellé de kami-labs) ; faction = réservé à un camp.
 D.reference = {
   PRIEST = {
     { slot = 1, id = 16693, zone = "scholo", boss = "Sombre Maître Gandling" },
-    { slot = 2, id = 22149, zone = "dm", boss = "quête « La vendetta de Falrin »", ench = "Pouvoir de guérison" },
-    { slot = 3, id = 16695, zone = "brs", boss = "monstres du donjon" },
+    { slot = 2, id = 1443, zone = "world", boss = "butin du monde", ench = "Pouvoir de guérison" },
+    { slot = 3, id = 16695, zone = "brs", boss = "Solakar Voluteflamme" },
     { slot = 15, id = 18510, zone = "craft", boss = "Travail du cuir 300" },
-    { slot = 5, id = 16690, zone = "brs", boss = "Général Drakkisath", ench = "Mana majeur" },
+    { slot = 5, id = 16690, zone = "brs", boss = "Général Drakkisath", ench = "Intelligence majeure" },
     { slot = 9, id = 16697, zone = "strat", boss = "monstres du donjon", ench = "Intelligence excellente" },
-    { slot = 10, id = 18409, zone = "craft", boss = "Couture 300", ench = "Pouvoir de guérison" },
+    { slot = 10, id = 271945, zone = "theramore", boss = "Troupe d'intervention de Theramore, exalté", ench = "Pouvoir de guérison", new = true, faction = "Alliance" },
     { slot = 6, id = 16696, zone = "brs", boss = "Intendant Zigris" },
     { slot = 7, id = 16694, zone = "strat", boss = "Baron Rivendare" },
-    { slot = 8, id = 15802, zone = "craft", boss = "Couture 290", ench = "Esprit" },
-    { slot = 11, id = 13345, zone = "strat", boss = "Baron Rivendare" },
-    { slot = 11, id = 272406, zone = "strangle", boss = "75 Réals de Terremine ternis", new = true },
-    { slot = 13, id = 272439, zone = "strangle", boss = "125 Réals de Terremine ternis", new = true },
-    { slot = 13, id = 12930, zone = "brs", boss = "monstres du donjon" },
-    { slot = 16, id = 17710, zone = "maraudon", boss = "Princesse Theradras", ench = "Intelligence renforcée" },
-    { slot = 17, id = 13353, zone = "strat", boss = "Balnazzar" },
-    { slot = 18, id = 249385, zone = "craft", boss = "Enchantement 275", new = true },
+    { slot = 8, id = 15802, zone = "craft", boss = "Couture 270", ench = "Esprit" },
+    { slot = 11, id = 18395, zone = "dm", boss = "Prince Tortheldrin" },
+    { slot = 11, id = 22334, zone = "strat", boss = "Balnazzar" },
+    { slot = 13, id = 18469, zone = "dm", boss = "quête « Sainte Bolognaise : Ce que la lumière ne vous dit pas »" },
+    { slot = 13, id = 272439, zone = "strangle", boss = "Pix Xizzix", new = true },
+    { slot = 16, id = 812, zone = "world", boss = "butin du monde", ench = "Pouvoir de guérison renforcé" },
+    { slot = 18, id = 22254, zone = "brd", boss = "monstres du donjon" },
   },
 }
-D.referenceLabel = { "Prêtre soigneur, niveau 60 avant les raids — liste WoW Forever de kami-labs.fr (02/11/2026)",
-                     "Healing priest, level 60 pre-raid — WoW Forever list from kami-labs.fr (2026-11-02)" }
+D.referenceLabel = { "Prêtre Sacré, niveau 60 avant les raids — kami-labs.fr, calculée avec wowsims le 20/11/2026",
+                     "Holy priest, level 60 pre-raid — kami-labs.fr, computed with wowsims on 2026-11-20" }
 
 -- Emplacements affichés (12 = 2e anneau, 14 = 2e bijou : regroupés avec 11 et 13)
 D.slotOrder = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 13, 16, 17, 18 }

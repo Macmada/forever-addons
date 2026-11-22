@@ -30,6 +30,9 @@ local Info = function(x) return ((C_Item and C_Item.GetItemInfo) or GetItemInfo)
 -- Gain en deux parties : le grand chiffre (soins/s ou points) et le détail
 local function GainParts(r)
   if not r then return "", "" end
+  if r.method == "ep" then                          -- prêtre soigneur : points de soins (Priest.lua)
+    return ns.Signed(r.score, 1) .. " |cffd8c8a0" .. L.cardEp .. "|r", ns.Priest.Detail(r.stats)
+  end
   if r.method == "heal" then
     local sub = {}
     if math.abs(r.healed or 0) >= 1 then sub[#sub + 1] = string.format(L.cardHealed, ns.Signed(r.healed)) end
@@ -115,7 +118,9 @@ local function Card()
         pcall(GameTooltip.SetHyperlink, GameTooltip, self.link)
         if self.subFull and self.subFull ~= "" then GameTooltip:AddLine(" "); GameTooltip:AddLine(self.subFull, 1, 1, 1, true) end
         if self.onRight then GameTooltip:AddLine(L.goTip, 0.4, 0.8, 1, true) end
-        GameTooltip:AddLine(L.healedTip, 0.6, 0.6, 0.6, true)
+        if ns.Priest and ns.Priest.Active() then
+          GameTooltip:AddLine(string.format(L.epTip, L["profile_" .. ns.Priest.Profile()]), 0.6, 0.6, 0.6, true)
+        else GameTooltip:AddLine(L.healedTip, 0.6, 0.6, 0.6, true) end
         GameTooltip:Show()
       end
     end)
@@ -273,9 +278,12 @@ local function CardFrom(c, ref, extraTags)
   elseif c.where then
     source = c.where
   end
-  local att = ns.ATTWhere(c.id)
+  local att = (not source) and ns.ATTWhere(c.id)
   if not source and att then source = att end
-  source = (source and (source .. "  ·  ") or "") .. (L[SRC[c.src] or "srcTooltip"])
+  -- objet de la base du prêtre (« data ») : la provenance suffit ; sinon, comment tu l'as vu
+  local how = c.src ~= "data" and L[SRC[c.src] or "srcTooltip"] or nil
+  if not source and not how then source = L.srcUnknown end
+  source = (source and how) and (source .. "  ·  " .. how) or source or how
   if ref and ref.ench then source = source .. "  ·  |cffd8c8a0" .. string.format(L.enchTag, ref.ench) .. "|r" end
   local gain, sub = GainParts(c.eval)
   if c.src == "equipped" then gain, sub = "|cff40d860" .. L.refWear:gsub("^ — ", "") .. "|r", "" end
@@ -362,6 +370,82 @@ function ns.BisLines()
   return lines
 end
 
+-- Prêtre soigneur, « Objectif 60 » : la référence emplacement par emplacement, ta progression, le meilleur calculé
+local function SlotIcon(slot)
+  local icon = GetInventoryItemTexture and GetInventoryItemTexture("player", slot)
+  local crop = icon ~= nil
+  if not icon and GetInventorySlotInfo and SLOT_NAME[slot] then
+    local ok, _, tex = pcall(GetInventorySlotInfo, SLOT_NAME[slot])
+    if ok then icon = tex end
+  end
+  return icon, crop
+end
+
+function ns.GoalLines()
+  local P = ns.Priest
+  local label = ns.lang == "en" and D.referenceLabel[2] or D.referenceLabel[1]
+  local lines = { { kind = "info", display = "|cffa0a0a0" .. string.format(L.goalIntro, label) .. "|r", text = string.format(L.goalIntro, label) } }
+  local nRef, nHave = 0, 0
+  local done = #lines
+  local goal = P.Goal()
+  local twoHanded = false                  -- arme de référence à deux mains : pas de ligne « main gauche »
+  for _, row in ipairs(goal) do
+    for _, r in ipairs(row.refs) do if ns.Items[r.id] and ns.Items[r.id][1] == 116 then twoHanded = true end end
+  end
+  for _, row in ipairs(goal) do
+    local slot = row.slot
+    if not (slot == 17 and twoHanded) then
+    local worn = GetInventoryItemLink("player", slot)
+    local worn2 = (slot == 11 or slot == 13) and GetInventoryItemLink("player", slot + 1) or nil
+    local wornEP = (worn and P.ItemEP(worn) or 0) + (worn2 and P.ItemEP(worn2) or 0)
+    if slot == 16 then local off = GetInventoryItemLink("player", 17); if off then wornEP = wornEP + P.ItemEP(off) end end
+    local icon, crop = SlotIcon(slot)
+    lines[#lines + 1] = { kind = "slot", icon = icon, iconCrop = crop, link = worn, title = L["slot" .. slot] or tostring(slot),
+                          right = "|cffa0a0a0" .. string.format(L.goalWornEP, (ns.Signed(wornEP, 1):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^%+", ""))) .. "|r",
+                          text = (L["slot" .. slot] or "") }
+    local refIds = {}
+    for _, r in ipairs(row.refs) do
+      refIds[r.id] = true
+      nRef = nRef + 1
+      local have, where = P.Have(r.id)
+      if have then nHave = nHave + 1 end
+      local link = P.Link(r.id)
+      local c = { link = link, id = r.id, src = "ref", eval = P.Evaluate(link), where = P.SourceText(r.id) or ((r.boss and (r.boss .. " — ") or "") .. Zone(r.zone)) }
+      local tags = { (have == "worn" and L.goalHave) or (have == "bags" and L.goalBags) or (have == "owned" and string.format(L.goalOwned, where)) or L.goalMissing }
+      local ok, why = P.Obtainable(r.id)
+      if not ok and why == "faction" then tags[#tags + 1] = L.goalOther end
+      local req = P.ReqLevel(r.id)
+      if req and req > UnitLevel("player") then tags[#tags + 1] = "|cffa0a0a0" .. string.format(L.goalLevel, req) .. "|r" end
+      if ns.Items[r.id] and ns.Items[r.id][11] ~= "" then tags[#tags + 1] = "|cffd8c8a0" .. L.goalSet .. "|r" end
+      local card = CardFrom(c, r, tags)
+      if have == "worn" then card.gain, card.gainSub = L.goalHave, "" end
+      card.text = (link:match("%[(.-)%]") or "?") .. " " .. (have or "missing") .. " — " .. (c.where or "")
+      lines[#lines + 1] = card
+    end
+    -- meilleur calculé : seulement si la référence n'est pas à ta portée (autre camp, phase suivante) ou absente.
+    -- La référence vient d'une simulation complète (bonus de set, mana sur tout un combat) : un calcul par poids ne la
+    -- contredit pas (22/11/2026 : aucun jeu de poids ne retrouve plus de 8 des 16 choix de kami-labs).
+    local reachable = false
+    for _, r in ipairs(row.refs) do if P.Obtainable(r.id) then reachable = true end end
+    local b = row.best and row.best[1]
+    if b and not refIds[b.id] then
+      if not reachable then
+        local link = P.Link(b.id)
+        local have, where = P.Have(b.id)
+        local c = { link = link, id = b.id, src = "data", eval = P.Evaluate(link), where = P.SourceText(b.id) }
+        local tags = { "|cff66ccff" .. L.goalCalc .. "|r" }
+        if have then tags[#tags + 1] = (have == "worn" and L.goalHave) or (have == "bags" and L.goalBags) or string.format(L.goalOwned, where) end
+        local card = CardFrom(c, nil, tags)
+        card.text = (link:match("%[(.-)%]") or "?") .. " " .. L.goalBest .. " — " .. (c.where or "")
+        lines[#lines + 1] = card
+      end
+    end
+    end
+  end
+  table.insert(lines, done + 1, { kind = "info", display = "|cffffd100" .. string.format(L.goalDone, nHave, nRef) .. "|r", text = string.format(L.goalDone, nHave, nRef) })
+  return lines
+end
+
 -- « À mon niveau » : pour chaque emplacement, les 2 meilleurs objets portables jusqu'au niveau choisi, et où les avoir
 ns.nearSpan = 0                     -- ton niveau ; le choix est retenu (db.nearSpan)
 function ns.NearLines(span)
@@ -370,7 +454,11 @@ function ns.NearLines(span)
   local maxLevel = math.min(60, level + span)
   local lines = {}
   -- (phrase d'introduction remplacée par les tuiles ; gardée dans le texte pour les recherches et les tests)
-  lines[#lines + 1] = { kind = "info", display = "", text = string.format(L.nearIntro, maxLevel), hidden = true }
+  if ns.Priest and ns.Priest.Active() then
+    lines[#lines + 1] = { kind = "info", display = "|cffa0a0a0" .. string.format(L.nowIntro, maxLevel) .. "|r", text = string.format(L.nowIntro, maxLevel) }
+  else
+    lines[#lines + 1] = { kind = "info", display = "", text = string.format(L.nearIntro, maxLevel), hidden = true }
+  end
   if not ns.DJ() and not (ns.ATT and ns.ATT.Available()) then lines[#lines + 1] = { kind = "info", display = "|cffa0a0a0" .. L.djOff .. "|r", text = L.djOff } end
   local bis = ns.BiS(2, maxLevel)
   local empty = {}
@@ -398,8 +486,9 @@ function ns.NearLines(span)
     end
   end
   if #empty > 0 then
-    lines[#lines + 1] = { kind = "info", display = "|cff808080" .. string.format(L.nearEmpty, table.concat(empty, ", ")) .. "|r",
-                          text = string.format(L.nearEmpty, table.concat(empty, ", ")) }
+    local msg = (ns.Priest and ns.Priest.Active()) and string.format(L.nowNothing, maxLevel, table.concat(empty, ", "))
+                or string.format(L.nearEmpty, table.concat(empty, ", "))
+    lines[#lines + 1] = { kind = "info", display = "|cff808080" .. msg .. "|r", text = msg }
   end
   return lines
 end
@@ -511,7 +600,14 @@ function ns.Refresh()
   else
     ui.tileSet.Hide()
   end
-  Render((tab == "dungeons" and ns.DungeonLines()) or (tab == "bis" and ns.BisLines()) or ns.NearLines())
+  local priest = ns.Priest and ns.Priest.Active()
+  if priest and tab == "dungeons" then tab = "near" end
+  ui.nearBtn:SetLabel(priest and L.tabNow or L.tabNear)
+  ui.bisBtn:SetLabel(priest and L.tabGoal or L.tabBis60)
+  ui.dunBtn:SetShown(not priest)
+  ui.profileBtn:SetShown(priest and true or false)
+  if priest then ui.profileBtn:SetLabel(string.format(L.profile, L["profile_" .. ns.Priest.Profile()])) end
+  Render((tab == "dungeons" and ns.DungeonLines()) or (tab == "bis" and (priest and ns.GoalLines() or ns.BisLines())) or ns.NearLines())
   ui.nearBtn:SetActive(tab == "near")
   ui.bisBtn:SetActive(tab == "bis")
   ui.dunBtn:SetActive(tab == "dungeons")
@@ -645,6 +741,26 @@ local function CreateUI()
   ui.bisBtn:SetPoint("LEFT", ui.nearBtn, "RIGHT", 4, 0)
   ui.dunBtn = K.Tab(ui, L.tabDungeons, function() tab = "dungeons"; ns.Refresh() end)
   ui.dunBtn:SetPoint("LEFT", ui.bisBtn, "RIGHT", 4, 0)
+  -- prêtre soigneur : profil de calcul (poids de wowsims), un clic passe au suivant
+  ui.profileBtn = K.Tab(ui, "", function()
+    local P, cur = ns.Priest, ns.Priest.Profile()
+    for i, k in ipairs(P.PROFILE_ORDER) do
+      if k == cur then ns.db.priestProfile = P.PROFILE_ORDER[i % #P.PROFILE_ORDER + 1]; break end
+    end
+    ns.version = ns.version + 1
+    P.Forget()
+    if ns.ForgetMemo then ns.ForgetMemo() end
+    ns.Refresh()
+  end)
+  ui.profileBtn:SetPoint("LEFT", ui.bisBtn, "RIGHT", 12, 0)
+  if ui.profileBtn.HookScript then
+    ui.profileBtn:HookScript("OnEnter", function(self)
+      GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+      GameTooltip:AddLine(L.profileTip, 1, 1, 1, true)
+      GameTooltip:Show()
+    end)
+    ui.profileBtn:HookScript("OnLeave", function() GameTooltip:Hide() end)
+  end
   ui.optBtn = K.Action(ui, "Interface\\Icons\\INV_Misc_Gear_01", L.optShort, L.optTip2, function() ShowOptions() end)
   ui.optBtn:SetPoint("TOPRIGHT", -18, -30)
   -- jusqu'à quel niveau regarder (onglet « À mon niveau »)
@@ -767,7 +883,13 @@ function ns.DiagCollect(add)
   local _, class = UnitClass("player")
   add("")
   add("## Évaluation")
-  add("Méthode : " .. ((class == "PRIEST" and _G.ForeverHealAPI) and "ForeverHeal" or "poids simplifiés (" .. tostring(class) .. ")"))
+  if ns.Priest and ns.Priest.Active() then
+    local I = ns.ItemsInfo or {}
+    add(string.format("Méthode : points de soins, profil %s (poids wowsims) ; base wowsims/forever %s du %s, %s objets ; phase %d",
+      ns.Priest.Profile(), tostring(I.commit), tostring(I.date), tostring(I.count), ns.Priest.PHASE))
+  else
+    add("Méthode : " .. ((class == "PRIEST" and _G.ForeverHealAPI) and "ForeverHeal" or "poids simplifiés (" .. tostring(class) .. ")"))
+  end
   add("")
   add("## Liste de référence (numéro = nom dans ce client, emplacement)")
   for _, r in ipairs(D.reference[class] or {}) do

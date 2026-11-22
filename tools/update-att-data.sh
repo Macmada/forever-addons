@@ -11,3 +11,5 @@ REV="$(git -C "$TMP/att" rev-parse --short HEAD)"
 lua5.1 tools/att_extract.lua "$TMP/att/db/Camelot" "$REV" > ForeverCompagnon_Data/Sources.lua.new
 mv ForeverCompagnon_Data/Sources.lua.new ForeverCompagnon_Data/Sources.lua
 echo "ForeverCompagnon_Data/Sources.lua : All The Things $REV"
+# Base d'objets du prêtre soigneur (simulateur wowsims/forever, licence MIT) : ForeverCompagnon/Loot/Items.lua
+python3 tools/wowsims_extract.py

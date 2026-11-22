@@ -1,5 +1,14 @@
 # Journal des versions
 
+## v3.8.0 (ForeverCompagnon 3.8.0) : Équipement du prêtre soigneur refait
+- **Tous les objets de Forever qu'un prêtre peut porter** (1 657, tirés du simulateur wowsims/forever, licence MIT) sont connus de l'addon, avec caractéristiques, niveau, faction et provenance : plus besoin de les avoir déjà croisés en jeu. Régénérés avec les sources d'All The Things (`tools/update-att-data.sh`).
+- **Deux onglets** : **Maintenant** (meilleure amélioration de chaque emplacement à ta portée et où l'obtenir) et **Objectif 60** (liste de kami-labs du 20/11/2026, ta progression ✓, enchantements). L'onglet Donjons disparaît pour le prêtre soigneur (son contenu est dans « Maintenant »).
+- **Une seule mesure, les points de soins**, avec les poids de wowsims (Sacré ou Discipline, groupe ou une cible) pour les conseils, les jets de butin, les récompenses de quête, les infobulles et les alertes.
+- **Liste de référence mise à jour** (kami-labs, calculée le 20/11/2026) : Amulette de Cainwyn, Protège-mains de Theramore (Alliance, exalté), Anneau de flamme émeraude, Anneau de guérison, Sceau royal d'Eldre'Thalas, Bâton des bois luminescent, Baguette de lumière éternelle ; plus de main gauche (bâton à deux mains).
+- **Pas de conseil contradictoire** : la liste de référence vient d'une simulation de combats entiers (bonus du set de dévot, mana) qu'un calcul par poids ne reproduit pas ; un « meilleur calculé » n'apparaît que si la pièce de référence est réservée à l'autre camp.
+- Ne sont jamais proposés : objets de l'autre camp, de la phase suivante (raids), JcJ seulement, ou sans provenance connue. Le niveau requis des nouveaux objets de Forever, souvent faux dans la base de wowsims, est estimé d'après leur niveau d'objet.
+- Les autres classes et rôles gardent l'évaluation d'avant.
+
 ## v3.7.0 (ForeverCompagnon 3.7.0) : sans Métiers ni suivi d'XP
 - **Partie Métiers retirée** (à la demande du joueur) : onglet, `/metiers`, `/fp metiers`, panneau à côté de la fenêtre du métier, conseils de métiers et de Secourisme dans « À faire », infobulles des patrons et formules, tests de l'auto-test. Ses sauvegardes (`ForeverMetiersDB`, `ForeverMetiersGlobalDB`) ne sont plus chargées : le jeu les efface à la prochaine déconnexion.
 - **Suivi de session retiré** : plus de tuile « prochain niveau » ni d'XP par heure sur l'écran Maintenant, plus de bandeau de session sous la fiche du personnage, plus de récapitulatif à la connexion ni de `/fp session` ; la session enregistrée est effacée au chargement.
