@@ -2,7 +2,7 @@
 
 ## v3.8.0 (ForeverCompagnon 3.8.0) : Équipement du prêtre soigneur refait
 - **Tous les objets de Forever qu'un prêtre peut porter** (1 657, tirés du simulateur wowsims/forever, licence MIT) sont connus de l'addon, avec caractéristiques, niveau, faction et provenance : plus besoin de les avoir déjà croisés en jeu. Régénérés avec les sources d'All The Things (`tools/update-att-data.sh`).
-- **Deux onglets** : **Maintenant** (meilleure amélioration de chaque emplacement à ta portée et où l'obtenir) et **Objectif 60** (liste de kami-labs du 20/11/2026, ta progression ✓, enchantements). L'onglet Donjons disparaît pour le prêtre soigneur (son contenu est dans « Maintenant »).
+- **Deux onglets** : **Maintenant** (meilleure amélioration de chaque emplacement à ta portée et où l'obtenir) et **Objectif 60** (liste de kami-labs du 20/11/2026, ta progression (coche verte), enchantements). L'onglet Donjons disparaît pour le prêtre soigneur (son contenu est dans « Maintenant »).
 - **Une seule mesure, les points de soins**, avec les poids de wowsims (Sacré ou Discipline, groupe ou une cible) pour les conseils, les jets de butin, les récompenses de quête, les infobulles et les alertes.
 - **Liste de référence mise à jour** (kami-labs, calculée le 20/11/2026) : Amulette de Cainwyn, Protège-mains de Theramore (Alliance, exalté), Anneau de flamme émeraude, Anneau de guérison, Sceau royal d'Eldre'Thalas, Bâton des bois luminescent, Baguette de lumière éternelle ; plus de main gauche (bâton à deux mains).
 - **Pas de conseil contradictoire** : la liste de référence vient d'une simulation de combats entiers (bonus du set de dévot, mana) qu'un calcul par poids ne reproduit pas ; un « meilleur calculé » n'apparaît que si la pièce de référence est réservée à l'autre camp.
