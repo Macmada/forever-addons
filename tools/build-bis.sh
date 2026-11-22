@@ -32,6 +32,7 @@ echo "ForeverBiS $VER construit ($(find ForeverBiS -name '*.lua' | wc -l) fichie
 if [ "$1" = "--zip" ]; then
   mkdir -p dist
   rm -f "dist/ForeverBiS-v$VER.zip"
-  zip -qr "dist/ForeverBiS-v$VER.zip" ForeverBiS ForeverCompagnon_Data
+  if command -v zip >/dev/null; then zip -qr "dist/ForeverBiS-v$VER.zip" ForeverBiS ForeverCompagnon_Data
+  else python3 -m zipfile -c "dist/ForeverBiS-v$VER.zip" ForeverBiS ForeverCompagnon_Data; fi
   echo "dist/ForeverBiS-v$VER.zip"
 fi
