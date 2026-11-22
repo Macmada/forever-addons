@@ -31,7 +31,7 @@ local Info = function(x) return ((C_Item and C_Item.GetItemInfo) or GetItemInfo)
 local function GainParts(r)
   if not r then return "", "" end
   if r.method == "ep" then                          -- prêtre soigneur : points de soins (Priest.lua)
-    return ns.Signed(r.score, 1) .. " |cffd8c8a0" .. L.cardEp .. "|r", ns.Priest.Detail(r.stats)
+    return ns.Signed(r.score, 1) .. " |cffd8c8a0" .. L.cardEp .. "|r", ns.Spec.Detail(r.stats)
   end
   if r.method == "heal" then
     local sub = {}
@@ -118,8 +118,9 @@ local function Card()
         pcall(GameTooltip.SetHyperlink, GameTooltip, self.link)
         if self.subFull and self.subFull ~= "" then GameTooltip:AddLine(" "); GameTooltip:AddLine(self.subFull, 1, 1, 1, true) end
         if self.onRight then GameTooltip:AddLine(L.goTip, 0.4, 0.8, 1, true) end
-        if ns.Priest and ns.Priest.Active() then
-          GameTooltip:AddLine(string.format(L.epTip, L["profile_" .. ns.Priest.Profile()]), 0.6, 0.6, 0.6, true)
+        if ns.Spec and ns.Spec.Active() then
+          local k = ns.Spec.Profile()
+          GameTooltip:AddLine(string.format(L.epTip, L["profile_" .. k], L["srcWeights_" .. ns.Spec.PROFILES[k].src]), 0.6, 0.6, 0.6, true)
         else GameTooltip:AddLine(L.healedTip, 0.6, 0.6, 0.6, true) end
         GameTooltip:Show()
       end
@@ -382,8 +383,9 @@ local function SlotIcon(slot)
 end
 
 function ns.GoalLines()
-  local P = ns.Priest
-  local label = ns.lang == "en" and D.referenceLabel[2] or D.referenceLabel[1]
+  local P = ns.Spec
+  local labels = D.referenceLabels[P.RefKey() or ""] or D.referenceLabel
+  local label = ns.lang == "en" and labels[2] or labels[1]
   local lines = { { kind = "info", display = "|cffa0a0a0" .. string.format(L.goalIntro, label) .. "|r", text = string.format(L.goalIntro, label) } }
   local nRef, nHave = 0, 0
   local done = #lines
@@ -412,7 +414,7 @@ function ns.GoalLines()
       local link = P.Link(r.id)
       local c = { link = link, id = r.id, src = "ref", eval = P.Evaluate(link), where = P.SourceText(r.id) or ((r.boss and (r.boss .. " — ") or "") .. Zone(r.zone)) }
       local tags = { (have == "worn" and L.goalHave) or (have == "bags" and L.goalBags) or (have == "owned" and string.format(L.goalOwned, where)) or L.goalMissing }
-      local ok, why = P.Obtainable(r.id)
+      local ok, why = P.Obtainable(r.id, true)
       if not ok and why == "faction" then tags[#tags + 1] = L.goalOther end
       local req = P.ReqLevel(r.id)
       if req and req > UnitLevel("player") then tags[#tags + 1] = "|cffa0a0a0" .. string.format(L.goalLevel, req) .. "|r" end
@@ -426,7 +428,7 @@ function ns.GoalLines()
     -- La référence vient d'une simulation complète (bonus de set, mana sur tout un combat) : un calcul par poids ne la
     -- contredit pas (22/11/2026 : aucun jeu de poids ne retrouve plus de 8 des 16 choix de kami-labs).
     local reachable = false
-    for _, r in ipairs(row.refs) do if P.Obtainable(r.id) then reachable = true end end
+    for _, r in ipairs(row.refs) do if P.Obtainable(r.id, true) then reachable = true end end
     local b = row.best and row.best[1]
     if b and not refIds[b.id] then
       if not reachable then
@@ -454,7 +456,7 @@ function ns.NearLines(span)
   local maxLevel = math.min(60, level + span)
   local lines = {}
   -- (phrase d'introduction remplacée par les tuiles ; gardée dans le texte pour les recherches et les tests)
-  if ns.Priest and ns.Priest.Active() then
+  if ns.Spec and ns.Spec.Active() then
     lines[#lines + 1] = { kind = "info", display = "|cffa0a0a0" .. string.format(L.nowIntro, maxLevel) .. "|r", text = string.format(L.nowIntro, maxLevel) }
   else
     lines[#lines + 1] = { kind = "info", display = "", text = string.format(L.nearIntro, maxLevel), hidden = true }
@@ -486,7 +488,7 @@ function ns.NearLines(span)
     end
   end
   if #empty > 0 then
-    local msg = (ns.Priest and ns.Priest.Active()) and string.format(L.nowNothing, maxLevel, table.concat(empty, ", "))
+    local msg = (ns.Spec and ns.Spec.Active()) and string.format(L.nowNothing, maxLevel, table.concat(empty, ", "))
                 or string.format(L.nearEmpty, table.concat(empty, ", "))
     lines[#lines + 1] = { kind = "info", display = "|cff808080" .. msg .. "|r", text = msg }
   end
@@ -600,13 +602,16 @@ function ns.Refresh()
   else
     ui.tileSet.Hide()
   end
-  local priest = ns.Priest and ns.Priest.Active()
+  local priest = ns.Spec and ns.Spec.Active()
   if priest and tab == "dungeons" then tab = "near" end
   ui.nearBtn:SetLabel(priest and L.tabNow or L.tabNear)
   ui.bisBtn:SetLabel(priest and L.tabGoal or L.tabBis60)
   ui.dunBtn:SetShown(not priest)
   ui.profileBtn:SetShown(priest and true or false)
-  if priest then ui.profileBtn:SetLabel(string.format(L.profile, L["profile_" .. ns.Priest.Profile()])) end
+  if priest then
+    local k = ns.Spec.Profile()
+    ui.profileBtn:SetLabel(string.format(ns.Spec.PROFILES[k].class == "PRIEST" and L.profile or L.spec, L["profile_" .. k]))
+  end
   Render((tab == "dungeons" and ns.DungeonLines()) or (tab == "bis" and (priest and ns.GoalLines() or ns.BisLines())) or ns.NearLines())
   ui.nearBtn:SetActive(tab == "near")
   ui.bisBtn:SetActive(tab == "bis")
@@ -743,13 +748,7 @@ local function CreateUI()
   ui.dunBtn:SetPoint("LEFT", ui.bisBtn, "RIGHT", 4, 0)
   -- prêtre soigneur : profil de calcul (poids de wowsims), un clic passe au suivant
   ui.profileBtn = K.Tab(ui, "", function()
-    local P, cur = ns.Priest, ns.Priest.Profile()
-    for i, k in ipairs(P.PROFILE_ORDER) do
-      if k == cur then ns.db.priestProfile = P.PROFILE_ORDER[i % #P.PROFILE_ORDER + 1]; break end
-    end
-    ns.version = ns.version + 1
-    P.Forget()
-    if ns.ForgetMemo then ns.ForgetMemo() end
+    ns.Spec.NextProfile()
     ns.Refresh()
   end)
   ui.profileBtn:SetPoint("LEFT", ui.bisBtn, "RIGHT", 12, 0)
@@ -883,10 +882,10 @@ function ns.DiagCollect(add)
   local _, class = UnitClass("player")
   add("")
   add("## Évaluation")
-  if ns.Priest and ns.Priest.Active() then
+  if ns.Spec and ns.Spec.Active() then
     local I = ns.ItemsInfo or {}
     add(string.format("Méthode : points de soins, profil %s (poids wowsims) ; base wowsims/forever %s du %s, %s objets ; phase %d",
-      ns.Priest.Profile(), tostring(I.commit), tostring(I.date), tostring(I.count), ns.Priest.PHASE))
+      tostring(ns.Spec.Profile()), tostring(I.commit), tostring(I.date), tostring(I.count), ns.Spec.PHASE))
   else
     add("Méthode : " .. ((class == "PRIEST" and _G.ForeverHealAPI) and "ForeverHeal" or "poids simplifiés (" .. tostring(class) .. ")"))
   end

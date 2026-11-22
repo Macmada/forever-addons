@@ -82,10 +82,10 @@ Commandes : `/fheal` (panneau), `/fheal alerte`, `/fheal infobulle`, `/fheal ann
 
 ### Équipement (ex-ForeverLoot)
 
-**Prêtre soigneur (refait en 3.8.0)** : deux onglets.
+**Prêtre soigneur (refait en 3.8.0) et paladin toutes spés (3.9.0 : Sacré, Protection, Vindicte, « Shockadin »)** : deux onglets ; la spé suit ton rôle, ou le bouton « Spé ».
 
-- **Maintenant** : à chaque emplacement, la meilleure amélioration jusqu'à ton niveau (+0, +3, +5 ou +10), parmi **tous les objets de Forever qu'un prêtre peut porter** (1 657 objets tirés du simulateur [wowsims/forever](https://github.com/wowsims/forever), licence MIT : caractéristiques, niveau, faction, provenance), plus ceux de tes sacs. Pour chacun : d'où il vient (boss et donjon, quête, marchand, artisanat, réputation) et un clic droit pour l'itinéraire. Les objets de l'autre camp, de la phase suivante, JcJ seulement ou sans provenance connue ne sont pas proposés.
-- **Objectif 60** : la liste BiS pré-raid de [kami-labs.fr](https://kami-labs.fr/bis-list-wow-forever/) (prêtre Sacré, simulée avec wowsims sur des combats entiers, bonus du set de dévot et mana compris), emplacement par emplacement : coche verte si tu l'as (porté, sacs, banque, autre personnage), sinon où l'obtenir et l'enchantement conseillé. Une pièce réservée à l'autre camp est remplacée par le meilleur calculé.
+- **Maintenant** : à chaque emplacement, la meilleure amélioration jusqu'à ton niveau (+0, +3, +5 ou +10), parmi **tous les objets de Forever que ta classe peut porter** (5 024 objets tirés du simulateur [wowsims/forever](https://github.com/wowsims/forever), licence MIT : caractéristiques, niveau, faction, provenance), plus ceux de tes sacs. Pour chacun : d'où il vient (boss et donjon, quête, marchand, artisanat, réputation) et un clic droit pour l'itinéraire. Les objets de l'autre camp, de la phase suivante, JcJ seulement ou sans provenance connue ne sont pas proposés.
+- **Objectif 60** : la liste BiS pré-raid de [kami-labs.fr](https://kami-labs.fr/bis-list-wow-forever/) de ta spé (simulée avec wowsims sur des combats entiers, bonus du set de dévot et mana compris), emplacement par emplacement : coche verte si tu l'as (porté, sacs, banque, autre personnage), sinon où l'obtenir et l'enchantement conseillé. Une pièce réservée à l'autre camp est remplacée par le meilleur calculé.
 - **Une seule mesure**, en « points de soins » : 1 point de puissance des soins = 1, les autres caractéristiques selon les poids de wowsims (Sacré ou Discipline, soins de groupe ou une cible : bouton « Calcul » en haut). Le détail est dans l'infobulle. Les jets de butin, récompenses de quête, infobulles et alertes utilisent la même mesure.
 
 **Autres classes et rôles** : équipement et butin évalués par les poids des caractéristiques selon ta **classe et ton rôle** (tank : endurance, armure, défense ; mêlée : force ou agilité et DPS de l'arme ; sorts : puissance des sorts, toucher…) :
@@ -98,6 +98,8 @@ Commandes : `/fheal` (panneau), `/fheal alerte`, `/fheal infobulle`, `/fheal ann
 - **Avec DungeonJournal** (facultatif) : le butin de chaque boss et les récompenses de quête de ses donjons, nouveaux donjons de Forever compris, entrent dans le BiS et l'onglet Donjons. **Avec Syndicator** (facultatif) : un objet déjà dans ta banque, ton courrier ou sur un autre personnage est signalé. **Avec All The Things** (facultatif) : où obtenir chaque objet du BiS.
 
 Commandes : `/floot` (ou `/bis`), `/floot donjons`, `/floot diag`, `/floot lang fr|en`.
+
+**ForeverBiS** : la partie Équipement seule, en addon séparé (dossier `ForeverBiS`, archive `ForeverBiS-v<version>.zip` de chaque version, construite par `tools/build-bis.sh`), pour qui ne veut que le BiS par spé : `/bis`, icône sur la minicarte. Le dossier `ForeverCompagnon_Data` joint est facultatif (noms dans ta langue, itinéraires).
 
 ### Préparation (ex-ForeverPrep)
 

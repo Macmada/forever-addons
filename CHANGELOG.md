@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v3.9.0 (ForeverCompagnon 3.9.0) : paladin toutes spés, et ForeverBiS
+- **Paladin** : la nouvelle partie Équipement marche aussi pour le paladin, dans ses spés **Sacré**, **Protection**, **Vindicte** et **Vindicte « Shockadin »** (Horion sacré) : la spé suit le rôle choisi dans ForeverCompagnon, et le bouton « Spé » passe de l'une à l'autre. Base élargie à 5 024 objets (tissu, cuir, mailles, plaques à partir du niveau 40, boucliers, librams, haches, épées, armes d'hast…).
+- **Listes de référence du paladin** (kami-labs, calculées le 20/11/2026 avec wowsims) pour chaque spé, avec enchantements ; les pièces réservées à l'autre camp (Profanateurs, Theramore…) sont remplacées par le meilleur calculé.
+- **Poids par spé** : Vindicte et Shockadin = simulateur wowsims ; Sacré et Protection = estimés (wowsims n'en publie pas), dit dans l'infobulle. La Vindicte ne se voit proposer que des armes à deux mains.
+- **ForeverBiS** : un addon séparé qui ne contient que la partie Équipement (avec une icône sur la minicarte et `/bis`), pour qui ne veut que ça. Archive `ForeverBiS-v3.9.0.zip` dans chaque version.
+- Correction : le relevé des marchands supposait la fenêtre principale chargée.
+
 ## v3.8.0 (ForeverCompagnon 3.8.0) : Équipement du prêtre soigneur refait
 - **Tous les objets de Forever qu'un prêtre peut porter** (1 657, tirés du simulateur wowsims/forever, licence MIT) sont connus de l'addon, avec caractéristiques, niveau, faction et provenance : plus besoin de les avoir déjà croisés en jeu. Régénérés avec les sources d'All The Things (`tools/update-att-data.sh`).
 - **Deux onglets** : **Maintenant** (meilleure amélioration de chaque emplacement à ta portée et où l'obtenir) et **Objectif 60** (liste de kami-labs du 20/11/2026, ta progression (coche verte), enchantements). L'onglet Donjons disparaît pour le prêtre soigneur (son contenu est dans « Maintenant »).

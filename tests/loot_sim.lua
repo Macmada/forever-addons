@@ -383,4 +383,45 @@ do
   check(ns.db.priestProfile == "holy_st" and ns.ui.profileBtn:IsShown(), "bouton de profil : Sacré une cible")
   ns.db.priestProfile = nil
 end
+-- 10. Paladin, toutes spés (même moteur, profils par spé)
+do
+  local S = ns.Spec
+  W.class, W.level = "PALADIN", 30
+  for k in pairs(GEAR) do GEAR[k] = nil end
+  for k in pairs(BAGS) do BAGS[k] = nil end
+  ns.db.specProfile = nil
+  ns.version = ns.version + 1; S.Forget(); ns.ForgetMemo()
+  check(S.Active() and #S.Profiles() == 4 and S.Profile() == "pal_holy", "paladin : 4 profils (Sacré, Protection, Vindicte, Shockadin), Sacré par défaut")
+  check(S.CanWear(16693) and not S.CanWear(12640) and S.CanWear(12640, 50), "paladin : tissu oui, plaques seulement à partir du niveau 40")
+  W.class = "PRIEST"
+  check(not S.CanWear(12640, 60) and not S.CanWear(19321, 60), "prêtre : ni plaques ni bouclier")
+  W.class, W.level = "PALADIN", 50
+  S.SetProfile("pal_ret")
+  local bis = ns.BiS(3, 53)
+  local oneHand = bis[17] ~= nil
+  for _, c in ipairs(bis[16] and bis[16].items or {}) do if ns.Items[c.id] and ns.Items[c.id][1] ~= 116 then oneHand = true end end
+  check(not oneHand and bis[16] and #bis[16].items > 0, "Vindicte : armes à deux mains seulement, pas de main gauche")
+  local goal = {}
+  for _, l in ipairs(ns.GoalLines()) do goal[#goal + 1] = l.text or "" end
+  goal = table.concat(goal, "\n")
+  check(goal:find(string.format(ns.L.goalDone, 0, 16), 1, true) and goal:find("Lionheart Helm", 1, true) and goal:find("The Unstoppable Force", 1, true),
+        "Objectif 60 Vindicte : liste de kami-labs (Heaume Cœur-de-lion, La Force irrésistible)")
+  check(not goal:find(ns.L.slot17, 1, true), "Vindicte : pas de ligne main gauche (arme à deux mains)")
+  -- Alliance : les pièces des Profanateurs (Horde) sont remplacées par le meilleur calculé
+  check(select(2, goal:gsub(" " .. ns.L.goalBest .. " — ", "")) >= 3, "Alliance : pièces Horde de la référence remplacées par un calcul")
+  S.SetProfile("pal_prot")
+  goal = {}
+  for _, l in ipairs(ns.GoalLines()) do goal[#goal + 1] = l.text or "" end
+  goal = table.concat(goal, "\n")
+  check(goal:find(string.format(ns.L.goalDone, 0, 17), 1, true) and goal:find("The Immovable Object", 1, true), "Objectif 60 Protection : 17 pièces dont L'Objet inébranlable")
+  check(S.ItemEP(19321) > S.ItemEP(16693), "Protection : un bouclier vaut plus qu'une coiffe de tissu de soigneur")
+  S.SetProfile("pal_holy")
+  check(S.ItemEP(16693) > S.ItemEP(12640), "Sacré : la Collerette de dévot (soins) vaut plus que le Heaume Cœur-de-lion (force)")
+  ns.ShowTab("bis")
+  ns.Refresh()
+  ns.ui.profileBtn.scripts.OnClick(ns.ui.profileBtn)
+  check(S.Profile() == "pal_prot" and ns.ui.profileBtn.fs:GetText():find(ns.L.profile_pal_prot, 1, true), "bouton de spé : Sacré -> Protection")
+  ns.db.specProfile = nil
+  W.class, W.level = "PRIEST", 40
+end
 W.rprint("\nTOUT OK (" .. LANG .. ")")

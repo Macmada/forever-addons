@@ -35,6 +35,7 @@ jobs:
           zip -r "dist/ForeverGFX-v${{ steps.v.outputs.gfx }}.zip" ForeverGFX
           zip -r "dist/ForeverMacros-v${{ steps.v.outputs.macros }}.zip" ForeverMacros
           zip -r "dist/ForeverCompagnon-v${{ steps.v.outputs.compagnon }}.zip" ForeverCompagnon ForeverCompagnon_Data
+          sh tools/build-bis.sh --zip          # addon séparé : la partie Équipement seule (ForeverBiS)
 
       - name: Créer release.json (WowUp)
         run: |

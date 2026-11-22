@@ -46,6 +46,99 @@ D.reference = {
 D.referenceLabel = { "Prêtre Sacré, niveau 60 avant les raids — kami-labs.fr, calculée avec wowsims le 20/11/2026",
                      "Holy priest, level 60 pre-raid — kami-labs.fr, computed with wowsims on 2026-11-20" }
 
+-- Paladin, niveau 60 avant les raids, WoW Forever : listes de kami-labs.fr calculées le 20/11/2026 avec wowsims/forever
+-- (sources du 15/11/2026), une par spé ; numéros relevés dans le lien « Ouvrir dans l'outil » (même ordre que le prêtre ;
+-- « ~ » = enchantement, libellé de kami-labs). Sacré-Protection et Vindicte-Protection : même liste que Protection.
+-- paladin-sacre : #1.paladin-sacre.60-preraid.252561-18723~1249058-12625-18510-10020~20028-13969~23802-18527~25079-14553-250600-275609~20024-275983-16058-18472-272439-22315~22750-19312-23201
+D.reference.PALADIN_holy = {
+  { slot = 1, id = 252561, boss = "Travail du cuir 300" },
+  { slot = 2, id = 18723, boss = "Ramstein Grandgosier, Stratholme", ench = "Pouvoir de guérison" },
+  { slot = 3, id = 12625, boss = "Forge 265" },
+  { slot = 15, id = 18510, boss = "Travail du cuir 300" },
+  { slot = 5, id = 10020, boss = "Couture", ench = "Intelligence majeure" },
+  { slot = 9, id = 13969, boss = "Kirtonos le Héraut, Scholomance", ench = "Pouvoir de guérison" },
+  { slot = 10, id = 18527, boss = "Roi Gordok, Hache-tripes", ench = "Pouvoir de guérison" },
+  { slot = 6, id = 14553, boss = "butin du monde" },
+  { slot = 7, id = 250600, boss = "Forge 300" },
+  { slot = 8, id = 275609, boss = "Couture 295", ench = "Esprit" },
+  { slot = 11, id = 275983, boss = "The Watchers, exalté" },
+  { slot = 11, id = 16058, boss = "quête « En rêves »" },
+  { slot = 13, id = 18472, boss = "quête « La lumière et comment l'altérer », Hache-tripes" },
+  { slot = 13, id = 272439, boss = "Pix Xizzix" },
+  { slot = 16, id = 22315, boss = "Isalien, Hache-tripes", ench = "Pouvoir de guérison" },
+  { slot = 17, id = 19312, boss = "Garde Foudrepique / Clan Loup-de-givre, exalté" },
+  { slot = 18, id = 23201, boss = "Seigneur Alexei Barov, Scholomance" },
+}
+-- paladin-protection : #1.paladin-protection.60-preraid.272783-19491~1249060-20057-13397~20015-12895~20025-19578~1248599-271940~25080-272779-237825-272781~20023-2246-275984-272440-20071-1728~23800-19321~20017-272434
+D.reference.PALADIN_prot = {
+  { slot = 1, id = 272783, boss = "marchand JcJ Alliance" },
+  { slot = 2, id = 19491, boss = "quête « 1200 bons - Amulette de la Sombrelune »", ench = "Déviation" },
+  { slot = 3, id = 20057, boss = "La Ligue d'Arathor, exalté" },
+  { slot = 15, id = 13397, boss = "Echine-de-pierre, Stratholme", ench = "Défense excellente" },
+  { slot = 5, id = 12895, boss = "quête « La cuirasse du vol chromatique »", ench = "Caractéristiques supérieures" },
+  { slot = 9, id = 19578, boss = "Sentinelles d'Aile-argent / Voltigeurs Chanteguerre, exalté", ench = "Agilité excellente" },
+  { slot = 10, id = 271940, boss = "Troupe d'intervention de Theramore, exalté", ench = "Agilité excellente" },
+  { slot = 6, id = 272779, boss = "marchand JcJ Alliance" },
+  { slot = 7, id = 237825, boss = "Sentinelles d'Aile-argent, exalté" },
+  { slot = 8, id = 272781, boss = "marchand JcJ Alliance", ench = "Agilité supérieure" },
+  { slot = 11, id = 2246, boss = "butin du monde" },
+  { slot = 11, id = 275984, boss = "The Watchers, exalté" },
+  { slot = 13, id = 272440, boss = "Pix Xizzix" },
+  { slot = 13, id = 20071, boss = "La Ligue d'Arathor, amical" },
+  { slot = 16, id = 1728, boss = "butin du monde", ench = "Agilité" },
+  { slot = 17, id = 19321, boss = "Garde Foudrepique / Clan Loup-de-givre, exalté", ench = "Endurance supérieure" },
+  { slot = 18, id = 272434, boss = "Pix Xizzix" },
+}
+-- paladin-vindicte : #1.paladin-vindicte.60-preraid.12640-15411~1249019-20212-20068~13419-252484~20025-19578~20010-272095~1248640-19044-22385-275618~20023-275981-19325-22268-272437-19323~1248668-0-272435
+D.reference.PALADIN_ret = {
+  { slot = 1, id = 12640, boss = "Forge 300" },
+  { slot = 2, id = 15411, boss = "quête « En rêves »", ench = "Force" },
+  { slot = 3, id = 20212, boss = "Les Profanateurs, exalté" },
+  { slot = 15, id = 20068, boss = "Les Profanateurs, exalté", ench = "Agilité mineure" },
+  { slot = 5, id = 252484, boss = "Travail du cuir 300", ench = "Caractéristiques supérieures" },
+  { slot = 9, id = 19578, boss = "Sentinelles d'Aile-argent / Voltigeurs Chanteguerre, exalté", ench = "Force excellente" },
+  { slot = 10, id = 272095, boss = "Chevaucheurs sombrelances, exalté", ench = "Force excellente" },
+  { slot = 6, id = 19044, boss = "Travail du cuir 265" },
+  { slot = 7, id = 22385, boss = "Forge 300" },
+  { slot = 8, id = 275618, boss = "Travail du cuir 295", ench = "Agilité supérieure" },
+  { slot = 11, id = 275981, boss = "The Watchers, exalté" },
+  { slot = 11, id = 19325, boss = "Garde Foudrepique / Clan Loup-de-givre, exalté" },
+  { slot = 13, id = 22268, boss = "Général Drakkisath, Pic Blackrock" },
+  { slot = 13, id = 272437, boss = "Pix Xizzix" },
+  { slot = 16, id = 19323, boss = "Garde Foudrepique / Clan Loup-de-givre, exalté", ench = "Force" },
+  { slot = 18, id = 272435, boss = "Pix Xizzix" },
+}
+-- shockadin-paladin : #1.shockadin-paladin.60-preraid.250599-15411~1249057-272745-272411~13419-252484~20025-19595~20010-271940~1248640-272404-22753-272718~20023-19325-275981-272438-280065-19323~1248607-0-272435
+D.reference.PALADIN_shock = {
+  { slot = 1, id = 250599, boss = "Forge 300" },
+  { slot = 2, id = 15411, boss = "quête « En rêves »", ench = "Puissance des sorts" },
+  { slot = 3, id = 272745, boss = "marchand JcJ Alliance" },
+  { slot = 15, id = 272411, boss = "Pix Xizzix", ench = "Agilité mineure" },
+  { slot = 5, id = 252484, boss = "Travail du cuir 300", ench = "Caractéristiques supérieures" },
+  { slot = 9, id = 19595, boss = "Sentinelles d'Aile-argent / Voltigeurs Chanteguerre, exalté", ench = "Force excellente" },
+  { slot = 10, id = 271940, boss = "Troupe d'intervention de Theramore, exalté", ench = "Force excellente" },
+  { slot = 6, id = 272404, boss = "Pix Xizzix" },
+  { slot = 7, id = 22753, boss = "Sentinelles d'Aile-argent, exalté" },
+  { slot = 8, id = 272718, boss = "marchand JcJ Alliance", ench = "Agilité supérieure" },
+  { slot = 11, id = 19325, boss = "Garde Foudrepique / Clan Loup-de-givre, exalté" },
+  { slot = 11, id = 275981, boss = "The Watchers, exalté" },
+  { slot = 13, id = 272438, boss = "Pix Xizzix" },
+  { slot = 13, id = 280065, boss = "Blackmaw Behemoth, Repaire des Noiregueules" },
+  { slot = 16, id = 19323, boss = "Garde Foudrepique / Clan Loup-de-givre, exalté", ench = "Puissance de sort renforcée" },
+  { slot = 18, id = 272435, boss = "Pix Xizzix" },
+}
+D.referenceLabels = {
+  PRIEST = D.referenceLabel,
+  PALADIN_holy = { "Paladin Sacré, niveau 60 avant les raids — kami-labs.fr, calculée avec wowsims le 20/11/2026",
+                   "Holy paladin, level 60 pre-raid — kami-labs.fr, computed with wowsims on 2026-11-20" },
+  PALADIN_prot = { "Paladin Protection, niveau 60 avant les raids — kami-labs.fr, calculée avec wowsims le 20/11/2026",
+                   "Protection paladin, level 60 pre-raid — kami-labs.fr, computed with wowsims on 2026-11-20" },
+  PALADIN_ret = { "Paladin Vindicte, niveau 60 avant les raids — kami-labs.fr, calculée avec wowsims le 20/11/2026",
+                  "Retribution paladin, level 60 pre-raid — kami-labs.fr, computed with wowsims on 2026-11-20" },
+  PALADIN_shock = { "Paladin « Shockadin » (Horion sacré), niveau 60 avant les raids — kami-labs.fr, calculée avec wowsims le 20/11/2026",
+                    "\"Shockadin\" paladin (Holy Shock), level 60 pre-raid — kami-labs.fr, computed with wowsims on 2026-11-20" },
+}
+
 -- Emplacements affichés (12 = 2e anneau, 14 = 2e bijou : regroupés avec 11 et 13)
 D.slotOrder = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 13, 16, 17, 18 }
 D.slots = {
