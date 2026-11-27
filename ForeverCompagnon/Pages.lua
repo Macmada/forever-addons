@@ -19,6 +19,8 @@ local T = FR and {
   best = "le plus efficace", fast = "urgence", hot = "en mouvement", group = "groupe",
   noHeal = "Pas de sort de soin connu pour ta classe.", combat = "En combat : dernier état connu.",
   shift = "Maj+clic : lien dans la discussion", more = "Tout voir", ahPrice = "HV %s",
+  ranks = "Rang conseillé", rankLine = "%s au lieu de %s : %d %% de soin en moins, %d %% de mana en moins (%s contre %s)",
+  rankName = "%s rang %d", rankHint = "quand le petit soin suffit",
   hpsShort = "soins/s", oomShort = "autonomie", neverShort = "jamais à sec", manaShort = "mana", healShort = "%s · %s s · %s mana",
 } or {
   now = "At my level", goal = "Level 60 goal", spec = "Spec: %s",
@@ -32,6 +34,8 @@ local T = FR and {
   best = "most efficient", fast = "emergency", hot = "on the move", group = "group",
   noHeal = "No known healing spell for your class.", combat = "In combat: last known state.",
   shift = "Shift+click: link in chat", more = "See all", ahPrice = "AH %s",
+  ranks = "Suggested rank", rankLine = "%s instead of %s: %d %% less healing, %d %% less mana (%s vs %s)",
+  rankName = "%s rank %d", rankHint = "when the smaller heal is enough",
   hpsShort = "heal/s", oomShort = "lasts", neverShort = "never dry", manaShort = "mana", healShort = "%s · %s s · %s mana",
 }
 root.PagesText = T
@@ -497,6 +501,18 @@ local function HealView(compact)
       card.action = ""
     end
     lines[#lines + 1] = card
+  end
+  -- rang conseillé : un sort plus petit qui coûte nettement moins (onglet seulement, pas la fiche étroite)
+  if not compact and ns.RankAdvice then
+    local okR, adv = pcall(ns.RankAdvice, S, 3)
+    if okR and adv and #adv > 0 then
+      lines[#lines + 1] = { kind = "head", title = T.ranks, right = T.rankHint }
+      for _, a in ipairs(adv) do
+        lines[#lines + 1] = { kind = "info", display = "|cff" .. U.Hex(C.text) .. string.format(T.rankLine,
+          string.format(T.rankName, a.small.name, a.small.rank), string.format(T.rankName, a.big.name, a.big.rank),
+          math.floor(a.loss * 100 + 0.5), math.floor(a.save * 100 + 0.5), Num(a.smallAmount), Num(a.bigAmount)) .. "|r" }
+      end
+    end
   end
   if #(d.gains or {}) > 0 then
     lines[#lines + 1] = { kind = "head", title = T.helps }

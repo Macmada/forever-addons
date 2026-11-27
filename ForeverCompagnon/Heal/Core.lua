@@ -169,6 +169,49 @@ function ns.KnownSpells()
   return out
 end
 
+-- Tous les rangs connus des soins sur une cible (avec incantation) : pour les conseils de rang
+function ns.KnownRanks()
+  local out = {}
+  for _, family in ipairs(D.ORDER) do
+    local fam = D.families[family]
+    if not fam.hot and not fam.targets then
+      for i, r in ipairs(fam.ranks) do
+        if Known(r[1]) then
+          local m = ns.SpellModel(family, i)
+          if m then out[#out + 1] = m end
+        end
+      end
+    end
+  end
+  return out
+end
+
+-- Conseils de rang (sans journal de combat : tes caractéristiques et les descriptions des sorts) : quand un sort plus
+-- petit soigne un peu moins mais coûte nettement moins, { petit, grand, perte de soin, économie de mana } (fractions)
+function ns.RankAdvice(S, max)
+  S = S or ns.Snapshot()
+  local list = {}
+  for _, m in ipairs(ns.KnownRanks()) do
+    if m.cost and m.cost > 0 then
+      list[#list + 1] = { m = m, amount = (m.base + m.coef * (S.heal or 0)) * (m.mult or 1) }
+    end
+  end
+  table.sort(list, function(a, b) return a.amount < b.amount end)
+  local out = {}
+  for i = 1, #list - 1 do
+    local small, big = list[i], list[i + 1]
+    local loss = 1 - small.amount / big.amount
+    local save = 1 - small.m.cost / big.m.cost
+    -- utile : économie de mana nettement plus grande que la perte de soin, et vrai écart de taille
+    if save > loss + 0.03 and loss > 0.05 and loss < 0.5 then
+      out[#out + 1] = { small = small.m, big = big.m, smallAmount = small.amount, bigAmount = big.amount, loss = loss, save = save }
+    end
+  end
+  table.sort(out, function(a, b) return (a.save - a.loss) > (b.save - b.loss) end)
+  while #out > (max or 3) do table.remove(out) end
+  return out
+end
+
 -- Famille d'un numéro de sort
 local familyOf = {}
 for _, c in pairs(D.classes) do

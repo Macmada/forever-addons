@@ -294,6 +294,17 @@ check(#pd.tiles == 4 and #pd.spells > 0 and #pd.gains == 5 and pd.gains[1].heale
       "panneau visuel : 4 tuiles, sorts, gains triés du plus utile au moins utile")
 check(ns.DiagText():find("Calcul du panneau : ok", 1, true), "diagnostic : calcul du panneau ok")
 
+-- 11d. rang conseillé : un sort plus petit qui coûte nettement moins (sans journal de combat)
+local ranks = ns.KnownRanks()
+check(#ranks >= 3, "rangs connus des soins sur une cible : " .. #ranks)
+local adv = ns.RankAdvice(nil, 3)
+local okAdv = type(adv) == "table"
+for _, a in ipairs(adv) do okAdv = okAdv and a.save > a.loss and a.smallAmount < a.bigAmount end
+check(okAdv, "conseils de rang : toujours plus d'économie de mana que de perte de soin (" .. #adv .. " conseil(s))")
+SPELLS[10963][3] = 600                                   -- Soins supérieurs r2 hors de prix : le r1 devient le bon choix
+adv = ns.RankAdvice(nil, 3)
+check(adv[1] and adv[1].small.id == 2060 and adv[1].big.id == 10963, "Soins supérieurs r2 trop cher : conseil « rang 1 au lieu de rang 2 »")
+SPELLS[10963][3] = 370
 -- 12. API pour les autres addons : écart de caractéristiques seul (enchantement)
 local e16 = ForeverHealAPI.EvaluateStats({ heal = 16 })
 local eSta = ForeverHealAPI.EvaluateStats({ sta = 10 })
