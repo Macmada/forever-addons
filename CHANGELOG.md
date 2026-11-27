@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v4.1.0 (ForeverCompagnon 4.1.0) : hôtel des ventes, tournée en ville, rang conseillé
+- **Accueil, hôtel des ventes** : l'amélioration la plus rentable (points par pièce d'or) que tu peux payer, avec son prix (Auctionator ou « Relever les prix ») ; les autres au survol. Prix HV sous chaque objet de l'onglet Équipement.
+- **Tournée en ville** : en ville, maître de classe, marchands de la liste de courses et hôtel des ventes en un seul trajet, dans l'ordre le plus court ; la flèche passe d'un arrêt au suivant. Les hôtels des ventes visités sont retenus.
+- **Soins, rang conseillé** : quand un rang plus bas économise nettement plus de mana qu'il ne perd de soin (calcul d'après tes caractéristiques, sans journal de combat).
+- **Ménage** : anciennes fenêtres Équipement, Préparation et Soins, tutoriel et icône séparée « Prépa » retirés (−1 400 lignes). Options d'Équipement (jets, quêtes, infobulles, niveaux supérieurs) dans le panneau Options du jeu.
+
 ## v4.0.3 (ForeverCompagnon 4.0.3) : corrections d'après les premiers essais en jeu
 - Donjon : case « obligatoire » de retour sur chaque ligne réglable ; une note longue n'écrase plus le libellé (texte entier au survol).
 - Accueil : maître de classe lu correctement sur Forever (plus de « (available) », les sorts déjà appris ne comptent plus dans « à apprendre »).
