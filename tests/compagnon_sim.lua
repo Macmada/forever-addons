@@ -144,6 +144,28 @@ for _, r in ipairs(ForeverCompagnonToolsMenu.rows) do
 end
 check(ForeverCompagnonAddonsFrame and ForeverCompagnonAddonsFrame:IsShown() and not ForeverCompagnonToolsMenu:IsShown(), "4.0 : menu Outils > Addons")
 ForeverCompagnonAddonsFrame:Hide()
+-- hôtel des ventes : l'amélioration la plus rentable (points par pièce d'or) que tu peux payer
+do
+  local loot = root.mods.ForeverLoot
+  local cand
+  for _, sl in pairs(loot.BiS(5, UnitLevel("player"))) do
+    for _, c in ipairs(sl.items) do if c.src ~= "bags" and not cand then cand = c end end
+  end
+  check(cand ~= nil, "hôtel des ventes : un objet candidat à ton niveau")
+  local saveA, saveM = _G.Auctionator, _G.GetMoney
+  _G.Auctionator = { API = { v1 = { GetAuctionPriceByItemID = function(_, id) return id == cand.id and 25000 or nil end } } }
+  _G.GetMoney = function() return 100000 end
+  loot.ForgetMemo()
+  local ah
+  for _, l in ipairs(root.NowLines()) do if l.ah then ah = l end end
+  check(ah and ah.source:find(root.Coins(25000), 1, true) and root.HomeAction(ah) == root.MainText.ah,
+        "Accueil : « Hôtel des ventes : … » avec le prix (" .. tostring(ah and ah.source) .. ")")
+  _G.GetMoney = function() return 100 end
+  local none = true
+  for _, l in ipairs(root.NowLines()) do if l.ah then none = false end end
+  check(none, "hôtel des ventes : rien si tu ne peux pas payer")
+  _G.Auctionator, _G.GetMoney = saveA, saveM
+end
 -- fiche collée au personnage (touche C) : nouveau style (4.0)
 _G.CharacterFrame.scripts.OnShow(_G.CharacterFrame)
 check(ForeverCompagnonSheet and ForeverCompagnonSheet:IsShown() and not (_G.ForeverHealPanel and _G.ForeverHealPanel:IsShown()),

@@ -170,6 +170,59 @@ local function BagTodo(lines)
   end
 end
 
+-- Prix à l'hôtel des ventes d'un objet (Auctionator, sinon le relevé de ForeverCompagnon) ; nil si jamais vu
+function root.AHPrice(id)
+  local prep = root.mods.ForeverPrep
+  if not (id and prep and prep.Price) then return nil end
+  local ok, p = pcall(prep.Price, id, true)
+  if ok and type(p) == "number" and p > 0 then return p end
+end
+local function Coins(c)
+  local prep = root.mods.ForeverPrep
+  return (prep and prep.FormatMoney) and prep.FormatMoney(c) or (Money(c) or "")
+end
+root.Coins = Coins
+
+-- Amélioration à acheter à l'hôtel des ventes : la plus rentable (points par pièce d'or) parmi celles que tu peux payer
+local function AHTodo(lines)
+  local loot = root.mods.ForeverLoot
+  if not (loot and loot.BiS) then return end
+  local level = UnitLevel("player")
+  local money = (GetMoney and GetMoney()) or 0
+  local found = {}
+  for _, s in pairs(loot.BiS(5, level)) do
+    for _, c in ipairs(s.items) do
+      if c.src ~= "bags" and not (loot.Owned and loot.Owned(c.id)) then
+        local price = root.AHPrice(c.id)
+        local gain = c.eval and c.eval.score or 0
+        if price and price <= money and gain > 0 then
+          found[#found + 1] = { c = c, price = price, gain = gain, ratio = gain / math.max(price / 10000, 0.01) }
+          break                                      -- un objet par emplacement : le meilleur trouvé à l'HV
+        end
+      end
+    end
+  end
+  if #found == 0 then return end
+  table.sort(found, function(a, b) return a.ratio > b.ratio end)
+  local best = found[1]
+  local name = best.c.link and best.c.link:match("%[(.-)%]") or "?"
+  local ratio = string.format("%.1f", best.ratio)
+  if root.FR then ratio = ratio:gsub("%.", ",") end
+  local tip = { title = string.format(L.todoAH, name), lines = { { L.todoAHTip, 0.85, 0.78, 0.6 } } }
+  if #found > 1 then
+    tip.lines[#tip.lines + 1] = { L.todoAHMore, 1, 0.82, 0 }
+    for i = 2, math.min(#found, 6) do
+      local f = found[i]
+      tip.lines[#tip.lines + 1] = { (f.c.link and f.c.link:match("%[(.-)%]") or "?") .. " : " .. Coins(f.price), 1, 1, 1 }
+    end
+  end
+  local gain = loot._GainParts and (loot._GainParts(best.c.eval)) or ""
+  lines[#lines + 1] = { kind = "card", link = best.c.link, icon = select(5, root.Game.ItemInstant(best.c.link)), quality = 2,
+                        name = string.format(L.todoAH, name), nameColor = { 1, 1, 1 },
+                        source = string.format(L.todoAHSrc, Coins(best.price), ratio), gain = gain, tip = tip, ah = true,
+                        onClick = function() root.Open("loot") end, onRight = function() root.Open("loot") end }
+end
+
 -- Amélioration vendue par un PNJ (sources intégrées) : l'acheter (clic : y aller)
 local function VendorTodo(lines)
   local loot = root.mods.ForeverLoot
@@ -262,6 +315,7 @@ function root.NowLines()
   local before = #lines
   Safe("maître de classe", TrainerTodo, lines)
   Safe("équiper", BagTodo, lines)
+  Safe("hôtel des ventes", AHTodo, lines)
   Safe("lieux", PlaceTodo, lines, places)
   Safe("quêtes", QuestTodo, lines)
   Safe("marchand", VendorTodo, lines)

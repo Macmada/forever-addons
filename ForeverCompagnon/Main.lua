@@ -12,7 +12,7 @@ local T = FR and {
   level = "%s niveau %d", todo = "À faire maintenant", hint = "clic : l'action · clic droit : le détail",
   cUp = "améliorations à ta portée", cBuy = "achats avant le donjon", cTrainer = "sorts chez le maître",
   cHps = "soins par seconde",
-  equip = "Équiper", route = "Itinéraire", guide = "Guide-moi", open = "Ouvrir",
+  equip = "Équiper", route = "Itinéraire", guide = "Guide-moi", open = "Ouvrir", ah = "HV",
   none = "Rien d'urgent : tu es prêt.", combat = "En combat : dernier état connu.",
   errors = "%d partie(s) en erreur : menu Outils, Erreurs", foot = "/fp · Échap ferme",
   tools = "Outils", roleTip = "Clic : changer de rôle (règle les conseils d'équipement et de préparation).",
@@ -32,7 +32,7 @@ local T = FR and {
   level = "%s level %d", todo = "To do now", hint = "click: action · right-click: details",
   cUp = "upgrades within reach", cBuy = "purchases before the dungeon", cTrainer = "spells at the trainer",
   cHps = "healing per second",
-  equip = "Equip", route = "Route", guide = "Guide me", open = "Open",
+  equip = "Equip", route = "Route", guide = "Guide me", open = "Open", ah = "AH",
   none = "Nothing urgent: you are ready.", combat = "In combat: last known state.",
   errors = "%d part(s) failed: Tools menu, Errors", foot = "/fp · Esc closes",
   tools = "Tools", roleTip = "Click: change role (sets gear and preparation advice).",
@@ -146,12 +146,14 @@ local function Tip(self)
   GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
   if l.link and GameTooltip.SetHyperlink then
     GameTooltip:SetHyperlink(l.link)
+    if l.tip and l.tip.lines and #l.tip.lines > 0 then GameTooltip:AddLine(" ") end
   else
     GameTooltip:SetText((l.tip and l.tip.title) or l.name or "", C.goldL[1], C.goldL[2], C.goldL[3])
-    for _, x in ipairs(l.tip and l.tip.lines or {}) do
-      if type(x) == "table" then GameTooltip:AddLine(x[1], x[2] or 1, x[3] or 1, x[4] or 1, true)
-      else GameTooltip:AddLine(x, 1, 1, 1, true) end
-    end
+  end
+  -- détail de la ligne (sous l'objet quand il y en a un : prix, autres choix…)
+  for _, x in ipairs(l.tip and l.tip.lines or {}) do
+    if type(x) == "table" then GameTooltip:AddLine(x[1], x[2] or 1, x[3] or 1, x[4] or 1, true)
+    else GameTooltip:AddLine(x, 1, 1, 1, true) end
   end
   GameTooltip:Show()
 end
@@ -205,6 +207,7 @@ end
 local function ActionOf(l)
   if l.equip then return T.equip, true end
   if l.buy then return T.guide end
+  if l.ah then return T.ah end
   if l.place or l.quests or l.trainer or l.vendor then return T.route end
   return T.open
 end

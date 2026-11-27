@@ -18,7 +18,7 @@ local T = FR and {
   heal = "soin %s · %s s · %s mana", eff = "%s / mana",
   best = "le plus efficace", fast = "urgence", hot = "en mouvement", group = "groupe",
   noHeal = "Pas de sort de soin connu pour ta classe.", combat = "En combat : dernier état connu.",
-  shift = "Maj+clic : lien dans la discussion", more = "Tout voir",
+  shift = "Maj+clic : lien dans la discussion", more = "Tout voir", ahPrice = "HV %s",
   hpsShort = "soins/s", oomShort = "autonomie", neverShort = "jamais à sec", manaShort = "mana", healShort = "%s · %s s · %s mana",
 } or {
   now = "At my level", goal = "Level 60 goal", spec = "Spec: %s",
@@ -31,7 +31,7 @@ local T = FR and {
   heal = "heal %s · %s s · %s mana", eff = "%s / mana",
   best = "most efficient", fast = "emergency", hot = "on the move", group = "group",
   noHeal = "No known healing spell for your class.", combat = "In combat: last known state.",
-  shift = "Shift+click: link in chat", more = "See all",
+  shift = "Shift+click: link in chat", more = "See all", ahPrice = "AH %s",
   hpsShort = "heal/s", oomShort = "lasts", neverShort = "never dry", manaShort = "mana", healShort = "%s · %s s · %s mana",
 }
 root.PagesText = T
@@ -343,6 +343,10 @@ root.Pages.loot = {
         for k, v in pairs(l) do c[k] = v end
         c.action = l.onRight and T.go or ""
         c.gain = l.gain
+        -- prix à l'hôtel des ventes, s'il a été relevé
+        local id = l.link and tonumber(tostring(l.link):match("item:(%d+)"))
+        local price = id and root.AHPrice and root.AHPrice(id)
+        if price then c.source = (c.source and (c.source .. " · ") or "") .. "|cffffd100" .. T.ahPrice:format(root.Coins(price)) .. "|r" end
         lines[#lines + 1] = c
       elseif l.kind == "slot" then
         lines[#lines + 1] = { kind = "head", title = l.title, right = l.right, icon = l.icon }
