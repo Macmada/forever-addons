@@ -1,5 +1,16 @@
 # Journal des versions
 
+## v4.0.0 (ForeverCompagnon 4.0.0) : nouvelle interface
+- **Une seule fenêtre, sombre et dorée**, à quatre onglets : **Accueil**, **Équipement**, **Donjon**, **Soins** (seulement pour les classes qui soignent). Plus de barre d'icônes à gauche ni de fenêtres séparées : `/fp`, `/bis`, `/floot`, `/prep`, `/fheal`, les icônes et la fiche automatique à l'entrée d'une instance ouvrent le bon onglet.
+- **En-tête** : portrait, nom, « classe niveau · rôle · zone » (clic : changer de rôle), menu **⚙ Outils** (mes vols, effacer la flèche, Configurer HealBot, cadre Flash, erreurs, journal, addons, diagnostic, auto-test, sonde, options).
+- **Accueil** : trois compteurs (améliorations à ta portée, achats avant le donjon, sorts chez le maître ou soins par seconde) et au plus **cinq actions**, une ligne chacune avec son bouton : Équiper, Itinéraire, Guide-moi.
+- **Équipement** : « À mon niveau » et « Objectif 60 », bouton de spé ; clic droit : y aller, Maj+clic : lien.
+- **Donjon** : liste à cocher par rubrique, « N / M prêt », donjon ou raid, Guide-moi vers le vendeur.
+- **Soins** : soins/s, autonomie, mana ; tes sorts classés par efficacité (le plus efficace, urgence, groupe, en mouvement) ; ce qui t'aide le plus.
+- **Options** dans le panneau du jeu : Échap > Options > AddOns > ForeverCompagnon (ou `/fp options`).
+- Réglages d'interface remis à zéro (position de la fenêtre, dernier onglet, place du cadre Flash) ; ce que l'addon a appris (maîtres, vendeurs, lancers de sorts, banque) est gardé.
+- **ForeverBiS** (addon séparé de la 3.9.0) retiré.
+
 ## v3.9.0 (ForeverCompagnon 3.9.0) : paladin toutes spés, et ForeverBiS
 - **Paladin** : la nouvelle partie Équipement marche aussi pour le paladin, dans ses spés **Sacré**, **Protection**, **Vindicte** et **Vindicte « Shockadin »** (Horion sacré) : la spé suit le rôle choisi dans ForeverCompagnon, et le bouton « Spé » passe de l'une à l'autre. Base élargie à 5 024 objets (tissu, cuir, mailles, plaques à partir du niveau 40, boucliers, librams, haches, épées, armes d'hast…).
 - **Listes de référence du paladin** (kami-labs, calculées le 20/11/2026 avec wowsims) pour chaque spé, avec enchantements ; les pièces réservées à l'autre camp (Profanateurs, Theramore…) sont remplacées par le meilleur calculé.
