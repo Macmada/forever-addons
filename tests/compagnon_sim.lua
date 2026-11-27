@@ -140,20 +140,31 @@ end
 check(ForeverCompagnonAddonsFrame and ForeverCompagnonAddonsFrame:IsShown() and not ForeverCompagnonToolsMenu:IsShown(), "4.0 : menu Outils > Addons")
 ForeverCompagnonAddonsFrame:Hide()
 
--- onglets : une fenêtre à la fois
+-- onglets : tout dans la même fenêtre (4.0)
 root.Open("loot")
-check(ForeverLootFrame:IsShown() and not ForeverCompagnonFrame:IsShown() and ForeverCompagnonRail:IsShown(), "onglet Équipement : remplace Maintenant")
+check(F:IsShown() and root.CurrentPage() == "loot" and F.pages.loot:IsShown() and not F.home:IsShown(), "onglet Équipement : dans la fenêtre")
+check(F.tabs[2].line:IsShown() and not F.tabs[1].line:IsShown(), "onglet Équipement souligné")
+check(not (_G.ForeverLootFrame and _G.ForeverLootFrame:IsShown()), "ancienne fenêtre d'équipement plus ouverte")
+F.pages.loot.seg.buttons[2]:GetScript("OnClick")()
+check(root.lootView == "goal", "Équipement : vue Objectif 60")
+F.pages.loot.seg.buttons[1]:GetScript("OnClick")()
 SlashCmdList.FOREVERPREP("")
-check(ForeverPrepFrame:IsShown() and not ForeverLootFrame:IsShown() and ForeverCompagnonRail:IsShown(), "/prep : passe aussi par la barre")
+check(root.CurrentPage() == "prep" and F.pages.prep:IsShown(), "/prep : onglet Donjon de la fenêtre")
+check(F.pages.prep.done:GetText():match("^%d+ / %d+"), "Donjon : compteur « prêt » (" .. tostring(F.pages.prep.done:GetText()) .. ")")
 root.Open("heal")
-check(ForeverHealPanel:IsShown() and not ForeverPrepFrame:IsShown(), "onglet Soins")
-ForeverHealPanel:Hide()
-check(not ForeverCompagnonRail:IsShown(), "fermer la fenêtre ferme la barre")
+check(root.CurrentPage() == "heal" and F.pages.heal.counters[1].value:GetText() ~= nil, "onglet Soins : chiffres affichés")
+check(#F.pages.heal.list.Shown("head") >= 1, "onglet Soins : rubrique « Tes soins »")
+root.Open("prep")
+check(#F.pages.prep.list.Shown("check") >= 1 and #F.pages.prep.list.Shown("head") >= 1, "onglet Donjon : rubriques et cases (" .. #F.pages.prep.list.Shown("check") .. " cases)")
+root.Open("loot")
+check(#F.pages.loot.list.Shown("card") + #F.pages.loot.list.Shown("info") >= 1, "onglet Équipement : lignes affichées")
+root.Open("heal")
+F:Hide()
 root.Toggle()
-check(ForeverHealPanel:IsShown(), "réouverture : dernier onglet")
-ForeverHealPanel:Hide()
+check(F:IsShown() and root.CurrentPage() == "heal", "réouverture : dernier onglet")
+F:Hide()
 root.Open("metiers")
-check(ForeverCompagnonFrame:IsShown() and root.db.lastTab == "now", "ancien onglet Métiers : Maintenant à la place")
+check(ForeverCompagnonFrame:IsShown() and root.db.lastTab == "now" and root.CurrentPage() == "now", "ancien onglet Métiers : Accueil à la place")
 ForeverCompagnonFrame:Hide()
 
 -- en combat : pas de recalcul
@@ -328,15 +339,13 @@ local lootNs = root.mods.ForeverLoot
 local realNear = lootNs.NearLines
 lootNs.NearLines = function() return { { kind = "card", name = "Anneau d'essai", source = "Vendeur — Vallée", onRight = function() lootNs.GoTo(272406) end } } end
 lootNs.ShowTab("near")
-lootNs.Refresh()
 lootNs.NearLines = realNear
-local rc
-for _, c in ipairs(lootNs._view.cards) do if c:IsShown() and c.onRight then rc = c end end
-check(rc ~= nil, "fenêtre Équipement : une carte avec « y aller »")
+local rc = ForeverCompagnonFrame.pages.loot.list.Shown("card")[1]
+check(rc ~= nil and rc.action:GetText() == root.PagesText.go, "onglet Équipement : une carte avec « Y aller »")
 rc.scripts.OnClick(rc, "RightButton")
-check(nav.target ~= nil, "fenêtre Équipement : clic droit sur la carte, la flèche est posée")
+check(nav.target ~= nil, "onglet Équipement : clic droit sur la carte, la flèche est posée")
 nav.Clear()
-ForeverLootFrame:Hide()
+ForeverCompagnonFrame:Hide()
 -- marchands visités retenus (position, articles) et proposés par Guide-moi
 _G.UnitGUID = function(u) return u == "npc" and "Creature-0-1-2-3-4-5611-0000" or "Player-1" end
 _G.UnitName = function(u) return u == "npc" and "Aubergiste de la Colline" or "Machin" end

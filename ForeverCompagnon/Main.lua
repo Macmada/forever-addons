@@ -61,6 +61,7 @@ local function Hex(c) return string.format("%02x%02x%02x", c[1] * 255, c[2] * 25
 local W, H, PAD = 560, 532, 16
 local ROWS = 5
 local ui, menu
+local page = "now"
 
 local function Fill(region, c, a) region:SetColorTexture(c[1], c[2], c[3], a or 1) end
 local function Text(parent, size, c, font)
@@ -79,13 +80,16 @@ local function Box(parent, c, a, border)
   return f
 end
 
+root.UI = {}
 local function HealerClass()
   local _, class = UnitClass("player")
   return class == "PRIEST" or class == "DRUID" or class == "PALADIN" or class == "SHAMAN"
 end
 
+root.UI.Fill, root.UI.Text, root.UI.Box, root.UI.Hex, root.UI.HealerClass = Fill, Text, Box, Hex, HealerClass
+
 ----------------------------------------------------------------------
--- Onglets : l'Accueil est dans cette fenêtre ; Équipement, Donjon et Soins ouvrent encore leur fenêtre (étape 2 : ici)
+-- Onglets
 ----------------------------------------------------------------------
 local TABS = {
   { key = "now", label = T.home }, { key = "loot", label = T.gear }, { key = "prep", label = T.dungeon },
@@ -113,7 +117,7 @@ local function MakeTab(parent, t)
     self.line:SetShown(on)
   end
   b.tab = t
-  b:SetScript("OnClick", function() if t.key ~= "now" then root.Open(t.key) end end)
+  b:SetScript("OnClick", function() root.Open(t.key) end)
   b:SetActive(t.key == "now")
   return b
 end
@@ -227,6 +231,8 @@ local function SetRow(b, l)
   b.sub:SetPoint("RIGHT", b, "RIGHT", -right, 0)
   b:Show()
 end
+
+root.UI.MakeCounter, root.UI.MakeRow, root.UI.Tip = MakeCounter, MakeRow, Tip
 
 ----------------------------------------------------------------------
 -- Données de l'Accueil : 3 compteurs et 5 actions au plus
@@ -351,6 +357,14 @@ function root.RefreshNow()
     b:SetShown(show)
     if show then b:ClearAllPoints(); b:SetPoint("BOTTOMLEFT", ui.tabBar, "BOTTOMLEFT", x, 0); x = x + b:GetWidth() + 4 end
   end
+  if page ~= "now" then
+    local p = root.Pages and root.Pages[page]
+    if p then
+      local ok, e = pcall(p.Refresh, ui.pages[page], ui)
+      ui.status:SetText(ok and (root.pageStatus or "") or ("|cff" .. Hex(C.red) .. tostring(e) .. "|r"))
+    end
+    return
+  end
   local actions, counters, stale = root.HomeData()
   for i, c in ipairs(ui.counters) do
     local d = counters[i]
@@ -452,11 +466,26 @@ local function Create()
   ui.tabs = {}
   for _, t in ipairs(TABS) do ui.tabs[#ui.tabs + 1] = MakeTab(ui.tabBar, t) end
 
+  -- pages : l'Accueil ici, les autres dans Pages.lua
+  ui.body = CreateFrame("Frame", nil, ui)
+  ui.body:SetPoint("TOPLEFT", ui.tabBar, "BOTTOMLEFT", 0, 0)
+  ui.body:SetPoint("BOTTOMRIGHT", ui, "BOTTOMRIGHT", -1, 27)
+  ui.home = CreateFrame("Frame", nil, ui.body)
+  ui.home:SetAllPoints()
+  ui.pages = { now = ui.home }
+  for key, def in pairs(root.Pages or {}) do
+    local f = CreateFrame("Frame", nil, ui.body)
+    f:SetAllPoints()
+    f:Hide()
+    def.Create(f, ui)
+    ui.pages[key] = f
+  end
+
   -- compteurs
   local cw = math.floor((W - 2 * PAD - 2 * 10) / 3)
   ui.counters = {}
   for i = 1, 3 do
-    local c = MakeCounter(ui)
+    local c = MakeCounter(ui.home)
     c:SetSize(cw, 54)
     c:SetPoint("TOPLEFT", ui.tabBar, "BOTTOMLEFT", PAD + (i - 1) * (cw + 10), -14)
     c:EnableMouse(true)
@@ -465,25 +494,25 @@ local function Create()
   end
 
   -- « À faire maintenant »
-  ui.todo = Text(ui, 14, C.goldL, "GameFontNormal")
+  ui.todo = Text(ui.home, 14, C.goldL, "GameFontNormal")
   K.TitleFont(ui.todo, 14, "GameFontNormal")
   ui.todo:SetTextColor(C.goldL[1], C.goldL[2], C.goldL[3])
   ui.todo:SetPoint("TOPLEFT", ui.counters[1], "BOTTOMLEFT", 0, -16)
   ui.todo:SetText(T.todo)
-  local hint = Text(ui, 10, C.muted, "GameFontHighlightSmall")
+  local hint = Text(ui.home, 10, C.muted, "GameFontHighlightSmall")
   hint:SetPoint("RIGHT", ui, "RIGHT", -PAD, 0)
   hint:SetPoint("BOTTOM", ui.todo, "BOTTOM", 0, 0)
   hint:SetJustifyH("RIGHT")
   hint:SetText(T.hint)
   ui.rows = {}
   for i = 1, ROWS do
-    local r = MakeRow(ui)
+    local r = MakeRow(ui.home)
     r:SetPoint("TOPLEFT", ui.todo, "BOTTOMLEFT", 0, -10 - (i - 1) * 54)
     r:SetPoint("RIGHT", ui, "RIGHT", -PAD, 0)
     r:Hide()
     ui.rows[i] = r
   end
-  ui.empty = Text(ui, 12, C.muted, "GameFontHighlight")
+  ui.empty = Text(ui.home, 12, C.muted, "GameFontHighlight")
   ui.empty:SetPoint("TOPLEFT", ui.todo, "BOTTOMLEFT", 0, -16)
   ui.empty:SetText(T.none)
 
@@ -507,7 +536,26 @@ local function Create()
   return ui
 end
 
-function root.ShowNow()
+function root.CurrentPage() return page end
+
+-- Affiche la fenêtre sur une page (now, loot, prep, heal) ; Soins seulement pour les classes qui soignent
+function root.ShowPage(key)
   Create()
-  if ui:IsShown() then ui:Hide() else ui:Show() end
+  if key == "heal" and not HealerClass() then key = "now" end
+  if not ui.pages[key] then key = "now" end
+  page = key
+  for k, f in pairs(ui.pages) do f:SetShown(k == key) end
+  for _, b in ipairs(ui.tabs) do b:SetActive(b.tab.key == key) end
+  if ui:IsShown() then root.RefreshNow() else ui:Show() end
 end
+function root.ShowNow() root.ShowPage("now") end
+
+-- 4.0 : réglages de l'ancienne interface remis à zéro (position, dernier onglet, cadre Flash). Ce que l'addon a appris
+-- (maîtres de classe, vendeurs, lancers de sorts, objets de la banque) est gardé.
+root.OnLogin(function()
+  local db = root.db
+  if db and db.uiVersion ~= 4 then
+    db.pos, db.lastTab, db.flashPos = nil, nil, nil
+    db.uiVersion = 4
+  end
+end)

@@ -46,6 +46,7 @@ Prep\UI.lua
 Window.lua
 Now.lua
 Main.lua
+Pages.lua
 Flash.lua
 Addons.lua
 HealBot.lua

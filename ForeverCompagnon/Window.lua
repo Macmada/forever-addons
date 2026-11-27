@@ -1,162 +1,55 @@
 local ADDON, root = ...
 local L = root.L
 
--- Une seule fenêtre : une barre d'onglets verticale (Maintenant, Soins, Équipement, Préparation, Addons) collée
--- à gauche de la fenêtre affichée. Chaque partie garde sa propre fenêtre ; une seule est visible à la fois,
--- à la même place. La barre suit la fenêtre (déplacement compris).
+-- 4.0 : une seule fenêtre (Main.lua) à quatre onglets : Accueil, Équipement, Donjon, Soins (Pages.lua). Ici : ouverture,
+-- commandes, icône, diagnostic commun.
 
 root.Shared.Diag(ADDON, root)
 root.Shared.Widgets(ADDON, root)
-local K = root.Kit
 
 root.TABS = {
-  { key = "now", label = root.FR and "Accueil" or "Home", icon = "Interface\\Icons\\Spell_Holy_PowerWordShield", frame = "ForeverCompagnonFrame",
-    open = function() root.ShowNow() end },
-  { key = "heal", label = L.heal, icon = "Interface\\Icons\\Spell_Holy_GreaterHeal", frame = "ForeverHealPanel",
-    mod = "ForeverHeal", toggle = "TogglePanel", classes = { PRIEST = true, DRUID = true, PALADIN = true, SHAMAN = true } },
-  { key = "loot", label = L.loot, icon = "Interface\\Icons\\INV_Chest_Cloth_17", frame = "ForeverLootFrame",
-    mod = "ForeverLoot", toggle = "Toggle" },
-  { key = "prep", label = L.prep, icon = "Interface\\Icons\\INV_Potion_51", frame = "ForeverPrepFrame",
-    mod = "ForeverPrep", toggle = "Toggle" },
+  { key = "now" }, { key = "loot", mod = "ForeverLoot", toggle = "Toggle" }, { key = "prep", mod = "ForeverPrep", toggle = "Toggle" },
+  { key = "heal", mod = "ForeverHeal", toggle = "TogglePanel" },
 }
-local byKey = {}
-for _, t in ipairs(root.TABS) do byKey[t.key] = t end
+local PAGES = { now = true, loot = true, prep = true, heal = true }
 
-local rail, current
-local hooked = {}
-
-local function Highlight()
-  if not rail then return end
-  for _, b in ipairs(rail.buttons) do b.sel:SetShown(current and b.tab.key == current.key) end
-end
-
-local function Rail()
-  if rail then return rail end
-  rail = CreateFrame("Frame", "ForeverCompagnonRail", UIParent)
-  local _, myClass = UnitClass("player")
-  local tabs = {}
-  for _, t in ipairs(root.TABS) do if not t.classes or t.classes[myClass] then tabs[#tabs + 1] = t end end
-  rail:SetSize(50, 16 + #tabs * 46)
-  rail:SetFrameStrata("HIGH")
-  K.Panel(rail, 0.92)
-  rail.buttons = {}
-  for i, t in ipairs(tabs) do
-    local b = CreateFrame("Button", nil, rail)
-    b:SetSize(38, 38)
-    b:SetPoint("TOP", 0, -8 - (i - 1) * 46)
-    b.tab = t
-    b.icon = b:CreateTexture(nil, "ARTWORK")
-    b.icon:SetAllPoints()
-    b.icon:SetTexture(t.icon)
-    b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    b.sel = b:CreateTexture(nil, "OVERLAY")
-    b.sel:SetPoint("TOPLEFT", -4, 4)
-    b.sel:SetPoint("BOTTOMRIGHT", 4, -4)
-    b.sel:SetTexture("Interface\\Buttons\\CheckButtonHilight")
-    b.sel:SetBlendMode("ADD")
-    b.sel:Hide()
-    local hl = b:CreateTexture(nil, "HIGHLIGHT")
-    hl:SetAllPoints()
-    hl:SetColorTexture(1, 0.82, 0.3, 0.25)
-    b:SetScript("OnClick", function() root.Open(t.key) end)
-    b:SetScript("OnEnter", function(self)
-      GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-      GameTooltip:SetText(t.label)
-      GameTooltip:Show()
-    end)
-    b:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    rail.buttons[i] = b
-  end
-  rail:Hide()
-  return rail
-end
-
--- Place la fenêtre f à la position commune (celle de la dernière fenêtre affichée)
-local function Place(f)
-  local p = root.db and root.db.pos
-  f:ClearAllPoints()
-  if p and p.x and p.y then f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", p.x, p.y)
-  else f:SetPoint("CENTER", UIParent, "CENTER", 25, 20) end
-end
-local function SavePos(f)
-  local x, y = f:GetLeft(), f:GetTop()
-  if root.db and type(x) == "number" and type(y) == "number" then root.db.pos = { x = x, y = y } end
-end
-
--- Une fenêtre de partie vient de s'afficher : elle devient l'onglet courant, les autres se ferment
-local function Docked(t, f)
-  -- panneau des soins collé à la fiche personnage (ouverte par C) : il reste là, sans barre ni déplacement
-  local cf = _G.CharacterFrame
-  if t.key == "heal" and cf and cf:IsShown() and f.attached ~= false and f:GetPoint() and select(2, f:GetPoint()) == cf then return end
-  if current and current.key ~= t.key then
-    local old = _G[current.frame]
-    if old and old ~= f and old:IsShown() then
-      SavePos(old)
-      current = t                         -- avant Hide : son OnHide ne doit pas fermer la barre
-      old:Hide()
-      Place(f)
-    end
-  end
-  current = t
-  local r = Rail()
-  if t.key == "now" then r:Hide(); return end      -- la fenêtre principale a ses propres onglets
-  r:ClearAllPoints()
-  r:SetPoint("TOPRIGHT", f, "TOPLEFT", 2, -24)
-  r:Show()
-  Highlight()
-end
-
--- Accroche une fenêtre de partie (créée à la première ouverture)
-function root.Adopt(t)
-  local f = _G[t.frame]
-  if not f or hooked[f] then return f end
-  hooked[f] = true
-  f:HookScript("OnShow", function(self) Docked(t, self) end)
-  f:HookScript("OnHide", function(self)
-    SavePos(self)
-    if current and current.key == t.key and rail then rail:Hide(); current = nil end
-  end)
-  f:HookScript("OnDragStop", function(self) SavePos(self) end)
-  if f:IsShown() then Docked(t, f) end
-  return f
-end
-
+-- Ouvre la fenêtre sur une partie (anciens noms : Maintenant, Métiers… : l'Accueil)
 function root.Open(key)
-  local t = byKey[key] or byKey.now
-  if root.db then root.db.lastTab = t.key end      -- onglet retenu : celui qu'on a ouvert en dernier
-  local f = _G[t.frame]
-  if f and f:IsShown() then root.Adopt(t); Docked(t, f); return end
-  local prev = current and _G[current.frame]
-  if prev and prev:IsShown() then SavePos(prev) end
-  if t.open then t.open()
-  else
-    local ns = root.mods[t.mod]
-    if ns and ns[t.toggle] then ns[t.toggle]() end
-  end
-  f = root.Adopt(t)
-  if f and f:IsShown() and prev and prev ~= f then Place(f); Docked(t, f) end
+  if not PAGES[key] then key = "now" end
+  if root.db then root.db.lastTab = key end
+  root.ShowPage(key)
 end
 
 -- Ouvre / ferme la fenêtre (icône Forever, liste des addons, /fp)
 function root.Toggle()
-  if current and _G[current.frame] and _G[current.frame]:IsShown() then _G[current.frame]:Hide(); return end
+  local f = _G.ForeverCompagnonFrame
+  if f and f:IsShown() then f:Hide(); return end
   root.Open((root.db and root.db.lastTab) or "now")
 end
 function ForeverCompagnon_OnCompartmentClick() root.Toggle() end
 
--- Les commandes des parties (/fheal, /floot, /prep) passent aussi par la barre : on enveloppe leurs Toggle
+-- Les commandes et icônes des parties (/floot, /bis, /prep, /fheal, fiche de prépa automatique) ouvrent la même fenêtre.
+-- Les anciennes fenêtres restent pour ForeverBiS (addon séparé) ; ici elles ne s'ouvrent plus.
 local function Wrap()
   for _, t in ipairs(root.TABS) do
     local ns = t.mod and root.mods[t.mod]
-    if ns and ns[t.toggle] and not ns["_pretre" .. t.toggle] then
-      local orig = ns[t.toggle]
-      ns["_pretre" .. t.toggle] = orig
-      ns[t.toggle] = function(...)
-        local r = orig(...)
-        root.Adopt(t)
-        return r
+    if ns and ns[t.toggle] and not ns._wrapped then
+      ns._wrapped = true
+      ns[t.toggle] = function()
+        local f = _G.ForeverCompagnonFrame
+        if f and f:IsShown() and root.CurrentPage() == t.key then f:Hide() else root.Open(t.key) end
       end
     end
+  end
+  local prep = root.mods.ForeverPrep
+  if prep and prep.Show and not prep._wrappedShow then
+    prep._wrappedShow = true
+    prep.Show = function(_, reason) root.prepReason = reason; root.Open("prep") end
+  end
+  local loot = root.mods.ForeverLoot
+  if loot and loot.ShowTab and not loot._wrappedTab then
+    loot._wrappedTab = true
+    loot.ShowTab = function(t) root.lootView = (t == "bis") and "goal" or "now"; root.Open("loot") end
   end
 end
 
@@ -177,8 +70,6 @@ end)
 root.OnLogin(function()
   Wrap()
   C_Timer.After(2.5, Icons)
-  -- les fenêtres ouvertes toutes seules (fiche de prépa à l'entrée en donjon…) s'accrochent aussi
-  C_Timer.After(3, function() for _, t in ipairs(root.TABS) do root.Adopt(t) end end)
 end)
 
 -- Diagnostic commun : en-tête, puis celui de chaque partie
