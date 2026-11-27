@@ -744,12 +744,17 @@ local function AttachToCharacterFrame()
   if not CharacterFrame then return end
   CharacterFrame:HookScript("OnShow", function()
     if not ns.db.panel then return end
+    -- 4.0 : la fiche de ForeverCompagnon (même style que la fenêtre) remplace l'ancien panneau
+    if ns.root and ns.root.ShowSheet and ns.root.ShowSheet(CharacterFrame) then return end
     CreatePanel()
     panel:ClearAllPoints()
     panel:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -30, -12)
     panel:Show()
   end)
-  CharacterFrame:HookScript("OnHide", function() if panel and panel.attached ~= false then panel:Hide() end end)
+  CharacterFrame:HookScript("OnHide", function()
+    if ns.root and ns.root.HideSheet then ns.root.HideSheet() end
+    if panel and panel.attached ~= false then panel:Hide() end
+  end)
 end
 
 function ns.TogglePanel()

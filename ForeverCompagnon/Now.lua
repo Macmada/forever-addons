@@ -280,13 +280,18 @@ local ev = CreateFrame("Frame")
 ev:RegisterEvent("PLAYER_REGEN_ENABLED")
 ev:RegisterEvent("PLAYER_LEVEL_UP")
 ev:RegisterEvent("BAG_UPDATE_DELAYED")
+ev:RegisterEvent("PLAYER_EQUIPMENT_CHANGED")
 local pending = false
 ev:SetScript("OnEvent", function(_, event)
-  if event == "BAG_UPDATE_DELAYED" and InCombatLockdown and InCombatLockdown() then return end
+  if event ~= "PLAYER_REGEN_ENABLED" and InCombatLockdown and InCombatLockdown() then return end
   -- un seul recalcul pour une série de changements rapprochés (butin ramassé, achats)
-  local f = _G.ForeverCompagnonFrame
-  if f and f:IsShown() and not pending then
+  local f, sh = _G.ForeverCompagnonFrame, _G.ForeverCompagnonSheet
+  if ((f and f:IsShown()) or (sh and sh:IsShown())) and not pending then
     pending = true
-    C_Timer.After(1, function() pending = false; root.RefreshNow() end)
+    C_Timer.After(1, function()
+      pending = false
+      root.RefreshNow()
+      if root.RefreshSheet then root.RefreshSheet() end
+    end)
   end
 end)

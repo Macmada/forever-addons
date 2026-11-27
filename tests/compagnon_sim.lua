@@ -88,6 +88,7 @@ _G.hooksecurefunc = _G.hooksecurefunc or function(name, f)
 end
 local root = W.load("ForeverCompagnon")
 W.fire("ADDON_LOADED", "ForeverCompagnon")
+_G.CharacterFrame = W.Obj("CharacterFrame")
 W.fire("PLAYER_LOGIN")
 W.fire("PLAYER_ENTERING_WORLD")
 W.run(5)
@@ -139,6 +140,13 @@ for _, r in ipairs(ForeverCompagnonToolsMenu.rows) do
 end
 check(ForeverCompagnonAddonsFrame and ForeverCompagnonAddonsFrame:IsShown() and not ForeverCompagnonToolsMenu:IsShown(), "4.0 : menu Outils > Addons")
 ForeverCompagnonAddonsFrame:Hide()
+-- fiche collée au personnage (touche C) : nouveau style (4.0)
+_G.CharacterFrame.scripts.OnShow(_G.CharacterFrame)
+check(ForeverCompagnonSheet and ForeverCompagnonSheet:IsShown() and not (_G.ForeverHealPanel and _G.ForeverHealPanel:IsShown()),
+      "C : fiche Soins de ForeverCompagnon, plus l'ancien panneau")
+check(ForeverCompagnonSheet.counters[1].value:GetText() ~= nil and #ForeverCompagnonSheet.list.Shown("head") >= 1, "fiche : chiffres et rubriques")
+_G.CharacterFrame.scripts.OnHide(_G.CharacterFrame)
+check(not ForeverCompagnonSheet:IsShown(), "fermer la fiche du personnage ferme la fiche Soins")
 -- panneau Options du jeu (Échap > Options > AddOns)
 SlashCmdList.FOREVERCOMPAGNON("options")
 check(ForeverCompagnonOptions ~= nil, "/fp options : panneau ForeverCompagnon créé")

@@ -18,7 +18,7 @@ local T = FR and {
   heal = "soin %s · %s s · %s mana", eff = "%s / mana",
   best = "le plus efficace", fast = "urgence", hot = "en mouvement", group = "groupe",
   noHeal = "Pas de sort de soin connu pour ta classe.", combat = "En combat : dernier état connu.",
-  shift = "Maj+clic : lien dans la discussion",
+  shift = "Maj+clic : lien dans la discussion", more = "Tout voir",
 } or {
   now = "At my level", goal = "Level 60 goal", spec = "Spec: %s",
   nowHelp = "Best piece you can get up to level %d, per slot. Right-click: go there.",
@@ -30,7 +30,7 @@ local T = FR and {
   heal = "heal %s · %s s · %s mana", eff = "%s / mana",
   best = "most efficient", fast = "emergency", hot = "on the move", group = "group",
   noHeal = "No known healing spell for your class.", combat = "In combat: last known state.",
-  shift = "Shift+click: link in chat",
+  shift = "Shift+click: link in chat", more = "See all",
 }
 root.PagesText = T
 
@@ -411,6 +411,64 @@ root.Pages.prep = {
 ----------------------------------------------------------------------
 -- Soins : trois chiffres, tes sorts, ce qui t'aide le plus
 ----------------------------------------------------------------------
+-- Chiffres et lignes de l'onglet Soins (aussi la fiche collée au personnage, Sheet plus bas) ; nil : pas de soins
+local function HealView()
+  local ns = root.mods.ForeverHeal
+  if not (ns and ns.PanelData) then return nil end
+  local d = ns.PanelData()
+  if not d.priest then return nil end
+  local M, S = d.M, d.S
+  local vals = {
+    { Num(M.hps), T.hps, C.green },
+    { (M.oom and M.oom ~= math.huge) and (M.oom >= 60 and string.format("%d min", math.floor(M.oom / 60)) or (math.floor(M.oom) .. " s")) or "OK",
+      (M.oom and M.oom ~= math.huge) and T.oom or T.never, (M.oom and M.oom < 60) and C.orange or C.green },
+    { Num(S.mana), string.format(T.mana, Num(S.regenOut, 1)), C.blue },
+  }
+  local lines = { { kind = "head", title = T.spells, right = T.spellsHint } }
+  local spells = {}
+  for _, m in pairs(ns.KnownSpells()) do
+    local amount = (m.base + m.coef * (S.heal or 0)) * (m.mult or 1) * (m.targets or 1)
+    spells[#spells + 1] = { m = m, amount = amount, eff = (m.cost and m.cost > 0) and amount / m.cost or 0 }
+  end
+  table.sort(spells, function(x, y) return x.eff > y.eff end)
+  local fastest
+  for _, sp in ipairs(spells) do if sp.m.canCrit and (not fastest or sp.m.cast < fastest.m.cast) then fastest = sp end end
+  for i, sp in ipairs(spells) do
+    local m = sp.m
+    local tag, col = "", C.muted
+    if i == 1 then tag, col = T.best, C.green
+    elseif sp == fastest then tag, col = T.fast, C.orange
+    elseif m.targets and m.targets > 1 then tag = T.group
+    elseif not m.canCrit then tag = T.hot end
+    local icon
+    local get = (C_Spell and C_Spell.GetSpellTexture) or _G.GetSpellTexture
+    if get then local okI, tex = pcall(get, m.id); if okI then icon = tex end end
+    lines[#lines + 1] = { kind = "card", icon = icon or "Interface\\Icons\\Spell_Holy_Heal", name = m.name,
+                          source = string.format(T.heal, Num(sp.amount), Num(m.cast, 1), Num(m.cost or 0)),
+                          gain = string.format(T.eff, Num(sp.eff, 1)), action = tag, actionColor = col }
+  end
+  if #(d.gains or {}) > 0 then
+    lines[#lines + 1] = { kind = "head", title = T.helps }
+    for i, g in ipairs(d.gains) do
+      if i <= 3 and (g.healed or 0) > 0 then
+        lines[#lines + 1] = { kind = "info", display = "|cff" .. U.Hex(C.text) .. string.format(T.helpLine, g.label, Num(g.healed)) .. "|r" }
+      end
+    end
+  end
+  if d.footer then lines[#lines + 1] = { kind = "info", display = d.footer } end
+  return vals, lines
+end
+root.HealView = HealView
+
+local function SetCounters(counters, vals)
+  for i, c in ipairs(counters) do
+    c:Show()
+    c.value:SetText(vals[i][1])
+    c.label:SetText(vals[i][2])
+    U.Fill(c.top, vals[i][3])
+  end
+end
+
 root.Pages.heal = {
   Create = function(f)
     local cw = math.floor((f:GetWidth() > 100 and f:GetWidth() or 558) - 2 * PAD - 20) / 3
@@ -424,59 +482,85 @@ root.Pages.heal = {
     f.list = ListArea(f, -82)
   end,
   Refresh = function(f)
-    local ns = root.mods.ForeverHeal
-    if not (ns and ns.PanelData) then return end
-    local d = ns.PanelData()
-    if not d.priest then
+    local vals, lines = HealView()
+    if not vals then
       for _, c in ipairs(f.counters) do c:Hide() end
       f.list.Render({ { kind = "info", display = T.noHeal } })
       return
     end
-    local M, S = d.M, d.S
-    local vals = {
-      { Num(M.hps), T.hps, C.green },
-      { (M.oom and M.oom ~= math.huge) and (M.oom >= 60 and string.format("%d min", math.floor(M.oom / 60)) or (math.floor(M.oom) .. " s")) or "OK",
-        (M.oom and M.oom ~= math.huge) and T.oom or T.never, (M.oom and M.oom < 60) and C.orange or C.green },
-      { Num(S.mana), string.format(T.mana, Num(S.regenOut, 1)), C.blue },
-    }
-    for i, c in ipairs(f.counters) do
-      c:Show()
-      c.value:SetText(vals[i][1])
-      c.label:SetText(vals[i][2])
-      U.Fill(c.top, vals[i][3])
-    end
-    local lines = { { kind = "head", title = T.spells, right = T.spellsHint } }
-    local spells = {}
-    for _, m in pairs(ns.KnownSpells()) do
-      local amount = (m.base + m.coef * (S.heal or 0)) * (m.mult or 1) * (m.targets or 1)
-      spells[#spells + 1] = { m = m, amount = amount, eff = (m.cost and m.cost > 0) and amount / m.cost or 0 }
-    end
-    table.sort(spells, function(a, b) return a.eff > b.eff end)
-    local fastest
-    for _, s in ipairs(spells) do if s.m.canCrit and (not fastest or s.m.cast < fastest.m.cast) then fastest = s end end
-    for i, s in ipairs(spells) do
-      local m = s.m
-      local tag, col = "", C.muted
-      if i == 1 then tag, col = T.best, C.green
-      elseif s == fastest then tag, col = T.fast, C.orange
-      elseif m.targets and m.targets > 1 then tag = T.group
-      elseif not m.canCrit then tag = T.hot end
-      local icon
-      local get = (C_Spell and C_Spell.GetSpellTexture) or _G.GetSpellTexture
-      if get then local okI, tex = pcall(get, m.id); if okI then icon = tex end end
-      lines[#lines + 1] = { kind = "card", icon = icon or "Interface\\Icons\\Spell_Holy_Heal", name = m.name,
-                            source = string.format(T.heal, Num(s.amount), Num(m.cast, 1), Num(m.cost or 0)),
-                            gain = string.format(T.eff, Num(s.eff, 1)), action = tag, actionColor = col }
-    end
-    if #(d.gains or {}) > 0 then
-      lines[#lines + 1] = { kind = "head", title = T.helps }
-      for i, g in ipairs(d.gains) do
-        if i <= 3 and (g.healed or 0) > 0 then
-          lines[#lines + 1] = { kind = "info", display = "|cff" .. U.Hex(C.text) .. string.format(T.helpLine, g.label, Num(g.healed)) .. "|r" }
-        end
-      end
-    end
-    if d.footer then lines[#lines + 1] = { kind = "info", display = d.footer } end
+    SetCounters(f.counters, vals)
     f.list.Render(lines)
   end,
 }
+
+----------------------------------------------------------------------
+-- Fiche collée au personnage (touche C) : l'onglet Soins en plus étroit, même style que la fenêtre
+----------------------------------------------------------------------
+local sheet
+local SW, SH = 340, 430
+local function Sheet()
+  if sheet then return sheet end
+  sheet = CreateFrame("Frame", "ForeverCompagnonSheet", UIParent)
+  sheet:SetSize(SW, SH)
+  sheet:SetFrameStrata("HIGH")
+  sheet:EnableMouse(true)
+  sheet:Hide()
+  sheet.bg = sheet:CreateTexture(nil, "BACKGROUND")
+  sheet.bg:SetAllPoints()
+  U.Fill(sheet.bg, C.bg, 0.97)
+  K.Border(sheet, C.frame[1], C.frame[2], C.frame[3], 1)
+  local head = CreateFrame("Frame", nil, sheet)
+  head:SetPoint("TOPLEFT", 1, -1)
+  head:SetPoint("TOPRIGHT", -1, -1)
+  head:SetHeight(40)
+  head.bg = head:CreateTexture(nil, "BACKGROUND")
+  head.bg:SetAllPoints()
+  U.Fill(head.bg, C.head)
+  local icon = head:CreateTexture(nil, "ARTWORK")
+  icon:SetSize(24, 24)
+  icon:SetPoint("LEFT", 12, 0)
+  icon:SetTexture("Interface\\Icons\\Spell_Holy_GreaterHeal")
+  icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+  local title = U.Text(head, 14, C.goldL, "GameFontNormal")
+  K.TitleFont(title, 14, "GameFontNormal")
+  title:SetTextColor(C.goldL[1], C.goldL[2], C.goldL[3])
+  title:SetPoint("LEFT", icon, "RIGHT", 8, 0)
+  title:SetText(root.MainText.heal)
+  local more = Button(head, function() root.Open("heal") end)
+  more:SetPoint("RIGHT", -10, 0)
+  more:SetLabel(T.more)
+  local cw = math.floor((SW - 2 * 12 - 2 * 6) / 3)
+  sheet.counters = {}
+  for i = 1, 3 do
+    local c = U.MakeCounter(sheet)
+    c:SetSize(cw, 50)
+    c:SetPoint("TOPLEFT", 12 + (i - 1) * (cw + 6), -52)
+    c.value:SetFont(c.value:GetFont(), 16, "")
+    c.label:SetFont(c.label:GetFont(), 10, "")
+    sheet.counters[i] = c
+  end
+  sheet.list = List(sheet)
+  sheet.list.scroll:SetPoint("TOPLEFT", 12, -112)
+  sheet.list.scroll:SetPoint("BOTTOMRIGHT", -32, 10)
+  sheet:SetScript("OnShow", function() root.RefreshSheet() end)
+  return sheet
+end
+
+function root.RefreshSheet()
+  if not (sheet and sheet:IsShown()) then return end
+  local vals, lines = HealView()
+  if not vals then sheet:Hide(); return end
+  SetCounters(sheet.counters, vals)
+  sheet.list.Render(lines)
+end
+
+-- Appelé par la partie Soins à l'ouverture et à la fermeture de la fiche du personnage
+function root.ShowSheet(anchor)
+  if not HealView() then return false end
+  Sheet()
+  sheet:ClearAllPoints()
+  if anchor then sheet:SetPoint("TOPLEFT", anchor, "TOPRIGHT", -30, -12) else sheet:SetPoint("CENTER") end
+  if sheet:IsShown() then root.RefreshSheet() else sheet:Show() end
+  return true
+end
+function root.HideSheet() if sheet then sheet:Hide() end end
