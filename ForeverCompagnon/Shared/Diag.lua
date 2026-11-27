@@ -34,10 +34,14 @@ local function Header(add)
   add(string.format("Client : %s build %s (%s), interface %s, langue %s", tostring(v), tostring(build), tostring(d), tostring(iface), GetLocale()))
   local _, race = UnitRace("player")
   local _, class = UnitClass("player")
+  -- royaume : vide sur le client de Forever (27/11/2026) : nom normalisé, sinon « non donné »
+  local realm = GetRealmName and GetRealmName() or ""
+  if (realm == nil or realm == "") and _G.GetNormalizedRealmName then realm = _G.GetNormalizedRealmName() or "" end
+  if realm == nil or realm == "" then realm = (GetLocale() == "frFR") and "(non donné par le client)" or "(not given by the client)" end
   add(string.format("Personnage : niveau %s, %s %s, %s, royaume %s", tostring(UnitLevel("player")), tostring(race), tostring(class),
-    tostring(UnitFactionGroup("player")), tostring(GetRealmName and GetRealmName() or "?")))
+    tostring(UnitFactionGroup("player")), tostring(realm)))
   local list = {}
-  for _, a in ipairs({ "ForeverGFX", "ForeverMacros", "ForeverPrep", "ForeverHeal", "ForeverLoot", "ForeverMetiers" }) do
+  for _, a in ipairs({ "ForeverCompagnon", "ForeverCompagnon_Data", "ForeverGFX", "ForeverMacros" }) do
     if Loaded(a) then list[#list + 1] = a .. " " .. tostring(Meta(a, "Version") or "?") end
   end
   add("Addons Forever chargés : " .. table.concat(list, ", "))

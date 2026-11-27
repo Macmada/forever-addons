@@ -60,7 +60,7 @@ _G.UnitArmor = function() return P.armor, P.armor end
 _G.UnitResistance = function() return 0, 0 end
 _G.UnitGUID = function() return "Player-1" end
 _G.InCombatLockdown = function() return P.combat end
-local KNOWN = { [2060] = true, [10963] = true, [10916] = true, [10928] = true, [10960] = true }
+local KNOWN = { [2060] = true, [10963] = true, [10916] = true, [10928] = true, [10960] = true, [15431] = true }
 _G.IsSpellKnown = function(id) return KNOWN[id] == true end
 local SPELLS = {
   [2060] = { "Soins supérieurs", 3000, 314, "Rend de 899 à 1013 points de vie à une cible alliée." },
@@ -68,6 +68,7 @@ local SPELLS = {
   [10916] = { "Soins rapides", 1500, 300, "Rend de 652 à 799 points de vie à une cible alliée." },
   [10928] = { "Rénovation", 0, 280, "Rend 700 points de vie à la cible en 15 sec." },
   [10960] = { "Prière de soins", 3000, 760, "Rend de 1 041 à 1 099 points de vie aux membres du groupe." },
+  [15431] = { "Nova sacrée", 0, 520, "Provoque une explosion de lumière sacrée autour du lanceur, qui inflige 59 à 69 points de dégâts du Sacré aux ennemis à moins de 10 mètres et rend 111 à 129 points de vie aux membres du groupe à moins de 10 mètres." },
 }
 _G.GetSpellInfo = function(id) local s = SPELLS[id]; if s then return s[1], nil, nil, s[2] end end
 _G.GetSpellDescription = function(id) local s = SPELLS[id]; return s and s[4] end
@@ -144,6 +145,8 @@ Fire("PLAYER_LOGIN"); Run(4)
 local spells = ns.KnownSpells()
 check(spells.greater and spells.greater.base == 1240 and math.abs(spells.greater.coef - 3 / 3.5) < 1e-6, "Soins supérieurs r2 : 1240 en moyenne (description), coefficient 3/3,5")
 check(spells.prayer and spells.prayer.base == 1070, "Prière de soins : « 1 041 à 1 099 » lu malgré l'espace des milliers")
+check(spells.nova and spells.nova.base == 120 and spells.nova.targets == 5 and math.abs(spells.nova.coef - 0.107) < 0.001,
+      "Nova sacrée : soin lu après les dégâts (120 = moyenne de 111 à 129), 5 cibles, coefficient 0,107")
 check(spells.renew and spells.renew.cast == 1.5 and not spells.renew.canCrit, "Rénovation : instantané (temps global), pas de critique")
 local S = ns.Snapshot()
 local M = ns.Metrics(S)

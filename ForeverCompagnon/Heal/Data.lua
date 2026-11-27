@@ -18,8 +18,15 @@ D.families = {
   renew = { hot = 15, ranks = { { 139, 8 }, { 6074, 14 }, { 6075, 20 }, { 6076, 26 }, { 6077, 32 }, { 6078, 38 },
                                 { 10927, 44 }, { 10928, 50 }, { 10929, 56 }, { 25315, 60 } } },
   prayer = { base = 3.0, targets = 5, ranks = { { 596, 30 }, { 996, 40 }, { 10960, 50 }, { 10961, 60 }, { 25316, 60 } } },
+  -- Nova sacrée (talent) : instantanée, soigne le groupe à 10 m ; la description donne d'abord les dégâts : on lit les
+  -- nombres après « rend » / « healing » (after) ; coefficient 0,107 par cible (coef / 3 du modèle de groupe)
+  nova = { base = 1.5, targets = 5, coef = 0.321, after = { "rend", "soign", "healing", "heals" },
+           ranks = { { 15237, 20 }, { 15430, 28 }, { 15431, 36 }, { 27799, 44 }, { 27800, 52 }, { 27801, 60 }, { 25331, 60 } } },
 }
-D.ORDER = { "greater", "heal", "flash", "lesser", "renew", "prayer" }
+D.ORDER = { "greater", "heal", "flash", "lesser", "renew", "prayer", "nova" }
+-- Sorts de soin connus mais pas comptés dans les soins par seconde : absorption (Bouclier) et rebonds (Prière de guérison)
+D.notModelled = { [17] = true, [592] = true, [600] = true, [3747] = true, [6065] = true, [6066] = true, [10898] = true,
+                  [10899] = true, [10900] = true, [10901] = true, [401859] = true }
 
 -- Conversions de départ (classique), remplacées par celles mesurées sur ton personnage
 D.defaults = {

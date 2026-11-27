@@ -125,7 +125,15 @@ function ns.SpellModel(family, rankIndex)
   local rank = fam.ranks[rankIndex]
   local id = rank[1]
   local name, cast, cost = SpellGame(id)
-  local nums = Numbers(Description(id))
+  local desc = Description(id) or ""
+  if fam.after then                                       -- soin après les dégâts (Nova sacrée)
+    local low = desc:lower()
+    for _, w in ipairs(fam.after) do
+      local at = low:find(w, 1, true)
+      if at then desc = desc:sub(at); break end
+    end
+  end
+  local nums = Numbers(desc)
   local avg
   if fam.hot then avg = nums[1]                           -- « … 450 points de vie en 15 sec »
   elseif nums[1] and nums[2] and nums[2] >= nums[1] then avg = (nums[1] + nums[2]) / 2
@@ -647,7 +655,7 @@ function ns.DiagCollect(add)
     local l = (b.name or ""):lower()
     local healish = false
     for _, w in ipairs(HEALWORDS) do if l:find(w, 1, true) then healish = true break end end
-    if healish and b.id and not ns.familyOf[b.id] then
+    if healish and b.id and not ns.familyOf[b.id] and not (D.notModelled and D.notModelled[b.id]) then
       add(string.format("  %d = %s %s", b.id, tostring(b.name), tostring(b.rank or "")))
       n = n + 1
     end
@@ -661,7 +669,7 @@ function ns.DiagCollect(add)
         local l = (name or ""):lower()
         local healish = false
         for _, w in ipairs(HEALWORDS) do if l:find(w, 1, true) then healish = true break end end
-        if healish and id and not ns.familyOf[id] then
+        if healish and id and not ns.familyOf[id] and not (D.notModelled and D.notModelled[id]) then
           add(string.format("  %d = %s %s", id, tostring(name), tostring(rank or "")))
           n = n + 1
         end
