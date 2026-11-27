@@ -10,7 +10,7 @@ root.Shared.Widgets(ADDON, root)
 local K = root.Kit
 
 root.TABS = {
-  { key = "now", label = L.now, icon = "Interface\\Icons\\Spell_Holy_PowerWordShield", frame = "ForeverCompagnonNowFrame",
+  { key = "now", label = root.FR and "Accueil" or "Home", icon = "Interface\\Icons\\Spell_Holy_PowerWordShield", frame = "ForeverCompagnonFrame",
     open = function() root.ShowNow() end },
   { key = "heal", label = L.heal, icon = "Interface\\Icons\\Spell_Holy_GreaterHeal", frame = "ForeverHealPanel",
     mod = "ForeverHeal", toggle = "TogglePanel", classes = { PRIEST = true, DRUID = true, PALADIN = true, SHAMAN = true } },
@@ -18,8 +18,6 @@ root.TABS = {
     mod = "ForeverLoot", toggle = "Toggle" },
   { key = "prep", label = L.prep, icon = "Interface\\Icons\\INV_Potion_51", frame = "ForeverPrepFrame",
     mod = "ForeverPrep", toggle = "Toggle" },
-  { key = "addons", label = L.addons, icon = "Interface\\Icons\\Trade_Engineering", frame = "ForeverCompagnonAddonsFrame",
-    open = function() root.ShowAddons() end },
 }
 local byKey = {}
 for _, t in ipairs(root.TABS) do byKey[t.key] = t end
@@ -101,6 +99,7 @@ local function Docked(t, f)
   end
   current = t
   local r = Rail()
+  if t.key == "now" then r:Hide(); return end      -- la fenêtre principale a ses propres onglets
   r:ClearAllPoints()
   r:SetPoint("TOPRIGHT", f, "TOPLEFT", 2, -24)
   r:Show()
@@ -207,11 +206,12 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
   local raw = (msg or ""):match("^%s*(.-)%s*$")
   msg = raw:lower()
   local map = { [""] = "now", maintenant = "now", now = "now", soins = "heal", heal = "heal", equipement = "loot", ["équipement"] = "loot",
-                gear = "loot", loot = "loot", prepa = "prep", ["prépa"] = "prep", prep = "prep",
-                addons = "addons", addon = "addons" }
+                gear = "loot", loot = "loot", prepa = "prep", ["prépa"] = "prep", prep = "prep" }
   local way = raw:match("^[Ww][Aa][Yy]%s*(.*)$")
   local hb = msg:match("^healbot%s*(.*)$")
   if way then root.Nav.Command(way)
+  elseif msg == "addons" or msg == "addon" then root.ShowAddons()
+  elseif msg == "outils" or msg == "tools" then root.Open("now"); root.ShowToolsMenu()
   elseif hb then root.HealBot.Command(hb)
   elseif msg == "vols" or msg == "taxi" or msg == "flights" then root.Nav.ListTaxi()
   elseif msg == "flash" or msg == "annonce" then

@@ -68,7 +68,7 @@ for _, faction in ipairs({ "Alliance", "Horde" }) do
       check(hps, "Maintenant : tuile des soins pour un soigneur")
     end
     SlashCmdList.FOREVERCOMPAGNON("")
-    check(ForeverCompagnonNowFrame:IsShown(), "écran Maintenant")
+    check(ForeverCompagnonFrame:IsShown(), "écran Maintenant")
     local lines = root.NowLines()
     check(#root.nowErrors == 0, "Maintenant sans erreur : " .. table.concat(root.nowErrors, " ; "))
     for _, r in ipairs(root.ClassRoles()) do

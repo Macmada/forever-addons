@@ -107,7 +107,7 @@ check(root.mods.ForeverPrep.db.minimap.hide, "icône séparée de Prépa masqué
 -- écran Maintenant
 SlashCmdList.FOREVERCOMPAGNON("")
 check(root.Sources and W.dataLoads == 1, "sources chargées une fois, au premier besoin (écran Maintenant)")
-check(ForeverCompagnonNowFrame and ForeverCompagnonNowFrame:IsShown(), "/fp : écran Maintenant")
+check(ForeverCompagnonFrame and ForeverCompagnonFrame:IsShown(), "/fp : écran Maintenant")
 local lines, _, tiles = root.NowLines()
 check(lines[1].kind == "head" and lines[1].title == root.L.secTodo and #root.nowErrors == 0,
       "Maintenant : « À faire » en premier, sans erreur (" .. table.concat(root.nowErrors, " ; ") .. ")")
@@ -120,12 +120,29 @@ check(#tiles >= 3 and #tiles <= 4, "Maintenant : " .. #tiles .. " tuiles en haut
 check(root.Session == nil and root.mods.ForeverMetiers == nil, "suivi de session et Métiers retirés")
 for _, t in ipairs(tiles) do check(t.kind ~= "session", "pas de tuile de session") end
 check(_G.ForeverCompagnonSessionSheet == nil, "pas de bandeau de session sous la fiche du personnage")
-check(ForeverCompagnonNowFrame.tiles and ForeverCompagnonNowFrame.tiles[1]:IsShown(), "tuiles affichées")
-check(ForeverCompagnonRail and ForeverCompagnonRail:IsShown(), "barre d'onglets affichée à côté")
+check(ForeverCompagnonFrame.counters and ForeverCompagnonFrame.counters[1].value:GetText() ~= nil, "compteurs affichés")
+check(not (ForeverCompagnonRail and ForeverCompagnonRail:IsShown()), "4.0 : Accueil sans barre à côté (onglets dans la fenêtre)")
+local F = ForeverCompagnonFrame
+local tabsShown = 0
+for _, b in ipairs(F.tabs) do if b:IsShown() then tabsShown = tabsShown + 1 end end
+check(#F.tabs == 4 and tabsShown == 4, "4.0 : 4 onglets (prêtre : Soins visible)")
+local acts, counters = root.HomeData()
+check(#acts <= 5 and #counters == 3, "4.0 : Accueil = 3 compteurs et " .. #acts .. " action(s) (5 au plus)")
+for i, a in ipairs(acts) do
+  check(F.rows[i]:IsShown() and F.rows[i].action:GetText() == root.HomeAction(a), "4.0 : ligne " .. i .. " « " .. tostring(a.name) .. " » bouton " .. tostring(root.HomeAction(a)))
+end
+check(F.subBtn.fs:GetText():find("12", 1, true) ~= nil, "4.0 : en-tête avec le niveau")
+root.ShowToolsMenu()
+check(ForeverCompagnonToolsMenu:IsShown() and ForeverCompagnonToolsMenu.rows[1]:IsShown(), "4.0 : menu Outils ouvert")
+for _, r in ipairs(ForeverCompagnonToolsMenu.rows) do
+  if r:IsShown() and r.title:GetText() == root.MainText.mAddons then r:GetScript("OnClick")(r) end
+end
+check(ForeverCompagnonAddonsFrame and ForeverCompagnonAddonsFrame:IsShown() and not ForeverCompagnonToolsMenu:IsShown(), "4.0 : menu Outils > Addons")
+ForeverCompagnonAddonsFrame:Hide()
 
 -- onglets : une fenêtre à la fois
 root.Open("loot")
-check(ForeverLootFrame:IsShown() and not ForeverCompagnonNowFrame:IsShown() and ForeverCompagnonRail:IsShown(), "onglet Équipement : remplace Maintenant")
+check(ForeverLootFrame:IsShown() and not ForeverCompagnonFrame:IsShown() and ForeverCompagnonRail:IsShown(), "onglet Équipement : remplace Maintenant")
 SlashCmdList.FOREVERPREP("")
 check(ForeverPrepFrame:IsShown() and not ForeverLootFrame:IsShown() and ForeverCompagnonRail:IsShown(), "/prep : passe aussi par la barre")
 root.Open("heal")
@@ -136,8 +153,8 @@ root.Toggle()
 check(ForeverHealPanel:IsShown(), "réouverture : dernier onglet")
 ForeverHealPanel:Hide()
 root.Open("metiers")
-check(ForeverCompagnonNowFrame:IsShown() and root.db.lastTab == "now", "ancien onglet Métiers : Maintenant à la place")
-ForeverCompagnonNowFrame:Hide()
+check(ForeverCompagnonFrame:IsShown() and root.db.lastTab == "now", "ancien onglet Métiers : Maintenant à la place")
+ForeverCompagnonFrame:Hide()
 
 -- en combat : pas de recalcul
 W.combat = true
@@ -226,8 +243,8 @@ local byKey = {}
 for _, e in ipairs(root.ADDONS) do byKey[e.key] = e end
 check(root.AddonStatus(byKey.dj) == "on", "Addons : DungeonJournal reconnu par son titre (dossier « FDJ »)")
 check(root.AddonStatus(byKey.tomtom) == "off" and root.AddonStatus(byKey.questie) == "absent", "Addons : TomTom désactivé, Questie absent")
-root.Open("addons")
-check(ForeverCompagnonAddonsFrame:IsShown() and ForeverCompagnonRail:IsShown(), "onglet Addons dans la barre")
+SlashCmdList.FOREVERCOMPAGNON("addons")
+check(ForeverCompagnonAddonsFrame:IsShown(), "/fp addons : fenêtre Addons (4.0 : dans le menu Outils)")
 local alines = root.AddonLines()
 local tomCard
 for _, l in ipairs(alines) do if l.kind == "card" and l.name == "TomTom" then tomCard = l end end

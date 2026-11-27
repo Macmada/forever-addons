@@ -1,6 +1,5 @@
 local _, root = ...
 local L = root.L
-local K = root.Kit
 
 -- « Maintenant » : en haut, quelques tuiles (un chiffre chacune) ; dessous, « À faire » : des actions écrites comme des
 -- phrases (maître de classe, donjons et zones d'après tes améliorations et tes quêtes, achats), un seul
@@ -8,8 +7,7 @@ local K = root.Kit
 -- l'onglet. Chaque partie est protégée : une erreur devient une ligne lisible (et un point du diagnostic). En combat,
 -- rien n'est recalculé (valeurs secrètes sur Forever) : l'écran garde le dernier état connu.
 
-local W, H = 600, 560
-local ui, last, lastTiles
+local last, lastTiles
 root.nowErrors = {}
 
 local GREEN, ORANGE, GOLD = { 0.25, 0.85, 0.38 }, { 1, 0.66, 0.24 }, { 1, 0.82, 0 }
@@ -189,7 +187,7 @@ local function VendorTodo(lines)
           local gain = loot._GainParts and (loot._GainParts(c.eval)) or ""
           lines[#lines + 1] = { kind = "card", link = c.link, icon = select(5, root.Game.ItemInstant(c.link)), quality = 2,
                                 name = string.format(L.todoBuyItem, name), nameColor = { 1, 1, 1 }, source = best and best.name or nil,
-                                gain = gain, onClick = function() if best then Go(best.mapID, best.x, best.y, best.name) end end,
+                                gain = gain, vendor = true, onClick = function() if best then Go(best.mapID, best.x, best.y, best.name) end end,
                                 onRight = function() root.Open("loot") end }
         end
       end
@@ -235,7 +233,7 @@ local function BuyTodo(lines, res)
         tipLines[#tipLines + 1] = { L.rightOpen, 0.85, 0.78, 0.6 }
         lines[#lines + 1] = { kind = "card", icon = r.icon or "Interface\\Icons\\INV_Misc_QuestionMark", quality = 1,
                               name = title or r.text, source = detail, nameColor = r.status == "bad" and { 1, 0.42, 0.35 } or { 1, 0.78, 0.38 },
-                              tip = { title = title or r.text, lines = tipLines },
+                              tip = { title = title or r.text, lines = tipLines }, buy = true,
                               onClick = function()
                                 if ns.GuideToVendor and #(res.shopping or {}) > 0 then ns.GuideToVendor() else root.Open("prep") end
                               end,
@@ -276,89 +274,7 @@ function root.NowLines()
   return lines, false, tiles
 end
 
-----------------------------------------------------------------------
--- Fenêtre
-----------------------------------------------------------------------
-function root.RefreshNow()
-  if not (ui and ui:IsShown()) then return end
-  local lines, stale, tiles = root.NowLines()
-  ui.status:SetText(stale and ("|cffffc860" .. L.combat .. "|r") or "")
-  local role = root.Role()
-  for _, b in ipairs(ui.roleBtns) do if b.SetActive then b:SetActive(b.role == role) else b.active = (b.role == role) end end
-  local defs = {}
-  for i, d in ipairs(tiles or {}) do
-    defs[i] = { value = d.value, label = d.label, color = d.color, tip = d.tip,
-                onClick = d.onClick or (d.open and function() root.Open(d.open) end) or nil }
-  end
-  ui.tileSet.Render(defs, 16, -100, W - 32, 10)
-  ui.list.Render(lines)
-end
-
-local function Create()
-  if ui then return ui end
-  ui = CreateFrame("Frame", "ForeverCompagnonNowFrame", UIParent, "BasicFrameTemplateWithInset")
-  root.SafeClose(ui)
-  ui:SetSize(W, H)
-  ui:SetPoint("CENTER", 25, 20)
-  ui:SetFrameStrata("HIGH")
-  ui:SetMovable(true)
-  ui:SetClampedToScreen(true)
-  ui:EnableMouse(true)
-  ui:RegisterForDrag("LeftButton")
-  ui:SetScript("OnDragStart", ui.StartMoving)
-  ui:SetScript("OnDragStop", ui.StopMovingOrSizing)
-  tinsert(UISpecialFrames, "ForeverCompagnonNowFrame")
-  ui:Hide()
-  K.Dress(ui, "Interface\\Icons\\Spell_Holy_PowerWordShield", L.title .. " — " .. L.now)
-  ui.head = ui:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-  ui.head:SetPoint("TOPLEFT", 18, -34)
-  K.TitleFont(ui.head, 20, "GameFontNormalLarge")
-  ui.head:SetText(L.nowTitle)
-  local x = -18
-  for _, a in ipairs({ { "Interface\\Icons\\INV_Misc_Note_01", L.diag, function() root.ShowDiag() end },
-                       { "Interface\\Icons\\INV_Misc_Spyglass_02", L.probe, function() root.ShowProbe() end },
-                       { "Interface\\Icons\\INV_Misc_Gear_08", L.test, function() root.RunTests() end },
-                       { "Interface\\Icons\\Spell_ChargePositive", L.refresh, function()
-                         last = nil
-                         local loot = root.mods.ForeverLoot
-                         if loot and loot.ForgetMemo then loot.ForgetMemo() end
-                         root.RefreshNow()
-                       end } }) do
-    local b = K.Action(ui, a[1], a[2], nil, a[3])
-    b:SetPoint("TOPRIGHT", x, -30)
-    x = x - 52
-  end
-  -- rôle (le client ne donne pas les talents) : boutons des rôles possibles pour la classe
-  ui.roleLabel = ui:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-  ui.roleLabel:SetPoint("TOPLEFT", 18, -66)
-  ui.roleLabel:SetText(L.role)
-  ui.roleBtns = {}
-  local prev
-  for _, r in ipairs(root.ClassRoles()) do
-    local b = K.Tab(ui, L["role_" .. r], function() root.SetRole(r) end)
-    b:SetHeight(22)
-    if prev then b:SetPoint("LEFT", prev, "RIGHT", 4, 0) else b:SetPoint("LEFT", ui.roleLabel, "RIGHT", 8, 0) end
-    K.Tooltip(b, L["role_" .. r], L.roleTip)
-    b.role = r
-    ui.roleBtns[#ui.roleBtns + 1] = b
-    prev = b
-  end
-  ui.status = ui:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  ui.status:SetPoint("TOPRIGHT", -20, -84)
-  ui.tileSet = K.Tiles(ui, 5, 64)                      -- composant commun (Widgets.lua) ; 5e : prochain niveau
-  ui.tiles = ui.tileSet.list
-  ui.list = K.CardList(ui, W - 60)
-  ui.list.scroll:SetPoint("TOPLEFT", 16, -174)
-  ui.list.scroll:SetPoint("BOTTOMRIGHT", -34, 16)
-  K.Backdrop(ui, ui.list.scroll, 0.6, 6)
-  ui:SetScript("OnShow", function() root.RefreshNow() end)
-  return ui
-end
-
-function root.ShowNow()
-  Create()
-  if ui:IsShown() then ui:Hide() else ui:Show() end
-end
+-- La fenêtre (en-tête, onglets, Accueil) est dans Main.lua : root.RefreshNow, root.ShowNow.
 
 local ev = CreateFrame("Frame")
 ev:RegisterEvent("PLAYER_REGEN_ENABLED")
@@ -368,7 +284,8 @@ local pending = false
 ev:SetScript("OnEvent", function(_, event)
   if event == "BAG_UPDATE_DELAYED" and InCombatLockdown and InCombatLockdown() then return end
   -- un seul recalcul pour une série de changements rapprochés (butin ramassé, achats)
-  if ui and ui:IsShown() and not pending then
+  local f = _G.ForeverCompagnonFrame
+  if f and f:IsShown() and not pending then
     pending = true
     C_Timer.After(1, function() pending = false; root.RefreshNow() end)
   end
