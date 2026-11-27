@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v4.0.1 (ForeverCompagnon 4.0.1) : fiche Soins de la fiche du personnage
+- La fiche qui s'ouvre avec le personnage (C) prend le style de la fenêtre : soins/s, autonomie, mana, tes sorts classés par efficacité, ce qui t'aide le plus, et « Tout voir » vers l'onglet Soins. Mise à jour à chaque changement d'objet.
+- Menu Outils : le survol d'une ligne ne masque plus son texte.
+
 ## v4.0.0 (ForeverCompagnon 4.0.0) : nouvelle interface
 - **Une seule fenêtre, sombre et dorée**, à quatre onglets : **Accueil**, **Équipement**, **Donjon**, **Soins** (seulement pour les classes qui soignent). Plus de barre d'icônes à gauche ni de fenêtres séparées : `/fp`, `/bis`, `/floot`, `/prep`, `/fheal`, les icônes et la fiche automatique à l'entrée d'une instance ouvrent le bon onglet.
 - **En-tête** : portrait, nom, « classe niveau · rôle · zone » (clic : changer de rôle), menu **⚙ Outils** (mes vols, effacer la flèche, Configurer HealBot, cadre Flash, erreurs, journal, addons, diagnostic, auto-test, sonde, options).

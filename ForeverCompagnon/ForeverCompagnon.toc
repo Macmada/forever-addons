@@ -3,7 +3,7 @@
 ## Notes: Ton compagnon d'aventure en une fenêtre, pour toutes les classes : que faire maintenant, équipement à ton niveau, préparation de donjon, soins (soigneurs), addons utiles.
 ## Notes-enUS: Your adventure companion in one window, for every class: what to do now, gear at your level, dungeon preparation, healing (healers), useful addons.
 ## Author: ForeverGFX
-## Version: 4.0.0
+## Version: 4.0.1
 ## SavedVariables: ForeverCompagnonDB, ForeverLootGlobalDB
 ## SavedVariablesPerCharacter: ForeverHealDB, ForeverLootDB, ForeverPrepDB
 ## IconTexture: Interface\Icons\INV_Misc_Book_09
