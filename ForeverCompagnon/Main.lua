@@ -26,6 +26,7 @@ local T = FR and {
   mDiag = "Diagnostic", mDiagD = "état de l'addon, à copier pour un rapport",
   mTest = "Auto-test", mTestD = "vérifie l'addon sur ce client",
   mProbe = "Sonde du client", mProbeD = "ce que le jeu donne aux addons",
+  mOptions = "Options…", mOptionsD = "Échap > Options > AddOns > ForeverCompagnon",
 } or {
   home = "Home", gear = "Gear", dungeon = "Dungeon", heal = "Healing",
   level = "%s level %d", todo = "To do now", hint = "click: action · right-click: details",
@@ -45,6 +46,7 @@ local T = FR and {
   mDiag = "Diagnostics", mDiagD = "addon state, to copy for a report",
   mTest = "Self-test", mTestD = "checks the addon on this client",
   mProbe = "Client probe", mProbeD = "what the game gives addons",
+  mOptions = "Options…", mOptionsD = "Esc > Options > AddOns > ForeverCompagnon",
 }
 root.MainText = T
 
@@ -280,6 +282,7 @@ local function MenuItems()
     { T.mDiag, T.mDiagD, function() root.ShowDiag() end },
     { T.mTest, T.mTestD, function() root.RunTests() end },
     { T.mProbe, T.mProbeD, function() root.ShowProbe() end },
+    { T.mOptions, T.mOptionsD, function() root.ShowOptions() end },
   }
   if root.HealBot and root.HealBot.Command then
     table.insert(items, 3, { T.mHealBot, T.mHealBotD, function() root.HealBot.Command("") end })

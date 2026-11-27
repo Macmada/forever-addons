@@ -99,7 +99,6 @@ Commandes : `/fheal` (panneau), `/fheal alerte`, `/fheal infobulle`, `/fheal ann
 
 Commandes : `/floot` (ou `/bis`), `/floot donjons`, `/floot diag`, `/floot lang fr|en`.
 
-**ForeverBiS** : la partie Équipement seule, en addon séparé (dossier `ForeverBiS`, archive `ForeverBiS-v<version>.zip` de chaque version, construite par `tools/build-bis.sh`), pour qui ne veut que le BiS par spé : `/bis`, icône sur la minicarte. Le dossier `ForeverCompagnon_Data` joint est facultatif (noms dans ta langue, itinéraires).
 
 ### Préparation (ex-ForeverPrep)
 

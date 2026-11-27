@@ -47,6 +47,7 @@ Window.lua
 Now.lua
 Main.lua
 Pages.lua
+Options.lua
 Flash.lua
 Addons.lua
 HealBot.lua

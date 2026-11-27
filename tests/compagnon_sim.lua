@@ -139,6 +139,20 @@ for _, r in ipairs(ForeverCompagnonToolsMenu.rows) do
 end
 check(ForeverCompagnonAddonsFrame and ForeverCompagnonAddonsFrame:IsShown() and not ForeverCompagnonToolsMenu:IsShown(), "4.0 : menu Outils > Addons")
 ForeverCompagnonAddonsFrame:Hide()
+-- panneau Options du jeu (Échap > Options > AddOns)
+SlashCmdList.FOREVERCOMPAGNON("options")
+check(ForeverCompagnonOptions ~= nil, "/fp options : panneau ForeverCompagnon créé")
+ForeverCompagnonOptions.scripts.OnShow(ForeverCompagnonOptions)
+local nChecks = 0
+for _, cb in ipairs(ForeverCompagnonOptions.checks) do if cb:IsShown() then nChecks = nChecks + 1 end end
+check(nChecks >= 8, "Options : " .. nChecks .. " réglages (Fenêtre, Équipement, Donjon, Soins)")
+local prepDb = root.mods.ForeverPrep.db
+local before = prepDb.autoInstance
+for _, cb in ipairs(ForeverCompagnonOptions.checks) do
+  if cb.label:GetText() == root.mods.ForeverPrep.L.optAutoInstance then cb:SetChecked(not before); cb.scripts.OnClick(cb) end
+end
+check(prepDb.autoInstance == (not before), "Options : la case écrit le réglage de la partie")
+prepDb.autoInstance = before
 
 -- onglets : tout dans la même fenêtre (4.0)
 root.Open("loot")

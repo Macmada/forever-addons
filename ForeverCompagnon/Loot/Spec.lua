@@ -86,7 +86,7 @@ local function Class() return select(2, UnitClass("player")) end
 ----------------------------------------------------------------------
 -- Profil en cours (spé)
 ----------------------------------------------------------------------
--- Rôle donné par ForeverCompagnon (écran Maintenant) ; nil dans l'addon séparé ForeverBiS
+-- Rôle donné par ForeverCompagnon (écran Maintenant)
 local function RoleOf() return ns.Role and ns.Role() or nil end
 
 function S.Profiles()

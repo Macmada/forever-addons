@@ -98,7 +98,7 @@ def scan_protected(path: str) -> list[tuple[int, str]]:
 
 def main() -> int:
     funcs, ns = load_api()
-    dirs = sys.argv[1:] or ["ForeverCompagnon", "ForeverGFX", "ForeverMacros", "tools/bis"]
+    dirs = sys.argv[1:] or ["ForeverCompagnon", "ForeverGFX", "ForeverMacros"]
     bad = 0
     for d in dirs:
         for base, _, files in os.walk(os.path.join(ROOT, d)):

@@ -29,7 +29,7 @@ end
 function ForeverCompagnon_OnCompartmentClick() root.Toggle() end
 
 -- Les commandes et icônes des parties (/floot, /bis, /prep, /fheal, fiche de prépa automatique) ouvrent la même fenêtre.
--- Les anciennes fenêtres restent pour ForeverBiS (addon séparé) ; ici elles ne s'ouvrent plus.
+-- Les anciennes fenêtres des parties ne s'ouvrent plus.
 local function Wrap()
   for _, t in ipairs(root.TABS) do
     local ns = t.mod and root.mods[t.mod]
@@ -102,6 +102,7 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
   local hb = msg:match("^healbot%s*(.*)$")
   if way then root.Nav.Command(way)
   elseif msg == "addons" or msg == "addon" then root.ShowAddons()
+  elseif msg == "options" or msg == "config" then root.ShowOptions()
   elseif msg == "outils" or msg == "tools" then root.Open("now"); root.ShowToolsMenu()
   elseif hb then root.HealBot.Command(hb)
   elseif msg == "vols" or msg == "taxi" or msg == "flights" then root.Nav.ListTaxi()

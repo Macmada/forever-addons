@@ -12,7 +12,7 @@ jobs:
       - name: Luacheck
         uses: lunarmodules/luacheck@v1
         with:
-          args: ForeverGFX ForeverMacros ForeverCompagnon ForeverCompagnon_Data tools/bis
+          args: ForeverGFX ForeverMacros ForeverCompagnon ForeverCompagnon_Data
       - name: Modules communs identiques dans chaque addon (diagnostic, icône, tutoriel)
         run: sh tools/sync-shared.sh --check
       - name: Caractères absents de la police du jeu (→ ≈ ✓ ● ○ ★ s'affichent en carré)
@@ -45,6 +45,3 @@ jobs:
           lua5.1 tests/compagnon_sim.lua en
           lua5.1 tests/classes_sim.lua fr
           lua5.1 tests/classes_sim.lua en
-          sh tools/build-bis.sh
-          lua5.1 tests/bis_sim.lua fr
-          lua5.1 tests/bis_sim.lua en
