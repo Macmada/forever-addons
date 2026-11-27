@@ -186,6 +186,22 @@ check(root.CurrentPage() == "heal" and F.pages.heal.counters[1].value:GetText() 
 check(#F.pages.heal.list.Shown("head") >= 1, "onglet Soins : rubrique « Tes soins »")
 root.Open("prep")
 check(#F.pages.prep.list.Shown("check") >= 1 and #F.pages.prep.list.Shown("head") >= 1, "onglet Donjon : rubriques et cases (" .. #F.pages.prep.list.Shown("check") .. " cases)")
+local mustRow
+for _, r in ipairs(F.pages.prep.list.Shown("check")) do if r.line.onMust then mustRow = mustRow or r end end
+check(mustRow and mustRow.must:IsShown(), "onglet Donjon : case « obligatoire » sur les lignes réglables")
+local keyMust = mustRow.line
+mustRow.must:SetChecked(not keyMust.must)
+mustRow.must.scripts.OnClick(mustRow.must)
+local flipped
+for _, r in ipairs(F.pages.prep.list.Shown("check")) do if r.line.label == keyMust.label then flipped = r.line.must end end
+check(flipped == (not keyMust.must), "case « obligatoire » : réglage changé et fiche recalculée")
+-- maître de classe sur Forever : le 2e retour est le type (« available »), pas un rang
+local pdb = root.mods.ForeverPrep.db
+local savedTrainer = pdb.trainer
+pdb.trainer = { services = { { name = "Brûlure de mana", rank = "available", level = 1, cost = 10 }, { name = "Soins", rank = "used", level = 1, cost = 5 } } }
+local due = root.mods.ForeverPrep.TrainerDue()
+check(#due == 1 and due[1].rank == nil, "maître de classe : « available » n'est pas un rang, « used » déjà appris")
+pdb.trainer = savedTrainer
 root.Open("loot")
 check(#F.pages.loot.list.Shown("card") + #F.pages.loot.list.Shown("info") >= 1, "onglet Équipement : lignes affichées")
 root.Open("heal")

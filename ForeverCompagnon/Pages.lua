@@ -139,11 +139,29 @@ local function List(parent)
       b.icon:SetSize(22, 22)
       b.icon:SetPoint("LEFT", b.box, "RIGHT", 8, 0)
       b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+      -- case « obligatoire » (fiche de préparation) : cochée, la ligne compte dans l'état et la liste de courses
+      b.must = CreateFrame("CheckButton", nil, b, "UICheckButtonTemplate")
+      b.must:SetSize(22, 22)
+      b.must:SetPoint("RIGHT", -6, 0)
+      b.must.row = b
+      b.must:SetScript("OnClick", function(self)
+        local l = self.row.line
+        if l and l.onMust then l.onMust(self:GetChecked() and true or false) end
+      end)
+      b.must:SetScript("OnEnter", function(self)
+        local l = self.row.line
+        if not (l and l.mustTip) then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText(l.mustTip[1], C.goldL[1], C.goldL[2], C.goldL[3])
+        GameTooltip:AddLine(l.mustTip[2], 1, 1, 1, true)
+        GameTooltip:Show()
+      end)
+      b.must:SetScript("OnLeave", function() GameTooltip:Hide() end)
       b.action = U.Text(b, 12, C.blue, "GameFontNormalSmall")
-      b.action:SetPoint("RIGHT", -12, 0)
       b.action:SetJustifyH("RIGHT")
       b.note = U.Text(b, 11, C.muted, "GameFontHighlightSmall")
       b.note:SetJustifyH("RIGHT")
+      b.note:SetWordWrap(false)
       b.text = U.Text(b, 13, C.text, "GameFontHighlight")
       b.text:SetPoint("LEFT", b.icon, "RIGHT", 8, 0)
       b.text:SetWordWrap(false)
@@ -213,11 +231,18 @@ local function List(parent)
         local c = l.done and C.muted or C.text
         r.text:SetTextColor(c[1], c[2], c[3])
         r.text:SetText(l.label or "")
+        local hasMust = l.onMust ~= nil
+        r.must:SetShown(hasMust)
+        if hasMust then r.must:SetChecked(l.must and true or false) end
+        r.action:ClearAllPoints()
+        if hasMust then r.action:SetPoint("RIGHT", r.must, "LEFT", -6, 0) else r.action:SetPoint("RIGHT", -12, 0) end
         r.action:SetText(l.action or "")
+        -- note bornée à 45 % de la ligne (une note longue écrasait le libellé, 27/11/2026) ; texte entier au survol
         r.note:SetText(l.note or "")
+        r.note:SetWidth(math.max(1, math.min((r.note:GetStringWidth() or 0) + 2, width * 0.45)))
         r.note:ClearAllPoints()
-        r.note:SetPoint("RIGHT", r.action, "LEFT", (l.action and l.action ~= "") and -12 or 0, 0)
-        r.text:SetPoint("RIGHT", r.note, "LEFT", -12, 0)
+        r.note:SetPoint("RIGHT", r.action, "LEFT", (l.action and l.action ~= "") and -10 or 0, 0)
+        r.text:SetPoint("RIGHT", r.note, "LEFT", -10, 0)
         y = y + 34 + 5
       elseif l.kind == "head" or l.kind == "slot" then
         r.icon:SetShown(l.icon ~= nil)
@@ -295,6 +320,9 @@ root.Pages.loot = {
     f.help:SetPoint("TOPLEFT", f.seg, "BOTTOMLEFT", 0, -8)
     f.help:SetPoint("RIGHT", -PAD, 0)
     f.list = ListArea(f, -72)
+    f.list.scroll:ClearAllPoints()
+    f.list.scroll:SetPoint("TOPLEFT", f.help, "BOTTOMLEFT", 0, -8)
+    f.list.scroll:SetPoint("BOTTOMRIGHT", -PAD - 22, 8)
   end,
   Refresh = function(f)
     local loot = root.mods.ForeverLoot
@@ -397,10 +425,16 @@ root.Pages.prep = {
             local done = r.status == "ok"
             if done then ok = ok + 1 end
             local buy = r.buyID and (r.buyQty or 0) > 0
-            lines[#lines + 1] = { kind = "check", done = done, status = r.status, icon = r.icon, label = Plain(title or r.text),
-                                  note = detail and Plain(detail) or nil, action = buy and T.guide or nil,
-                                  tip = { title = Plain(title or r.text), lines = { detail and Plain(detail) or nil } },
-                                  onClick = buy and function() if prep.GuideToVendor then prep.GuideToVendor() end end or nil }
+            local line = { kind = "check", done = done, status = r.status, icon = r.icon, label = Plain(title or r.text),
+                           note = detail and Plain(detail) or nil, action = buy and T.guide or nil,
+                           tip = { title = Plain(title or r.text), lines = { detail and Plain(detail) or nil } },
+                           onClick = buy and function() if prep.GuideToVendor then prep.GuideToVendor() end end or nil }
+            if r.key and prep.SetMandatory then
+              line.must = r.mandatory
+              line.mustTip = { PL.mustTitle, PL.mustTip }
+              line.onMust = function(v) prep.SetMandatory(r.key, v); root.RefreshNow() end
+            end
+            lines[#lines + 1] = line
           end
         end
       end

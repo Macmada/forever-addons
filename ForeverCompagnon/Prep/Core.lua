@@ -566,6 +566,7 @@ local function IsClassTrainer()
   if f then local ok, v = pcall(f); if ok and v then return false end end
   return true
 end
+local TYPES = { available = true, unavailable = true, used = true, header = true }
 function ns.ReadTrainer()
   local num = _G.GetNumTrainerServices
   if not num then return nil end
@@ -574,6 +575,8 @@ function ns.ReadTrainer()
   local list = {}
   for i = 1, n do
     local name, rank, category = _G.GetTrainerServiceInfo(i)
+    -- client de Forever : le 2e retour est le type (« available », « used »…), sans rang (27/11/2026)
+    if TYPES[rank] then category, rank = rank, nil end
     if name and category ~= "header" then
       local lvl = _G.GetTrainerServiceLevelReq and _G.GetTrainerServiceLevelReq(i) or 0
       local cost = _G.GetTrainerServiceCost and _G.GetTrainerServiceCost(i) or 0
@@ -597,13 +600,16 @@ local function SaveTrainer()
   db.trainer = t
 end
 -- Sorts à apprendre maintenant (niveau atteint, pas encore appris) d'après la dernière visite ; nil si jamais visité
+-- (types du maître de classe : TYPES plus haut ; un relevé ancien peut les avoir gardés comme rang)
 function ns.TrainerDue()
   local t = db and db.trainer
   local level = UnitLevel("player")
   if not (t and t.services) then return nil end
   local out, cost = {}, 0
   for _, sv in ipairs(t.services) do
-    if not sv.used and sv.level <= level then out[#out + 1] = sv; cost = cost + (sv.cost or 0) end
+    local used = sv.used or sv.rank == "used"
+    if TYPES[sv.rank] then sv.rank = nil end
+    if not used and sv.level <= level then out[#out + 1] = sv; cost = cost + (sv.cost or 0) end
   end
   return out, cost, t
 end
