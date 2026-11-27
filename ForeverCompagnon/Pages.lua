@@ -12,7 +12,7 @@ local T = FR and {
   nowHelp = "Meilleure pièce que tu peux obtenir d'ici le niveau %d, par emplacement. Clic droit : y aller.",
   dungeon = "Donjon", raid = "Raid", ready = "%d / %d prêt", go = "Y aller", guide = "Guide-moi",
   prepAuto = "Coché tout seul quand le jeu le voit (sacs, sorts, réparation).", prepIn = "Dans l'instance : %s",
-  hps = "soins par seconde", oom = "à plein régime, sans boire", never = "jamais à sec", mana = "régén. %s / s hors combat",
+  hps = "soins par seconde", oom = "à plein régime, sans boire", never = "jamais à sec", mana = "mana · régén. %s / s",
   spells = "Tes soins", spellsHint = "efficacité = points soignés par point de mana",
   helps = "Ce qui t'aide le plus", helpLine = "%s : %s soignés de plus avant d'être à sec",
   heal = "soin %s · %s s · %s mana", eff = "%s / mana",
@@ -25,7 +25,7 @@ local T = FR and {
   nowHelp = "Best piece you can get up to level %d, per slot. Right-click: go there.",
   dungeon = "Dungeon", raid = "Raid", ready = "%d / %d ready", go = "Go", guide = "Guide me",
   prepAuto = "Ticked automatically when the game sees it (bags, spells, repairs).", prepIn = "In the instance: %s",
-  hps = "healing per second", oom = "at full pace, without drinking", never = "never out of mana", mana = "regen %s / s out of combat",
+  hps = "healing per second", oom = "at full pace, without drinking", never = "never out of mana", mana = "mana · regen %s / s",
   spells = "Your heals", spellsHint = "efficiency = healing per mana point",
   helps = "What helps you most", helpLine = "%s: %s more healing before running dry",
   heal = "heal %s · %s s · %s mana", eff = "%s / mana",
@@ -450,7 +450,7 @@ local function HealView(compact)
     if get then local okI, tex = pcall(get, m.id); if okI then icon = tex end end
     local card = { kind = "card", icon = icon or "Interface\\Icons\\Spell_Holy_Heal", name = m.name,
                    source = string.format(T.heal, Num(sp.amount), Num(m.cast, 1), Num(m.cost or 0)),
-                   gain = string.format(T.eff, Num(sp.eff, 1)), action = tag, actionColor = col,
+                   gain = string.format(T.eff, FR and (string.format("%.1f", sp.eff):gsub("%.", ",")) or string.format("%.1f", sp.eff)), action = tag, actionColor = col,
                    tip = { title = m.name, lines = { string.format(T.heal, Num(sp.amount), Num(m.cast, 1), Num(m.cost or 0)), T.spellsHint } } }
     if compact then
       -- fiche étroite : pas de colonne « conseil » ; il passe sous le nom, en couleur
