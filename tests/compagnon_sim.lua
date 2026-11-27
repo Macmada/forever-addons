@@ -166,6 +166,31 @@ do
   check(none, "hôtel des ventes : rien si tu ne peux pas payer")
   _G.Auctionator, _G.GetMoney = saveA, saveM
 end
+-- tournée en ville : maître, marchand et hôtel des ventes en un trajet, le plus proche d'abord
+do
+  local Nav, prep = root.Nav, root.mods.ForeverPrep
+  local sv = { Player = Nav.Player, World = Nav.World, Due = prep.TrainerDue, An = prep.Analyze, V = prep.ATT.Vendors, R = _G.IsResting }
+  Nav.Player = function() return 0, 0, 0 end
+  Nav.World = function(_, x, y) return 0, x * 10, y * 10 end            -- 1 point de carte = 10 m
+  prep.TrainerDue = function() return { { name = "Soins" } }, 100, { mapID = 1, x = 50, y = 0, npc = "Maître" } end
+  prep.Analyze = function() return { shopping = { { id = 1, name = "Eau" }, { id = 2, name = "Pain" } }, sections = {} } end
+  prep.ATT.Vendors = function(id) return { { name = "Aubergiste", mapID = 1, x = 10, y = 0 }, { name = "Loin", mapID = 1, x = 900, y = 0 } } end
+  root.db.auctionHouses = { a = { mapID = 1, x = 30, y = 0, faction = UnitFactionGroup("player") } }
+  local stops = root.TourStops(true)
+  check(#stops == 3 and stops[1].title == "Aubergiste" and stops[2].title == root.TourText.ah and stops[3].title == "Maître",
+        "tournée : 3 arrêts dans l'ordre le plus court (marchand, HV, maître), marchand trop loin écarté")
+  check(#stops[1].what == 2, "tournée : un seul arrêt pour les deux achats chez le même marchand")
+  _G.IsResting = function() return true end
+  local tl
+  for _, l in ipairs(root.NowLines()) do if l.tour then tl = l end end
+  check(tl and root.HomeAction(tl) == root.MainText.route, "Accueil en ville : ligne « Tournée en ville »")
+  check(root.StartTour(stops) and Nav.route and #Nav.route.steps == 3 and Nav.target.title == "Aubergiste", "tournée : la flèche part vers le 1er arrêt")
+  Nav.Arrived()
+  check(Nav.target.title == root.TourText.ah, "tournée : arrivé, la flèche passe au 2e arrêt")
+  Nav.Clear()
+  Nav.Player, Nav.World, prep.TrainerDue, prep.Analyze, prep.ATT.Vendors, _G.IsResting = sv.Player, sv.World, sv.Due, sv.An, sv.V, sv.R
+  root.db.auctionHouses = nil
+end
 -- fiche collée au personnage (touche C) : nouveau style (4.0)
 _G.CharacterFrame.scripts.OnShow(_G.CharacterFrame)
 check(ForeverCompagnonSheet and ForeverCompagnonSheet:IsShown() and not (_G.ForeverHealPanel and _G.ForeverHealPanel:IsShown()),

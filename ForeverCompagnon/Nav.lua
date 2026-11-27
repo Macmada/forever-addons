@@ -402,6 +402,16 @@ local function Next()
 end
 N.Next = Next
 
+-- Suite d'arrêts à pied (tournée en ville) : la flèche passe au suivant à chaque arrivée
+function N.Route(stops)
+  if not stops or #stops == 0 then return false end
+  local steps = {}
+  for _, s in ipairs(stops) do steps[#steps + 1] = { kind = "go", mapID = s.mapID, x = s.x, y = s.y, title = s.title } end
+  N.route = { steps = steps, i = 0 }
+  Start(1)
+  return true
+end
+
 -- Va vers un lieu par le chemin le plus rapide (vols connus, bateaux, zeppelins) : la flèche suit chaque étape
 function N.Go(mapID, x, y, title)
   local plan = N.Plan(mapID, x, y, title)

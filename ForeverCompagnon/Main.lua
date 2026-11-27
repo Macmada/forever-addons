@@ -208,7 +208,7 @@ local function ActionOf(l)
   if l.equip then return T.equip, true end
   if l.buy then return T.guide end
   if l.ah then return T.ah end
-  if l.place or l.quests or l.trainer or l.vendor then return T.route end
+  if l.place or l.quests or l.trainer or l.vendor or l.tour then return T.route end
   return T.open
 end
 root.HomeAction = ActionOf

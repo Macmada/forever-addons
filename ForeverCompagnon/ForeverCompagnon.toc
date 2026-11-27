@@ -43,6 +43,7 @@ Prep\Widgets.lua
 Prep\UI.lua
 Window.lua
 Now.lua
+Tour.lua
 Main.lua
 Pages.lua
 Options.lua

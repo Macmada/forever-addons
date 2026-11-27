@@ -320,6 +320,12 @@ function root.NowLines()
   Safe("quêtes", QuestTodo, lines)
   Safe("marchand", VendorTodo, lines)
   Safe("achats", BuyTodo, lines, res)
+  -- en ville (repos) : la tournée qui enchaîne maître, marchands et hôtel des ventes, en tête
+  if IsResting and IsResting() and root.TourTodo then
+    local ah = false
+    for _, l in ipairs(lines) do if l.ah then ah = true end end
+    Safe("tournée", root.TourTodo, lines, ah)
+  end
   if #lines == before then lines[#lines + 1] = { kind = "info", text = Gray(L.noTodo) } end
   local tiles = root.NowTiles(res, places)
   for _, e in ipairs(root.nowErrors) do lines[#lines + 1] = { kind = "info", text = "|cffff6a5a" .. string.format(L.err, e) .. "|r" } end
