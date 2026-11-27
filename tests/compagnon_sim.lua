@@ -135,6 +135,10 @@ end
 check(F.subBtn.fs:GetText():find("12", 1, true) ~= nil, "4.0 : en-tête avec le niveau")
 root.ShowToolsMenu()
 check(ForeverCompagnonToolsMenu:IsShown() and ForeverCompagnonToolsMenu.rows[1]:IsShown(), "4.0 : menu Outils ouvert")
+local mr = ForeverCompagnonToolsMenu.rows[1]
+mr.scripts.OnEnter(mr)
+check(mr.hover:IsShown(), "menu Outils : survol derrière le texte (il ne le masque plus)")
+mr.scripts.OnLeave(mr)
 for _, r in ipairs(ForeverCompagnonToolsMenu.rows) do
   if r:IsShown() and r.title:GetText() == root.MainText.mAddons then r:GetScript("OnClick")(r) end
 end
