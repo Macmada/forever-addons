@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v4.0.2 (ForeverCompagnon 4.0.2) : fiche Soins à côté de la fiche du personnage, Nova sacrée
+- La fiche Soins (C) ne cache plus les onglets de droite de la fiche du personnage ; elle se déplace en la glissant (place retenue, `/fp fiche place` pour la remettre à côté).
+- Soins : la Nova sacrée est comptée ; Mot de pouvoir : Bouclier et Prière de guérison (absorption, rebonds) ne sont plus signalés comme absents.
+- Diagnostic : royaume « non donné par le client » au lieu d'un blanc, liste des addons Forever chargés à jour (aussi dans ForeverGFX et ForeverMacros).
+
 ## v4.0.1 (ForeverCompagnon 4.0.1) : fiche Soins de la fiche du personnage
 - La fiche qui s'ouvre avec le personnage (C) prend le style de la fenêtre : soins/s, autonomie, mana, tes sorts classés par efficacité, ce qui t'aide le plus, et « Tout voir » vers l'onglet Soins. Mise à jour à chaque changement d'objet.
 - Menu Outils : le survol d'une ligne ne masque plus son texte.
