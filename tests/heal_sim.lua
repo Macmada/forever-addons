@@ -269,11 +269,6 @@ local before = ns.tooltipStats.computed
 GameTooltip.link = "item:robe"; GameTooltip.lines = {}; ns.OnTooltipItem(GameTooltip)
 GameTooltip.lines = {}; ns.OnTooltipItem(GameTooltip)
 check(ns.tooltipStats.computed == before + 1 and ns.tooltipStats.cached >= 1, "infobulle : calculée une fois, puis reprise du cache")
-ns.lastDiag = nil
-local dbtn = ns.panel and ns.panel.diagBtn
-check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
-dbtn.scripts.OnClick(dbtn)
-check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
 -- 11b. client de Forever : pas de CombatLogGetCurrentEventInfo, et C_CombatLog.GetCurrentEventInfo réservé à Blizzard
 -- (l'appeler bloque l'addon) : il ne doit jamais être appelé
 local blockedCalls = 0
@@ -284,15 +279,12 @@ Fire("COMBAT_LOG_EVENT_UNFILTERED")
 check(blockedCalls == 0, "client de Forever : C_CombatLog.GetCurrentEventInfo (protégé) jamais appelé")
 _G.C_CombatLog, _G.CombatLogGetCurrentEventInfo = nil, saveCL
 
--- 11c. panneau : onglets « Mon prêtre » / « Mes sacs » (le bouton « Retour au panneau » restait sans effet, 05/11/2026)
-local pnl = ns.panel
-pnl:Show()
-check(rawget(pnl, "tabBags") == nil and rawget(pnl, "mode") == nil, "panneau : plus d'onglet « Mes sacs » (une seule vue)")
+-- 11c. 4.0 : plus d'ancien panneau (onglet Soins et fiche C de ForeverCompagnon) ; calcul en échec signalé au diagnostic
+check(_G.ForeverHealPanel == nil, "4.0 : plus d'ancien panneau Soins")
 local realRaw, realData = ns.PanelRaw, ns.PanelData
 ns.PanelRaw = function() error("test de panne") end
 ns.PanelData = function() error("test de panne") end
 ns.RefreshPanel()
-check(ns.lastPanelError and ns.lastPanelError:find("test de panne", 1, true), "calcul en échec : erreur gardée et affichée dans le panneau")
 check(ns.DiagText():find("Calcul du panneau : ERREUR", 1, true), "diagnostic : le calcul du panneau en échec est signalé")
 ns.PanelRaw, ns.PanelData = realRaw, realData
 ns.RefreshPanel()
@@ -300,7 +292,6 @@ ns.RefreshPanel()
 local pd = ns.PanelData()
 check(#pd.tiles == 4 and #pd.spells > 0 and #pd.gains == 5 and pd.gains[1].healed >= pd.gains[#pd.gains].healed and pd.footer,
       "panneau visuel : 4 tuiles, sorts, gains triés du plus utile au moins utile")
-check(rawget(pnl, "macroBtn") == nil, "bouton Macros retiré (conseils de rangs impossibles sur Forever)")
 check(ns.DiagText():find("Calcul du panneau : ok", 1, true), "diagnostic : calcul du panneau ok")
 
 -- 12. API pour les autres addons : écart de caractéristiques seul (enchantement)

@@ -53,23 +53,11 @@ local function Wrap()
   end
 end
 
--- Une seule icône : celle de la minicarte « Forever » ; l'icône séparée de Prépa est masquée la première fois
-local function Icons()
-  local prep = root.mods.ForeverPrep
-  if prep and prep.db and prep.db.minimap and not prep.db.minimap.pretreDone then
-    prep.db.minimap.pretreDone = true
-    prep.db.minimap.hide = true
-    if prep.UpdateMinimapButton then pcall(prep.UpdateMinimapButton) end
-  end
-  if prep and _G.ForeverHub and _G.ForeverHub.button then prep.minimapButton = _G.ForeverHub.button end
-end
-
 root.OnLoaded(function()
   Wrap()
 end)
 root.OnLogin(function()
   Wrap()
-  C_Timer.After(2.5, Icons)
 end)
 
 -- Diagnostic commun : en-tête, puis celui de chaque partie

@@ -103,7 +103,7 @@ for _, name in ipairs(root.order) do
 end
 check(shared and root.mods.ForeverPrep.ATT and root.mods.ForeverPrep.StartTour ~= nil or shared, "modules communs (diag, composants, lien avec le jeu) dans chaque partie")
 check(ForeverHub and ForeverHub.entries.ForeverCompagnon and not ForeverHub.entries.ForeverLoot, "icône Forever : une seule entrée pour le prêtre")
-check(root.mods.ForeverPrep.db.minimap.hide, "icône séparée de Prépa masquée")
+check(_G.ForeverPrepMinimapButton == nil, "4.0 : plus d'icône séparée de Prépa (une seule icône Forever)")
 
 -- écran Maintenant
 SlashCmdList.FOREVERCOMPAGNON("")

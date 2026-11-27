@@ -117,11 +117,6 @@ local txt = {}
 for _, l in ipairs(lines) do txt[#txt + 1] = l.text end
 txt = table.concat(txt, "\n")
 check(txt:find("Robe du soigneur", 1, true) and txt:find("Rivendare", 1, true) and txt:find("Pouvoir de guérison", 1, true), "onglet BiS rempli (référence Forever, enchantement conseillé)")
-local dun = ns.DungeonLines()
-local dtxt = {}
-for _, l in ipairs(dun) do dtxt[#dtxt + 1] = l.text end
-dtxt = table.concat(dtxt, "\n")
-check(dtxt:find("Stratholme", 1, true) and dtxt:find("Sceau de Rivendare", 1, true), "onglet Donjons : butin vu et référence")
 
 -- 5b. DungeonJournal (format réel : ForeverDungeonJournal_NS.DB[donjon].bosses[i].loot / quests[i].rewardItems) et Syndicator
 _G.ForeverDungeonJournal_NS = {
@@ -149,11 +144,6 @@ local bl = {}
 for _, l in ipairs(ns.BisLines()) do bl[#bl + 1] = l.text end
 bl = table.concat(bl, "\n")
 check(bl:find("Syndicator", 1, true) and bl:find("DungeonJournal", 1, true), "onglet BiS : lignes DungeonJournal et Syndicator")
-local dl = {}
-for _, l in ipairs(ns.DungeonLines()) do dl[#dl + 1] = l.text end
-dl = table.concat(dl, "\n")
-check(dl:find("La Salle des thanes", 1, true) and dl:find("Faldrim Anvilmar", 1, true) and dl:find("Gants de l'oracle", 1, true)
-      and not dl:find("Gantelets de plaques", 1, true), "onglet Donjons : butin de DungeonJournal pour toi, boss par boss")
 check(ns.DiagText():find("DungeonJournal : présent", 1, true), "diagnostic : DungeonJournal détecté")
 
 -- 5c. Sources intégrées (base WoW Forever d'All The Things, Data/Sources.lua) : où obtenir chaque objet de la référence ;
@@ -194,20 +184,9 @@ ns.version = ns.version + 1
 check(NT(ns.NearLines(5)):find("Robe de la Horde", 1, true), "contrôle : un personnage de la Horde, lui, voit la récompense de la Horde")
 _G.UnitFactionGroup = saveFG
 ns.version = ns.version + 1
-local dlf = NT(ns.DungeonLines())
-check(not dlf:find("Robe de la Horde", 1, true), "onglet Donjons (Alliance) : pas de récompense de quête de la Horde")
 local n0 = NT(ns.NearLines(0))
 check(n0:find("Gants de l'oracle", 1, true), "À mon niveau (40) : déjà portable")
-SlashCmdList.FOREVERLOOT("")
-check(ns.ui.nearBtn.active and ns.ui.spanBtns[0].active, "/floot : onglet « À mon niveau » (ton niveau par défaut)")
-ns.ui.spanBtns[10].scripts.OnClick(ns.ui.spanBtns[10])
-check(ns.nearSpan == 10 and ns.ui.spanBtns[10].active, "choix « +10 niveaux »")
-check(ns.db.nearSpan == 10, "choix retenu d'une fois sur l'autre")
-local tl = ns.NearTiles()
-check(#tl == 4 and tl[1].label == ns.L.tileUp and ns.ui.tiles[1]:IsShown(), "« À mon niveau » : 4 tuiles (améliorations, meilleur gain, sacs, donjon)")
-ns.ui.dunBtn.scripts.OnClick(ns.ui.dunBtn)
-check(not ns.ui.tiles[1]:IsShown(), "onglet Donjons : pas de tuiles")
-ns.ui.nearBtn.scripts.OnClick(ns.ui.nearBtn)
+check(NT(ns.NearLines(10)):find("Gants de l'oracle", 1, true), "À mon niveau +10 : même objet proposé")
 
 -- 5e. alerte quand tu ramasses un objet qui t'améliore (05/11/2026)
 _G.EquipItemByName = function(l) equipped = l end
@@ -273,22 +252,14 @@ W.class, W.level = "PRIEST", 40
 -- 8. diagnostic, icône commune, commande
 local diag = ns.DiagText()
 check(diag:find("Liste de référence", 1, true) and diag:find("16693", 1, true) and not diag:find("Erreur", 1, true), "diagnostic complet")
-SlashCmdList.FOREVERLOOT("donjons")
-check(ns.ui:IsShown(), "/floot donjons")
-check(ns.ui.dunBtn.active and not ns.ui.bisBtn.active, "onglet Donjons actif (style Forever)")
--- cartes d'objets (fenêtre refaite le 05/11/2026) : nom en couleur de qualité, gain en grand, étoile des références
-ns.ShowTab("bis")
-local robe, ref, torse
-for _, c in ipairs(ns._view.cards) do
-  if c:IsShown() and c.name:GetText() == "Robe du soigneur" then robe = c end
-  if c:IsShown() and c.star:IsShown() then ref = c end
+-- cartes d'objets (affichées par l'onglet Équipement de ForeverCompagnon) : nom, gain, titres d'emplacement
+local robe, torse
+for _, l in ipairs(ns.BisLines()) do
+  if l.kind == "card" and l.name == "Robe du soigneur" then robe = l end
+  if l.kind == "slot" and l.title == ns.L.slot5 then torse = l end
 end
-for _, h in ipairs(ns._view.slots) do if h:IsShown() and h.title:GetText() == ns.L.slot5 then torse = h end end
-check(robe and robe.gain:GetText():find(ns.L.cardHps, 1, true), "carte : Robe du soigneur avec son gain en soins/s")
-check(ref, "carte de référence marquée d'une étoile")
+check(robe and (robe.gain or ""):find(ns.L.cardHps, 1, true), "carte : Robe du soigneur avec son gain en soins/s")
 check(torse, "titre d'emplacement « " .. ns.L.slot5 .. " »")
-ns.ui.optBtn.scripts.OnClick(ns.ui.optBtn)
-check(_G.ForeverLootOptionsFrame and _G.ForeverLootOptionsFrame:IsShown(), "bouton Options : options dans une petite fenêtre")
 -- gros chiffre d'une carte : jamais une perte en titre d'une amélioration
 do
   local G = ns._GainParts
@@ -353,12 +324,10 @@ do
   local e = ns.Evaluate(P.Link(16693))
   check(e and e.method == "ep" and e.minLevel == 57 and ns.GainText(e):find(ns.L.cardEp, 1, true), "infobulles et jets : même mesure (points de soins)")
   -- écrans
-  ns.ShowTab("near")
   local txt = {}
   for _, l in ipairs(ns.NearLines(3)) do txt[#txt + 1] = l.text or "" end
   txt = table.concat(txt, "\n")
   check(txt:find(string.format(ns.L.nowIntro, 43), 1, true), "onglet Maintenant : introduction")
-  check(ns.ui.nearBtn.fs:GetText() == ns.L.tabNow and ns.ui.bisBtn.fs:GetText() == ns.L.tabGoal and not ns.ui.dunBtn:IsShown(), "onglets « Maintenant » et « Objectif 60 », plus d'onglet Donjons")
   local goal = {}
   for _, l in ipairs(ns.GoalLines()) do goal[#goal + 1] = l.text or "" end
   goal = table.concat(goal, "\n")
@@ -378,9 +347,8 @@ do
   for _, l in ipairs(ns.GoalLines()) do goal[#goal + 1] = l.text or "" end
   check(table.concat(goal, "\n"):find(string.format(ns.L.goalDone, 1, 16), 1, true), "Collerette portée : 1/16")
   -- profil : le bouton passe au suivant
-  ns.Refresh()
-  ns.ui.profileBtn.scripts.OnClick(ns.ui.profileBtn)
-  check(ns.db.priestProfile == "holy_st" and ns.ui.profileBtn:IsShown(), "bouton de profil : Sacré une cible")
+  ns.Spec.NextProfile()
+  check(ns.db.priestProfile == "holy_st", "profil suivant : Sacré une cible")
   ns.db.priestProfile = nil
 end
 -- 10. Paladin, toutes spés (même moteur, profils par spé)
@@ -417,10 +385,8 @@ do
   check(S.ItemEP(19321) > S.ItemEP(16693), "Protection : un bouclier vaut plus qu'une coiffe de tissu de soigneur")
   S.SetProfile("pal_holy")
   check(S.ItemEP(16693) > S.ItemEP(12640), "Sacré : la Collerette de dévot (soins) vaut plus que le Heaume Cœur-de-lion (force)")
-  ns.ShowTab("bis")
-  ns.Refresh()
-  ns.ui.profileBtn.scripts.OnClick(ns.ui.profileBtn)
-  check(S.Profile() == "pal_prot" and ns.ui.profileBtn.fs:GetText():find(ns.L.profile_pal_prot, 1, true), "bouton de spé : Sacré -> Protection")
+  S.NextProfile()
+  check(S.Profile() == "pal_prot", "spé suivante : Sacré -> Protection")
   ns.db.specProfile = nil
   W.class, W.level = "PRIEST", 40
 end

@@ -37,5 +37,5 @@ sync Diag.lua $SEP
 sync Hub.lua $SEP
 sync Tour.lua ForeverGFX ForeverMacros
 sync Widgets.lua $SEP
-for f in Diag.lua Hub.lua Tour.lua ATT.lua Widgets.lua; do wrap "$f"; done
+for f in Diag.lua Hub.lua ATT.lua Widgets.lua; do wrap "$f"; done
 echo "modules communs : ok"

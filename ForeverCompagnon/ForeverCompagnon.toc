@@ -14,7 +14,6 @@ Debug.lua
 Shared\Diag.lua
 Shared\Widgets.lua
 Shared\ATT.lua
-Shared\Tour.lua
 Shared\Hub.lua
 Compat.lua
 Nav.lua
@@ -40,7 +39,6 @@ Prep\Diag.lua
 Prep\ATT.lua
 Prep\Data.lua
 Prep\Core.lua
-Prep\Tour.lua
 Prep\Widgets.lua
 Prep\UI.lua
 Window.lua

@@ -1,6 +1,7 @@
 local _, ns = ...; if ns.Module then _, ns = ns.Module("ForeverHeal") end
 local L = ns.L
 local Print = ns.Print
+local K = ns.Kit
 
 local GREEN, RED, GREY = "|cff40d860", "|cffff5050", "|cffa0a0a0"
 
@@ -216,277 +217,6 @@ function ns.Announce(a, b)
   ns.lastAnnounce = lines
 end
 
-----------------------------------------------------------------------
--- Panneau à côté de la fiche personnage
-----------------------------------------------------------------------
-local panel
-local K = ns.Kit
-local SECTION_ICON = {}
-local function SectionIcons()
-  SECTION_ICON[L.p_stats] = "Interface\\Icons\\Spell_Holy_InnerFire"
-  SECTION_ICON[L.p_mix] = "Interface\\Icons\\Spell_Holy_LesserHeal"
-  SECTION_ICON[L.p_results] = "Interface\\Icons\\Spell_Holy_GreaterHeal"
-  SECTION_ICON[L.p_worth] = "Interface\\Icons\\INV_Misc_Coin_02"
-  SECTION_ICON[L.upTitle] = "Interface\\Icons\\INV_Misc_Bag_10"
-end
-
--- Panneau : titres de rubrique (icône, lettres de livre, filet doré) et lignes, recréés à chaque affichage
-local pool = { head = {}, fs = {} }
-local pused = { head = 0, fs = 0 }
-local function PHead()
-  pused.head = pused.head + 1
-  local h = pool.head[pused.head]
-  if not h then
-    h = CreateFrame("Frame", nil, panel.child)
-    h:SetHeight(26)
-    h.icon = h:CreateTexture(nil, "ARTWORK")
-    h.icon:SetSize(20, 20)
-    h.icon:SetPoint("LEFT", 2, 0)
-    h.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    h.fs = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    h.fs:SetPoint("LEFT", h.icon, "RIGHT", 8, 0)
-    K.TitleFont(h.fs, 15, "GameFontNormal")
-    h.rest = h:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    h.rest:SetPoint("LEFT", h.fs, "RIGHT", 6, 0)
-    h.rule = h:CreateTexture(nil, "ARTWORK")
-    h.rule:SetPoint("BOTTOMLEFT"); h.rule:SetPoint("BOTTOMRIGHT"); h.rule:SetHeight(1)
-    h.rule:SetColorTexture(0.65, 0.48, 0.16, 0.8)
-    pool.head[pused.head] = h
-  end
-  h:Show()
-  return h
-end
-local function PLine()
-  pused.fs = pused.fs + 1
-  local f = pool.fs[pused.fs]
-  if not f then
-    f = panel.child:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    f:SetJustifyH("LEFT")
-    f:SetJustifyV("TOP")
-    f:SetSpacing(2)
-    pool.fs[pused.fs] = f
-  end
-  f:ClearAllPoints()
-  f:Show()
-  return f
-end
-
--- text : le texte du panneau (titres marqués \1titre\2suite)
-local function RenderPanel(text)
-  for _, k in ipairs({ "head", "fs" }) do for _, o in ipairs(pool[k]) do o:Hide() end; pused[k] = 0 end
-  local width = panel.child:GetWidth()
-  if type(width) ~= "number" or width <= 0 then width = 380 end
-  local y = -2
-  for line in (text .. "\n"):gmatch("(.-)\n") do
-    local title, rest = line:match("^\1(.-)\2(.*)$")
-    if title then
-      local h = PHead()
-      h:ClearAllPoints()
-      h:SetPoint("TOPLEFT", 0, y - 4)
-      h:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
-      h.icon:SetTexture(SECTION_ICON[title] or SECTION_ICON[L.p_stats])
-      h.fs:SetText(title)
-      h.rest:SetText(rest or "")
-      y = y - 34
-    elseif line == "" then
-      y = y - 4
-    else
-      local f = PLine()
-      f:SetWidth(width - 14)
-      f:SetText(line)
-      f:SetPoint("TOPLEFT", 10, y)
-      local fh = f:GetStringHeight()
-      y = y - ((type(fh) == "number" and fh > 0) and fh or 12) - 3
-    end
-  end
-  panel.child:SetHeight(-y + 8)
-end
-
--- Panneau visuel : tuiles, barres des sorts, barres des gains, ligne de caractéristiques (09/11/2026 : moins de texte)
-local vis = { rows = {} }
-local function VRow()
-  vis.used = vis.used + 1
-  local r = vis.rows[vis.used]
-  if not r then
-    r = CreateFrame("Frame", nil, panel.child)
-    r:SetHeight(24)
-    r:EnableMouse(true)
-    r.icon = r:CreateTexture(nil, "ARTWORK")
-    r.icon:SetSize(18, 18)
-    r.icon:SetPoint("LEFT", 4, 0)
-    r.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    r.name:SetPoint("LEFT", 28, 0)
-    r.name:SetWidth(128)
-    r.name:SetJustifyH("LEFT")
-    if r.name.SetWordWrap then r.name:SetWordWrap(false) end
-    r.bg = r:CreateTexture(nil, "BACKGROUND")
-    r.bg:SetPoint("LEFT", 160, 0)
-    r.bg:SetSize(130, 10)
-    r.bg:SetColorTexture(1, 1, 1, 0.08)
-    r.bar = r:CreateTexture(nil, "ARTWORK")
-    r.bar:SetPoint("LEFT", r.bg, "LEFT", 0, 0)
-    r.bar:SetHeight(10)
-    r.right = r:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    r.right:SetPoint("RIGHT", -6, 0)
-    r.right:SetJustifyH("RIGHT")
-    r:SetScript("OnEnter", function(self)
-      if not self.tip then return end
-      GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-      GameTooltip:SetText(self.tip[1], 1, 0.82, 0)
-      for i = 2, #self.tip do GameTooltip:AddLine(self.tip[i], 1, 1, 1, true) end
-      GameTooltip:Show()
-    end)
-    r:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    vis.rows[vis.used] = r
-  end
-  r:Show()
-  return r
-end
-
-local function RenderVisual(d)
-  for _, k in ipairs({ "head", "fs" }) do for _, o in ipairs(pool[k]) do o:Hide() end; pused[k] = 0 end
-  for _, r in ipairs(vis.rows) do r:Hide() end
-  if vis.tileSet then vis.tileSet.Hide() end
-  vis.used = 0
-  local width = panel.child:GetWidth()
-  if type(width) ~= "number" or width <= 0 then width = 380 end
-  local y = -4
-  if not d.priest then
-    local f = PLine(); f:SetWidth(width - 14); f:SetText(L.notPriest); f:SetPoint("TOPLEFT", 10, y)
-    panel.child:SetHeight(60)
-    return
-  end
-  -- tuiles (composant commun, dans la zone qui défile)
-  vis.tileSet = vis.tileSet or K.Tiles(panel.child, 4, 52)
-  local defs = {}
-  for i, td in ipairs(d.tiles) do
-    defs[i] = { value = td.value, label = td.label, tip = td.tip,
-                color = td.warn and { 1, 0.66, 0.24 } or { 0.25, 0.85, 0.38 } }
-  end
-  vis.tileSet.Render(defs, 4, y, width - 8)
-  y = y - 62
-  local function Head(title, icon, rest)
-    local h = PHead()
-    h:ClearAllPoints()
-    h:SetPoint("TOPLEFT", 0, y - 2)
-    h:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
-    h.icon:SetTexture(icon)
-    h.fs:SetText(title)
-    h.rest:SetText(rest or "")
-    y = y - 32
-  end
-  local function Row(icon, name, frac, color, right, tip)
-    local r = VRow()
-    r:ClearAllPoints()
-    r:SetPoint("TOPLEFT", 0, y)
-    r:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
-    r.icon:SetShown(icon ~= nil)
-    if icon then r.icon:SetTexture(icon) end
-    r.name:SetText(name)
-    local room = math.max(60, width - 160 - 108)            -- 108 : place du chiffre de droite (« +433 soignés »)
-    r.bg:SetWidth(room)
-    local bw = math.max(1, room * math.max(0, math.min(1, frac or 0)))
-    r.bar:SetWidth(bw)
-    r.bar:SetColorTexture(color[1], color[2], color[3], 0.9)
-    r.right:SetText(right or "")
-    r.tip = tip
-    y = y - 26
-  end
-  -- tes sorts
-  Head(L.v_spells, "Interface\\Icons\\Spell_Holy_LesserHeal",
-       GREY .. ((d.observed or 0) >= 15 and string.format(L.v_spellsObserved, d.observed) or L.v_spellsDefault) .. "|r")
-  for _, sp in ipairs(d.spells) do
-    local icon = sp.id and C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(sp.id) or nil
-    Row(icon, sp.name, sp.share, { 1, 0.78, 0.3 }, Fmt(sp.share * 100) .. " %  ·  " .. Fmt(sp.avg),
-        { sp.name, string.format(L.v_spellTip, Fmt(sp.share * 100), Fmt(sp.normal), Fmt(sp.avg)) })
-  end
-  -- ce qui t'aide le plus
-  Head(L.v_worth, "Interface\\Icons\\INV_Misc_Coin_02")
-  local top = math.max(1, d.gains[1] and d.gains[1].healed or 1)
-  for i, g in ipairs(d.gains) do
-    local best = i == 1 and g.healed > 0
-    Row(nil, (best and GREEN or "") .. g.label .. (best and "|r" or ""), g.healed / top, best and { 0.25, 0.85, 0.38 } or { 0.45, 0.6, 0.45 },
-        (best and GREEN or "") .. string.format(L.v_healed, Signed(g.healed)) .. (best and "|r" or ""),
-        { g.label, string.format(L.v_gainTip, Signed(g.hps, 1), g.oom, Signed(g.healed)), best and L.v_bestTip or nil })
-  end
-  Row(nil, GREY .. d.survival.label .. "|r", 0, { 0.5, 0.5, 0.5 }, GREY .. string.format(L.v_survival, Signed(d.survival.hp)) .. "|r",
-      { d.survival.label, L.v_survivalTip })
-  -- caractéristiques, en une ligne (conversions au survol)
-  y = y - 6
-  local r = VRow()
-  r:ClearAllPoints()
-  r:SetPoint("TOPLEFT", 0, y)
-  r:SetPoint("RIGHT", panel.child, "RIGHT", 0, 0)
-  r.icon:Hide(); r.bar:SetWidth(1); r.bar:SetColorTexture(0, 0, 0, 0); r.bg:SetWidth(1); r.bg:SetColorTexture(0, 0, 0, 0)
-  r.name:SetWidth(width - 20)
-  r.name:SetText(GREY .. d.footer .. "|r")
-  r.right:SetText("")
-  r.tip = { L.v_footerTitle, d.footerTip }
-  y = y - 26
-  panel.child:SetHeight(-y + 8)
-  -- remet le fond des barres pour la prochaine fois (la ligne de caractéristiques l'a effacé)
-  r.restore = true
-end
-ns._RenderVisual = RenderVisual
-
-local function CreatePanel()
-  if panel then return panel end
-  SectionIcons()
-  panel = CreateFrame("Frame", "ForeverHealPanel", UIParent, "BasicFrameTemplateWithInset")
-  ns.SafeClose(panel)
-  ns.panel = panel
-  panel:SetSize(440, 600)
-  panel:SetPoint("CENTER")
-  panel:SetFrameStrata("HIGH")
-  panel:SetMovable(true)
-  panel:EnableMouse(true)
-  panel:RegisterForDrag("LeftButton")
-  panel:SetScript("OnDragStart", panel.StartMoving)
-  panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
-  panel:Hide()
-  local logo = panel:CreateTexture(nil, "OVERLAY")
-  logo:SetSize(16, 16)
-  logo:SetPoint("TOPLEFT", 8, -4)
-  logo:SetTexture("Interface\\Icons\\Spell_Holy_GreaterHeal")
-  logo:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-  local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-  title:SetPoint("LEFT", logo, "RIGHT", 6, 0)
-  title:SetText(L.panelTitle)
-  panel.diagBtn = ns.MakeDiagButton(panel)
-
-  -- onglets : ton prêtre / tes sacs
-  -- (onglets « Mon soigneur » / « Mes sacs » retirés le 09/11/2026 : « Mes sacs » ne servait pas ; les améliorations des
-  -- sacs sont dans l'onglet Équipement et dans « À faire »)
-
-  -- actions en icônes
-  panel.whereBtn = K.Action(panel, "Interface\\Icons\\INV_Letter_03", "", L.tipWhere, function(self)
-    ns.db.announceWhere = (ns.db.announceWhere == "screen") and "chat" or "screen"
-    self.label:SetText(L["whereShort_" .. ns.db.announceWhere])
-  end)
-  panel.whereBtn:SetPoint("TOPRIGHT", -18, -30)
-  -- (bouton « Oublier » retiré le 09/11/2026 : la répartition des sorts se refait toute seule ; /fheal oublier reste)
-  -- (bouton « Macros » retiré le 09/11/2026 : les conseils de rangs demandent les montants soignés du journal de combat,
-  -- interdit aux addons sur Forever ; il n'a jamais rien créé)
-
-  local sheet = CreateFrame("Frame", nil, panel)
-  sheet:SetPoint("TOPLEFT", 12, -76)
-  sheet:SetPoint("BOTTOMRIGHT", -12, 12)
-  K.Panel(sheet, 0.55)
-  local sf = CreateFrame("ScrollFrame", nil, sheet, "UIPanelScrollFrameTemplate")
-  sf:SetPoint("TOPLEFT", 8, -6)
-  sf:SetPoint("BOTTOMRIGHT", -28, 6)
-  local child = CreateFrame("Frame", nil, sf)
-  child:SetSize(380, 10)
-  sf:SetScrollChild(child)
-  panel.child = child
-  panel:SetScript("OnShow", function()
-    panel.whereBtn.label:SetText(L["whereShort_" .. ns.db.announceWhere])
-    ns.RefreshPanel()
-  end)
-  return panel
-end
-
 -- titre de rubrique, marqué pour l'affichage (\1titre\2) ; ns.PanelText() rend le texte lisible
 local function H(t) return "\1" .. t .. "\2" end
 
@@ -604,33 +334,13 @@ function ns.UpgradesRaw()
   return table.concat(out, "\n")
 end
 
--- Un calcul qui échoue s'affiche dans le panneau (et dans le diagnostic) au lieu de le laisser figé (05/11/2026)
+-- 4.0 : l'onglet Soins et la fiche collée au personnage (Pages.lua) remplacent l'ancien panneau ; ici, on les redessine
 function ns.RefreshPanel()
-  if not panel or not panel:IsShown() then return end
-  for _, r in ipairs(vis.rows) do
-    r:Hide()
-    if r.restore then r.restore = nil; r.bg:SetColorTexture(1, 1, 1, 0.08); r.name:SetWidth(128) end
-  end
-  if vis.tileSet then vis.tileSet.Hide() end
-  if panel.mode ~= "upgrades" then
-    local ok, d = pcall(ns.PanelData)
-    if ok and d then
-      local ok2, err = pcall(RenderVisual, d)
-      if ok2 then return end
-      d = err
-    end
-    ns.lastPanelError = tostring(d)
-    RenderPanel("|cffff6a5a" .. string.format(L.panelError, tostring(d)) .. "|r")
-    return
-  end
-  local ok, text = pcall(ns.UpgradesRaw)
-  if not ok then
-    ns.lastPanelError = tostring(text)
-    text = "|cffff6a5a" .. string.format(L.panelError, tostring(text)) .. "|r"
-  end
-  RenderPanel(text)
+  local root = ns.root
+  if not root then return end
+  if root.CurrentPage and root.CurrentPage() == "heal" and root.RefreshNow then root.RefreshNow() end
+  if root.RefreshSheet then root.RefreshSheet() end
 end
-
 
 local alert
 -- Alerte bien visible (06/11/2026 : noyée dans le texte de combat) : cadre sombre à bordure orange qui pulse, icône de
@@ -743,24 +453,12 @@ end
 local function AttachToCharacterFrame()
   if not CharacterFrame then return end
   CharacterFrame:HookScript("OnShow", function()
-    if not ns.db.panel then return end
-    -- 4.0 : la fiche de ForeverCompagnon (même style que la fenêtre) remplace l'ancien panneau
-    if ns.root and ns.root.ShowSheet and ns.root.ShowSheet(CharacterFrame) then return end
-    CreatePanel()
-    panel:ClearAllPoints()
-    panel:SetPoint("TOPLEFT", CharacterFrame, "TOPRIGHT", -30, -12)
-    panel:Show()
+    if ns.db.panel and ns.root and ns.root.ShowSheet then ns.root.ShowSheet(CharacterFrame) end
   end)
-  CharacterFrame:HookScript("OnHide", function()
-    if ns.root and ns.root.HideSheet then ns.root.HideSheet() end
-    if panel and panel.attached ~= false then panel:Hide() end
-  end)
+  CharacterFrame:HookScript("OnHide", function() if ns.root and ns.root.HideSheet then ns.root.HideSheet() end end)
 end
 
-function ns.TogglePanel()
-  CreatePanel()
-  if panel:IsShown() then panel:Hide() else panel:ClearAllPoints(); panel:SetPoint("CENTER"); panel:Show() end
-end
+function ns.TogglePanel() if ns.root and ns.root.Open then ns.root.Open("heal") end end
 
 ----------------------------------------------------------------------
 -- Démarrage, commandes

@@ -351,15 +351,17 @@ SlashCmdList.FOREVERPREP("raid")
 check(ForeverPrepDB.context == "raid", "commande /prep raid")
 -- 8. Bouton flottant
 Char({ level = 38, class = "MAGE", talents = { 31 }, bags = {} })
-ns.ui:Hide()
+-- 4.0 : la fiche est l'onglet Donjon de ForeverCompagnon (simulé ici)
+local opened = {}
+ns.root = ns.root or {}
+ns.root.Open = function(k) opened[#opened + 1] = k end
+ns.root.CurrentPage = function() return "prep" end
 RunTimers(5)
 local fb = ns.floatButton
 check(fb and fb.shown, "bouton « Prépa » affiché après la connexion")
 check(fb.summary and fb.summary ~= ns.L.allGood, "bouton : résumé des manques dans l'infobulle")
 fb.scripts.OnClick(fb, "LeftButton")
-check(ns.ui.shown, "clic sur le bouton : fiche ouverte (hors déclencheurs automatiques)")
-fb.scripts.OnClick(fb, "LeftButton")
-check(not ns.ui.shown, "second clic : fiche fermée")
+check(opened[#opened] == "prep", "clic sur le bouton : onglet Donjon de ForeverCompagnon")
 SlashCmdList.FOREVERPREP("bouton")
 check(not fb.shown and ForeverPrepDB.float.shown == false, "/prep bouton : bouton masqué")
 SlashCmdList.FOREVERPREP("bouton")
@@ -370,10 +372,6 @@ check(diagText:find("diagnostic", 1, true) and not diagText:find("Erreur", 1, tr
 if os.getenv("SHOW_DIAG") then print(diagText) end
 SlashCmdList["FOREVERPREP"]("diag")
 ns.lastDiag = nil
-local dbtn = ns.ui and ns.ui.diagBtn
-check(dbtn and dbtn.scripts.OnClick, "bouton « Diag » présent dans la fenêtre")
-dbtn.scripts.OnClick(dbtn)
-check(ns.lastDiag and ns.lastDiag:find("diagnostic", 1, true), "clic sur « Diag » : diagnostic ouvert sans commande écrite")
 -- 9. performances : analyses regroupées, aucune en combat
 local analyses = 0
 local realAnalyze = ns.Analyze
@@ -407,25 +405,14 @@ end
 check(not mana3, "niveau 3 : pas de ligne « Potions de mana » (la première est au niveau 5)")
 check(not band3 or band3.status ~= "bad", "bandages manquants : à faire (orange), pas bloquant (rouge)")
 P.level = saveLevel
--- fenêtre : bandeau d'état, onglets Donjon / Raid, rôle avec icône
-if not ns.ui:IsShown() then ns.Toggle() end
-ns.ui.tabDungeon.scripts.OnClick(ns.ui.tabDungeon)
-check(ns.ui.bannerText:GetText() ~= "" and ns.ui.tabDungeon.active and not ns.ui.tabRaid.active, "fenêtre : bandeau d'état, onglet Donjon actif")
-ns.ui.tabRaid.scripts.OnClick(ns.ui.tabRaid)
-check(ns.ui.tabRaid.active and ns.ui.title:GetText() == ns.L.titleRaid, "onglet Raid : fiche du raid")
-ns.ui.tabDungeon.scripts.OnClick(ns.ui.tabDungeon)
-
--- en combat (05/11/2026 : fenêtre vide) : pas d'analyse, la dernière est montrée, mise à jour à la sortie du combat
+-- en combat : pas d'analyse (le jeu cache une partie des informations), mise à jour à la sortie du combat
 local analysesBefore = 0
 local realAn = ns.Analyze
 ns.Analyze = function(...) analysesBefore = analysesBefore + 1; return realAn(...) end
 combat = true
-if not ns.ui:IsShown() then ns.Toggle() end
-ns.Refresh()
-check(analysesBefore == 0 and ns.ui.bannerSub:GetText():find(ns.L.combatStale, 1, true), "en combat : pas d'analyse, dernière fiche montrée (« " .. ns.L.combatStale .. " »)")
+ns.GuideToVendor()
+check(analysesBefore == 0, "en combat : Guide-moi n'analyse pas")
 combat = false
-Fire("PLAYER_REGEN_ENABLED")
-check(analysesBefore >= 1 and not ns.ui.bannerSub:GetText():find(ns.L.combatStale, 1, true), "sortie du combat : fiche mise à jour")
 ns.Analyze = realAn
 -- croix de fermeture : cache la fenêtre sans passer par HideUIPanel (réservé en combat)
 local fake = CreateFrame("Frame", "ForeverPrepFakeFrame", UIParent, "BasicFrameTemplateWithInset")

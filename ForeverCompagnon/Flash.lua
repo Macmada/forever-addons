@@ -31,7 +31,7 @@ local ROW_H = 30
 local function Pos()
   local cf = _G.CharacterFrame
   frame:ClearAllPoints()
-  local hp = _G.ForeverHealPanel
+  local hp = _G.ForeverCompagnonSheet
   if root.db and root.db.flashPos then                                  -- position choisie (glissée) : toujours là
     frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", root.db.flashPos[1], root.db.flashPos[2])
   elseif cf and cf:IsShown() then

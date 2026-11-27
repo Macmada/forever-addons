@@ -30,7 +30,12 @@ local function Entries()
   }
   if loot and loot.db then
     list[#list + 1] = { T.gear }
-    list[#list + 1] = { loot.L.optLootAlert, function() return loot.db.lootAlert end, function(v) loot.db.lootAlert = v end }
+    for _, o in ipairs({ { "optLootAlert", "lootAlert" }, { "optRoll", "rollHelp" }, { "optQuest", "questHelp" },
+                         { "optTip", "tooltipHint" }, { "optHigher", "higher" } }) do
+      local key = o[2]
+      list[#list + 1] = { loot.L[o[1]], function() return loot.db[key] end,
+                          function(v) loot.db[key] = v; loot.version = (loot.version or 0) + 1; if loot.ForgetMemo then loot.ForgetMemo() end end }
+    end
   end
   if prep and prep.db then
     local PL = prep.L
