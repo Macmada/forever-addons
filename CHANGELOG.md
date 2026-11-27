@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v4.0.3 (ForeverCompagnon 4.0.3) : corrections d'après les premiers essais en jeu
+- Donjon : case « obligatoire » de retour sur chaque ligne réglable ; une note longue n'écrase plus le libellé (texte entier au survol).
+- Accueil : maître de classe lu correctement sur Forever (plus de « (available) », les sorts déjà appris ne comptent plus dans « à apprendre »).
+- Équipement : la liste ne passe plus sous le texte d'aide.
+- Fiche Soins (C) : libellés courts, noms des sorts en entier, conseil sous le nom, un peu plus large.
+- Soins : libellé du mana sans coupure, efficacité toujours à une décimale ; titres de rubrique sans chevauchement.
+
 ## v4.0.2 (ForeverCompagnon 4.0.2) : fiche Soins à côté de la fiche du personnage, Nova sacrée
 - La fiche Soins (C) ne cache plus les onglets de droite de la fiche du personnage ; elle se déplace en la glissant (place retenue, `/fp fiche place` pour la remettre à côté).
 - Soins : la Nova sacrée est comptée ; Mot de pouvoir : Bouclier et Prière de guérison (absorption, rebonds) ne sont plus signalés comme absents.
