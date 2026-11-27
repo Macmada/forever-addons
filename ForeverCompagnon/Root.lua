@@ -45,7 +45,7 @@ root.L = FR and {
   testTitle = "ForeverCompagnon — auto-test", probeTitle = "ForeverCompagnon — sonde du client",
   testHelp = "Copie ce rapport (Ctrl+A, Ctrl+C) et colle-le à Claude.",
   ok = "OK", ko = "ÉCHEC", skip = "non testé",
-  help = "Commandes : /fp (maintenant), /fp soins, /fp equipement, /fp prepa, /fp addons, /fp healbot [voir|annuler], /fp vols, /fp way x y [nom], /fp test, /fp sonde, /fp diag ; problèmes : /fp erreurs [afficher|effacer|muet], /fp log, /fp rapport",
+  help = "Commandes : /fp (maintenant), /fp soins, /fp equipement, /fp prepa, /fp addons, /fp healbot [voir|annuler], /fp vols, /fp way x y [nom], /fp options, /fp fiche place, /fp test, /fp sonde, /fp diag ; problèmes : /fp erreurs [afficher|effacer|muet], /fp log, /fp rapport",
   ownBank = "dans ta banque", ownOther = "chez %s",
   scanButton = "Relever les prix", scanTip = "ForeverCompagnon relève tous les prix de l'hôtel des ventes (une fois toutes les 15 minutes, limite du jeu) pour la préparation.",
   scanStart = "Relevé des prix de l'hôtel des ventes en cours…", scanDone = "Prix relevés : %d objets (%d enchères).",

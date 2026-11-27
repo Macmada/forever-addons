@@ -103,6 +103,9 @@ SlashCmdList.FOREVERCOMPAGNON = function(msg)
   if way then root.Nav.Command(way)
   elseif msg == "addons" or msg == "addon" then root.ShowAddons()
   elseif msg == "options" or msg == "config" then root.ShowOptions()
+  elseif msg == "fiche place" or msg == "sheet reset" then
+    root.db.sheetPos = nil
+    root.Print(root.FR and "Fiche Soins : remise à côté de la fiche du personnage." or "Healing sheet: back next to the character frame.")
   elseif msg == "outils" or msg == "tools" then root.Open("now"); root.ShowToolsMenu()
   elseif hb then root.HealBot.Command(hb)
   elseif msg == "vols" or msg == "taxi" or msg == "flights" then root.Nav.ListTaxi()

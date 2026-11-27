@@ -504,6 +504,16 @@ local function Sheet()
   sheet:SetSize(SW, SH)
   sheet:SetFrameStrata("HIGH")
   sheet:EnableMouse(true)
+  -- déplaçable (glisser), place retenue ; /fp fiche place : retour à côté de la fiche du personnage
+  sheet:SetMovable(true)
+  sheet:SetClampedToScreen(true)
+  sheet:RegisterForDrag("LeftButton")
+  sheet:SetScript("OnDragStart", sheet.StartMoving)
+  sheet:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+    local x, y = self:GetLeft(), self:GetTop()
+    if root.db and type(x) == "number" and type(y) == "number" then root.db.sheetPos = { x = x, y = y } end
+  end)
   sheet:Hide()
   sheet.bg = sheet:CreateTexture(nil, "BACKGROUND")
   sheet.bg:SetAllPoints()
@@ -559,7 +569,11 @@ function root.ShowSheet(anchor)
   if not HealView() then return false end
   Sheet()
   sheet:ClearAllPoints()
-  if anchor then sheet:SetPoint("TOPLEFT", anchor, "TOPRIGHT", -30, -12) else sheet:SetPoint("CENTER") end
+  local pos = root.db and root.db.sheetPos
+  if pos and pos.x and pos.y then sheet:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", pos.x, pos.y)
+  -- à droite de la fiche du personnage, sans couvrir ses onglets de droite (27/11/2026 : -30 les cachait)
+  elseif anchor then sheet:SetPoint("TOPLEFT", anchor, "TOPRIGHT", 40, -12)
+  else sheet:SetPoint("CENTER") end
   if sheet:IsShown() then root.RefreshSheet() else sheet:Show() end
   return true
 end
