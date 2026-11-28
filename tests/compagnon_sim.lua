@@ -877,9 +877,9 @@ do
   -- buffs suivis en combat (WatchHoT) : ceux du prêtre de Forever ajoutés par leur nom, un choix déjà fait gardé
   _G.HealBot_Globals.WatchHoT = { PRIE = { ["Rénovation"] = 2 } }
   local saveSpell3 = _G.C_Spell
-  _G.C_Spell = { GetSpellName = function(id) return ({ [139] = "Rénovation", [1243] = "Mot de pouvoir : Robustesse", [588] = "Feu intérieur" })[id] end }
+  _G.C_Spell = { GetSpellName = function(id) return ({ [139] = "Rénovation", [1243] = "Mot de pouvoir : Robustesse", [588] = "Feu intérieur", [1459] = "Intelligence des Arcanes" })[id] end }
   root.Game.used.spellName = nil
-  check(HB.SetupBuffWatch() == 2 and HealBot_Globals.WatchHoT.PRIE["Mot de pouvoir : Robustesse"] == 3 and HealBot_Globals.WatchHoT.PRIE["Feu intérieur"] == 1
+  check(HB.SetupBuffWatch() == 3 and HealBot_Globals.WatchHoT.MAGE["Intelligence des Arcanes"] == 3 and HealBot_Globals.WatchHoT.PRIE["Mot de pouvoir : Robustesse"] == 3 and HealBot_Globals.WatchHoT.PRIE["Feu intérieur"] == 1
         and HealBot_Globals.WatchHoT.PRIE["Rénovation"] == 2, "buffs suivis en combat : Robustesse, Feu intérieur ajoutés ; Rénovation (ton choix) gardée")
   _G.C_Spell = saveSpell3
   root.Game.used.spellName = nil

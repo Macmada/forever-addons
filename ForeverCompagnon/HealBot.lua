@@ -286,21 +286,31 @@ end
 -- En combat, la rangée native ne montre que les buffs de la liste « buffs suivis » d'HealBot (HealBot_Globals.WatchHoT,
 -- lue par HBCA_ConfiguredBuffFilters) ; celle du prêtre ne contient que des sorts du WoW moderne (sauf Rénovation, Bouclier).
 -- On y ajoute les buffs du prêtre de Forever, par leur nom dans ta langue ; valeur 1 = posé par toi, 3 = par n'importe qui.
+-- Les buffs des autres classes (posés par n'importe qui, valeur 3) sont ajoutés quelle que soit ta classe : ce sont eux que
+-- tu vois sur tes alliés. Rangés sous la clé de leur classe dans HealBot (il les lit toutes).
 local WATCH = {
-  PRIEST = { key = "PRIE", spells = { { 139, 1 }, { 17, 1 }, { 1243, 3 }, { 21562, 3 }, { 588, 1 }, { 14752, 3 }, { 27681, 3 },
-                                      { 976, 3 }, { 6346, 3 }, { 10060, 3 } } },
+  PRIE = { { 139, 1 }, { 17, 1 }, { 1243, 3 }, { 21562, 3 }, { 588, 1 }, { 14752, 3 }, { 27681, 3 }, { 976, 3 }, { 27683, 3 },
+           { 6346, 3 }, { 10060, 3 } },
+  MAGE = { { 1459, 3 }, { 23028, 3 }, { 1008, 3 }, { 604, 3 } },                       -- Intelligence/Illumination des arcanes, Amplifier/Atténuer la magie
+  DRUI = { { 1126, 3 }, { 21849, 3 }, { 467, 3 }, { 774, 3 }, { 8936, 3 }, { 29166, 3 } }, -- Marque/Don du fauve, Épines, Récupération, Rétablissement, Innervation
+  PALA = { { 19740, 3 }, { 19742, 3 }, { 20217, 3 }, { 1038, 3 }, { 19977, 3 }, { 20911, 3 }, { 25782, 3 }, { 25894, 3 },
+           { 25898, 3 }, { 25895, 3 }, { 25890, 3 }, { 25899, 3 }, { 1022, 3 }, { 1044, 3 }, { 6940, 3 } },  -- bénédictions (et supérieures), Protection, Liberté, Sacrifice
+  WARR = { { 6673, 3 } },                                                                -- Cri de guerre
+  HUNT = { { 19506, 3 } },                                                               -- Aura de précision
+  WARL = { { 5697, 3 }, { 132, 3 } },                                                    -- Respiration interminable, Détection de l'invisibilité
 }
 function HB.SetupBuffWatch()
   local g = _G.HealBot_Globals
-  local _, class = UnitClass("player")
-  local w = WATCH[class]
-  if type(g) ~= "table" or not w then return 0 end
+  if type(g) ~= "table" then return 0 end
   g.WatchHoT = g.WatchHoT or {}
-  g.WatchHoT[w.key] = g.WatchHoT[w.key] or {}
-  local list, n = g.WatchHoT[w.key], 0
-  for _, sp in ipairs(w.spells) do
-    local name = G_SpellName and G_SpellName(sp[1]) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(sp[1]))
-    if name and list[name] == nil then list[name] = sp[2]; n = n + 1 end
+  local n = 0
+  for key, spells in pairs(WATCH) do
+    g.WatchHoT[key] = g.WatchHoT[key] or {}
+    local list = g.WatchHoT[key]
+    for _, sp in ipairs(spells) do
+      local name = G_SpellName and G_SpellName(sp[1]) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(sp[1]))
+      if name and list[name] == nil then list[name] = sp[2]; n = n + 1 end
+    end
   end
   return n
 end
