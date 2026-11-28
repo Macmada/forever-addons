@@ -235,14 +235,15 @@ end
 function HB.SetupDebuffs()
   local c = _G.HealBot_Config_Cures
   local slot = _G.HealBot_Options_getDropDownId_bySpec
-  if type(c) ~= "table" or type(slot) ~= "function" then return 0 end
+  if type(c) ~= "table" then return 0, "HealBot_Config_Cures absent" end
+  if type(slot) ~= "function" then return 0, "HealBot_Options_getDropDownId_bySpec absent" end
   local _, class = UnitClass("player")
   local plan = CURES[class]
-  if not plan then return 0 end
+  if not plan then return 0, "classe " .. tostring(class) .. " non prévue" end
   c.HealBotDebuffText = c.HealBotDebuffText or {}
   c.HealBotDebuffDropDown = c.HealBotDebuffDropDown or {}
   local none = _G.HEALBOT_WORDS_NONE or "None"
-  local used, n = {}, 0
+  local used, n, missing = {}, 0, {}
   for k = 1, 5 do
     local t = c.HealBotDebuffText[slot(k)]
     if t and t ~= none and (c.HealBotDebuffDropDown[slot(k)] or 1) > 1 then used[t] = true end
@@ -253,6 +254,7 @@ function HB.SetupDebuffs()
     for _, id in ipairs(choices) do
       if not name and KnownSpell(id) then name = G_SpellName and G_SpellName(id) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id)) end
     end
+    if not name then missing[#missing + 1] = table.concat(choices, "/") end
     if name and not used[name] then
       while k <= 5 do
         local t = c.HealBotDebuffText[slot(k)]
@@ -267,7 +269,23 @@ function HB.SetupDebuffs()
   end
   c.DebuffWatch, c.DebuffWatchInCombat = true, true
   if n > 0 and type(_G.HealBot_Timers_Set) == "function" then pcall(_G.HealBot_Timers_Set, "AURA", "DebuffReset") end
-  return n
+  -- HealBot relit ses réglages de débuffs tout de suite si sa fonction est là (sinon au prochain passage de ses minuteries)
+  if n > 0 and type(_G.HealBot_Options_Debuff_Reset) == "function" then pcall(_G.HealBot_Options_Debuff_Reset) end
+  local why = (#missing > 0) and ("sorts inconnus : " .. table.concat(missing, ", ")) or nil
+  return n, why
+end
+
+-- Emplacements « Débuffs » d'HealBot tels qu'il les a retenus (pour comprendre un « AUCUN »)
+function HB.DebuffSlots()
+  local c = _G.HealBot_Config_Cures
+  local slot = _G.HealBot_Options_getDropDownId_bySpec
+  if type(c) ~= "table" or type(slot) ~= "function" then return "?" end
+  local parts = {}
+  for k = 1, 5 do
+    local id = slot(k)
+    parts[#parts + 1] = k .. "=" .. tostring(c.HealBotDebuffText and c.HealBotDebuffText[id]) .. "/" .. tostring(c.HealBotDebuffDropDown and c.HealBotDebuffDropDown[id])
+  end
+  return "spec " .. tostring(_G.HealBot_Config and _G.HealBot_Config.CurrentSpec) .. " : " .. table.concat(parts, ", ")
 end
 
 function HB.Export()
@@ -609,10 +627,17 @@ function HB.Command(arg)
   elseif arg == "annuler" or arg == "undo" or arg == "restore" or arg == "moderne annuler" or arg == "modern undo" then HB.RemoveModern()
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()
-  elseif arg == "debuffs" or arg == "débuffs" or arg == "dispel" then root.Print((HB.DebuffText()))
-  elseif arg == "debuffs regler" or arg == "debuffs régler" or arg == "debuffs setup" then
-    HB.SetupDebuffs()
-    C_Timer.After(1, function() root.Print((HB.DebuffText())) end)
+  elseif arg == "debuffs" or arg == "débuffs" or arg == "dispel" or arg == "debuffs regler" or arg == "debuffs régler" or arg == "debuffs setup" then
+    local _, info = HB.DebuffText()
+    if #info.types == 0 or arg ~= "debuffs" then
+      local n, why = HB.SetupDebuffs()
+      root.Print(FR and "HealBot : %d sort(s) de dissipation réglé(s)%s" or "HealBot: %d dispel spell(s) set%s", n, why and (" — " .. why) or "")
+    end
+    C_Timer.After(1.5, function()
+      local text, i2 = HB.DebuffText()
+      root.Print(text)
+      if #i2.types == 0 then root.Print("  " .. HB.DebuffSlots()) end
+    end)
   elseif arg == "a" or arg == "b" or arg == "c" then HB.InstallModern(arg:upper())
   elseif arg == "moderne" or arg == "modern" then HB.InstallModern()
   elseif arg == "export" or arg == "releve" or arg == "relevé" then HB.Export()
