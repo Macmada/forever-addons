@@ -202,6 +202,9 @@ function HB.DebuffInfo()
   end
   local c = type(_G.HealBot_Config_Cures) == "table" and _G.HealBot_Config_Cures or {}
   info.watch, info.inCombat, info.bar, info.dispelOnly = c.DebuffWatch, c.DebuffWatchInCombat, c.CDCshownHB, c.CDCshownHBDispelOnly
+  local b = type(_G.HealBot_Config_Buffs) == "table" and _G.HealBot_Config_Buffs or {}
+  local g = type(_G.HealBot_Globals) == "table" and _G.HealBot_Globals or {}
+  info.buffsInCombat = (b.BuffWatch and b.BuffCustomWatchInCombat and g.CombatAurasOn ~= false) and true or false
   return info
 end
 function HB.DebuffText()
@@ -213,6 +216,7 @@ function HB.DebuffText()
   local lines = {
     (FR and "HealBot, débuffs avec une icône : " or "HealBot, debuffs with an icon: ") .. (#names > 0 and table.concat(names, ", ") or (FR and "AUCUN" or "NONE")),
     (FR and "  surveillance : %s, en combat : %s, barre colorée : %s" or "  watch: %s, in combat: %s, coloured bar: %s"):format(tostring(i.watch), tostring(i.inCombat), tostring(i.bar)),
+    (FR and "  tes buffs visibles en combat : %s" or "  your buffs shown in combat: %s"):format(tostring(i.buffsInCombat)),
   }
   return table.concat(lines, "\n"), i
 end
@@ -273,6 +277,23 @@ function HB.SetupDebuffs()
   if n > 0 and type(_G.HealBot_Options_Debuff_Reset) == "function" then pcall(_G.HealBot_Options_Debuff_Reset) end
   local why = (#missing > 0) and ("sorts inconnus : " .. table.concat(missing, ", ")) or nil
   return n, why
+end
+
+-- Buffs visibles en combat. Sur Forever, en combat, HealBot fait afficher par le jeu la rangée « HELPFUL|PLAYER » (les buffs
+-- que TU as posés : Rénovation, Bouclier, Robustesse…) si HealBot_Config_Buffs.BuffWatch et BuffCustomWatchInCombat sont vrais
+-- (HealBot_Forever_BuffsEnabled) et que ses auras de combat sont actives ; le nombre d'icônes suit le skin (5).
+function HB.SetupBuffs()
+  local b = _G.HealBot_Config_Buffs
+  if type(b) ~= "table" then return false end
+  b.BuffWatch, b.BuffCustomWatchInCombat = true, true
+  local g = _G.HealBot_Globals
+  if type(g) == "table" then
+    if g.CombatAurasOn == false then g.CombatAurasOn = true end
+    if (g.CombatAurasHots or 4) < 5 then
+      if type(_G.HealBot_CombatAuras_SetOption) == "function" then pcall(_G.HealBot_CombatAuras_SetOption, "hots", 5) else g.CombatAurasHots = 5 end
+    end
+  end
+  return true
 end
 
 -- Emplacements « Débuffs » d'HealBot tels qu'il les a retenus (pour comprendre un « AUCUN »)
@@ -464,6 +485,7 @@ function HB.InstallModern(style)
   if type(_G.HealBot_SetResetFlag) == "function" then pcall(_G.HealBot_SetResetFlag, "SOFT") end
   root.db.healbotStyle = style
   pcall(HB.SetupDebuffs)
+  pcall(HB.SetupBuffs)
   root.db.healbotDeficit = true                                   -- vie perdue affichée sur les barres
   root.Print(T.modernDone, style)
   return true
@@ -630,6 +652,7 @@ function HB.Command(arg)
   elseif arg == "debuffs" or arg == "débuffs" or arg == "dispel" or arg == "debuffs regler" or arg == "debuffs régler" or arg == "debuffs setup" then
     local _, info = HB.DebuffText()
     if #info.types == 0 or arg ~= "debuffs" then
+      pcall(HB.SetupBuffs)
       local n, why = HB.SetupDebuffs()
       root.Print(FR and "HealBot : %d sort(s) de dissipation réglé(s)%s" or "HealBot: %d dispel spell(s) set%s", n, why and (" — " .. why) or "")
     end

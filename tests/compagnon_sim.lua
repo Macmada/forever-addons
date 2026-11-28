@@ -874,6 +874,10 @@ do
         and HealBot_Config_Cures.HealBotDebuffDropDown["11"] == 4 and HealBot_Config_Cures.DebuffWatchInCombat and reset == 1,
         "débuffs : Abolir maladie et Dissipation de la magie surveillés sur le groupe, en combat")
   check(HB.SetupDebuffs() == 0, "débuffs : déjà réglés, rien de plus")
+  _G.HealBot_Config_Buffs = { BuffWatch = true, BuffCustomWatchInCombat = false }
+  _G.HealBot_Globals.CombatAurasHots = 4
+  check(HB.SetupBuffs() and HealBot_Config_Buffs.BuffCustomWatchInCombat and HealBot_Globals.CombatAurasHots == 5
+        and HB.DebuffInfo().buffsInCombat, "buffs : visibles en combat (rangée native, 5 icônes)")
   _G.IsPlayerSpell, _G.C_Spell = saveIPS2, saveSpell2
   root.Game.used.spellName = nil
   local ex = HB.ExportText()
