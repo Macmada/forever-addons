@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v4.2.3 (ForeverCompagnon 4.2.3) : HealBot, buffs en combat, durées, diagnostic des débuffs
+- Tes buffs (Rénovation, Bouclier, Robustesse…) visibles en combat, 5 icônes.
+- Durée restante toujours affichée sur les icônes de buffs et de débuffs (compte à rebours d'HealBot forcé).
+- `/fp healbot debuffs` : si aucun type n'est surveillé, règle les sorts de dissipation et demande à HealBot de relire ; sinon, donne la raison et ses emplacements « Débuffs ». Indique aussi les buffs en combat et les durées.
+
 ## v4.2.2 (ForeverCompagnon 4.2.2) : débuffs dissipables et durées dans HealBot
 - Débuffs : les sorts de dissipation sont choisis dans les réglages « Débuffs » d'HealBot (prêtre : Dissipation de la magie, Abolir maladie ; aussi paladin, druide, chaman), surveillés sur tout le groupe, en combat. Sans eux, aucune icône de débuff ne s'affichait en combat sur Forever. À l'installation des skins, ou `/fp healbot debuffs regler`. Tes réglages déjà faits sont gardés ; les clics ne sont pas touchés.
 - Durée restante toujours affichée sur les icônes de buffs et de débuffs (HealBot ne l'écrivait que sous 9 s).
