@@ -205,6 +205,7 @@ function HB.DebuffInfo()
   local b = type(_G.HealBot_Config_Buffs) == "table" and _G.HealBot_Config_Buffs or {}
   local g = type(_G.HealBot_Globals) == "table" and _G.HealBot_Globals or {}
   info.buffsInCombat = (b.BuffWatch and b.BuffCustomWatchInCombat and g.CombatAurasOn ~= false) and true or false
+  info.nums = g.CombatAurasNums == true
   return info
 end
 function HB.DebuffText()
@@ -216,7 +217,7 @@ function HB.DebuffText()
   local lines = {
     (FR and "HealBot, débuffs avec une icône : " or "HealBot, debuffs with an icon: ") .. (#names > 0 and table.concat(names, ", ") or (FR and "AUCUN" or "NONE")),
     (FR and "  surveillance : %s, en combat : %s, barre colorée : %s" or "  watch: %s, in combat: %s, coloured bar: %s"):format(tostring(i.watch), tostring(i.inCombat), tostring(i.bar)),
-    (FR and "  tes buffs visibles en combat : %s" or "  your buffs shown in combat: %s"):format(tostring(i.buffsInCombat)),
+    (FR and "  tes buffs visibles en combat : %s, durée restante affichée : %s" or "  your buffs shown in combat: %s, time left shown: %s"):format(tostring(i.buffsInCombat), tostring(i.nums)),
   }
   return table.concat(lines, "\n"), i
 end
@@ -289,6 +290,12 @@ function HB.SetupBuffs()
   local g = _G.HealBot_Globals
   if type(g) == "table" then
     if g.CombatAurasOn == false then g.CombatAurasOn = true end
+    -- durée restante sur les icônes natives (buffs et débuffs) : « toujours » (option nums de /hbca, HealBot_CombatAuras.lua),
+    -- quel que soit le seuil du skin ; reconstruit hors combat
+    if g.CombatAurasNums ~= true or g.CombatAurasNumsFollowSkin ~= false then
+      if type(_G.HealBot_CombatAuras_SetOption) == "function" then pcall(_G.HealBot_CombatAuras_SetOption, "nums", "on")
+      else g.CombatAurasNums, g.CombatAurasNumsFollowSkin = true, false end
+    end
     if (g.CombatAurasHots or 4) < 5 then
       if type(_G.HealBot_CombatAuras_SetOption) == "function" then pcall(_G.HealBot_CombatAuras_SetOption, "hots", 5) else g.CombatAurasHots = 5 end
     end
