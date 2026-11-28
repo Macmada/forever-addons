@@ -217,6 +217,59 @@ function HB.DebuffText()
   return table.concat(lines, "\n"), i
 end
 
+-- Règle les débuffs surveillés : pour chaque type que tu dissipes, le sort de dissipation, surveillé sur tout le groupe
+-- (comme les menus « Débuffs » d'HealBot : HealBot_Config_Cures.HealBotDebuffText/DropDown, puis « DebuffReset »).
+-- Un emplacement déjà réglé par toi est gardé. Rien d'autre (jamais les clics).
+local CURES = {
+  PRIEST = { { 552, 528 }, { 527 } },            -- Abolir maladie (sinon Guérison des maladies) ; Dissipation de la magie
+  PALADIN = { { 4987, 1152 } },                  -- Épuration (sinon Purification)
+  DRUID = { { 2893, 8946 }, { 2782 } },          -- Abolir le poison (sinon Guérison du poison) ; Délivrance de la malédiction
+  SHAMAN = { { 2870 }, { 526 } },                -- Guérison des maladies ; Guérison du poison
+}
+local G_SpellName = root.Game and root.Game.SpellName
+local function KnownSpell(id)
+  if IsPlayerSpell and IsPlayerSpell(id) then return true end
+  if C_SpellBook and C_SpellBook.IsSpellKnown then local ok, v = pcall(C_SpellBook.IsSpellKnown, id); if ok and v then return true end end
+  return IsSpellKnown and IsSpellKnown(id) or false
+end
+function HB.SetupDebuffs()
+  local c = _G.HealBot_Config_Cures
+  local slot = _G.HealBot_Options_getDropDownId_bySpec
+  if type(c) ~= "table" or type(slot) ~= "function" then return 0 end
+  local _, class = UnitClass("player")
+  local plan = CURES[class]
+  if not plan then return 0 end
+  c.HealBotDebuffText = c.HealBotDebuffText or {}
+  c.HealBotDebuffDropDown = c.HealBotDebuffDropDown or {}
+  local none = _G.HEALBOT_WORDS_NONE or "None"
+  local used, n = {}, 0
+  for k = 1, 5 do
+    local t = c.HealBotDebuffText[slot(k)]
+    if t and t ~= none and (c.HealBotDebuffDropDown[slot(k)] or 1) > 1 then used[t] = true end
+  end
+  local k = 1
+  for _, choices in ipairs(plan) do
+    local name
+    for _, id in ipairs(choices) do
+      if not name and KnownSpell(id) then name = G_SpellName and G_SpellName(id) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id)) end
+    end
+    if name and not used[name] then
+      while k <= 5 do
+        local t = c.HealBotDebuffText[slot(k)]
+        if not t or t == none or (c.HealBotDebuffDropDown[slot(k)] or 1) <= 1 then break end
+        k = k + 1
+      end
+      if k > 5 then break end
+      c.HealBotDebuffText[slot(k)] = name
+      c.HealBotDebuffDropDown[slot(k)] = 4                     -- surveillé sur tout le groupe (et le raid)
+      used[name], n, k = true, n + 1, k + 1
+    end
+  end
+  c.DebuffWatch, c.DebuffWatchInCombat = true, true
+  if n > 0 and type(_G.HealBot_Timers_Set) == "function" then pcall(_G.HealBot_Timers_Set, "AURA", "DebuffReset") end
+  return n
+end
+
 function HB.Export()
   if type(_G.Healbot_Config_Skins) ~= "table" then root.Print(T.notLoaded); return end
   root.ShowText("HealBot — relevé pour Claude (Ctrl+A, Ctrl+C)", HB.ExportText())
@@ -287,7 +340,9 @@ HB.MODERN = {
   -- débuffs à gauche (1), buffs à droite (2), À L'EXTÉRIEUR de la barre (ONBAR 2, relevé du 28/11/2026), une rangée, durées
   ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 2, BUFFONBAR = 2, DSCALE = 0.75, BSCALE = 0.7,
                          MAXDICONS = 3, MAXBICONS = 5, DEBUFFDOUBLE = "false", BUFFDOUBLE = "false" },
-  ["IconSetsText^1~f~1"] = { DBSDUR = "true", BUFFSDUR = "true" },
+  -- durée restante sur les icônes : HealBot ne l'écrit que sous un seuil (9 s par défaut, DBDURTHRH/BUFFDURTHRH, y compris
+  -- sur les icônes natives de Forever, HealBot_CombatAuras.lua) : seuil d'une heure, donc toujours affichée
+  ["IconSetsText^1~f~1"] = { DBSDUR = "true", BUFFSDUR = "true", DBDURTHRH = 3600, BUFFDURTHRH = 3600, DBHEIGHT = 10, BUFFHEIGHT = 10 },
   ["BarSort~f~1"] = { RAIDORDER = 3, SUBORDER = 5, SUBPF = "true" },
   ["BarVisibility~f~1"] = { ALERTIC = 0.9, ALERTOC = 0.8 },
 }
@@ -390,6 +445,7 @@ function HB.InstallModern(style)
   end
   if type(_G.HealBot_SetResetFlag) == "function" then pcall(_G.HealBot_SetResetFlag, "SOFT") end
   root.db.healbotStyle = style
+  pcall(HB.SetupDebuffs)
   root.db.healbotDeficit = true                                   -- vie perdue affichée sur les barres
   root.Print(T.modernDone, style)
   return true
@@ -554,6 +610,9 @@ function HB.Command(arg)
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()
   elseif arg == "debuffs" or arg == "débuffs" or arg == "dispel" then root.Print((HB.DebuffText()))
+  elseif arg == "debuffs regler" or arg == "debuffs régler" or arg == "debuffs setup" then
+    HB.SetupDebuffs()
+    C_Timer.After(1, function() root.Print((HB.DebuffText())) end)
   elseif arg == "a" or arg == "b" or arg == "c" then HB.InstallModern(arg:upper())
   elseif arg == "moderne" or arg == "modern" then HB.InstallModern()
   elseif arg == "export" or arg == "releve" or arg == "relevé" then HB.Export()

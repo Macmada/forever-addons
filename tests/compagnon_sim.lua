@@ -859,6 +859,23 @@ do
   local dt = HB.DebuffText()
   check(dt:find(LANG == "fr" and "Magie (Dissipation de la magie), Maladie (Abolir maladie)" or "Magic (Dissipation de la magie), Disease (Abolir maladie)", 1, true),
         "/fp healbot debuffs : types dissipables surveillés et leur sort (" .. dt:gsub("\n.*", "") .. ")")
+  -- débuffs « AUCUN » (capture du 28/11) : réglage des sorts de dissipation, comme les menus « Débuffs » d'HealBot
+  _G.HEALBOT_WORDS_NONE = "None"
+  _G.HealBot_Options_getDropDownId_bySpec = function(k) return "1" .. k end
+  local reset = 0
+  _G.HealBot_Timers_Set = function(a, b) if a == "AURA" and b == "DebuffReset" then reset = reset + 1 end end
+  _G.HealBot_Config_Cures = { DebuffWatch = true, DebuffWatchInCombat = false, HealBotDebuffText = { ["11"] = "None", ["12"] = "None" },
+                              HealBotDebuffDropDown = { ["11"] = 1, ["12"] = 1 } }
+  local saveIPS2, saveSpell2 = _G.IsPlayerSpell, _G.C_Spell
+  _G.IsPlayerSpell = function(id) return id == 552 or id == 528 or id == 527 end
+  _G.C_Spell = { GetSpellName = function(id) return ({ [552] = "Abolir maladie", [528] = "Guérison des maladies", [527] = "Dissipation de la magie" })[id] end }
+  root.Game.used.spellName = nil
+  check(HB.SetupDebuffs() == 2 and HealBot_Config_Cures.HealBotDebuffText["11"] == "Abolir maladie" and HealBot_Config_Cures.HealBotDebuffText["12"] == "Dissipation de la magie"
+        and HealBot_Config_Cures.HealBotDebuffDropDown["11"] == 4 and HealBot_Config_Cures.DebuffWatchInCombat and reset == 1,
+        "débuffs : Abolir maladie et Dissipation de la magie surveillés sur le groupe, en combat")
+  check(HB.SetupDebuffs() == 0, "débuffs : déjà réglés, rien de plus")
+  _G.IsPlayerSpell, _G.C_Spell = saveIPS2, saveSpell2
+  root.Game.used.spellName = nil
   local ex = HB.ExportText()
   check(ex:find("Icons~f~1!{", 1, true) and ex:find("HealGroups = {", 1, true) and ex:find("HealBot_Config_Cures = {", 1, true),
         "/fp healbot export : texte du skin « Group », débuffs surveillés et réglages du skin actif")
