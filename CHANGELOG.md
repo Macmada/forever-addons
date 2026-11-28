@@ -1,5 +1,11 @@
 # Journal des versions
 
+## v4.2.0 (ForeverCompagnon 4.2.0) : skins HealBot « Forever Moderne »
+- **Configurer HealBot** (menu ⚙, onglet Addons, `/fp healbot`) : choix du style avec aperçu, **A** liste moderne, **B** cartes en ligne, **C** barres fines. Installe deux skins, « Forever Moderne » (seul et groupe : tank, moi, le groupe, familiers en petites barres dessous) et « Forever Moderne Raid » (10 à 40, groupes en colonnes).
+- Débuffs à gauche, buffs à droite avec leur durée, soin en cours en préremplissage, vie en % et vie perdue, fond sombre et liseré doré.
+- **Les sorts des clics ne sont plus jamais touchés** : la gestion des clics et les anciens skins « Forever Groupe » / « Forever Raid » sont retirés. `/fp healbot annuler` remet les skins d'avant ; `/fp healbot a|b|c` pour changer de style.
+- Pour partager un skin : HealBot, Partager, Exporter le skin.
+
 ## v4.1.1 (ForeverCompagnon 4.1.1) : relevé des réglages d'HealBot
 - `/fp healbot export` : fenêtre à copier avec les réglages d'HealBot (skin intégré « Group » et skin actif), pour préparer le skin « Forever Moderne ». Lecture seule : ne change ni les clics ni les skins.
 
