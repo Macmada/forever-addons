@@ -808,7 +808,8 @@ do
   _G.HEALBOT_OPTIONS_RAID40 = "Raid 40"
   local skinText = "Skin\nGroup\nAuthor~v!Monti\nGeneral~t!{OFREQ=0.07,HIDEPARTYF=\"false\",HIDERAIDF=\"true\"}\nIcons~f~1!{RCEN=\"true\",SHOWCLASS=\"false\",SHOWROLE=\"true\"}\nBarText~f~1!{HLTHONBAR=\"false\",AHEIGHT=10,HLTHTYPE=1,NUMFORMAT1=11,SHOWROLE=\"false\",HEIGHT=13}\n" ..
                    "HealBar~f~1!{HEIGHT=40,GRPCOLS=\"false\",WIDTH=110}\nHealBar~d!2~3~\nHealGroups~f~8!{FRAME=7,STATE=\"true\",NAME=\"Pets\"}\n" ..
-                   "BarSort~f~1!{SUBORDER=6,RAIDORDER=3}\nBarVisibility~f~1!{ALERTIC=0.95,ALERTOC=0.9}"
+                   "BarSort~f~1!{SUBORDER=6,RAIDORDER=3}\nBarVisibility~f~1!{ALERTIC=0.95,ALERTOC=0.9}\n" ..
+                   "IconSets^1~f~1!{DEBUFFANCHOR=1,BUFFANCHOR=2,MAXDICONS=4,MAXBICONS=6}\nIconSets^1~d!2~3~"
   _G.HealBot_Config_SkinsData = { Group = "PACK", ["Raid 40"] = "PACK40", Standard = "PACKSTD" }
   local first = true
   _G.HealBot_Util_Decompress = function(s) if first then first = false; return nil end; if s == "PACK" then return skinText end
@@ -875,6 +876,25 @@ do
   check(ex:find("Icons~f~1!{", 1, true) and ex:find("HealGroups = {", 1, true), "/fp healbot export : texte du skin « Group » et réglages du skin actif")
   SlashCmdList.FOREVERCOMPAGNON("healbot export")
   check(root.textFrame and root.textFrame:IsShown(), "/fp healbot export : fenêtre à copier")
+  -- skin « Forever Moderne » : apparence seulement, les clics ne bougent pas (demande du joueur, 28/11/2026)
+  local pf = HB.PatchFrames("Skin\nGroup\nHealBar~f~1!{HEIGHT=40,WIDTH=110}\nHealBar~d!2~3~7~8~\nFrame~f~7!{BACKA=0.83}",
+                            "Forever Moderne", { ["HealBar~f~7"] = { HEIGHT = 18 }, ["Frame~f~7"] = { BACKA = 0.7 } })
+  check(pf:find("HealBar~d!2~3~8~", 1, true) and pf:find("HealBar~f~7!{HEIGHT=18,WIDTH=110}", 1, true) and pf:find("Frame~f~7!{BACKA=0.7}", 1, true),
+        "skin moderne : cadre des familiers réglé à part (ligne de copie corrigée)")
+  local before = {}
+  for k, v in pairs(_G.HealBot_Config_Spells.EnabledKeyCombo) do before[k] = v end
+  local nb = 0
+  for _ in pairs(before) do nb = nb + 1 end
+  SlashCmdList.FOREVERCOMPAGNON("healbot moderne")
+  local mt = loaded["Forever Moderne"]
+  check(mt and mt:find("IconSets^1~f~1!{", 1, true) and mt:find("DEBUFFANCHOR=1", 1, true) and mt:find("BUFFANCHOR=2", 1, true),
+        "skin moderne importé : débuffs à gauche, buffs à droite")
+  check(current == "Forever Moderne" and HealBot_Config.SkinDefault["Forever Moderne"].Party, "skin moderne : choisi pour le groupe")
+  local same, na = true, 0
+  for k, v in pairs(_G.HealBot_Config_Spells.EnabledKeyCombo) do na = na + 1; if before[k] ~= v then same = false end end
+  check(same and na == nb, "skin moderne : clics strictement inchangés (" .. nb .. " clic(s))")
+  SlashCmdList.FOREVERCOMPAGNON("healbot moderne annuler")
+  check(not HealBot_Config.SkinDefault["Forever Moderne"] or not HealBot_Config.SkinDefault["Forever Moderne"].Party, "skin moderne : annuler remet les skins d'avant")
   Healbot_Config_Skins.Current_Skin = "Standard"
 
   -- ancienne version : Robustesse posée sur Alt+gauche -> libérée et déplacée ; un Alt+clic changé à la main reste

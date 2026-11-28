@@ -20,6 +20,7 @@ local T = FR and {
   mClear = "Effacer la flèche", mClearD = "retire la flèche de l'itinéraire",
   mFlash = "Cadre Flash", mFlashOn = "activé : caractéristiques à chaque changement d'objet", mFlashOff = "désactivé",
   mHealBot = "Configurer HealBot", mHealBotD = "skins en français, rôles, sorts sur les clics",
+  mModern = "Skin HealBot moderne", mModernD = "apparence seulement, clics inchangés",
   mErrors = "Erreurs", mErrorsD = "relevé de tous les addons, à copier",
   mLog = "Journal", mLogD = "ce que l'addon a fait (diagnostic)",
   mAddons = "Addons", mAddonsD = "addons utiles sur Forever",
@@ -40,6 +41,7 @@ local T = FR and {
   mClear = "Clear the arrow", mClearD = "removes the route arrow",
   mFlash = "Flash frame", mFlashOn = "on: stats on every gear change", mFlashOff = "off",
   mHealBot = "Set up HealBot", mHealBotD = "skins, roles, click spells",
+  mModern = "Modern HealBot skin", mModernD = "look only, clicks unchanged",
   mErrors = "Errors", mErrorsD = "errors from every addon, to copy",
   mLog = "Log", mLogD = "what the addon did (diagnostics)",
   mAddons = "Addons", mAddonsD = "useful addons on Forever",
@@ -289,6 +291,7 @@ local function MenuItems()
   }
   if root.HealBot and root.HealBot.Command then
     table.insert(items, 3, { T.mHealBot, T.mHealBotD, function() root.HealBot.Command("") end })
+    table.insert(items, 4, { T.mModern, T.mModernD, function() root.HealBot.InstallModern() end })
   end
   return items
 end
