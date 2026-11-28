@@ -16,8 +16,12 @@ local T = FR and {
   noBackup = "HealBot : aucune sauvegarde à remettre.",
   deficitOn = "HealBot : vie manquante affichée en rouge sur les barres.", deficitOff = "HealBot : vie manquante masquée.",
   button = "Configurer HealBot", buttonTip = "Installe les skins « Forever Moderne » (groupe et raid). Les sorts de tes clics ne changent pas. Annuler : /fp healbot annuler",
-  modernDone = "HealBot : skins « Forever Moderne » (seul et groupe) et « Forever Moderne Raid » installés (clics inchangés). Pour les partager : HealBot, Partager, Exporter le skin. Annuler : /fp healbot annuler",
+  modernDone = "HealBot : skins « Forever Moderne » (seul et groupe) et « Forever Moderne Raid » installés, style %s (clics inchangés). Pour les partager : HealBot, Partager, Exporter le skin. Annuler : /fp healbot annuler",
   modernUndone = "HealBot : skins d'avant remis (les skins « Forever Moderne » restent dans la liste d'HealBot).",
+  chooseTitle = "Skin HealBot : choisis ton style", chooseNote = "Apparence seulement : les sorts de tes clics ne changent pas.",
+  styleA = "A — Liste moderne", styleAD = "une ligne par joueur, débuffs à gauche, buffs à droite",
+  styleB = "B — Cartes en ligne", styleBD = "cartes côte à côte, à poser sous ton personnage",
+  styleC = "C — Barres fines", styleCD = "le plus épuré : barres fines, petites icônes", current = "(actuel)",
 } or {
   notLoaded = "HealBot is not loaded: enable it in the Addons tab (then /reload).",
   combat = "In combat: try again after the fight.",
@@ -25,8 +29,12 @@ local T = FR and {
   noBackup = "HealBot: no backup to restore.",
   deficitOn = "HealBot: missing health shown in red on the bars.", deficitOff = "HealBot: missing health hidden.",
   button = "Set up HealBot", buttonTip = "Installs the \"Forever Moderne\" skins (party and raid). Your click spells don't change. Undo: /fp healbot annuler",
-  modernDone = "HealBot: \"Forever Moderne\" (solo and party) and \"Forever Moderne Raid\" skins installed (clicks unchanged). To share them: HealBot, Share, Export skin. Undo: /fp healbot annuler",
+  modernDone = "HealBot: \"Forever Moderne\" (solo and party) and \"Forever Moderne Raid\" skins installed, style %s (clicks unchanged). To share them: HealBot, Share, Export skin. Undo: /fp healbot annuler",
   modernUndone = "HealBot: previous skins restored (the \"Forever Moderne\" skins stay in HealBot's list).",
+  chooseTitle = "HealBot skin: pick your style", chooseNote = "Look only: your click spells don't change.",
+  styleA = "A — Modern list", styleAD = "one row per player, debuffs left, buffs right",
+  styleB = "B — Cards in a row", styleBD = "cards side by side, to place under your character",
+  styleC = "C — Thin bars", styleCD = "the cleanest: thin bars, small icons", current = "(current)",
 }
 HB.T = T
 
@@ -256,8 +264,38 @@ local MODERN_SKINS = {
     flags = { "HEALBOT_OPTIONS_RAID10", "HEALBOT_OPTIONS_RAID15", "HEALBOT_OPTIONS_RAID20", "HEALBOT_OPTIONS_RAID25", "HEALBOT_OPTIONS_RAID40" } },
 }
 
--- Installe les deux skins et les choisit pour seul, groupe et raid. Clics : jamais lus ni écrits ici.
-function HB.InstallModern()
+-- Trois styles (maquette du 28/11/2026) : A liste moderne, B cartes en ligne, C barres fines. Même habillage, seules
+-- la taille et la disposition des barres changent (réglages ajoutés par-dessus ceux du style A).
+HB.STYLES = {
+  A = { group = {}, raid = {} },
+  B = { group = { ["HealBar~f~1"] = { WIDTH = 120, HEIGHT = 42, NUMCOLS = 5, CMARGIN = 4, RMARGIN = 4 },
+                  ["HealBar~f~7"] = { WIDTH = 120, HEIGHT = 14, NUMCOLS = 5, CMARGIN = 4, RMARGIN = 2 },
+                  ["IconSets^1~f~1"] = { MAXDICONS = 2, MAXBICONS = 3, DSCALE = 0.6, BSCALE = 0.55 } },
+        raid = { ["HealBar~f~1"] = { WIDTH = 100, HEIGHT = 36 } } },
+  C = { group = { ["HealBar~f~1"] = { WIDTH = 190, HEIGHT = 18, CMARGIN = 2, RMARGIN = 1 },
+                  ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 12, RMARGIN = 1 },
+                  ["BarText~f~1"] = { HEIGHT = 10, HHEIGHT = 10 },
+                  ["IconSets^1~f~1"] = { DSCALE = 0.5, BSCALE = 0.45 } },
+        raid = { ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 20 }, ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9 },
+                 ["IconSets^1~f~1"] = { DSCALE = 0.45, BSCALE = 0.4 } } },
+}
+local function Merge(base, extra)
+  local out = {}
+  for k, v in pairs(base) do out[k] = Copy(v) end
+  for k, v in pairs(extra or {}) do
+    out[k] = out[k] or {}
+    for kk, vv in pairs(v) do out[k][kk] = vv end
+  end
+  return out
+end
+function HB.StyleEdits(style)
+  local st = HB.STYLES[style] or HB.STYLES.A
+  return Merge(HB.MODERN, st.group), Merge(HB.MODERN_RAID, st.raid)
+end
+
+-- Installe les deux skins (style A, B ou C) et les choisit pour seul, groupe et raid. Clics : jamais lus ni écrits ici.
+function HB.InstallModern(style)
+  style = HB.STYLES[style] and style or (root.db and root.db.healbotStyle) or "A"
   if type(_G.HealBot_Config_SkinsData) ~= "table" or type(_G.HealBot_Share_SkinLoad) ~= "function" or type(_G.HealBot_Config) ~= "table" then
     root.Print(T.notLoaded); return false
   end
@@ -274,7 +312,9 @@ function HB.InstallModern()
     local n = t and t:match("^[^\n]+\n([^\n]+)")
     if n then byName[n] = t end
   end
+  local groupEdits, raidEdits = HB.StyleEdits(style)
   for _, s in ipairs(MODERN_SKINS) do
+    s.edits = (s.name == HB.SKIN_MODERN_RAID) and raidEdits or groupEdits
     local text = byName[s.from]
     if not text then root.Print(T.skinFail, s.from); return false end
     local ok, err = pcall(_G.HealBot_Share_SkinLoad, PatchFrames(text, s.name, s.edits), false)
@@ -292,8 +332,9 @@ function HB.InstallModern()
     pcall(_G.HealBot_Options_Set_Current_Skin, (IsInRaid and IsInRaid()) and HB.SKIN_MODERN_RAID or HB.SKIN_MODERN)
   end
   if type(_G.HealBot_SetResetFlag) == "function" then pcall(_G.HealBot_SetResetFlag, "SOFT") end
+  root.db.healbotStyle = style
   root.db.healbotDeficit = true                                   -- vie perdue affichée sur les barres
-  root.Print(T.modernDone)
+  root.Print(T.modernDone, style)
   return true
 end
 
@@ -308,8 +349,106 @@ function HB.RemoveModern()
   return true
 end
 
--- « Configurer HealBot » : les skins modernes, rien d'autre
-function HB.Setup() return HB.InstallModern() end
+-- Aperçu dessiné d'un style dans la fenêtre de choix : barres couleur de classe, débuffs (carrés de couleur) à gauche,
+-- buffs à droite, partie claire = soin en cours
+local PREVIEW_UNITS = { { 0.78, 0.61, 0.43, 0.55 }, { 1, 1, 1, 0.92 }, { 0.25, 0.78, 0.92, 0.78 }, { 0.67, 0.83, 0.45, 0.3 } }
+local function Box(parent, x, y, w, h, r, g, b, a)
+  local t = parent:CreateTexture(nil, "ARTWORK")
+  t:SetPoint("TOPLEFT", x, -y)
+  t:SetSize(w, h)
+  t:SetColorTexture(r, g, b, a or 1)
+  return t
+end
+local function Preview(f, key)
+  local function Bar(x, y, w, h, u, i, icons)
+    Box(f, x, y, w, h, 0.11, 0.12, 0.15)
+    Box(f, x, y, math.max(1, w * u[4]), h, u[1], u[2], u[3], 0.9)
+    if i == 1 then Box(f, x + w * u[4], y, w * 0.25, h, u[1], u[2], u[3], 0.35) end     -- soin en cours
+    if icons then
+      local s = math.max(4, math.floor(h * 0.55))
+      if i == 1 or i == 3 then Box(f, x + 2, y + (h - s) / 2, s, s, i == 1 and 0.69 or 0.25, i == 1 and 0.48 or 0.55, i == 1 and 0.23 or 1) end
+      for k = 1, (i == 2 and 3 or 2) do Box(f, x + w - k * (s + 1) - 1, y + (h - s) / 2, s, s, 0.37, 0.83, 0.54) end
+    end
+  end
+  if key == "A" then
+    for i, u in ipairs(PREVIEW_UNITS) do Bar(0, (i - 1) * 11, 100, 9, u, i, true) end
+    Box(f, 12, 45, 88, 5, 0.67, 0.83, 0.45, 0.6)                                            -- familier
+  elseif key == "B" then
+    for i, u in ipairs(PREVIEW_UNITS) do
+      local x = (i - 1) * 26
+      Box(f, x, 6, 24, 34, 0.09, 0.1, 0.13)
+      Bar(x + 2, 12, 20, 14, u, i, false)
+      if i ~= 2 then Box(f, x + 2, 30, 5, 5, 0.25, 0.55, 1) end
+      Box(f, x + 15, 30, 7, 5, 0.37, 0.83, 0.54)
+    end
+  else
+    for i, u in ipairs(PREVIEW_UNITS) do Bar(0, (i - 1) * 9 + 4, 100, 4, u, i, false) end
+    for i = 1, 4 do Box(f, 102, (i - 1) * 9 + 4, 4, 4, 0.37, 0.83, 0.54) end
+  end
+end
+HB.Preview = Preview
+
+-- « Configurer HealBot » : choix du style (A, B, C), puis les skins modernes, rien d'autre
+local chooser
+function HB.Setup()
+  if not HB.Available() then root.Print(T.notLoaded); return false end
+  if not chooser then
+    chooser = CreateFrame("Frame", "ForeverCompagnonHealBotStyle", UIParent)
+    chooser:SetSize(440, 260)
+    chooser:SetPoint("CENTER")
+    chooser:SetFrameStrata("DIALOG")
+    chooser:EnableMouse(true)
+    tinsert(UISpecialFrames, "ForeverCompagnonHealBotStyle")
+    local C = root.Theme or { bg = { 0.07, 0.08, 0.1 }, goldL = { 0.94, 0.77, 0.42 }, muted = { 0.64, 0.61, 0.55 }, line = { 0.18, 0.2, 0.24 } }
+    local bg = chooser:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetColorTexture(C.bg[1], C.bg[2], C.bg[3], 0.97)
+    root.Kit.Border(chooser, 0.84, 0.66, 0.29, 0.8)
+    local title = chooser:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    title:SetPoint("TOPLEFT", 14, -12)
+    title:SetText(T.chooseTitle)
+    local note = chooser:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    note:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -4)
+    note:SetText(T.chooseNote)
+    local close = CreateFrame("Button", nil, chooser, "UIPanelCloseButton")
+    close:SetPoint("TOPRIGHT", -2, -2)
+    close:SetScript("OnClick", function() chooser:Hide() end)
+    chooser.buttons = {}
+    for i, key in ipairs({ "A", "B", "C" }) do
+      local b = CreateFrame("Button", nil, chooser)
+      b:SetSize(412, 60)
+      b:SetPoint("TOPLEFT", 14, -50 - (i - 1) * 66)
+      b.bg = b:CreateTexture(nil, "BACKGROUND")
+      b.bg:SetAllPoints()
+      b.bg:SetColorTexture(0.102, 0.114, 0.141, 1)
+      root.Kit.Border(b, C.line[1], C.line[2], C.line[3], 1)
+      local hl = b:CreateTexture(nil, "HIGHLIGHT")
+      hl:SetAllPoints()
+      hl:SetColorTexture(1, 0.82, 0.3, 0.08)
+      b.name = b:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+      b.name:SetPoint("TOPLEFT", 10, -7)
+      b.name:SetText(T["style" .. key])
+      b.desc = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+      b.desc:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -3)
+      b.desc:SetText(T["style" .. key .. "D"])
+      b.desc:SetWidth(250)
+      b.desc:SetJustifyH("LEFT")
+      b.preview = CreateFrame("Frame", nil, b)
+      b.preview:SetSize(110, 52)
+      b.preview:SetPoint("RIGHT", -8, -2)
+      Preview(b.preview, key)
+      b.key = key
+      b:SetScript("OnClick", function() chooser:Hide(); HB.InstallModern(key) end)
+      chooser.buttons[i] = b
+    end
+  end
+  local cur = root.db and root.db.healbotStyle
+  for _, b in ipairs(chooser.buttons) do
+    b.name:SetText(T["style" .. b.key] .. ((cur == b.key) and ("  |cffa0a0a0" .. T.current .. "|r") or ""))
+  end
+  chooser:Show()
+  return true
+end
 
 ----------------------------------------------------------------------
 -- Protection de la prédiction des soins d'HealBot (client 1.60.1, 15/11/2026) : HealBot 26.11.14, en mode de couleur
@@ -357,8 +496,10 @@ function HB.Command(arg)
   elseif arg == "annuler" or arg == "undo" or arg == "restore" or arg == "moderne annuler" or arg == "modern undo" then HB.RemoveModern()
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()
+  elseif arg == "a" or arg == "b" or arg == "c" then HB.InstallModern(arg:upper())
+  elseif arg == "moderne" or arg == "modern" then HB.InstallModern()
   elseif arg == "export" or arg == "releve" or arg == "relevé" then HB.Export()
-  else HB.InstallModern() end
+  else HB.Setup() end
 end
 
 ----------------------------------------------------------------------

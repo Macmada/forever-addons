@@ -825,14 +825,21 @@ do
   _G.HealBot_Options_Set_Current_Skin = function(n) current = n end
   check(HB.Available(), "HealBot chargé : reconnu")
 
-  -- « Configurer HealBot » (28/11/2026) : les skins modernes seulement, jamais les clics
+  -- « Configurer HealBot » (28/11/2026) : choix du style A/B/C avec aperçu, puis les skins modernes, jamais les clics
   W.combat = true
-  HB.Setup()
+  HB.InstallModern("A")
   check(loaded["Forever Moderne"] == nil, "en combat : rien n'est touché")
   W.combat = false
   local clicksBefore = {}
   for k, v in pairs(HealBot_Config_Spells.EnabledKeyCombo) do clicksBefore[k] = v end
   HB.Setup()
+  local ch = _G.ForeverCompagnonHealBotStyle
+  check(ch and ch:IsShown() and #ch.buttons == 3 and ch.buttons[2].preview, "Configurer HealBot : fenêtre de choix A, B, C avec aperçus")
+  ch.buttons[2].scripts.OnClick(ch.buttons[2])
+  check(root.db.healbotStyle == "B" and loaded["Forever Moderne"]:find("NUMCOLS=5", 1, true) and not ch:IsShown(), "style B : cartes côte à côte (5 colonnes)")
+  SlashCmdList.FOREVERCOMPAGNON("healbot c")
+  check(root.db.healbotStyle == "C" and loaded["Forever Moderne"]:find("HEIGHT=18", 1, true), "/fp healbot c : barres fines")
+  ch.buttons[1].scripts.OnClick(ch.buttons[1])
   check(loaded["Forever Moderne"] and loaded["Forever Moderne Raid"] and current == "Forever Moderne", "Configurer HealBot : skins modernes installés")
   local same = setSpell == 0
   for k, v in pairs(HealBot_Config_Spells.EnabledKeyCombo) do if clicksBefore[k] ~= v then same = false end end
