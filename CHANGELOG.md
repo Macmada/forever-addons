@@ -1,5 +1,10 @@
 # Journal des versions
 
+## v4.2.5 (ForeverCompagnon 4.2.5) : HealBot, buffs du prêtre en combat
+- En combat, seulement les buffs du prêtre suivis (Rénovation, Bouclier, Feu intérieur, Robustesse, Esprit divin, protections contre l'Ombre, Gardien de peur, Infusion de puissance) ; les buffs des autres classes ajoutés par la 4.2.4 sont retirés.
+- Les longs buffs ne disparaissent plus en combat (limite de durée d'HealBot remise à 0).
+- `/fp healbot debuffs` : état de la rangée de combat et des durées en minutes, pour le diagnostic.
+
 ## v4.2.4 (ForeverCompagnon 4.2.4) : HealBot, buffs en combat et durées en minutes
 - Buffs visibles en combat : ajoutés à la liste « buffs suivis » d'HealBot (qui, sur Forever, ne montre que celle-ci en combat) : prêtre (Rénovation, Bouclier, Robustesse, Feu intérieur, Esprit divin, protections…) et les buffs des autres classes (mage, druide, paladin, guerrier, chasseur, démoniste). Tes réglages déjà faits sont gardés.
 - Durée des icônes abrégée : « 32m » au lieu de « 1917 » au-delà de 90 secondes.
