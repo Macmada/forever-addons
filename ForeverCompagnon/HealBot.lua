@@ -747,7 +747,40 @@ function HB.ToggleDeficit()
   HB.UpdateDeficits()
 end
 
+----------------------------------------------------------------------
+-- Durée restante lisible : sur Forever, les icônes d'HealBot (rangées natives, HealBot_CombatAuras.lua) écrivent la durée
+-- par le compte à rebours du jeu (Cooldown hbcaCD de chaque icône), en secondes brutes (« 1917 »). Le jeu abrège en
+-- minutes (« 32m ») au-delà d'un seuil donné par SetCountdownAbbrevThreshold : on le pose sur ces compte à rebours, hors
+-- combat (les rangées sont reconstruites hors combat), sans rien lire des icônes.
+----------------------------------------------------------------------
+local ABBREV = 90
+local function AbbrevIn(frame, depth)
+  if depth > 3 or not (frame and frame.GetChildren) then return 0 end
+  local n = 0
+  for _, child in ipairs({ frame:GetChildren() }) do
+    local cd = rawget(child, "hbcaCD")
+    if cd and not rawget(cd, "fcAbbrev") and cd.SetCountdownAbbrevThreshold then
+      if pcall(cd.SetCountdownAbbrevThreshold, cd, ABBREV) then cd.fcAbbrev = true; n = n + 1 end
+    end
+    n = n + AbbrevIn(child, depth + 1)
+  end
+  return n
+end
+function HB.AbbrevCountdowns()
+  if InCombatLockdown and InCombatLockdown() then return 0 end
+  local n = 0
+  for _, list in ipairs({ _G.HealBot_Unit_Button, _G.HealBot_Private_Button }) do
+    if type(list) == "table" then
+      for _, button in pairs(list) do
+        if type(button) == "table" then local ok, k = pcall(AbbrevIn, button, 1); if ok then n = n + k end end
+      end
+    end
+  end
+  return n
+end
+
 if C_Timer and C_Timer.NewTicker then
+  C_Timer.NewTicker(3, function() if _G.HealBot_Unit_Button then HB.AbbrevCountdowns() end end)
   C_Timer.NewTicker(0.25, function() if _G.HealBot_Unit_Button then HB.UpdateDeficits() end end)
 end
 

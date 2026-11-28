@@ -921,6 +921,19 @@ do
   HB.UpdateDeficits()
   check(HealBot_Unit_Button.a.fcDeficit and HealBot_Unit_Button.a.fcDeficit:GetText() == secretStr, "vie manquante : texte du jeu posé sur la barre (sans être lu)")
   check(HealBot_Unit_Button.b.fcDeficit:GetText() == "", "membre hors ligne : rien")
+  -- durée lisible : seuil d'abréviation posé sur les compte à rebours des icônes natives d'HealBot (« 32m » et non « 1917 »)
+  do
+    local abbrev
+    local cd = { SetCountdownAbbrevThreshold = function(_, v) abbrev = v end }
+    local auraBtn = { hbcaCD = cd, GetChildren = function() end }
+    local container = { GetChildren = function() return auraBtn end }
+    HealBot_Unit_Button.a.GetChildren = function() return container end
+    check(HB.AbbrevCountdowns() == 1 and abbrev == 90 and HB.AbbrevCountdowns() == 0, "durée des icônes : abrégée au-delà de 90 s, une seule fois")
+    W.combat = true; cd.fcAbbrev = nil
+    check(HB.AbbrevCountdowns() == 0, "durée des icônes : rien en combat")
+    W.combat = false
+    HealBot_Unit_Button.a.GetChildren = nil
+  end
   check(HealBot_Unit_Button.a.fcDeficit.x == -4, "autre skin : vie perdue tout à droite")
   Healbot_Config_Skins.Current_Skin = "Forever Moderne"
   HB.UpdateDeficits()
