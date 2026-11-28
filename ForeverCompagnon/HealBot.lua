@@ -277,6 +277,7 @@ function HB.SetupDebuffs()
     end
   end
   c.DebuffWatch, c.DebuffWatchInCombat = true, true
+  c.DebuffWatchWhenMounted = true                   -- sinon HealBot cache les débuffs sur une monture (défaut : faux)
   if n > 0 and type(_G.HealBot_Timers_Set) == "function" then pcall(_G.HealBot_Timers_Set, "AURA", "DebuffReset") end
   -- HealBot relit ses réglages de débuffs tout de suite si sa fonction est là (sinon au prochain passage de ses minuteries)
   if n > 0 and type(_G.HealBot_Options_Debuff_Reset) == "function" then pcall(_G.HealBot_Options_Debuff_Reset) end
@@ -331,6 +332,7 @@ function HB.SetupBuffs()
   local b = _G.HealBot_Config_Buffs
   if type(b) ~= "table" then return false end
   b.BuffWatch, b.BuffCustomWatchInCombat = true, true
+  b.BuffWatchWhenMounted = true                     -- sinon HealBot cache les buffs sur une monture (défaut : faux)
   pcall(HB.SetupBuffWatch)
   local g = _G.HealBot_Globals
   if type(g) == "table" then
@@ -708,10 +710,10 @@ function HB.Command(arg)
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()
   elseif arg == "debuffs" or arg == "débuffs" or arg == "dispel" or arg == "debuffs regler" or arg == "debuffs régler" or arg == "debuffs setup" then
-    local _, info = HB.DebuffText()
-    if #info.types == 0 or arg ~= "debuffs" then
-      pcall(HB.SetupBuffs)
-      local n, why = HB.SetupDebuffs()
+    -- réglages de surveillance assurés à chaque fois (combat, monture, durées) ; sorts de dissipation ajoutés s'il en manque
+    pcall(HB.SetupBuffs)
+    local n, why = HB.SetupDebuffs()
+    if n > 0 or why then
       root.Print(FR and "HealBot : %d sort(s) de dissipation réglé(s)%s" or "HealBot: %d dispel spell(s) set%s", n, why and (" — " .. why) or "")
     end
     C_Timer.After(1.5, function()

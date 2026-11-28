@@ -873,7 +873,8 @@ do
   _G.C_Spell = { GetSpellName = function(id) return ({ [552] = "Abolir maladie", [528] = "Guérison des maladies", [527] = "Dissipation de la magie" })[id] end }
   root.Game.used.spellName = nil
   check(HB.SetupDebuffs() == 2 and HealBot_Config_Cures.HealBotDebuffText["11"] == "Abolir maladie" and HealBot_Config_Cures.HealBotDebuffText["12"] == "Dissipation de la magie"
-        and HealBot_Config_Cures.HealBotDebuffDropDown["11"] == 4 and HealBot_Config_Cures.DebuffWatchInCombat and reset == 1,
+        and HealBot_Config_Cures.HealBotDebuffDropDown["11"] == 4 and HealBot_Config_Cures.DebuffWatchInCombat and reset == 1
+        and HealBot_Config_Cures.DebuffWatchWhenMounted,
         "débuffs : Abolir maladie et Dissipation de la magie surveillés sur le groupe, en combat")
   check(HB.SetupDebuffs() == 0, "débuffs : déjà réglés, rien de plus")
   -- buffs suivis en combat (WatchHoT) : ceux du prêtre de Forever ajoutés par leur nom, un choix déjà fait gardé
@@ -888,7 +889,7 @@ do
   _G.HealBot_Config_Buffs = { BuffWatch = true, BuffCustomWatchInCombat = false }
   _G.HealBot_Globals.CombatAurasHots = 4
   _G.HealBot_Globals.CombatAurasMaxDur = 120
-  check(HB.SetupBuffs() and HealBot_Config_Buffs.BuffCustomWatchInCombat and HealBot_Globals.CombatAurasHots == 5
+  check(HB.SetupBuffs() and HealBot_Config_Buffs.BuffCustomWatchInCombat and HealBot_Config_Buffs.BuffWatchWhenMounted and HealBot_Globals.CombatAurasHots == 5
         and HB.DebuffInfo().buffsInCombat and HealBot_Globals.CombatAurasNums == true and HealBot_Globals.CombatAurasNumsFollowSkin == false and HealBot_Globals.CombatAurasMaxDur == 0, "longs buffs gardés en combat (maxdur 0), buffs : visibles en combat (5 icônes), durée restante toujours affichée")
   _G.IsPlayerSpell, _G.C_Spell = saveIPS2, saveSpell2
   root.Game.used.spellName = nil
