@@ -220,8 +220,8 @@ function HB.DebuffText()
     (FR and "  surveillance : %s, en combat : %s, barre colorée : %s" or "  watch: %s, in combat: %s, coloured bar: %s"):format(tostring(i.watch), tostring(i.inCombat), tostring(i.bar)),
     (FR and "  tes buffs visibles en combat : %s, durée restante affichée : %s" or "  your buffs shown in combat: %s, time left shown: %s"):format(tostring(i.buffsInCombat), tostring(i.nums)),
     (FR and "  rangée de combat : active %s, %s icône(s), buffs cachés au-delà de %s s (0 = aucun)" or "  combat row: on %s, %s icon(s), buffs hidden beyond %s s (0 = none)"):format(tostring(i.on), tostring(i.hots), tostring(i.maxdur)),
-    (FR and "  durées en minutes : %d compte(s) à rebours trouvé(s), %d abrégé(s), %d sans la fonction, %d refusé(s)"
-        or "  minutes: %d countdown(s) found, %d shortened, %d without the function, %d refused"):format(HB.abbrev.found, HB.abbrev.applied, HB.abbrev.nofunc, HB.abbrev.failed),
+    (FR and "  durées en minutes : %d texte(s) de durée, %d compte(s) à rebours (%d abrégé(s), %d sans la fonction)"
+        or "  minutes: %d duration text(s), %d countdown(s) (%d shortened, %d without the function)"):format(HB.abbrev.texts or 0, HB.abbrev.found, HB.abbrev.applied, HB.abbrev.nofunc),
   }
   return table.concat(lines, "\n"), i
 end
@@ -831,7 +831,43 @@ local function AbbrevIn(frame, depth)
   end
   return n
 end
+-- Hors combat, HealBot écrit la durée des icônes classiques lui-même (Healbot_Aura.lua : txt.expire[i]:SetText(secondes)),
+-- en secondes brutes. On accroche chaque texte de durée (une fois) : un nombre au-delà de 90 s devient « 32m », au-delà d'une
+-- heure « 1h ». Valeur secrète ou texte non numérique : laissé tel quel.
+HB.abbrev.texts = 0
+local function Short(sec)
+  if sec >= 3600 then return math.floor(sec / 3600 + 0.5) .. "h" end
+  return math.floor(sec / 60 + 0.5) .. "m"
+end
+local function HookExpire(fs)
+  if not fs or rawget(fs, "fcShort") or not fs.SetText then return end
+  fs.fcShort = true
+  HB.abbrev.texts = HB.abbrev.texts + 1
+  hooksecurefunc(fs, "SetText", function(self, text)
+    if rawget(self, "fcBusy") then return end
+    if text == nil or (issecretvalue and issecretvalue(text)) then return end
+    local sec = tonumber(text)
+    if sec and sec >= ABBREV then
+      self.fcBusy = true
+      pcall(self.SetText, self, Short(sec))
+      self.fcBusy = nil
+    end
+  end)
+end
+HB.ShortDuration = Short
+function HB.HookExpireTexts()
+  for _, list in ipairs({ _G.HealBot_Unit_Button, _G.HealBot_Private_Button }) do
+    if type(list) == "table" then
+      for _, button in pairs(list) do
+        local exp = type(button) == "table" and button.gref and button.gref.txt and button.gref.txt.expire
+        if type(exp) == "table" then for _, fs in pairs(exp) do pcall(HookExpire, fs) end end
+      end
+    end
+  end
+end
+
 function HB.AbbrevCountdowns()
+  pcall(HB.HookExpireTexts)
   if InCombatLockdown and InCombatLockdown() then return 0 end
   local n = 0
   for _, list in ipairs({ _G.HealBot_Unit_Button, _G.HealBot_Private_Button }) do

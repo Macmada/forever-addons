@@ -82,9 +82,11 @@ _G.geterrorhandler = function() return handler end
 _G.seterrorhandler = function(f) handler = f end
 _G.debugstack = function() return "[string \"@Interface/AddOns/Questie/Modules/Map.lua\"]:42: in function <...>\n[C]: in function 'pcall'" end
 local function GameError(msg) return geterrorhandler()(msg) end
-_G.hooksecurefunc = _G.hooksecurefunc or function(name, f)
-  local orig = _G[name]
-  _G[name] = function(...) local r = { orig(...) }; f(...); return unpack(r) end
+_G.hooksecurefunc = _G.hooksecurefunc or function(a, b, c)
+  local t, name, f = _G, a, b
+  if type(a) == "table" then t, name, f = a, b, c end          -- forme objet : hooksecurefunc(cadre, "Méthode", f)
+  local orig = t[name]
+  t[name] = function(...) local r = { orig(...) }; f(...); return unpack(r) end
 end
 local root = W.load("ForeverCompagnon")
 W.fire("ADDON_LOADED", "ForeverCompagnon")
@@ -943,6 +945,19 @@ do
     check(HB.AbbrevCountdowns() == 0, "durée des icônes : rien en combat")
     W.combat = false
     HealBot_Unit_Button.a.GetChildren = nil
+  end
+  -- durée des icônes classiques (hors combat) : « 1917 » écrit par HealBot devient « 32m »
+  do
+    local fs = W.Obj()
+    HealBot_Unit_Button.a.gref.txt = { expire = { [1] = fs } }
+    HB.HookExpireTexts()
+    fs:SetText(1917)
+    check(fs:GetText() == "32m", "durée : 1917 s affichées « 32m » (" .. tostring(fs:GetText()) .. ")")
+    fs:SetText(12)
+    check(tostring(fs:GetText()) == "12", "durée courte : secondes gardées")
+    fs:SetText(7300)
+    check(fs:GetText() == "2h", "durée longue : « 2h »")
+    HealBot_Unit_Button.a.gref.txt = nil
   end
   check(HealBot_Unit_Button.a.fcDeficit.x == -4, "autre skin : vie perdue tout à droite")
   Healbot_Config_Skins.Current_Skin = "Forever Moderne"
