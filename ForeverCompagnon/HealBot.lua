@@ -213,18 +213,21 @@ HB.MODERN = {
   ["HealGroups~f~3"] = { NAME = "Raid", STATE = "true", FRAME = 1 },
   ["HealGroups~f~8"] = { NAME = "Pets", STATE = "true", FRAME = 7 },
   ["HealGroups~f~9"] = { STATE = "false" }, ["HealGroups~f~10"] = { STATE = "false" }, ["HealGroups~f~11"] = { STATE = "false" },
-  ["HealBar~f~1"] = { WIDTH = 190, HEIGHT = 30, TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 3, NUMCOLS = 1 },
-  ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 18, TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2, NUMCOLS = 1 },
+  -- 38 de haut : le nom et la vie tiennent sur deux lignes dans la barre (à 30, la vie débordait dessous, 28/11/2026)
+  ["HealBar~f~1"] = { WIDTH = 190, HEIGHT = 38, TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 3, NUMCOLS = 1 },
+  ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 20, TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2, NUMCOLS = 1 },
+  -- familiers : nom seul (une ligne), la vie perdue reste affichée par ForeverCompagnon
+  ["BarText~f~7"] = { HLTHONBAR = "false", HEIGHT = 10, OFFSET = 0 },
   ["StickyFrames~f~7"] = { STUCK = "true", STUCKTO = 1, STUCKPOINT = "TOPLEFT", STUCKTOPOINT = "BOTTOMLEFT" },
   ["Frame~f~1"] = { BACKR = 0.05, BACKG = 0.055, BACKB = 0.075, BACKA = 0.86, BORDERR = 0.84, BORDERG = 0.66, BORDERB = 0.29,
                     BORDERA = 0.6, PADDING = 3 },
   ["Frame~f~7"] = { BACKR = 0.05, BACKG = 0.055, BACKB = 0.075, BACKA = 0.7, BORDERR = 0.84, BORDERG = 0.66, BORDERB = 0.29,
                     BORDERA = 0.35, PADDING = 2 },
-  ["FrameAlias~f~1"] = { SHOW = "true", ALIAS = root.FR and "Groupe" or "Group", FONT = "Roboto Bold", SIZE = 11, OUTLINE = 2,
+  ["FrameAlias~f~1"] = { SHOW = "true", NAME = root.FR and "Groupe" or "Group", ALIAS = root.FR and "Groupe" or "Group", FONT = "Roboto Bold", SIZE = 11, OUTLINE = 2,
                          R = GOLDL.R, G = GOLDL.G, B = GOLDL.B },
   ["FrameAliasBar~f~1"] = { TEXTURE = "Smooth v2", HEIGHT = 16, R = 0.1, G = 0.11, B = 0.14, A = 0.9 },
   ["HeadBar~f~1"] = { SHOW = "false" },
-  ["BarCol~f~1"] = { HA = 1, BA = 0.85, BR = 0.105, BG = 0.12, BB = 0.15 },
+  ["BarCol~f~1"] = { HA = 0.8, BA = 0.85, BR = 0.105, BG = 0.12, BB = 0.15 },
   -- préremplissage : soins entrants couleur de classe (les modes « selon la vie » sont refusés aux addons sur Forever)
   ["BarIACol~f~1"] = { IC = 3, AC = 3, IA = 0.55 },
   ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "false", INCHEALS = 1, SHOWROLE = "true", CLASSONBAR = "false",
@@ -243,9 +246,9 @@ HB.MODERN = {
 HB.SKIN_MODERN_RAID = "Forever Moderne Raid"
 HB.MODERN_RAID = {
   ["General~t"] = { HIDEPARTYF = "false", HIDERAIDF = "false" },
-  ["HealBar~f~1"] = { WIDTH = 96, HEIGHT = 30, GRPCOLS = "true", TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2 },
+  ["HealBar~f~1"] = { WIDTH = 96, HEIGHT = 36, GRPCOLS = "true", TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2 },
   ["Frame~f~1"] = HB.MODERN["Frame~f~1"],
-  ["FrameAlias~f~1"] = { SHOW = "true", ALIAS = "Raid", FONT = "Roboto Bold", SIZE = 11, OUTLINE = 2, R = GOLDL.R, G = GOLDL.G, B = GOLDL.B },
+  ["FrameAlias~f~1"] = { SHOW = "true", NAME = "Raid", ALIAS = "Raid", FONT = "Roboto Bold", SIZE = 11, OUTLINE = 2, R = GOLDL.R, G = GOLDL.G, B = GOLDL.B },
   ["FrameAliasBar~f~1"] = HB.MODERN["FrameAliasBar~f~1"],
   ["BarCol~f~1"] = HB.MODERN["BarCol~f~1"],
   ["BarIACol~f~1"] = HB.MODERN["BarIACol~f~1"],
@@ -272,11 +275,11 @@ HB.STYLES = {
                   ["HealBar~f~7"] = { WIDTH = 120, HEIGHT = 14, NUMCOLS = 5, CMARGIN = 4, RMARGIN = 2 },
                   ["IconSets^1~f~1"] = { MAXDICONS = 2, MAXBICONS = 3, DSCALE = 0.6, BSCALE = 0.55 } },
         raid = { ["HealBar~f~1"] = { WIDTH = 100, HEIGHT = 36 } } },
-  C = { group = { ["HealBar~f~1"] = { WIDTH = 190, HEIGHT = 18, CMARGIN = 2, RMARGIN = 1 },
-                  ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 12, RMARGIN = 1 },
-                  ["BarText~f~1"] = { HEIGHT = 10, HHEIGHT = 10 },
+  C = { group = { ["HealBar~f~1"] = { WIDTH = 190, HEIGHT = 26, CMARGIN = 2, RMARGIN = 1 },
+                  ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 14, RMARGIN = 1 },
+                  ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9, OFFSET = -3, HOFFSET = -4 },
                   ["IconSets^1~f~1"] = { DSCALE = 0.5, BSCALE = 0.45 } },
-        raid = { ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 20 }, ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9 },
+        raid = { ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 26 }, ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9, OFFSET = -3, HOFFSET = -4 },
                  ["IconSets^1~f~1"] = { DSCALE = 0.45, BSCALE = 0.4 } } },
 }
 local function Merge(base, extra)

@@ -838,7 +838,7 @@ do
   ch.buttons[2].scripts.OnClick(ch.buttons[2])
   check(root.db.healbotStyle == "B" and loaded["Forever Moderne"]:find("NUMCOLS=5", 1, true) and not ch:IsShown(), "style B : cartes côte à côte (5 colonnes)")
   SlashCmdList.FOREVERCOMPAGNON("healbot c")
-  check(root.db.healbotStyle == "C" and loaded["Forever Moderne"]:find("HEIGHT=18", 1, true), "/fp healbot c : barres fines")
+  check(root.db.healbotStyle == "C" and loaded["Forever Moderne"]:find("HEIGHT=26", 1, true), "/fp healbot c : barres fines")
   ch.buttons[1].scripts.OnClick(ch.buttons[1])
   check(loaded["Forever Moderne"] and loaded["Forever Moderne Raid"] and current == "Forever Moderne", "Configurer HealBot : skins modernes installés")
   local same = setSpell == 0
