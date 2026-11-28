@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v4.1.1 (ForeverCompagnon 4.1.1) : relevé des réglages d'HealBot
+- `/fp healbot export` : fenêtre à copier avec les réglages d'HealBot (skin intégré « Group » et skin actif), pour préparer le skin « Forever Moderne ». Lecture seule : ne change ni les clics ni les skins.
+
 ## v4.1.0 (ForeverCompagnon 4.1.0) : hôtel des ventes, tournée en ville, rang conseillé
 - **Accueil, hôtel des ventes** : l'amélioration la plus rentable (points par pièce d'or) que tu peux payer, avec son prix (Auctionator ou « Relever les prix ») ; les autres au survol. Prix HV sous chaque objet de l'onglet Équipement.
 - **Tournée en ville** : en ville, maître de classe, marchands de la liste de courses et hôtel des ventes en un seul trajet, dans l'ordre le plus court ; la flèche passe d'un arrêt au suivant. Les hôtels des ventes visités sont retenus.
