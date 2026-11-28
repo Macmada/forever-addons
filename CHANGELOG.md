@@ -1,5 +1,12 @@
 # Journal des versions
 
+## v4.2.1 (ForeverCompagnon 4.2.1) : skins HealBot corrigés d'après le code d'HealBot
+- Réglages vérifiés dans le code d'HealBot 26.11.27 (github.com/davidmarshall15/Healbot) au lieu d'être devinés.
+- Groupe et raid : icône du poste (tank, soigneur, dégâts), nom à gauche, % de vie à droite sur la même ligne, vie perdue juste à gauche du %.
+- Débuffs à gauche et buffs à droite, à l'extérieur de la barre (style B : sur la barre).
+- Titre « Groupe », barres à la bonne hauteur (le % ne déborde plus), familiers avec leur nom seul, barre du prêtre adoucie.
+- `/fp healbot debuffs` : les types de débuffs qu'HealBot affiche chez toi (sur Forever, seuls ceux que tu peux dissiper, d'après ses réglages « Débuffs »).
+
 ## v4.2.0 (ForeverCompagnon 4.2.0) : skins HealBot « Forever Moderne »
 - **Configurer HealBot** (menu ⚙, onglet Addons, `/fp healbot`) : choix du style avec aperçu, **A** liste moderne, **B** cartes en ligne, **C** barres fines. Installe deux skins, « Forever Moderne » (seul et groupe : tank, moi, le groupe, familiers en petites barres dessous) et « Forever Moderne Raid » (10 à 40, groupes en colonnes).
 - Débuffs à gauche, buffs à droite avec leur durée, soin en cours en préremplissage, vie en % et vie perdue, fond sombre et liseré doré.
