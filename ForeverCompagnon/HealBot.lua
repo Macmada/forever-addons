@@ -206,6 +206,7 @@ function HB.DebuffInfo()
   local g = type(_G.HealBot_Globals) == "table" and _G.HealBot_Globals or {}
   info.buffsInCombat = (b.BuffWatch and b.BuffCustomWatchInCombat and g.CombatAurasOn ~= false) and true or false
   info.nums = g.CombatAurasNums == true
+  info.maxdur, info.hots, info.on = g.CombatAurasMaxDur, g.CombatAurasHots, g.CombatAurasOn
   return info
 end
 function HB.DebuffText()
@@ -218,6 +219,9 @@ function HB.DebuffText()
     (FR and "HealBot, débuffs avec une icône : " or "HealBot, debuffs with an icon: ") .. (#names > 0 and table.concat(names, ", ") or (FR and "AUCUN" or "NONE")),
     (FR and "  surveillance : %s, en combat : %s, barre colorée : %s" or "  watch: %s, in combat: %s, coloured bar: %s"):format(tostring(i.watch), tostring(i.inCombat), tostring(i.bar)),
     (FR and "  tes buffs visibles en combat : %s, durée restante affichée : %s" or "  your buffs shown in combat: %s, time left shown: %s"):format(tostring(i.buffsInCombat), tostring(i.nums)),
+    (FR and "  rangée de combat : active %s, %s icône(s), buffs cachés au-delà de %s s (0 = aucun)" or "  combat row: on %s, %s icon(s), buffs hidden beyond %s s (0 = none)"):format(tostring(i.on), tostring(i.hots), tostring(i.maxdur)),
+    (FR and "  durées en minutes : %d compte(s) à rebours trouvé(s), %d abrégé(s), %d sans la fonction, %d refusé(s)"
+        or "  minutes: %d countdown(s) found, %d shortened, %d without the function, %d refused"):format(HB.abbrev.found, HB.abbrev.applied, HB.abbrev.nofunc, HB.abbrev.failed),
   }
   return table.concat(lines, "\n"), i
 end
@@ -328,6 +332,12 @@ function HB.SetupBuffs()
     if g.CombatAurasNums ~= true or g.CombatAurasNumsFollowSkin ~= false then
       if type(_G.HealBot_CombatAuras_SetOption) == "function" then pcall(_G.HealBot_CombatAuras_SetOption, "nums", "on")
       else g.CombatAurasNums, g.CombatAurasNumsFollowSkin = true, false end
+    end
+    -- HealBot cache en combat les buffs de durée totale supérieure à CombatAurasMaxDur (120 s hors Forever, et sur un
+    -- HealBot installé avant) : Robustesse, bénédictions… disparaissaient. 0 = aucune limite
+    if (g.CombatAurasMaxDur or 0) > 0 then
+      if type(_G.HealBot_CombatAuras_SetOption) == "function" then pcall(_G.HealBot_CombatAuras_SetOption, "maxdur", 0)
+      else g.CombatAurasMaxDur = 0 end
     end
     if (g.CombatAurasHots or 4) < 5 then
       if type(_G.HealBot_CombatAuras_SetOption) == "function" then pcall(_G.HealBot_CombatAuras_SetOption, "hots", 5) else g.CombatAurasHots = 5 end
@@ -787,13 +797,27 @@ end
 -- combat (les rangées sont reconstruites hors combat), sans rien lire des icônes.
 ----------------------------------------------------------------------
 local ABBREV = 90
+HB.abbrev = { found = 0, applied = 0, nofunc = 0, failed = 0, cooldowns = 0 }
 local function AbbrevIn(frame, depth)
-  if depth > 3 or not (frame and frame.GetChildren) then return 0 end
+  if depth > 5 or not (frame and frame.GetChildren) then return 0 end
   local n = 0
-  for _, child in ipairs({ frame:GetChildren() }) do
+  local ok, kids = pcall(function() return { frame:GetChildren() } end)
+  for _, child in ipairs(ok and kids or {}) do
+    -- compte à rebours d'une icône d'HealBot (hbcaCD), ou tout Cooldown posé sur une icône de ses rangées natives
     local cd = rawget(child, "hbcaCD")
-    if cd and not rawget(cd, "fcAbbrev") and cd.SetCountdownAbbrevThreshold then
-      if pcall(cd.SetCountdownAbbrevThreshold, cd, ABBREV) then cd.fcAbbrev = true; n = n + 1 end
+    if not cd and child.GetObjectType then
+      local okT, t = pcall(child.GetObjectType, child)
+      if okT and t == "Cooldown" then cd = child; HB.abbrev.cooldowns = HB.abbrev.cooldowns + 1 end
+    end
+    if cd and not rawget(cd, "fcAbbrev") then
+      HB.abbrev.found = HB.abbrev.found + 1
+      if not cd.SetCountdownAbbrevThreshold then
+        HB.abbrev.nofunc = HB.abbrev.nofunc + 1; cd.fcAbbrev = true
+      elseif pcall(cd.SetCountdownAbbrevThreshold, cd, ABBREV) then
+        cd.fcAbbrev = true; n = n + 1; HB.abbrev.applied = HB.abbrev.applied + 1
+      else
+        HB.abbrev.failed = HB.abbrev.failed + 1; cd.fcAbbrev = true
+      end
     end
     n = n + AbbrevIn(child, depth + 1)
   end
