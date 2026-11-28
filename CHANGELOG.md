@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v4.2.4 (ForeverCompagnon 4.2.4) : HealBot, buffs en combat et durées en minutes
+- Buffs visibles en combat : ajoutés à la liste « buffs suivis » d'HealBot (qui, sur Forever, ne montre que celle-ci en combat) : prêtre (Rénovation, Bouclier, Robustesse, Feu intérieur, Esprit divin, protections…) et les buffs des autres classes (mage, druide, paladin, guerrier, chasseur, démoniste). Tes réglages déjà faits sont gardés.
+- Durée des icônes abrégée : « 32m » au lieu de « 1917 » au-delà de 90 secondes.
+
 ## v4.2.3 (ForeverCompagnon 4.2.3) : HealBot, buffs en combat, durées, diagnostic des débuffs
 - Tes buffs (Rénovation, Bouclier, Robustesse…) visibles en combat, 5 icônes.
 - Durée restante toujours affichée sur les icônes de buffs et de débuffs (compte à rebours d'HealBot forcé).
