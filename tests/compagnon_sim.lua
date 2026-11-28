@@ -875,12 +875,12 @@ do
         "débuffs : Abolir maladie et Dissipation de la magie surveillés sur le groupe, en combat")
   check(HB.SetupDebuffs() == 0, "débuffs : déjà réglés, rien de plus")
   -- buffs suivis en combat (WatchHoT) : ceux du prêtre de Forever ajoutés par leur nom, un choix déjà fait gardé
-  _G.HealBot_Globals.WatchHoT = { PRIE = { ["Rénovation"] = 2 } }
+  _G.HealBot_Globals.WatchHoT = { PRIE = { ["Rénovation"] = 2 }, MAGE = { ["Intelligence des Arcanes"] = 3, ["Évocation"] = 1 } }
   local saveSpell3 = _G.C_Spell
   _G.C_Spell = { GetSpellName = function(id) return ({ [139] = "Rénovation", [1243] = "Mot de pouvoir : Robustesse", [588] = "Feu intérieur", [1459] = "Intelligence des Arcanes" })[id] end }
   root.Game.used.spellName = nil
-  check(HB.SetupBuffWatch() == 3 and HealBot_Globals.WatchHoT.MAGE["Intelligence des Arcanes"] == 3 and HealBot_Globals.WatchHoT.PRIE["Mot de pouvoir : Robustesse"] == 3 and HealBot_Globals.WatchHoT.PRIE["Feu intérieur"] == 1
-        and HealBot_Globals.WatchHoT.PRIE["Rénovation"] == 2, "buffs suivis en combat : Robustesse, Feu intérieur ajoutés ; Rénovation (ton choix) gardée")
+  check(HB.SetupBuffWatch() == 2 and HealBot_Globals.WatchHoT.MAGE["Intelligence des Arcanes"] == nil and HealBot_Globals.WatchHoT.MAGE["Évocation"] == 1 and HealBot_Globals.WatchHoT.PRIE["Mot de pouvoir : Robustesse"] == 3 and HealBot_Globals.WatchHoT.PRIE["Feu intérieur"] == 1
+        and HealBot_Globals.WatchHoT.PRIE["Rénovation"] == 2, "buffs suivis en combat : prêtre seulement (Robustesse, Feu intérieur ajoutés, Rénovation gardée) ; buffs des autres classes de la 4.2.4 retirés")
   _G.C_Spell = saveSpell3
   root.Game.used.spellName = nil
   _G.HealBot_Config_Buffs = { BuffWatch = true, BuffCustomWatchInCombat = false }

@@ -290,19 +290,18 @@ end
 -- En combat, la rangée native ne montre que les buffs de la liste « buffs suivis » d'HealBot (HealBot_Globals.WatchHoT,
 -- lue par HBCA_ConfiguredBuffFilters) ; celle du prêtre ne contient que des sorts du WoW moderne (sauf Rénovation, Bouclier).
 -- On y ajoute les buffs du prêtre de Forever, par leur nom dans ta langue ; valeur 1 = posé par toi, 3 = par n'importe qui.
--- Les buffs des autres classes (posés par n'importe qui, valeur 3) sont ajoutés quelle que soit ta classe : ce sont eux que
--- tu vois sur tes alliés. Rangés sous la clé de leur classe dans HealBot (il les lit toutes).
+-- Seulement les buffs du prêtre (choix du joueur, 28/11/2026). Les buffs des autres classes ajoutés par la v4.2.4 (valeur 3 ;
+-- ceux d'HealBot valent 1) sont retirés de sa liste.
 local WATCH = {
   PRIE = { { 139, 1 }, { 17, 1 }, { 1243, 3 }, { 21562, 3 }, { 588, 1 }, { 14752, 3 }, { 27681, 3 }, { 976, 3 }, { 27683, 3 },
            { 6346, 3 }, { 10060, 3 } },
-  MAGE = { { 1459, 3 }, { 23028, 3 }, { 1008, 3 }, { 604, 3 } },                       -- Intelligence/Illumination des arcanes, Amplifier/Atténuer la magie
-  DRUI = { { 1126, 3 }, { 21849, 3 }, { 467, 3 }, { 774, 3 }, { 8936, 3 }, { 29166, 3 } }, -- Marque/Don du fauve, Épines, Récupération, Rétablissement, Innervation
-  PALA = { { 19740, 3 }, { 19742, 3 }, { 20217, 3 }, { 1038, 3 }, { 19977, 3 }, { 20911, 3 }, { 25782, 3 }, { 25894, 3 },
-           { 25898, 3 }, { 25895, 3 }, { 25890, 3 }, { 25899, 3 }, { 1022, 3 }, { 1044, 3 }, { 6940, 3 } },  -- bénédictions (et supérieures), Protection, Liberté, Sacrifice
-  WARR = { { 6673, 3 } },                                                                -- Cri de guerre
-  HUNT = { { 19506, 3 } },                                                               -- Aura de précision
-  WARL = { { 5697, 3 }, { 132, 3 } },                                                    -- Respiration interminable, Détection de l'invisibilité
 }
+local OLD_OTHERS = {
+  MAGE = { 1459, 23028, 1008, 604 }, DRUI = { 1126, 21849, 467, 774, 8936, 29166 },
+  PALA = { 19740, 19742, 20217, 1038, 19977, 20911, 25782, 25894, 25898, 25895, 25890, 25899, 1022, 1044, 6940 },
+  WARR = { 6673 }, HUNT = { 19506 }, WARL = { 5697, 132 },
+}
+local function SpellNameOf(id) return G_SpellName and G_SpellName(id) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(id)) end
 function HB.SetupBuffWatch()
   local g = _G.HealBot_Globals
   if type(g) ~= "table" then return 0 end
@@ -312,8 +311,17 @@ function HB.SetupBuffWatch()
     g.WatchHoT[key] = g.WatchHoT[key] or {}
     local list = g.WatchHoT[key]
     for _, sp in ipairs(spells) do
-      local name = G_SpellName and G_SpellName(sp[1]) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(sp[1]))
+      local name = SpellNameOf(sp[1])
       if name and list[name] == nil then list[name] = sp[2]; n = n + 1 end
+    end
+  end
+  for key, ids in pairs(OLD_OTHERS) do
+    local list = g.WatchHoT[key]
+    if type(list) == "table" then
+      for _, id in ipairs(ids) do
+        local name = SpellNameOf(id)
+        if name and list[name] == 3 then list[name] = nil end
+      end
     end
   end
   return n
