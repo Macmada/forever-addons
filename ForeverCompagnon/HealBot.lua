@@ -230,8 +230,10 @@ HB.MODERN = {
   ["BarCol~f~1"] = { HA = 0.8, BA = 0.85, BR = 0.105, BG = 0.12, BB = 0.15 },
   -- préremplissage : soins entrants couleur de classe (les modes « selon la vie » sont refusés aux addons sur Forever)
   ["BarIACol~f~1"] = { IC = 3, AC = 3, IA = 0.55 },
+  -- nom à gauche, vie à droite (ALIGN/HALIGN : 1 gauche, 2 centre, 3 droite ; 2 = centré sur la capture du 28/11/2026)
   ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "false", INCHEALS = 1, SHOWROLE = "true", CLASSONBAR = "false",
-                      FONT = "Roboto Bold", HEIGHT = 12, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 11, HOUTLINE = 2 },
+                      FONT = "Roboto Bold", HEIGHT = 12, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 11, HOUTLINE = 2,
+                      ALIGN = 1, HALIGN = 3 },
   ["Icons~f~1"] = { SHOWROLE = "true", SHOWCLASS = "false" },
   -- débuffs ancrés à gauche (1), buffs à droite (2), sur la barre, une seule rangée, durées affichées
   ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 1, BUFFONBAR = 1, DSCALE = 0.75, BSCALE = 0.7,
@@ -253,7 +255,8 @@ HB.MODERN_RAID = {
   ["BarCol~f~1"] = HB.MODERN["BarCol~f~1"],
   ["BarIACol~f~1"] = HB.MODERN["BarIACol~f~1"],
   ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "false", INCHEALS = 1, SHOWROLE = "true", CLASSONBAR = "false",
-                      FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 10, HOUTLINE = 2 },
+                      FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 10, HOUTLINE = 2,
+                      ALIGN = 1, HALIGN = 3 },
   ["Icons~f~1"] = HB.MODERN["Icons~f~1"],
   -- barres étroites : 2 débuffs à gauche, 3 buffs à droite, un peu plus petits
   ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 1, BUFFONBAR = 1, DSCALE = 0.6, BSCALE = 0.55,
