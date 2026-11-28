@@ -217,7 +217,8 @@ HB.MODERN = {
   ["HealBar~f~1"] = { WIDTH = 190, HEIGHT = 38, TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 3, NUMCOLS = 1 },
   ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 20, TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2, NUMCOLS = 1 },
   -- familiers : nom seul (une ligne), la vie perdue reste affichée par ForeverCompagnon
-  ["BarText~f~7"] = { HLTHONBAR = "false", HEIGHT = 10, OFFSET = 0 },
+  ["BarText~f~7"] = { HLTHONBAR = "false", HEIGHT = 10, OFFSET = -5, OFFSET2 = 4 },
+  ["Icons~f~7"] = { SHOWCLASS = "false", SHOWROLE = "false" },                       -- pas de rôle pour un familier
   ["StickyFrames~f~7"] = { STUCK = "true", STUCKTO = 1, STUCKPOINT = "TOPLEFT", STUCKTOPOINT = "BOTTOMLEFT" },
   ["Frame~f~1"] = { BACKR = 0.05, BACKG = 0.055, BACKB = 0.075, BACKA = 0.86, BORDERR = 0.84, BORDERG = 0.66, BORDERB = 0.29,
                     BORDERA = 0.6, PADDING = 3 },
@@ -230,13 +231,18 @@ HB.MODERN = {
   ["BarCol~f~1"] = { HA = 0.8, BA = 0.85, BR = 0.105, BG = 0.12, BB = 0.15 },
   -- préremplissage : soins entrants couleur de classe (les modes « selon la vie » sont refusés aux addons sur Forever)
   ["BarIACol~f~1"] = { IC = 3, AC = 3, IA = 0.55 },
-  -- nom à gauche, vie à droite (ALIGN/HALIGN : 1 gauche, 2 centre, 3 droite ; 2 = centré sur la capture du 28/11/2026)
+  -- Texte, d'après le code d'HealBot 26.11.27 (HealBot_Skins.lua, HealBot_Options.lua) : ALIGN 1 = nom à gauche ;
+  -- HLTHTXTANCHOR 3 = vie « indépendante à droite » ; hauteur du nom = 5 + OFFSET, de la vie = -7 + HOFFSET : OFFSET -5 et
+  -- HOFFSET 7 les mettent tous deux au milieu de la barre, sur la même ligne ; OFFSET2 décale le nom après l'icône de rôle
   ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "false", INCHEALS = 1, SHOWROLE = "true", CLASSONBAR = "false",
                       FONT = "Roboto Bold", HEIGHT = 12, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 11, HOUTLINE = 2,
-                      ALIGN = 1, HALIGN = 3 },
-  ["Icons~f~1"] = { SHOWROLE = "true", SHOWCLASS = "false" },
-  -- débuffs ancrés à gauche (1), buffs à droite (2), sur la barre, une seule rangée, durées affichées
-  ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 1, BUFFONBAR = 1, DSCALE = 0.75, BSCALE = 0.7,
+                      ALIGN = 1, OFFSET = -5, OFFSET2 = 22, HLTHTXTANCHOR = 3, HOFFSET = 7, HOFFSET2 = -4 },
+  -- poste (tank, soigneur, dégâts) : HealBot n'affiche l'icône de rôle qu'avec l'icône de classe activée (SHOWCLASS),
+  -- qui prend alors le dessin du rôle ; placée au milieu à gauche de la barre (ancre 1), devant le nom
+  ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true", CLASSEN = "true", CLASSONBAR = 1, CLASSANCHOR = 1, CLASSVOFFSET = 0,
+                    CLASSHOFFSET = 2, CLASSSCALE = 0.5 },
+  -- débuffs à gauche (1), buffs à droite (2), À L'EXTÉRIEUR de la barre (ONBAR 2, relevé du 28/11/2026), une rangée, durées
+  ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 2, BUFFONBAR = 2, DSCALE = 0.75, BSCALE = 0.7,
                          MAXDICONS = 3, MAXBICONS = 5, DEBUFFDOUBLE = "false", BUFFDOUBLE = "false" },
   ["IconSetsText^1~f~1"] = { DBSDUR = "true", BUFFSDUR = "true" },
   ["BarSort~f~1"] = { RAIDORDER = 3, SUBORDER = 5, SUBPF = "true" },
@@ -255,9 +261,10 @@ HB.MODERN_RAID = {
   ["BarCol~f~1"] = HB.MODERN["BarCol~f~1"],
   ["BarIACol~f~1"] = HB.MODERN["BarIACol~f~1"],
   ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "false", INCHEALS = 1, SHOWROLE = "true", CLASSONBAR = "false",
-                      FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 10, HOUTLINE = 2,
-                      ALIGN = 1, HALIGN = 3 },
-  ["Icons~f~1"] = HB.MODERN["Icons~f~1"],
+                      FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 10, HOUTLINE = 2 },
+  -- raid : barres étroites, nom et vie sur deux lignes ; icône de rôle petite, en haut à gauche (ancre 5)
+  ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true", CLASSEN = "true", CLASSONBAR = 1, CLASSANCHOR = 5, CLASSVOFFSET = 0,
+                    CLASSHOFFSET = 1, CLASSSCALE = 0.4 },
   -- barres étroites : 2 débuffs à gauche, 3 buffs à droite, un peu plus petits
   ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 1, BUFFONBAR = 1, DSCALE = 0.6, BSCALE = 0.55,
                          MAXDICONS = 2, MAXBICONS = 3, DEBUFFDOUBLE = "false", BUFFDOUBLE = "false" },
@@ -276,11 +283,11 @@ HB.STYLES = {
   A = { group = {}, raid = {} },
   B = { group = { ["HealBar~f~1"] = { WIDTH = 120, HEIGHT = 42, NUMCOLS = 5, CMARGIN = 4, RMARGIN = 4 },
                   ["HealBar~f~7"] = { WIDTH = 120, HEIGHT = 14, NUMCOLS = 5, CMARGIN = 4, RMARGIN = 2 },
-                  ["IconSets^1~f~1"] = { MAXDICONS = 2, MAXBICONS = 3, DSCALE = 0.6, BSCALE = 0.55 } },
+                  ["IconSets^1~f~1"] = { MAXDICONS = 2, MAXBICONS = 3, DSCALE = 0.6, BSCALE = 0.55, DEBUFFONBAR = 1, BUFFONBAR = 1 } },
         raid = { ["HealBar~f~1"] = { WIDTH = 100, HEIGHT = 36 } } },
   C = { group = { ["HealBar~f~1"] = { WIDTH = 190, HEIGHT = 26, CMARGIN = 2, RMARGIN = 1 },
                   ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 14, RMARGIN = 1 },
-                  ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9, OFFSET = -3, HOFFSET = -4 },
+                  ["BarText~f~1"] = { HEIGHT = 10, HHEIGHT = 10, OFFSET2 = 18 },
                   ["IconSets^1~f~1"] = { DSCALE = 0.5, BSCALE = 0.45 } },
         raid = { ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 26 }, ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9, OFFSET = -3, HOFFSET = -4 },
                  ["IconSets^1~f~1"] = { DSCALE = 0.45, BSCALE = 0.4 } } },

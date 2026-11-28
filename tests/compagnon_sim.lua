@@ -870,6 +870,9 @@ do
   local mt = loaded["Forever Moderne"]
   check(mt and mt:find("IconSets^1~f~1!{", 1, true) and mt:find("DEBUFFANCHOR=1", 1, true) and mt:find("BUFFANCHOR=2", 1, true),
         "skin moderne importé : débuffs à gauche, buffs à droite")
+  check(mt:find("DEBUFFONBAR=2", 1, true) and mt:find("HLTHTXTANCHOR=3", 1, true) and mt:find("HOFFSET=7", 1, true),
+        "skin moderne : icônes hors de la barre, nom et vie sur la même ligne (code d'HealBot)")
+  check(mt:find('SHOWCLASS="true"', 1, true) and mt:find('SHOWROLE="true"', 1, true), "skin moderne : poste (tank, soin, dégâts) affiché")
   check(current == "Forever Moderne" and HealBot_Config.SkinDefault["Forever Moderne"].Party, "skin moderne : choisi pour le groupe")
   local mr = loaded["Forever Moderne Raid"]
   check(mr and mr:find("GRPCOLS=\"true\"", 1, true) and mr:find("BUFFANCHOR=2", 1, true) and HealBot_Config.SkinDefault["Forever Moderne Raid"]["Raid 40"],
