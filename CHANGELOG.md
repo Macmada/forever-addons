@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v4.2.7 (ForeverCompagnon 4.2.7) : HealBot, buffs et débuffs sur une monture
+- Buffs et débuffs gardés quand tu es sur une monture (HealBot coupe leur surveillance en selle par défaut). Appliqué par `/fp healbot a` ou `/fp healbot debuffs`.
+- À savoir : HealBot 26.11.28 (sorti le 28/11) n'affiche plus aucun buff ni débuff en combat sur Forever (bug corrigé chez eux, pas encore publié) ; ça reviendra avec sa prochaine version.
+
 ## v4.2.6 (ForeverCompagnon 4.2.6) : durées HealBot en minutes
 - Durée des icônes de buffs et de débuffs d'HealBot en minutes (« 32m ») au-delà de 90 secondes, en heures (« 1h ») au-delà d'une heure ; en dessous, les secondes. HealBot écrivait les secondes brutes (« 1917 »).
 
