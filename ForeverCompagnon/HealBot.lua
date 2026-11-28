@@ -283,10 +283,33 @@ end
 -- Buffs visibles en combat. Sur Forever, en combat, HealBot fait afficher par le jeu la rangée « HELPFUL|PLAYER » (les buffs
 -- que TU as posés : Rénovation, Bouclier, Robustesse…) si HealBot_Config_Buffs.BuffWatch et BuffCustomWatchInCombat sont vrais
 -- (HealBot_Forever_BuffsEnabled) et que ses auras de combat sont actives ; le nombre d'icônes suit le skin (5).
+-- En combat, la rangée native ne montre que les buffs de la liste « buffs suivis » d'HealBot (HealBot_Globals.WatchHoT,
+-- lue par HBCA_ConfiguredBuffFilters) ; celle du prêtre ne contient que des sorts du WoW moderne (sauf Rénovation, Bouclier).
+-- On y ajoute les buffs du prêtre de Forever, par leur nom dans ta langue ; valeur 1 = posé par toi, 3 = par n'importe qui.
+local WATCH = {
+  PRIEST = { key = "PRIE", spells = { { 139, 1 }, { 17, 1 }, { 1243, 3 }, { 21562, 3 }, { 588, 1 }, { 14752, 3 }, { 27681, 3 },
+                                      { 976, 3 }, { 6346, 3 }, { 10060, 3 } } },
+}
+function HB.SetupBuffWatch()
+  local g = _G.HealBot_Globals
+  local _, class = UnitClass("player")
+  local w = WATCH[class]
+  if type(g) ~= "table" or not w then return 0 end
+  g.WatchHoT = g.WatchHoT or {}
+  g.WatchHoT[w.key] = g.WatchHoT[w.key] or {}
+  local list, n = g.WatchHoT[w.key], 0
+  for _, sp in ipairs(w.spells) do
+    local name = G_SpellName and G_SpellName(sp[1]) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(sp[1]))
+    if name and list[name] == nil then list[name] = sp[2]; n = n + 1 end
+  end
+  return n
+end
+
 function HB.SetupBuffs()
   local b = _G.HealBot_Config_Buffs
   if type(b) ~= "table" then return false end
   b.BuffWatch, b.BuffCustomWatchInCombat = true, true
+  pcall(HB.SetupBuffWatch)
   local g = _G.HealBot_Globals
   if type(g) == "table" then
     if g.CombatAurasOn == false then g.CombatAurasOn = true end
