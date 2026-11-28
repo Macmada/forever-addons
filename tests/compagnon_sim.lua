@@ -893,6 +893,11 @@ do
   HB.UpdateDeficits()
   check(HealBot_Unit_Button.a.fcDeficit and HealBot_Unit_Button.a.fcDeficit:GetText() == secretStr, "vie manquante : texte du jeu posé sur la barre (sans être lu)")
   check(HealBot_Unit_Button.b.fcDeficit:GetText() == "", "membre hors ligne : rien")
+  check(HealBot_Unit_Button.a.fcDeficit.x == -4, "autre skin : vie perdue tout à droite")
+  Healbot_Config_Skins.Current_Skin = "Forever Moderne"
+  HB.UpdateDeficits()
+  check(HealBot_Unit_Button.a.fcDeficit.x == -36, "skin Forever Moderne : vie perdue à gauche du %")
+  Healbot_Config_Skins.Current_Skin = "Standard"
   SlashCmdList.FOREVERCOMPAGNON("healbot chiffres")
   check(HealBot_Unit_Button.a.fcDeficit:GetText() == "" and root.db.healbotDeficit == false, "/fp healbot chiffres : masqué")
   SlashCmdList.FOREVERCOMPAGNON("healbot chiffres")

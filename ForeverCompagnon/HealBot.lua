@@ -261,9 +261,10 @@ HB.MODERN_RAID = {
   ["BarCol~f~1"] = HB.MODERN["BarCol~f~1"],
   ["BarIACol~f~1"] = HB.MODERN["BarIACol~f~1"],
   ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "false", INCHEALS = 1, SHOWROLE = "true", CLASSONBAR = "false",
-                      FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 10, HOUTLINE = 2 },
-  -- raid : barres étroites, nom et vie sur deux lignes ; icône de rôle petite, en haut à gauche (ancre 5)
-  ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true", CLASSEN = "true", CLASSONBAR = 1, CLASSANCHOR = 5, CLASSVOFFSET = 0,
+                      FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 10, HOUTLINE = 2,
+                      ALIGN = 1, OFFSET = -5, OFFSET2 = 15, HLTHTXTANCHOR = 3, HOFFSET = 7, HOFFSET2 = -3 },
+  -- raid : même disposition que le groupe (rôle, nom à gauche, vie à droite, même ligne), en plus petit
+  ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true", CLASSEN = "true", CLASSONBAR = 1, CLASSANCHOR = 1, CLASSVOFFSET = 0,
                     CLASSHOFFSET = 1, CLASSSCALE = 0.4 },
   -- barres étroites : 2 débuffs à gauche, 3 buffs à droite, un peu plus petits
   ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 1, BUFFONBAR = 1, DSCALE = 0.6, BSCALE = 0.55,
@@ -289,7 +290,7 @@ HB.STYLES = {
                   ["HealBar~f~7"] = { WIDTH = 160, HEIGHT = 14, RMARGIN = 1 },
                   ["BarText~f~1"] = { HEIGHT = 10, HHEIGHT = 10, OFFSET2 = 18 },
                   ["IconSets^1~f~1"] = { DSCALE = 0.5, BSCALE = 0.45 } },
-        raid = { ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 26 }, ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9, OFFSET = -3, HOFFSET = -4 },
+        raid = { ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 26 }, ["BarText~f~1"] = { HEIGHT = 9, HHEIGHT = 9, OFFSET2 = 13 },
                  ["IconSets^1~f~1"] = { DSCALE = 0.45, BSCALE = 0.4 } } },
 }
 local function Merge(base, extra)
@@ -548,10 +549,19 @@ local function DeficitButton(button)
     fs = top:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     local font = _G.STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
     fs:SetFont(font, 12, "OUTLINE")
-    fs:SetPoint("RIGHT", button.gref.Bar or top, "RIGHT", -4, 0)
     fs:SetJustifyH("RIGHT")
     fs:SetTextColor(1, 0.38, 0.38)
     button.fcDeficit = fs
+  end
+  -- place : skins Forever Moderne, le % est tout à droite sur la ligne du nom : la vie perdue juste à sa gauche (la place
+  -- de « 100% » dans sa police) ; autres skins : tout à droite comme avant
+  local skins = _G.Healbot_Config_Skins
+  local cur = type(skins) == "table" and skins.Current_Skin or ""
+  local x = (cur == HB.SKIN_MODERN or cur == HB.SKIN_MODERN_RAID) and ((cur == HB.SKIN_MODERN_RAID) and -30 or -36) or -4
+  if fs.x ~= x then
+    fs:ClearAllPoints()
+    fs:SetPoint("RIGHT", button.gref.Bar or top, "RIGHT", x, 0)
+    fs.x = x
   end
   local unit = button.unit
   if not unit or not DeficitOn() then fs:SetText(""); return end
