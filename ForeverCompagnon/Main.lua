@@ -19,8 +19,7 @@ local T = FR and {
   mRoute = "Itinéraire : mes vols", mRouteD = "points de vol connus, le plus proche d'abord",
   mClear = "Effacer la flèche", mClearD = "retire la flèche de l'itinéraire",
   mFlash = "Cadre Flash", mFlashOn = "activé : caractéristiques à chaque changement d'objet", mFlashOff = "désactivé",
-  mHealBot = "Configurer HealBot", mHealBotD = "skins en français, rôles, sorts sur les clics",
-  mModern = "Skin HealBot moderne", mModernD = "apparence seulement, clics inchangés",
+  mHealBot = "Configurer HealBot", mHealBotD = "skins modernes groupe et raid, clics inchangés",
   mErrors = "Erreurs", mErrorsD = "relevé de tous les addons, à copier",
   mLog = "Journal", mLogD = "ce que l'addon a fait (diagnostic)",
   mAddons = "Addons", mAddonsD = "addons utiles sur Forever",
@@ -40,8 +39,7 @@ local T = FR and {
   mRoute = "Route: my flights", mRouteD = "known flight points, nearest first",
   mClear = "Clear the arrow", mClearD = "removes the route arrow",
   mFlash = "Flash frame", mFlashOn = "on: stats on every gear change", mFlashOff = "off",
-  mHealBot = "Set up HealBot", mHealBotD = "skins, roles, click spells",
-  mModern = "Modern HealBot skin", mModernD = "look only, clicks unchanged",
+  mHealBot = "Set up HealBot", mHealBotD = "modern party and raid skins, clicks unchanged",
   mErrors = "Errors", mErrorsD = "errors from every addon, to copy",
   mLog = "Log", mLogD = "what the addon did (diagnostics)",
   mAddons = "Addons", mAddonsD = "useful addons on Forever",
@@ -290,8 +288,7 @@ local function MenuItems()
     { T.mOptions, T.mOptionsD, function() root.ShowOptions() end },
   }
   if root.HealBot and root.HealBot.Command then
-    table.insert(items, 3, { T.mHealBot, T.mHealBotD, function() root.HealBot.Command("") end })
-    table.insert(items, 4, { T.mModern, T.mModernD, function() root.HealBot.InstallModern() end })
+    table.insert(items, 3, { T.mHealBot, T.mHealBotD, function() root.HealBot.Setup() end })
   end
   return items
 end

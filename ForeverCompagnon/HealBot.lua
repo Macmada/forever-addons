@@ -1,15 +1,9 @@
 local _, root = ...
-local G = root.Game
 
--- HealBot Continued configuré pour le prêtre, avec les fonctions d'HealBot lui-même (aucun fichier d'HealBot n'est
--- modifié ni copié) :
---  * clics : chaque clic reçoit le bon sort d'après les sorts connus (« Soins » sans rang = rang le plus haut, donc rien
---    à refaire à chaque nouveau rang) ; à chaque nouveau sort (Soins rapides, Dissipation…), les clics que tu n'as pas
---    changés toi-même sont mis à jour ;
---  * cadres : deux skins importés par la fonction d'import d'HealBot, « Forever Groupe » (seul et en groupe) et
---    « Forever Raid » (raid de 10 à 40), tirés de ses skins « Groupe » et « Raid 40 » avec des réglages de soigneur
---    (vie manquante affichée, rôles, tri par groupe puis rôle, alerte à 90 %) ;
---  * sauvegarde : les clics et le choix des skins d'avant sont gardés ; « /fp healbot annuler » les remet.
+-- HealBot Continued habillé par ForeverCompagnon, avec les fonctions d'HealBot lui-même (aucun fichier d'HealBot n'est
+-- modifié ni copié) : skins « Forever Moderne » (seul et groupe) et « Forever Moderne Raid », vie perdue sur les barres,
+-- protection de la prédiction des soins, relevé des réglages. Depuis le 28/11/2026, ForeverCompagnon ne touche plus du
+-- tout aux sorts affectés aux clics (demande du joueur) : seule l'apparence change.
 
 local HB = {}
 root.HealBot = HB
@@ -17,108 +11,27 @@ root.HealBot = HB
 local FR = root.FR
 local T = FR and {
   notLoaded = "HealBot n'est pas chargé : active-le dans l'onglet Addons (puis /reload).",
-  combat = "En combat : HealBot sera configuré à la fin du combat.",
-  notPriest = "La configuration automatique d'HealBot est prévue pour le prêtre.",
-  done = "HealBot configuré : %d clic(s) réglé(s), skins « Forever Groupe » et « Forever Raid ». Annuler : /fp healbot annuler",
+  combat = "En combat : réessaie à la fin du combat.",
   skinFail = "Skins HealBot : import impossible (%s skin introuvable).",
-  doneClicks = "HealBot : %d clic(s) réglé(s). Annuler : /fp healbot annuler",
-  updated = "HealBot : %s sur %s (nouveau sort).",
-  removed = "HealBot : %s libéré (Alt lance le sort sur toi : Robustesse passe sur Ctrl+clic milieu).",
-  restored = "HealBot : clics et skins d'avant remis.",
   noBackup = "HealBot : aucune sauvegarde à remettre.",
-  planTitle = "Clics HealBot prévus à ton niveau :",
-  kept = "%s : laissé tel quel (changé par toi)",
   deficitOn = "HealBot : vie manquante affichée en rouge sur les barres.", deficitOff = "HealBot : vie manquante masquée.",
-  button = "Configurer HealBot", buttonTip = "Règle les clics de soins et les cadres de groupe/raid d'HealBot pour ton prêtre (sauvegarde avant, /fp healbot annuler).",
-  modernDone = "HealBot : skins « Forever Moderne » (seul et groupe) et « Forever Moderne Raid » installés (clics inchangés). Pour le partager : HealBot, Partager, Exporter le skin. Annuler : /fp healbot moderne annuler",
+  button = "Configurer HealBot", buttonTip = "Installe les skins « Forever Moderne » (groupe et raid). Les sorts de tes clics ne changent pas. Annuler : /fp healbot annuler",
+  modernDone = "HealBot : skins « Forever Moderne » (seul et groupe) et « Forever Moderne Raid » installés (clics inchangés). Pour les partager : HealBot, Partager, Exporter le skin. Annuler : /fp healbot annuler",
   modernUndone = "HealBot : skins d'avant remis (les skins « Forever Moderne » restent dans la liste d'HealBot).",
-  Left = "Clic gauche", Right = "Clic droit", Middle = "Clic milieu", Shift = "Maj+", Ctrl = "Ctrl+", Alt = "Alt+",
 } or {
   notLoaded = "HealBot is not loaded: enable it in the Addons tab (then /reload).",
-  combat = "In combat: HealBot will be set up after the fight.",
-  notPriest = "The automatic HealBot setup is made for priests.",
-  done = "HealBot set up: %d click(s), skins \"Forever Groupe\" and \"Forever Raid\". Undo: /fp healbot annuler",
+  combat = "In combat: try again after the fight.",
   skinFail = "HealBot skins: import failed (%s skin not found).",
-  doneClicks = "HealBot: %d click(s) set. Undo: /fp healbot annuler",
-  updated = "HealBot: %s on %s (new spell).",
-  removed = "HealBot: %s freed (Alt casts on yourself: Fortitude moves to Ctrl+middle click).",
-  restored = "HealBot: previous clicks and skins restored.",
   noBackup = "HealBot: no backup to restore.",
-  planTitle = "HealBot clicks planned at your level:",
-  kept = "%s: left as is (changed by you)",
   deficitOn = "HealBot: missing health shown in red on the bars.", deficitOff = "HealBot: missing health hidden.",
-  button = "Set up HealBot", buttonTip = "Sets HealBot's healing clicks and party/raid frames for your priest (backup first, /fp healbot annuler).",
-  modernDone = "HealBot: \"Forever Moderne\" (solo and party) and \"Forever Moderne Raid\" skins installed (clicks unchanged). To share it: HealBot, Share, Export skin. Undo: /fp healbot moderne annuler",
-  modernUndone = "HealBot: previous skins restored (the \"Forever Moderne\" skin stays in HealBot's list).",
-  Left = "Left click", Right = "Right click", Middle = "Middle click", Shift = "Shift+", Ctrl = "Ctrl+", Alt = "Alt+",
+  button = "Set up HealBot", buttonTip = "Installs the \"Forever Moderne\" skins (party and raid). Your click spells don't change. Undo: /fp healbot annuler",
+  modernDone = "HealBot: \"Forever Moderne\" (solo and party) and \"Forever Moderne Raid\" skins installed (clicks unchanged). To share them: HealBot, Share, Export skin. Undo: /fp healbot annuler",
+  modernUndone = "HealBot: previous skins restored (the \"Forever Moderne\" skins stay in HealBot's list).",
 }
 HB.T = T
 
-HB.SKIN_GROUP, HB.SKIN_RAID = "Forever Groupe", "Forever Raid"
-
--- Sorts du prêtre : numéro du rang 1 (un rang appris reste connu, le rang 1 suffit pour savoir si le sort l'est)
-local S = {
-  lesser = 2050, heal = 2054, greater = 2060, flash = 2061, renew = 139, shield = 17, prayer = 596,
-  cure = 528, abolish = 552, dispel = 527, rez = 2006, fort = 1243,
-}
-HB.SPELLS = S
-local LESSER_RANKS = { 2050, 2052, 2053 }
-
-local function Known(id)
-  if IsPlayerSpell and IsPlayerSpell(id) then return true end
-  if C_SpellBook and C_SpellBook.IsSpellKnown then
-    local ok, v = pcall(C_SpellBook.IsSpellKnown, id)
-    if ok and v then return true end
-  end
-  return IsSpellKnown and IsSpellKnown(id) or false
-end
-HB.Known = Known
-
-local function Name(id) return G.SpellName(id) end
-
--- Nom avec rang au format d'HealBot, « Soins inférieurs(Rang 2) »
-local function RankedName(id)
-  local name = Name(id)
-  local sub = C_Spell and C_Spell.GetSpellSubtext and C_Spell.GetSpellSubtext(id) or (GetSpellSubtext and GetSpellSubtext(id))
-  if name and sub and sub ~= "" then return name .. "(" .. sub .. ")" end
-end
-
--- Clics prévus : { combo HealBot (« ShiftLeft »), nom à donner à HealBot, repli si HealBot ne connaît pas ce nom }
-function HB.Plan()
-  local out = {}
-  local function add(combo, text, fallback) if text then out[#out + 1] = { combo = combo, text = text, fallback = fallback } end end
-  -- gros soin efficace au clic gauche ; soin rapide (ou petit rang moins cher) en Maj+gauche
-  local main = (Known(S.greater) and "greater") or (Known(S.heal) and "heal") or (Known(S.lesser) and "lesser")
-  if main then add("Left", Name(S[main])) end
-  if Known(S.flash) then add("ShiftLeft", Name(S.flash))
-  elseif main == "heal" then add("ShiftLeft", Name(S.lesser))
-  elseif main == "lesser" then
-    local best
-    for i = #LESSER_RANKS, 1, -1 do if Known(LESSER_RANKS[i]) then best = i; break end end
-    if best and best > 1 then add("ShiftLeft", RankedName(LESSER_RANKS[best - 1]), nil) end
-  end
-  if Known(S.rez) then add("CtrlLeft", Name(S.rez)) end
-  -- pas de clic avec Alt : c'est la touche « se cibler soi-même » de WoW, le sort partirait sur toi
-  if Known(S.fort) then add("CtrlMiddle", Name(S.fort)) end
-  if Known(S.renew) then add("Right", Name(S.renew)) end
-  if Known(S.shield) then add("ShiftRight", Name(S.shield)) end
-  if Known(S.prayer) then add("CtrlRight", Name(S.prayer)) end
-  if Known(S.abolish) then add("Middle", Name(S.abolish)) elseif Known(S.cure) then add("Middle", Name(S.cure)) end
-  if Known(S.dispel) then add("ShiftMiddle", Name(S.dispel)) end
-  return out
-end
-
--- « ShiftLeft » -> « Maj+Clic gauche »
-function HB.ComboLabel(combo)
-  local mods, button = combo:match("^(%a-)(Left)$")
-  if not button then mods, button = combo:match("^(%a-)(Right)$") end
-  if not button then mods, button = combo:match("^(%a-)(Middle)$") end
-  return (mods and T[mods] or "") .. (T[button] or combo)
-end
-
 function HB.Available()
-  return type(_G.HealBot_Action_SetSpell) == "function" and type(_G.HealBot_Config_Spells) == "table"
-         and type(_G.HealBot_Config_Spells.EnabledKeyCombo) == "table"
+  return type(_G.HealBot_Share_SkinLoad) == "function" and type(_G.HealBot_Config) == "table"
 end
 
 local function Copy(t)
@@ -135,67 +48,6 @@ local function Store()
   return root.db.healbot[key]
 end
 HB.Store = Store
-
--- Demande à HealBot de relire ses clics (comme après un import de sorts)
-local function Refresh()
-  if type(_G.HealBot_Options_SaveSpellsProfile) == "function" then pcall(_G.HealBot_Options_SaveSpellsProfile, "SPELLS") end
-  if type(_G.HealBot_Timers_Set) == "function" then
-    pcall(_G.HealBot_Timers_Set, "INIT", "SpellsTabText")
-    pcall(_G.HealBot_Timers_Set, "INIT", "PrepSetAllAttribs")
-  end
-end
-
--- Pose un clic ; vrai si HealBot a reconnu le sort (« S:numéro^nom »)
-local function SetOne(combo, text)
-  pcall(_G.HealBot_Action_SetSpell, "ENABLED", combo, text)
-  local v = _G.HealBot_Config_Spells.EnabledKeyCombo[combo]
-  return type(v) == "string" and v:sub(1, 2) == "S:"
-end
-
--- Applique les clics prévus. onlyMine : ne touche qu'aux clics posés par nous et pas changés depuis (mise à jour).
-local function ApplyClicks(onlyMine)
-  local st = Store()
-  st.set = st.set or {}
-  local combos = _G.HealBot_Config_Spells.EnabledKeyCombo
-  local n, changes = 0, {}
-  for _, p in ipairs(HB.Plan()) do
-    local current = combos[p.combo]
-    local mine = st.set[p.combo] ~= nil and current == st.set[p.combo]
-    if not onlyMine or mine or current == nil then
-      local function Is(text) return type(current) == "string" and current:match("^S:%d+%^(.*)$") == text end
-      if Is(p.text) then
-        st.set[p.combo] = current
-        n = n + 1
-      else
-        local wanted = p.text
-        local ok = SetOne(p.combo, wanted)
-        if not ok and p.fallback then wanted = p.fallback; ok = SetOne(p.combo, wanted) end
-        if ok then
-          changes[#changes + 1] = { combo = p.combo, text = wanted }
-          st.set[p.combo] = combos[p.combo]
-          n = n + 1
-        else
-          combos[p.combo] = current                                -- sort inconnu d'HealBot : on remet l'ancien
-        end
-      end
-    end
-  end
-  -- clics posés par une ancienne version et plus prévus (Alt+gauche) : retirés s'ils n'ont pas été changés depuis
-  local planned = {}
-  for _, p in ipairs(HB.Plan()) do planned[p.combo] = true end
-  for combo, value in pairs(st.set) do
-    if not planned[combo] then
-      if combos[combo] == value then
-        pcall(_G.HealBot_Action_SetSpell, "ENABLED", combo, "")
-        combos[combo] = nil
-        changes[#changes + 1] = { combo = combo, removed = true }
-      end
-      st.set[combo] = nil
-    end
-  end
-  Refresh()
-  return n, changes
-end
 
 -- Skin tiré d'un skin intégré d'HealBot (texte d'import), réglages remplacés : edits[ligne] = { clé = valeur }
 local function Val(v) return type(v) == "string" and ('"' .. v .. '"') or tostring(v) end
@@ -257,116 +109,12 @@ local function PatchFrames(text, newName, edits)
 end
 HB.PatchFrames = PatchFrames
 
--- Réglages communs aux deux skins. Sur Forever, la vie des alliés est secrète : HealBot n'affiche que la vie actuelle ou
--- le pourcentage (pas la vie manquante), et le texte de vie était coupé dans ses skins d'origine (HLTHONBAR).
-local GOLD = { R = 1, G = 0.82, B = 0.35 }
-local COMMON = {
-  ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "true", SHOWROLE = "true",          -- vie en %
-                      FONT = "Roboto Bold", HEIGHT = 12, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 11, HOUTLINE = 2 },
-  ["BarSort~f~1"] = { RAIDORDER = 3, SUBORDER = 5, SUBPF = "true" },                              -- par groupe, puis rôle
-  ["BarVisibility~f~1"] = { ALERTIC = 0.9, ALERTOC = 0.8 },                                       -- alerte sous 90 % en combat
-  ["Icons~f~1"] = { SHOWCLASS = "true", SHOWROLE = "true" },        -- icône de rôle (HealBot la met à la place de celle de classe)
-  ["General~t"] = { HIDEPARTYF = "false", HIDERAIDF = "false" },     -- cadres de Blizzard gardés (secours si HealBot plante)
-  -- habillage : barres lisses, fond sombre, liseré doré et titre du cadre, comme les fenêtres de ForeverCompagnon
-  ["BarCol~f~1"] = { HA = 0.95, BA = 0.85, BR = 0.06, BG = 0.06, BB = 0.08 },
-  ["Frame~f~1"] = { BACKR = 0.03, BACKG = 0.03, BACKB = 0.05, BACKA = 0.75, BORDERR = GOLD.R, BORDERG = GOLD.G, BORDERB = GOLD.B,
-                    BORDERA = 0.7, PADDING = 3 },
-  ["HeadBar~f~1"] = { SHOW = "true", TEXTURE = "Smooth v2", HEIGHT = 18, WIDTH = 1, R = 0.18, G = 0.13, B = 0.05, A = 0.9 },
-  ["HeadText~f~1"] = { FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, R = GOLD.R, G = GOLD.G, B = GOLD.B, A = 1 },
-  -- couleur des soins entrants et des absorptions : celle de la classe (3, défaut d'HealBot). Les modes « selon la vie »
-  -- (5, 6) passent la vie secrète du groupe à SetPredictedValues, refusé aux addons depuis le client 1.60.1 (15/11/2026)
-  ["BarIACol~f~1"] = { IC = 3, AC = 3 },
-}
-local function With(extra)
-  local t = {}
-  for k, v in pairs(COMMON) do t[k] = v end
-  for k, v in pairs(extra) do t[k] = v end
-  return t
-end
-HB.SKINS = {
-  { name = HB.SKIN_GROUP, from = "Group", edits = With({ ["HealBar~f~1"] = { WIDTH = 130, HEIGHT = 38, TEXTURE = "Smooth v2", CMARGIN = 3, RMARGIN = 3 },
-                     -- pas de familiers : HealBot Tooltips plante sur eux (un familier n'a pas de classe sur Forever)
-                     ["HealGroups~f~8"] = { STATE = "false" } }),
-    flags = { "HEALBOT_WORD_SOLO", "HEALBOT_WORD_PARTY" } },
-  { name = HB.SKIN_RAID, from = "Raid 40", edits = With({ ["HealBar~f~1"] = { WIDTH = 90, HEIGHT = 32, GRPCOLS = "true", TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2 },
-                                                                          ["HealGroups~f~8"] = { STATE = "false" } }),
-    flags = { "HEALBOT_OPTIONS_RAID10", "HEALBOT_OPTIONS_RAID15", "HEALBOT_OPTIONS_RAID20", "HEALBOT_OPTIONS_RAID25", "HEALBOT_OPTIONS_RAID40" } },
-}
-
 local function Decompress(s)
   local f = _G.HealBot_Util_Decompress
   if type(f) ~= "function" then return nil end
   local ok, out = pcall(f, s)
   if not (ok and out) then ok, out = pcall(f, s) end           -- 1er appel : HealBot charge sa bibliothèque et ne rend rien
   return ok and out or nil
-end
-
-local function ApplySkins()
-  local data, load = _G.HealBot_Config_SkinsData, _G.HealBot_Share_SkinLoad
-  if type(data) ~= "table" or type(load) ~= "function" or type(_G.HealBot_Config) ~= "table" then return false, "HealBot_Share_SkinLoad" end
-  local st = Store()
-  local cfg = _G.HealBot_Config
-  cfg.SkinDefault = cfg.SkinDefault or {}
-  if not st.skinDefault then st.skinDefault = Copy(cfg.SkinDefault) end
-  if not st.skin and _G.Healbot_Config_Skins then st.skin = _G.Healbot_Config_Skins.Current_Skin end
-  -- skins intégrés d'HealBot, retrouvés par le nom écrit dans leurs données (« Group », « Raid 40 ») : HealBot les range
-  -- sous le nom anglais au chargement, puis la traduction renomme ses variables (« Groupe » en français)
-  local byName = {}
-  for _, packed in pairs(data) do
-    local text = type(packed) == "string" and Decompress(packed)
-    local n = text and text:match("^[^\n]+\n([^\n]+)")
-    if n then byName[n] = text end
-  end
-  for _, s in ipairs(HB.SKINS) do
-    local text = byName[s.from]
-    if not text then return false, s.from end
-    local ok, err = pcall(load, Patch(text, s.name, s.edits), false)
-    if not ok then return false, tostring(err) end
-    -- ce skin devient celui d'HealBot pour ces situations (les autres skins perdent ce choix)
-    for _, f in ipairs(s.flags) do
-      local id = _G[f]
-      if id then
-        for skin, t in pairs(cfg.SkinDefault) do if type(t) == "table" and skin ~= s.name then t[id] = nil end end
-        cfg.SkinDefault[s.name] = cfg.SkinDefault[s.name] or {}
-        cfg.SkinDefault[s.name][id] = true
-      end
-    end
-  end
-  -- familiers retirés par leur nom, après l'import : HealBot renumérote les groupes de barres d'un ancien skin (les
-  -- familiers passent de la ligne 8 à la ligne 10), donc un réglage par numéro de ligne vise le mauvais groupe
-  HB.NoPets()
-  local want = (IsInRaid and IsInRaid()) and HB.SKIN_RAID or HB.SKIN_GROUP
-  if type(_G.HealBot_Options_Set_Current_Skin) == "function" then pcall(_G.HealBot_Options_Set_Current_Skin, want) end
-  -- cadres de groupe et de raid de WoW gardés en secours, aussi dans le réglage global d'HealBot (s'il prend le pas sur le skin)
-  local o = type(_G.HealBot_Globals) == "table" and _G.HealBot_Globals.OverrideFrames
-  if type(o) == "table" then o.HIDEPARTYF, o.HIDERAIDF = false, false end
-  -- HealBot relit quels cadres de Blizzard masquer (sinon seulement au prochain changement de groupe)
-  if type(_G.HealBot_Options_SetFrames) == "function" then pcall(_G.HealBot_Options_SetFrames) end
-  if type(_G.HealBot_Timers_ToggleBlizzardFrames) == "function" then pcall(_G.HealBot_Timers_ToggleBlizzardFrames) end
-  return true
-end
-
-local PETS = { Pets = true, Vehicle = true }
-function HB.NoPets()
-  local skins = _G.Healbot_Config_Skins
-  if type(skins) ~= "table" then return 0 end
-  local n = 0
-  for _, name in ipairs({ HB.SKIN_GROUP, HB.SKIN_RAID }) do
-    local groups = type(skins.HealGroups) == "table" and skins.HealGroups[name]
-    if type(groups) == "table" then
-      local petName = _G.HEALBOT_OPTIONS_PETHEALS_en
-      for _, g in pairs(groups) do
-        if type(g) == "table" and (PETS[g.NAME] or (petName and g.NAME == petName)) and g.STATE ~= false then g.STATE = false; n = n + 1 end
-      end
-    end
-    if type(skins.Healing) == "table" then
-      skins.Healing[name] = skins.Healing[name] or {}
-      skins.Healing[name].GROUPPETS = false
-      skins.Healing[name].SELFPET = false
-    end
-  end
-  if type(_G.HealBot_SetResetFlag) == "function" then pcall(_G.HealBot_SetResetFlag, "SOFT") end
-  return n
 end
 
 -- Relevé pour Claude (/fp healbot export) : le texte d'import du skin intégré « Group » d'HealBot (noms exacts des
@@ -560,58 +308,8 @@ function HB.RemoveModern()
   return true
 end
 
-local pending
-function HB.Setup()
-  if not HB.Available() then root.Print(T.notLoaded); return false end
-  local _, class = UnitClass("player")
-  if class ~= "PRIEST" then root.Print(T.notPriest); return false end
-  if InCombatLockdown and InCombatLockdown() then pending = true; root.Print(T.combat); return false end
-  local st = Store()
-  if not st.clicks then st.clicks = Copy(_G.HealBot_Config_Spells.EnabledKeyCombo) end   -- sauvegarde, une seule fois
-  local n = ApplyClicks(false)
-  local ok, err = ApplySkins()
-  st.auto = true
-  if ok then root.Print(T.done, n) else root.Print(T.skinFail, err); root.Print(T.doneClicks, n) end
-  return true, n
-end
-
--- Nouveau sort appris : met à jour les clics qu'on a posés et que tu n'as pas changés
-function HB.Update()
-  local st = root.db and root.db.healbot and Store()
-  if not (st and st.auto and HB.Available()) then return end
-  if InCombatLockdown and InCombatLockdown() then pending = "update"; return end
-  local _, changes = ApplyClicks(true)
-  for _, c in ipairs(changes) do
-    if c.removed then root.Print(T.removed, HB.ComboLabel(c.combo)) else root.Print(T.updated, c.text, HB.ComboLabel(c.combo)) end
-  end
-end
-
-function HB.Restore()
-  local st = Store()
-  if not (st.clicks and HB.Available()) then root.Print(T.noBackup); return false end
-  if InCombatLockdown and InCombatLockdown() then root.Print(T.combat); return false end
-  wipe(_G.HealBot_Config_Spells.EnabledKeyCombo)
-  for k, v in pairs(st.clicks) do _G.HealBot_Config_Spells.EnabledKeyCombo[k] = v end
-  if type(_G.HealBot_Action_ClearSpellCache) == "function" then pcall(_G.HealBot_Action_ClearSpellCache) end
-  if st.skinDefault and type(_G.HealBot_Config) == "table" then _G.HealBot_Config.SkinDefault = Copy(st.skinDefault) end
-  if st.skin and type(_G.HealBot_Options_Set_Current_Skin) == "function" then pcall(_G.HealBot_Options_Set_Current_Skin, st.skin) end
-  Refresh()
-  local key = (UnitName("player") or "?") .. "-" .. (GetRealmName and GetRealmName() or "")
-  root.db.healbot[key] = nil
-  root.Print(T.restored)
-  return true
-end
-
-function HB.ShowPlan()
-  root.Print(T.planTitle)
-  local st = root.db and root.db.healbot and Store() or {}
-  local combos = HB.Available() and _G.HealBot_Config_Spells.EnabledKeyCombo or {}
-  for _, p in ipairs(HB.Plan()) do
-    local cur = combos[p.combo]
-    if st.set and st.set[p.combo] and cur ~= st.set[p.combo] then root.Print("  " .. T.kept, HB.ComboLabel(p.combo))
-    else root.Print("  %s : %s", HB.ComboLabel(p.combo), p.text) end
-  end
-end
+-- « Configurer HealBot » : les skins modernes, rien d'autre
+function HB.Setup() return HB.InstallModern() end
 
 ----------------------------------------------------------------------
 -- Protection de la prédiction des soins d'HealBot (client 1.60.1, 15/11/2026) : HealBot 26.11.14, en mode de couleur
@@ -656,14 +354,11 @@ function HB.Command(arg)
     root.db.healbotGuard = (root.db.healbotGuard == false)
     HB.GuardPrediction()
     root.Print(HB.GuardText() or (FR and "HealBot : fonction de prédiction absente." or "HealBot: prediction function not found."))
-  elseif arg == "annuler" or arg == "undo" or arg == "restore" then HB.Restore()
-  elseif arg == "voir" or arg == "plan" or arg == "show" then HB.ShowPlan()
+  elseif arg == "annuler" or arg == "undo" or arg == "restore" or arg == "moderne annuler" or arg == "modern undo" then HB.RemoveModern()
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()
   elseif arg == "export" or arg == "releve" or arg == "relevé" then HB.Export()
-  elseif arg == "moderne" or arg == "modern" then HB.InstallModern()
-  elseif arg == "moderne annuler" or arg == "modern undo" then HB.RemoveModern()
-  else HB.Setup() end
+  else HB.InstallModern() end
 end
 
 ----------------------------------------------------------------------
@@ -734,14 +429,3 @@ if C_Timer and C_Timer.NewTicker then
   C_Timer.NewTicker(0.25, function() if _G.HealBot_Unit_Button then HB.UpdateDeficits() end end)
 end
 
-local ev = CreateFrame("Frame")
-for _, e in ipairs({ "LEARNED_SPELL_IN_SKILL_LINE", "LEARNED_SPELL_IN_TAB", "PLAYER_LEVEL_UP", "PLAYER_REGEN_ENABLED" }) do
-  pcall(ev.RegisterEvent, ev, e)
-end
-ev:SetScript("OnEvent", function(_, event)
-  if event == "PLAYER_REGEN_ENABLED" then
-    if pending == true then pending = nil; HB.Setup() elseif pending == "update" then pending = nil; HB.Update() end
-    return
-  end
-  C_Timer.After(2, HB.Update)
-end)

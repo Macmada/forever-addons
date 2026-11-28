@@ -106,8 +106,7 @@ function root.SelectAddon(e, st, folder)
   ui.url:HighlightText()
   ui.urlLabel:SetText(string.format(L.addonUrlFor, e.name))
   ui.enable:SetShown(st == "off" and folder ~= nil and A.EnableAddOn ~= nil)
-  local _, class = UnitClass("player")
-  ui.healbot:SetShown(e.key == "healbot" and st == "on" and class == "PRIEST")
+  ui.healbot:SetShown(e.key == "healbot" and st == "on")
 end
 
 function root.RefreshAddons()

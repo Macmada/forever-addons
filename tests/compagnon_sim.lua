@@ -791,17 +791,9 @@ do
     return ({ [2050] = "Rang 1", [2052] = "Rang 2", [2053] = "Rang 3" })[id] end }
   root.Game.used.spellName = nil
   check(not HB.Available(), "HealBot absent : rien n'est touché")
-  -- HealBot imité : un nom connu (avec ou sans rang) devient « S:numéro^nom »
-  local byName = { ["Soins inférieurs(Rang 2)"] = 2052 }
-  for id, n in pairs(names) do if known[id] or id == 2054 or id == 2061 or id == 527 then byName[n] = byName[n] or id end end
   _G.HealBot_Config_Spells = { EnabledKeyCombo = { Left = "S:2050^Soins inférieurs", Button4 = "S:9^Perso", CtrlRight = "S:8^Mon sort" } }
-  local refreshed = 0
-  _G.HealBot_Action_SetSpell = function(t, combo, text)
-    assert(t == "ENABLED")
-    local id = byName[text] and (known[byName[text]] or text:find("Rang")) and byName[text]
-    HealBot_Config_Spells.EnabledKeyCombo[combo] = id and ("S:" .. id .. "^" .. text) or text
-  end
-  _G.HealBot_Timers_Set = function(_, t) if t == "PrepSetAllAttribs" then refreshed = refreshed + 1 end end
+  local setSpell = 0
+  _G.HealBot_Action_SetSpell = function() setSpell = setSpell + 1 end
   _G.HEALBOT_SORTBY_GROUP = "Groupe"     -- traduit après le chargement des données (rangées sous « Group »)
   _G.HEALBOT_WORD_SOLO, _G.HEALBOT_WORD_PARTY = "Solo", "Party"
   for _, n in ipairs({ 10, 15, 20, 25, 40 }) do _G["HEALBOT_OPTIONS_RAID" .. n] = "Raid" .. n end
@@ -833,44 +825,26 @@ do
   _G.HealBot_Options_Set_Current_Skin = function(n) current = n end
   check(HB.Available(), "HealBot chargé : reconnu")
 
-  -- niveau 15 : Soins inférieurs au clic gauche, rang 2 (moins cher) en Maj+gauche
+  -- « Configurer HealBot » (28/11/2026) : les skins modernes seulement, jamais les clics
   W.combat = true
   HB.Setup()
-  check(HealBot_Config_Spells.EnabledKeyCombo.Right == nil, "en combat : rien n'est touché, reporté à la fin du combat")
+  check(loaded["Forever Moderne"] == nil, "en combat : rien n'est touché")
   W.combat = false
-  W.fire("PLAYER_REGEN_ENABLED")
-  local c = HealBot_Config_Spells.EnabledKeyCombo
-  check(c.Left == "S:2050^Soins inférieurs" and c.ShiftLeft == "S:2052^Soins inférieurs(Rang 2)", "niveau 15 : Soins inférieurs (gauche), rang 2 en Maj+gauche")
-  check(c.Right == "S:139^Rénovation" and c.ShiftRight == "S:17^Mot de pouvoir : Bouclier" and c.Middle == "S:528^Guérison des maladies",
-        "Rénovation (droit), Bouclier (Maj+droit), Guérison des maladies (milieu)")
-  check(c.CtrlLeft == "S:2006^Résurrection" and c.CtrlMiddle == "S:1243^Mot de pouvoir : Robustesse" and c.AltLeft == nil,
-        "Résurrection (Ctrl+gauche), Robustesse (Ctrl+milieu, jamais Alt : touche « soi-même » de WoW)")
-  check(c.Button4 == "S:9^Perso" and c.CtrlRight == "S:8^Mon sort" and c.ShiftMiddle == nil, "clics non prévus laissés tels quels (bouton 4, Ctrl+droit)")
-  check(refreshed >= 1, "HealBot relit ses clics")
-  local st = HB.Store()
-  check(st.clicks and st.clicks.Left == "S:2050^Soins inférieurs" and st.clicks.Right == nil, "sauvegarde des clics d'avant")
-  -- skins
-  local g, r = loaded["Forever Groupe"], loaded["Forever Raid"]
-  check(g and r, "skins « Forever Groupe » et « Forever Raid » importés par HealBot")
-  check(g and g:find("HLTHTYPE=3", 1, true) and g:find("HLTHONBAR=\"true\"", 1, true) and g:find("AHEIGHT=10", 1, true)
-        and g:find(",HEIGHT=12", 1, true) and g:find("SHOWROLE=\"true\"", 1, true) and g:find("IGNOREONFULL=\"true\"", 1, true),
-        "skin : vie en % affichée, rôles, autres réglages intacts (AHEIGHT)")
-  check(g and g:find('Icons~f~1!{RCEN="true",SHOWCLASS="true",SHOWROLE="true"}', 1, true)
-        and g:find('General~t!{OFREQ=0.07,HIDEPARTYF="false",HIDERAIDF="false"}', 1, true), "skin : icône de rôle, cadres de Blizzard gardés en secours")
-  check(blizz == 1 and HealBot_Globals.OverrideFrames.HIDEPARTYF == false and HealBot_Globals.OverrideFrames.HIDERAIDF == false,
-        "cadres de WoW gardés en secours (skin et réglage global d'HealBot), relus tout de suite")
-  check(g and g:find('HealGroups~f~8!{FRAME=7,STATE="false",NAME="Pets"}', 1, true), "skin groupe : sans familiers (infobulle d'HealBot qui plante)")
-  check(g and g:find('HealBar~f~1!{HEIGHT=38,GRPCOLS="false",WIDTH=130,CMARGIN=3,RMARGIN=3,TEXTURE="Smooth v2"}', 1, true) and g:find("HealBar~d!2~3~", 1, true), "skin groupe : barres lisses 130×38")
-  check(r and r:find("WIDTH=90", 1, true) and r:find("GRPCOLS=\"true\"", 1, true) and r:find("NAME=\"Pets\"", 1, true)
-        and r:find("STATE=\"false\"", 1, true) and r:find("SUBORDER=5", 1, true), "skin raid : colonnes par groupe, sans familiers, tri par rôle")
-  local sd = HealBot_Config.SkinDefault
-  check(sd["Forever Groupe"].Party and sd["Forever Groupe"].Solo and sd["Forever Raid"].Raid10 and sd["Forever Raid"]["Raid 40"]
-        and not sd.Group.Party and not sd["Raid 40"]["Raid 40"], "HealBot passe seul sur Forever Groupe / Forever Raid")
-  check(current == "Forever Groupe", "skin actif : Forever Groupe (hors raid)")
-  local hg = Healbot_Config_Skins.HealGroups["Forever Groupe"]
-  check(hg[10].STATE == false and hg[3].STATE == true and Healbot_Config_Skins.Healing["Forever Groupe"].GROUPPETS == false
-        and Healbot_Config_Skins.HealGroups["Forever Raid"][10].STATE == false, "familiers retirés par leur nom après l'import (HealBot renumérote)")
-  Healbot_Config_Skins.Current_Skin = "Forever Groupe"
+  local clicksBefore = {}
+  for k, v in pairs(HealBot_Config_Spells.EnabledKeyCombo) do clicksBefore[k] = v end
+  HB.Setup()
+  check(loaded["Forever Moderne"] and loaded["Forever Moderne Raid"] and current == "Forever Moderne", "Configurer HealBot : skins modernes installés")
+  local same = setSpell == 0
+  for k, v in pairs(HealBot_Config_Spells.EnabledKeyCombo) do if clicksBefore[k] ~= v then same = false end end
+  for k in pairs(clicksBefore) do if HealBot_Config_Spells.EnabledKeyCombo[k] == nil then same = false end end
+  check(same, "Configurer HealBot : aucun clic lu ni changé (HealBot_Action_SetSpell jamais appelé)")
+  check(blizz == 0 and HealBot_Config.SkinDefault["Forever Moderne"].Solo and HealBot_Config.SkinDefault["Forever Moderne Raid"].Raid10
+        and not HealBot_Config.SkinDefault.Group.Party, "skins modernes choisis pour seul, groupe et raid")
+  W.fire("LEARNED_SPELL_IN_TAB"); W.run(3)
+  check(setSpell == 0, "nouveau sort appris : les clics ne sont plus touchés")
+  SlashCmdList.FOREVERCOMPAGNON("healbot annuler")
+  check(HealBot_Config.SkinDefault.Group.Party and current == "Standard", "/fp healbot annuler : skins d'avant remis")
+  Healbot_Config_Skins.Current_Skin = "Forever Moderne"
   SlashCmdList.FOREVERCOMPAGNON("healbot diag")
   local ex = HB.ExportText()
   check(ex:find("Icons~f~1!{", 1, true) and ex:find("HealGroups = {", 1, true), "/fp healbot export : texte du skin « Group » et réglages du skin actif")
@@ -899,31 +873,6 @@ do
   SlashCmdList.FOREVERCOMPAGNON("healbot moderne annuler")
   check(not HealBot_Config.SkinDefault["Forever Moderne"] or not HealBot_Config.SkinDefault["Forever Moderne"].Party, "skin moderne : annuler remet les skins d'avant")
   Healbot_Config_Skins.Current_Skin = "Standard"
-
-  -- ancienne version : Robustesse posée sur Alt+gauche -> libérée et déplacée ; un Alt+clic changé à la main reste
-  c.AltLeft = "S:1243^Mot de pouvoir : Robustesse"; st.set.AltLeft = c.AltLeft
-  c.AltRight = "S:5^Perso"; st.set.AltRight = "S:4^Ancien"
-  HB.Update()
-  check(c.AltLeft == nil and st.set.AltLeft == nil and c.CtrlMiddle == "S:1243^Mot de pouvoir : Robustesse", "ancien Alt+gauche libéré, Robustesse sur Ctrl+milieu")
-  check(c.AltRight == "S:5^Perso", "Alt+clic changé à la main : gardé")
-  c.AltRight = nil
-  -- niveau 16 : Soins appris -> clic gauche mis à jour ; un clic changé à la main n'est pas touché
-  c.Right = "S:7^Mon choix"
-  known[2054] = true
-  HB.Update()
-  check(c.Left == "S:2054^Soins" and c.ShiftLeft == "S:2050^Soins inférieurs", "niveau 16 : Soins (gauche), Soins inférieurs (Maj+gauche)")
-  check(c.Right == "S:7^Mon choix", "clic changé à la main : gardé")
-  -- niveau 18 et 20 : Dissipation, Soins rapides
-  known[527], known[2061] = true, true
-  HB.Update()
-  check(c.ShiftMiddle == "S:527^Dissipation de la magie" and c.ShiftLeft == "S:2061^Soins rapides", "niveau 18-20 : Dissipation (Maj+milieu), Soins rapides (Maj+gauche)")
-  check(HB.ComboLabel("ShiftLeft") == (LANG == "fr" and "Maj+Clic gauche" or "Shift+Left click"), "nom des clics lisible")
-  -- annuler
-  HB.Restore()
-  check(c.Left == "S:2050^Soins inférieurs" and c.Right == nil and c.Button4 == "S:9^Perso" and HealBot_Config.SkinDefault.Group.Party
-        and HealBot_Config.SkinDefault["Forever Raid"] == nil
-        and current == "Standard", "annuler : clics et skins d'avant remis")
-  check(not HB.Restore(), "annuler deux fois : rien à remettre")
   -- vie manquante sur les barres : valeur secrète passée telle quelle au texte, jamais lue
   local secretStr = setmetatable({}, { __concat = function() error("secret") end, __eq = function() error("secret") end })
   _G.UnitHealthMissing = function() return SECRET end
@@ -940,10 +889,6 @@ do
   check(HealBot_Unit_Button.a.fcDeficit:GetText() == secretStr, "/fp healbot chiffres : réaffiché")
   W.run(1)
   _G.HealBot_Unit_Button, _G.UnitHealthMissing, _G.C_StringUtil, _G.UnitIsConnected = nil, nil, nil, nil
-  -- autre classe
-  W.class = "MAGE"
-  check(not HB.Setup(), "autre classe : pas de configuration automatique")
-  W.class = "PRIEST"
   _G.IsPlayerSpell, _G.C_Spell = saveIPS, saveSpell
   root.Game.used.spellName = nil
   for _, k in ipairs({ "HealBot_Config_Spells", "HealBot_Action_SetSpell", "HealBot_Config", "HealBot_Share_SkinLoad" }) do _G[k] = nil end
@@ -1015,7 +960,7 @@ do
   SlashCmdList.FOREVERCOMPAGNON("healbot protection")
   check(root.db.healbotGuard == false and not pcall(_G.HealBot_Forever_UpdatePrediction, "secret"), "/fp healbot protection : coupée, l'erreur repasse")
   SlashCmdList.FOREVERCOMPAGNON("healbot protection")
-  check(HBm.SKINS[1].edits["BarIACol~f~1"].IC == 3, "skins Forever : couleur des soins entrants par classe")
+  check(HBm.MODERN["BarIACol~f~1"].IC == 3 and HBm.MODERN_RAID["BarIACol~f~1"].IC == 3, "skins Forever Moderne : couleur des soins entrants par classe")
   _G.HealBot_Forever_UpdatePrediction = nil
   -- le jeu affiche « grand nombre d'erreurs » : /fp erreurs s'ouvre tout seul, texte sélectionné, une fois par session
   ForeverCompagnonTextFrame:Hide()
