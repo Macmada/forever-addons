@@ -1,5 +1,8 @@
 # Journal des versions
 
+## v4.2.6 (ForeverCompagnon 4.2.6) : durées HealBot en minutes
+- Durée des icônes de buffs et de débuffs d'HealBot en minutes (« 32m ») au-delà de 90 secondes, en heures (« 1h ») au-delà d'une heure ; en dessous, les secondes. HealBot écrivait les secondes brutes (« 1917 »).
+
 ## v4.2.5 (ForeverCompagnon 4.2.5) : HealBot, buffs du prêtre en combat
 - En combat, seulement les buffs du prêtre suivis (Rénovation, Bouclier, Feu intérieur, Robustesse, Esprit divin, protections contre l'Ombre, Gardien de peur, Infusion de puissance) ; les buffs des autres classes ajoutés par la 4.2.4 sont retirés.
 - Les longs buffs ne disparaissent plus en combat (limite de durée d'HealBot remise à 0).
