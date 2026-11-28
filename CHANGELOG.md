@@ -1,5 +1,9 @@
 # Journal des versions
 
+## v4.2.2 (ForeverCompagnon 4.2.2) : débuffs dissipables et durées dans HealBot
+- Débuffs : les sorts de dissipation sont choisis dans les réglages « Débuffs » d'HealBot (prêtre : Dissipation de la magie, Abolir maladie ; aussi paladin, druide, chaman), surveillés sur tout le groupe, en combat. Sans eux, aucune icône de débuff ne s'affichait en combat sur Forever. À l'installation des skins, ou `/fp healbot debuffs regler`. Tes réglages déjà faits sont gardés ; les clics ne sont pas touchés.
+- Durée restante toujours affichée sur les icônes de buffs et de débuffs (HealBot ne l'écrivait que sous 9 s).
+
 ## v4.2.1 (ForeverCompagnon 4.2.1) : skins HealBot corrigés d'après le code d'HealBot
 - Réglages vérifiés dans le code d'HealBot 26.11.27 (github.com/davidmarshall15/Healbot) au lieu d'être devinés.
 - Groupe et raid : icône du poste (tank, soigneur, dégâts), nom à gauche, % de vie à droite sur la même ligne, vie perdue juste à gauche du %.
