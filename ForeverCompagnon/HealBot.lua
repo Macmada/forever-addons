@@ -335,6 +335,60 @@ function HB.NoPets()
   return n
 end
 
+-- Relevé pour Claude (/fp healbot export) : le texte d'import du skin intégré « Group » d'HealBot (noms exacts des
+-- réglages : icônes, barres, groupes) et tous les réglages du skin actif. Sert à écrire un skin sans deviner les noms.
+local function Dump(v, depth, out, indent)
+  if type(v) ~= "table" then out[#out + 1] = indent .. tostring(v); return end
+  if depth > 3 then out[#out + 1] = indent .. "{…}"; return end
+  local keys = {}
+  for k in pairs(v) do keys[#keys + 1] = k end
+  table.sort(keys, function(a, b) return tostring(a) < tostring(b) end)
+  for _, k in ipairs(keys) do
+    local x = v[k]
+    if type(x) == "table" then
+      out[#out + 1] = indent .. tostring(k) .. " = {"
+      Dump(x, depth + 1, out, indent .. "  ")
+      out[#out + 1] = indent .. "}"
+    elseif type(x) ~= "function" then
+      out[#out + 1] = indent .. tostring(k) .. " = " .. tostring(x)
+    end
+  end
+end
+function HB.ExportText()
+  local out = { "-- HealBot : relevé pour Claude (" .. date("%Y-%m-%d %H:%M") .. ")" }
+  local ver = _G.C_AddOns and _G.C_AddOns.GetAddOnMetadata and _G.C_AddOns.GetAddOnMetadata("HealBot", "Version")
+  out[#out + 1] = "-- version d'HealBot : " .. tostring(ver)
+  local data = _G.HealBot_Config_SkinsData
+  if type(data) == "table" then
+    for _, packed in pairs(data) do
+      local text = type(packed) == "string" and Decompress(packed)
+      local n = text and text:match("^[^\n]+\n([^\n]+)")
+      if n == "Group" then
+        out[#out + 1] = "## Skin intégré « Group » (texte d'import)"
+        out[#out + 1] = text
+      end
+    end
+  end
+  local skins = _G.Healbot_Config_Skins
+  if type(skins) == "table" then
+    local cur = skins.Current_Skin
+    out[#out + 1] = "## Skin actif « " .. tostring(cur) .. " »"
+    local cats = {}
+    for k, v in pairs(skins) do if type(v) == "table" and v[cur] ~= nil then cats[#cats + 1] = k end end
+    table.sort(cats)
+    for _, k in ipairs(cats) do
+      out[#out + 1] = k .. " = {"
+      Dump(skins[k][cur], 1, out, "  ")
+      out[#out + 1] = "}"
+    end
+  end
+  return table.concat(out, "\n")
+end
+function HB.Export()
+  if type(_G.Healbot_Config_Skins) ~= "table" then root.Print(T.notLoaded); return end
+  root.ShowText("HealBot — relevé pour Claude (Ctrl+A, Ctrl+C)", HB.ExportText())
+end
+
 -- Ce qu'HealBot a retenu pour le skin actif (groupes de barres, familiers), à copier pour Claude
 function HB.Diag()
   local skins = _G.Healbot_Config_Skins
@@ -453,6 +507,7 @@ function HB.Command(arg)
   elseif arg == "voir" or arg == "plan" or arg == "show" then HB.ShowPlan()
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()
+  elseif arg == "export" or arg == "releve" or arg == "relevé" then HB.Export()
   else HB.Setup() end
 end
 

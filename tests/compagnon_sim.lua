@@ -871,6 +871,10 @@ do
         and Healbot_Config_Skins.HealGroups["Forever Raid"][10].STATE == false, "familiers retirés par leur nom après l'import (HealBot renumérote)")
   Healbot_Config_Skins.Current_Skin = "Forever Groupe"
   SlashCmdList.FOREVERCOMPAGNON("healbot diag")
+  local ex = HB.ExportText()
+  check(ex:find("Icons~f~1!{", 1, true) and ex:find("HealGroups = {", 1, true), "/fp healbot export : texte du skin « Group » et réglages du skin actif")
+  SlashCmdList.FOREVERCOMPAGNON("healbot export")
+  check(root.textFrame and root.textFrame:IsShown(), "/fp healbot export : fenêtre à copier")
   Healbot_Config_Skins.Current_Skin = "Standard"
 
   -- ancienne version : Robustesse posée sur Alt+gauche -> libérée et déplacée ; un Alt+clic changé à la main reste
