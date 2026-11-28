@@ -30,8 +30,8 @@ local T = FR and {
   kept = "%s : laissé tel quel (changé par toi)",
   deficitOn = "HealBot : vie manquante affichée en rouge sur les barres.", deficitOff = "HealBot : vie manquante masquée.",
   button = "Configurer HealBot", buttonTip = "Règle les clics de soins et les cadres de groupe/raid d'HealBot pour ton prêtre (sauvegarde avant, /fp healbot annuler).",
-  modernDone = "HealBot : skin « Forever Moderne » installé pour seul et groupe (clics inchangés). Pour le partager : HealBot, Partager, Exporter le skin. Annuler : /fp healbot moderne annuler",
-  modernUndone = "HealBot : skins d'avant remis (le skin « Forever Moderne » reste dans la liste d'HealBot).",
+  modernDone = "HealBot : skins « Forever Moderne » (seul et groupe) et « Forever Moderne Raid » installés (clics inchangés). Pour le partager : HealBot, Partager, Exporter le skin. Annuler : /fp healbot moderne annuler",
+  modernUndone = "HealBot : skins d'avant remis (les skins « Forever Moderne » restent dans la liste d'HealBot).",
   Left = "Clic gauche", Right = "Clic droit", Middle = "Clic milieu", Shift = "Maj+", Ctrl = "Ctrl+", Alt = "Alt+",
 } or {
   notLoaded = "HealBot is not loaded: enable it in the Addons tab (then /reload).",
@@ -48,7 +48,7 @@ local T = FR and {
   kept = "%s: left as is (changed by you)",
   deficitOn = "HealBot: missing health shown in red on the bars.", deficitOff = "HealBot: missing health hidden.",
   button = "Set up HealBot", buttonTip = "Sets HealBot's healing clicks and party/raid frames for your priest (backup first, /fp healbot annuler).",
-  modernDone = "HealBot: \"Forever Moderne\" skin installed for solo and party (clicks unchanged). To share it: HealBot, Share, Export skin. Undo: /fp healbot moderne annuler",
+  modernDone = "HealBot: \"Forever Moderne\" (solo and party) and \"Forever Moderne Raid\" skins installed (clicks unchanged). To share it: HealBot, Share, Export skin. Undo: /fp healbot moderne annuler",
   modernUndone = "HealBot: previous skins restored (the \"Forever Moderne\" skin stays in HealBot's list).",
   Left = "Left click", Right = "Right click", Middle = "Middle click", Shift = "Shift+", Ctrl = "Ctrl+", Alt = "Alt+",
 }
@@ -482,7 +482,33 @@ HB.MODERN = {
   ["BarVisibility~f~1"] = { ALERTIC = 0.9, ALERTOC = 0.8 },
 }
 
--- Installe le skin et le choisit pour « seul » et « groupe ». Clics : jamais lus ni écrits ici.
+-- Version raid (10 à 40) : même habillage, tiré du skin « Raid 40 » d'HealBot ; ses groupes de barres (tanks, groupes de
+-- raid en colonnes) sont gardés, seuls l'apparence, les icônes et le préremplissage changent ; barres plus petites
+HB.SKIN_MODERN_RAID = "Forever Moderne Raid"
+HB.MODERN_RAID = {
+  ["General~t"] = { HIDEPARTYF = "false", HIDERAIDF = "false" },
+  ["HealBar~f~1"] = { WIDTH = 96, HEIGHT = 30, GRPCOLS = "true", TEXTURE = "Smooth v2", CMARGIN = 2, RMARGIN = 2 },
+  ["Frame~f~1"] = HB.MODERN["Frame~f~1"],
+  ["FrameAlias~f~1"] = { SHOW = "true", ALIAS = "Raid", FONT = "Roboto Bold", SIZE = 11, OUTLINE = 2, R = GOLDL.R, G = GOLDL.G, B = GOLDL.B },
+  ["FrameAliasBar~f~1"] = HB.MODERN["FrameAliasBar~f~1"],
+  ["BarCol~f~1"] = HB.MODERN["BarCol~f~1"],
+  ["BarIACol~f~1"] = HB.MODERN["BarIACol~f~1"],
+  ["BarText~f~1"] = { HLTHONBAR = "true", HLTHTYPE = 3, IGNOREONFULL = "false", INCHEALS = 1, SHOWROLE = "true", CLASSONBAR = "false",
+                      FONT = "Roboto Bold", HEIGHT = 11, OUTLINE = 2, HFONT = "Roboto Bold", HHEIGHT = 10, HOUTLINE = 2 },
+  ["Icons~f~1"] = HB.MODERN["Icons~f~1"],
+  -- barres étroites : 2 débuffs à gauche, 3 buffs à droite, un peu plus petits
+  ["IconSets^1~f~1"] = { DEBUFFANCHOR = 1, BUFFANCHOR = 2, DEBUFFONBAR = 1, BUFFONBAR = 1, DSCALE = 0.6, BSCALE = 0.55,
+                         MAXDICONS = 2, MAXBICONS = 3, DEBUFFDOUBLE = "false", BUFFDOUBLE = "false" },
+  ["IconSetsText^1~f~1"] = HB.MODERN["IconSetsText^1~f~1"],
+  ["BarVisibility~f~1"] = HB.MODERN["BarVisibility~f~1"],
+}
+local MODERN_SKINS = {
+  { name = HB.SKIN_MODERN, from = "Group", edits = HB.MODERN, flags = { "HEALBOT_WORD_SOLO", "HEALBOT_WORD_PARTY" } },
+  { name = HB.SKIN_MODERN_RAID, from = "Raid 40", edits = HB.MODERN_RAID,
+    flags = { "HEALBOT_OPTIONS_RAID10", "HEALBOT_OPTIONS_RAID15", "HEALBOT_OPTIONS_RAID20", "HEALBOT_OPTIONS_RAID25", "HEALBOT_OPTIONS_RAID40" } },
+}
+
+-- Installe les deux skins et les choisit pour seul, groupe et raid. Clics : jamais lus ni écrits ici.
 function HB.InstallModern()
   if type(_G.HealBot_Config_SkinsData) ~= "table" or type(_G.HealBot_Share_SkinLoad) ~= "function" or type(_G.HealBot_Config) ~= "table" then
     root.Print(T.notLoaded); return false
@@ -494,24 +520,28 @@ function HB.InstallModern()
   if not st.modernBackup then
     st.modernBackup = { default = Copy(cfg.SkinDefault), skin = _G.Healbot_Config_Skins and _G.Healbot_Config_Skins.Current_Skin }
   end
-  local text
+  local byName = {}
   for _, packed in pairs(_G.HealBot_Config_SkinsData) do
     local t = type(packed) == "string" and Decompress(packed)
-    if t and t:match("^[^\n]+\n([^\n]+)") == "Group" then text = t end
+    local n = t and t:match("^[^\n]+\n([^\n]+)")
+    if n then byName[n] = t end
   end
-  if not text then root.Print(T.skinFail, "Group"); return false end
-  local ok, err = pcall(_G.HealBot_Share_SkinLoad, PatchFrames(text, HB.SKIN_MODERN, HB.MODERN), false)
-  if not ok then root.Print(T.skinFail, tostring(err)); return false end
-  for _, f in ipairs({ "HEALBOT_WORD_SOLO", "HEALBOT_WORD_PARTY" }) do
-    local id = _G[f]
-    if id then
-      for skin, t in pairs(cfg.SkinDefault) do if type(t) == "table" and skin ~= HB.SKIN_MODERN then t[id] = nil end end
-      cfg.SkinDefault[HB.SKIN_MODERN] = cfg.SkinDefault[HB.SKIN_MODERN] or {}
-      cfg.SkinDefault[HB.SKIN_MODERN][id] = true
+  for _, s in ipairs(MODERN_SKINS) do
+    local text = byName[s.from]
+    if not text then root.Print(T.skinFail, s.from); return false end
+    local ok, err = pcall(_G.HealBot_Share_SkinLoad, PatchFrames(text, s.name, s.edits), false)
+    if not ok then root.Print(T.skinFail, tostring(err)); return false end
+    for _, f in ipairs(s.flags) do
+      local id = _G[f]
+      if id then
+        for skin, t in pairs(cfg.SkinDefault) do if type(t) == "table" and skin ~= s.name then t[id] = nil end end
+        cfg.SkinDefault[s.name] = cfg.SkinDefault[s.name] or {}
+        cfg.SkinDefault[s.name][id] = true
+      end
     end
   end
-  if not (IsInRaid and IsInRaid()) and type(_G.HealBot_Options_Set_Current_Skin) == "function" then
-    pcall(_G.HealBot_Options_Set_Current_Skin, HB.SKIN_MODERN)
+  if type(_G.HealBot_Options_Set_Current_Skin) == "function" then
+    pcall(_G.HealBot_Options_Set_Current_Skin, (IsInRaid and IsInRaid()) and HB.SKIN_MODERN_RAID or HB.SKIN_MODERN)
   end
   if type(_G.HealBot_SetResetFlag) == "function" then pcall(_G.HealBot_SetResetFlag, "SOFT") end
   root.db.healbotDeficit = true                                   -- vie perdue affichée sur les barres

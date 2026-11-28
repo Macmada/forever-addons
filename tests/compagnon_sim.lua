@@ -890,6 +890,9 @@ do
   check(mt and mt:find("IconSets^1~f~1!{", 1, true) and mt:find("DEBUFFANCHOR=1", 1, true) and mt:find("BUFFANCHOR=2", 1, true),
         "skin moderne importé : débuffs à gauche, buffs à droite")
   check(current == "Forever Moderne" and HealBot_Config.SkinDefault["Forever Moderne"].Party, "skin moderne : choisi pour le groupe")
+  local mr = loaded["Forever Moderne Raid"]
+  check(mr and mr:find("GRPCOLS=\"true\"", 1, true) and mr:find("BUFFANCHOR=2", 1, true) and HealBot_Config.SkinDefault["Forever Moderne Raid"]["Raid 40"],
+        "skin moderne raid : importé (groupes en colonnes, buffs à droite) et choisi pour les raids")
   local same, na = true, 0
   for k, v in pairs(_G.HealBot_Config_Spells.EnabledKeyCombo) do na = na + 1; if before[k] ~= v then same = false end end
   check(same and na == nb, "skin moderne : clics strictement inchangés (" .. nb .. " clic(s))")
