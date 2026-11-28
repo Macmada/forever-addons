@@ -853,8 +853,15 @@ do
   check(HealBot_Config.SkinDefault.Group.Party and current == "Standard", "/fp healbot annuler : skins d'avant remis")
   Healbot_Config_Skins.Current_Skin = "Forever Moderne"
   SlashCmdList.FOREVERCOMPAGNON("healbot diag")
+  _G.HealBot_Forever_GetDebuffTypes = function() return { Magic = true, Disease = true }, "Magic,Disease", false end
+  _G.HealBot_Options_retDebuffCureSpell = function(t) return ({ Magic = "Dissipation de la magie", Disease = "Abolir maladie" })[t] end
+  _G.HealBot_Config_Cures = { DebuffWatch = true, DebuffWatchInCombat = true, CDCshownHB = true }
+  local dt = HB.DebuffText()
+  check(dt:find(LANG == "fr" and "Magie (Dissipation de la magie), Maladie (Abolir maladie)" or "Magic (Dissipation de la magie), Disease (Abolir maladie)", 1, true),
+        "/fp healbot debuffs : types dissipables surveillés et leur sort (" .. dt:gsub("\n.*", "") .. ")")
   local ex = HB.ExportText()
-  check(ex:find("Icons~f~1!{", 1, true) and ex:find("HealGroups = {", 1, true), "/fp healbot export : texte du skin « Group » et réglages du skin actif")
+  check(ex:find("Icons~f~1!{", 1, true) and ex:find("HealGroups = {", 1, true) and ex:find("HealBot_Config_Cures = {", 1, true),
+        "/fp healbot export : texte du skin « Group », débuffs surveillés et réglages du skin actif")
   SlashCmdList.FOREVERCOMPAGNON("healbot export")
   check(root.textFrame and root.textFrame:IsShown(), "/fp healbot export : fenêtre à copier")
   -- skin « Forever Moderne » : apparence seulement, les clics ne bougent pas (demande du joueur, 28/11/2026)

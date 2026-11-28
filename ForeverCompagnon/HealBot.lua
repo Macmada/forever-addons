@@ -159,6 +159,14 @@ function HB.ExportText()
       end
     end
   end
+  out[#out + 1] = "## Débuffs surveillés"
+  out[#out + 1] = (HB.DebuffText())
+  local cures = _G.HealBot_Config_Cures
+  if type(cures) == "table" then
+    out[#out + 1] = "HealBot_Config_Cures = {"
+    Dump(cures, 1, out, "  ")
+    out[#out + 1] = "}"
+  end
   local skins = _G.Healbot_Config_Skins
   if type(skins) == "table" then
     local cur = skins.Current_Skin
@@ -174,6 +182,41 @@ function HB.ExportText()
   end
   return table.concat(out, "\n")
 end
+-- Débuffs surveillés par HealBot. Sur Forever, en combat, HealBot fait afficher les débuffs par le jeu avec un filtre sur
+-- les types de dissipation configurés dans ses réglages « Débuffs » (HealBot_Forever_GetDebuffTypes, Healbot_Aura.lua) :
+-- seuls ces types ont une icône. On lit son résultat, sans rien changer.
+local TYPE_FR = { Magic = "Magie", Disease = "Maladie", Poison = "Poison", Curse = "Malédiction", Bleed = "Saignement" }
+function HB.DebuffInfo()
+  local info = { types = {}, spells = {} }
+  local f = _G.HealBot_Forever_GetDebuffTypes
+  if type(f) == "function" then
+    local ok, types, signature = pcall(f)
+    if ok and type(types) == "table" then
+      for _, n in ipairs({ "Magic", "Disease", "Poison", "Curse", "Bleed" }) do if types[n] then info.types[#info.types + 1] = n end end
+      info.signature = signature
+    end
+  end
+  local spell = _G.HealBot_Options_retDebuffCureSpell
+  if type(spell) == "function" then
+    for _, n in ipairs(info.types) do local ok, sp = pcall(spell, n); if ok and sp then info.spells[n] = sp end end
+  end
+  local c = type(_G.HealBot_Config_Cures) == "table" and _G.HealBot_Config_Cures or {}
+  info.watch, info.inCombat, info.bar, info.dispelOnly = c.DebuffWatch, c.DebuffWatchInCombat, c.CDCshownHB, c.CDCshownHBDispelOnly
+  return info
+end
+function HB.DebuffText()
+  local i = HB.DebuffInfo()
+  local names = {}
+  for _, n in ipairs(i.types) do
+    names[#names + 1] = (FR and TYPE_FR[n] or n) .. (i.spells[n] and (" (" .. i.spells[n] .. ")") or "")
+  end
+  local lines = {
+    (FR and "HealBot, débuffs avec une icône : " or "HealBot, debuffs with an icon: ") .. (#names > 0 and table.concat(names, ", ") or (FR and "AUCUN" or "NONE")),
+    (FR and "  surveillance : %s, en combat : %s, barre colorée : %s" or "  watch: %s, in combat: %s, coloured bar: %s"):format(tostring(i.watch), tostring(i.inCombat), tostring(i.bar)),
+  }
+  return table.concat(lines, "\n"), i
+end
+
 function HB.Export()
   if type(_G.Healbot_Config_Skins) ~= "table" then root.Print(T.notLoaded); return end
   root.ShowText("HealBot — relevé pour Claude (Ctrl+A, Ctrl+C)", HB.ExportText())
@@ -510,6 +553,7 @@ function HB.Command(arg)
   elseif arg == "annuler" or arg == "undo" or arg == "restore" or arg == "moderne annuler" or arg == "modern undo" then HB.RemoveModern()
   elseif arg == "chiffres" or arg == "numbers" or arg == "vie" then HB.ToggleDeficit()
   elseif arg == "diag" then HB.Diag()
+  elseif arg == "debuffs" or arg == "débuffs" or arg == "dispel" then root.Print((HB.DebuffText()))
   elseif arg == "a" or arg == "b" or arg == "c" then HB.InstallModern(arg:upper())
   elseif arg == "moderne" or arg == "modern" then HB.InstallModern()
   elseif arg == "export" or arg == "releve" or arg == "relevé" then HB.Export()
